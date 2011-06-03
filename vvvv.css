@@ -1,0 +1,36 @@
+body{
+  font-family:Arial;
+  font-size:10pt;
+}
+
+h1{
+  font-size:14pt;
+}
+
+
+#patchxml{
+  background-color: #e6e6e6;
+  width:500px;
+  height:500px;
+  border:0;
+}
+
+.background{
+  fill: #e6e6e6; 
+}
+
+.vvvv-link{
+  stroke: #000;
+  stroke-width: 1;
+}
+
+a{
+  text-decoration:none;
+}
+
+pre{
+  border:1px solid #e6e6e6;
+  width:500px;
+  height: 500px;
+  overflow:auto;
+}
