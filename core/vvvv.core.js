@@ -28,6 +28,7 @@ VVVV.Core = {
     
     this.setValue = function(i, v) {
       this.values[i] = v;
+      this.changed = true;
       _(this.links).each(function(l) {
         l.toPin.values[i] = v;
         l.toPin.changed = true;
@@ -98,6 +99,16 @@ VVVV.Core = {
           return this.inputPins["Y Input Value"];
         case "String": 
           return this.inputPins["Input String"];
+      }
+      return undefined;
+    }
+    
+    this.IOBoxOutputPin = function() {
+      switch (this.IOBoxType()) {
+        case "Value Advanced":
+          return this.outputPins["Y Output Value"];
+        case "String": 
+          return this.outputPins["Output String"];
       }
       return undefined;
     }

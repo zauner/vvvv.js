@@ -5,16 +5,17 @@ VVVV.Core.MainLoop = {
   
     var fps = 30;
     var framecount = 0;
+    var dom = new VVVV.Core.DOMInterface(graph);
     
     function update() {
       framecount ++;
       var start = new Date().getTime();
-      VVVV.Core.DOMInterface.populateIOBoxes(graph);
+      dom.populateIOBoxes();
       graph.evaluate();
-      VVVV.Core.DOMInterface.processOutputIOBoxes(graph);
+      dom.processOutputIOBoxes();
       var elapsed = new Date().getTime()-start;
       window.status = elapsed;
-      //if (framecount<20)
+      //if (framecount<1)
         window.setTimeout(update, Math.max(0, Math.round(1000/fps-elapsed)));
     }
     
