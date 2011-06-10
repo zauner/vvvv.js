@@ -85,16 +85,19 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
       var dt = new Date().getTime()-lastUpdate[i];
       if (currPos[i]==undefined)
         currPos[i] = 0.0;
-      
-      if (deltaPos[i]==0)
-        continue;
         
       var targetPos = parseFloat(positionIn.getValue(i));
       var filterTime = parseFloat(filterTimeIn.getValue(i));
+      
+      if (!isFinite(targetPos) || !isFinite(filterTime)) {
+        currPos[i] = undefined;
+        positionOut.setValue(i, undefined);
+        continue;
+      }
         
       if (pinsChanged) {
         dt = 0;
-        
+        deltaPos[i] = undefined;
         if (filterTime>0)
           velocity[i] = (targetPos-currPos[i])/(filterTime*1000);
         else
@@ -104,7 +107,6 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
       currPos[i] += velocity[i]*dt;
       
       if (deltaPos[i]!=undefined && deltaPos[i]!=0 && sign(targetPos-currPos[i]) != sign(deltaPos[i])) {
-        console.log(sign(deltaPos[i]));
         velocity[i] = 0;
         currPos[i] = targetPos;
       }
