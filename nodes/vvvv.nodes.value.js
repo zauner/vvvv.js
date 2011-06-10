@@ -10,10 +10,12 @@ VVVV.Nodes.AddValue = function(id, graph) {
   this.addOutputPin("Output", [0.0], this);
 
   this.evaluate = function() {
-    var maxSpreadSize = Math.max(this.inputPins["Input 1"].values.length, this.inputPins["Input 2"].values.length);
-    
-    for (var i=0; i<maxSpreadSize; i++) {
-      this.outputPins["Output"].setValue(i, parseFloat(this.inputPins["Input 1"].getValue(i)) + parseFloat(this.inputPins["Input 2"].getValue(i)));
+    if (this.inputPins["Input 1"].pinIsChanged() || this.inputPins["Input 2"].pinIsChanged()) {
+      var maxSpreadSize = Math.max(this.inputPins["Input 1"].values.length, this.inputPins["Input 2"].values.length);
+      
+      for (var i=0; i<maxSpreadSize; i++) {
+        this.outputPins["Output"].setValue(i, parseFloat(this.inputPins["Input 1"].getValue(i)) + parseFloat(this.inputPins["Input 2"].getValue(i)));
+      }
     }
     
   }
@@ -31,8 +33,10 @@ VVVV.Nodes.IOBoxValueAdvanced = function(id, graph) {
   this.addOutputPin("Y Output Value", [0.0], this);
 
   this.evaluate = function() {
-    for (var i=0; i<this.inputPins["Y Input Value"].values.length; i++) {
-      this.outputPins["Y Output Value"].setValue(i, parseFloat(this.inputPins["Y Input Value"].values[i]));
+    if (this.inputPins["Y Input Value"].pinIsChanged()) {
+      for (var i=0; i<this.inputPins["Y Input Value"].values.length; i++) {
+        this.outputPins["Y Output Value"].setValue(i, parseFloat(this.inputPins["Y Input Value"].values[i]));
+      }
     }
   }
 
