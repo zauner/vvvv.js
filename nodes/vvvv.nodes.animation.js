@@ -111,9 +111,10 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
         currPos[i] = targetPos;
       }
       
-      deltaPos[i] = targetPos - currPos[i];
+      if (deltaPos[i]!=0)
+        positionOut.setValue(i, currPos[i]);
       
-      positionOut.setValue(i, currPos[i]);
+      deltaPos[i] = targetPos - currPos[i];
       
       lastUpdate[i] = new Date().getTime();
     }
