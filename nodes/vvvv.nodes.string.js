@@ -7,8 +7,10 @@ VVVV.Nodes.IOBoxString = function(id, graph) {
   this.addOutputPin("Output String", [""], this);
 
   this.evaluate = function() {
-    for (var i=0; i<this.inputPins["Input String"].values.length; i++) {
-      this.outputPins["Output String"].setValue(i, this.inputPins["Input String"].values[i]);
+    if (this.inputPins["Input String"].pinIsChanged()) {
+      for (var i=0; i<this.inputPins["Input String"].values.length; i++) {
+        this.outputPins["Output String"].setValue(i, this.inputPins["Input String"].values[i]);
+      }
     }
   }
 
