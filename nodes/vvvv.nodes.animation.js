@@ -64,45 +64,58 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
   var velocityOut = this.addOutputPin("Velocity Out", [0.0], this);
   var accelerationOut = this.addOutputPin("Acceleration Out", [0.0], this);
   
-  var lastUpdate = new Date().getTime();
+  var lastUpdate = [];
   var currPos = [];
   var velocity = [];
+  var deltaPos = [];
+  
+  function sign(n) {
+    return n>=0;
+  }
 
   this.evaluate = function() {
     
     var maxSize = this.getMaxInputSliceCount();
     var pinsChanged = positionIn.pinIsChanged() || filterTimeIn.pinIsChanged();
-    var dt = new Date().getTime()-lastUpdate;
     
     for (var i=0; i<maxSize; i++) {
+    
+      if (lastUpdate[i]==undefined)
+        lastUpdate[i] = new Date().getTime();
+      var dt = new Date().getTime()-lastUpdate[i];
       if (currPos[i]==undefined)
         currPos[i] = 0.0;
+      
+      if (deltaPos[i]==0)
+        continue;
+        
       var targetPos = parseFloat(positionIn.getValue(i));
       var filterTime = parseFloat(filterTimeIn.getValue(i));
         
       if (pinsChanged) {
-        console.log(this.inputPins["Go To Position"]);
-        console.log(positionIn);
         dt = 0;
         
         if (filterTime>0)
           velocity[i] = (targetPos-currPos[i])/(filterTime*1000);
         else
           velocity[i] = 0;
-        console.log(velocity[i]);
-      
       }
-      
-      if (currPos[i]>=targetPos)
-          return;
       
       currPos[i] += velocity[i]*dt;
       
+      if (deltaPos[i]!=undefined && deltaPos[i]!=0 && sign(targetPos-currPos[i]) != sign(deltaPos[i])) {
+        console.log(sign(deltaPos[i]));
+        velocity[i] = 0;
+        currPos[i] = targetPos;
+      }
+      
+      deltaPos[i] = targetPos - currPos[i];
+      
       positionOut.setValue(i, currPos[i]);
       
+      lastUpdate[i] = new Date().getTime();
     }
     
-    lastUpdate = new Date().getTime();
   }
 
 }
