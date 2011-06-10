@@ -23,6 +23,28 @@ VVVV.Nodes.AddValue = function(id, graph) {
 }
 VVVV.Nodes.AddValue.prototype = new VVVV.Core.Node();
 
+VVVV.Nodes.MultiplyValue = function(id, graph) {
+  this.constructor(id, "Multiply (Value)", graph);
+  
+  this.addInputPin("Input 1", [0.0], this);
+  this.addInputPin("Input 2", [0.0], this);
+  
+  this.addOutputPin("Output", [0.0], this);
+
+  this.evaluate = function() {
+    if (this.inputPins["Input 1"].pinIsChanged() || this.inputPins["Input 2"].pinIsChanged()) {
+      var maxSpreadSize = Math.max(this.inputPins["Input 1"].values.length, this.inputPins["Input 2"].values.length);
+      
+      for (var i=0; i<maxSpreadSize; i++) {
+        this.outputPins["Output"].setValue(i, parseFloat(this.inputPins["Input 1"].getValue(i)) * parseFloat(this.inputPins["Input 2"].getValue(i)));
+      }
+    }
+    
+  }
+
+}
+VVVV.Nodes.MultiplyValue.prototype = new VVVV.Core.Node();
+
 
 
 VVVV.Nodes.IOBoxValueAdvanced = function(id, graph) {
