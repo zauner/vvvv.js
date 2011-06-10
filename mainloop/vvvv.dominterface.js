@@ -1,4 +1,4 @@
-7
+
 
 VVVV.Core.DOMInterface = function(graph) {
 
@@ -54,7 +54,6 @@ VVVV.Core.DOMInterface = function(graph) {
           that.fetchValuesFromDOM(iobox);
           for (var i=0; i<iobox.values.length; i++) {
             if (iobox.node.IOBoxInputPin().getValue(i)!=iobox.values[i]) {
-              console.log("setting...");
               iobox.node.IOBoxInputPin().setValue(i, iobox.values[i]);
             }
           }
