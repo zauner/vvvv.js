@@ -37,6 +37,11 @@ VVVV.Core = {
     
     this.pinIsChanged = function() {
       var ret = this.changed;
+      //if (this.node.nodename=='LinearFilter (Animation)') {
+      //  console.log("querying pinchanged for "+this.pinname+' of node '+this.node.id+' to changed...');
+      //  if (ret)
+      //    console.log("it changed! resetting it, though...");
+      //}
       this.changed = false;
       return ret;
     }
@@ -279,10 +284,11 @@ VVVV.Core = {
         if (n.inputPins[pinname]!=undefined) {
           if (values!=undefined)
             n.inputPins[pinname].values = values;
+          return;
         }
         if ($(this).attr('visible')==1 || $(this).attr('slicecount')!=undefined)
         {
-          if ($(xml).find('link[srcnodeid='+n.id+']').filter('link[srcpinname='+pinname.replace(/[\[\]]/,'')+']').length > 0)
+          if ($(xml).find('link[srcnodeid='+n.id+']').filter('link[srcpinname='+pinname.replace(/[\[\]]/,'')+']').length > 0) // if it's an input pin
             n.addOutputPin(pinname, values);
           else
             n.addInputPin(pinname, values);
