@@ -213,3 +213,41 @@ VVVV.Nodes.Change = function(id, graph) {
 }
 VVVV.Nodes.Change.prototype = new VVVV.Core.Node();
 
+
+
+VVVV.Nodes.FlipFlop = function(id, graph) {
+  this.constructor(id, "FlipFlop (Animation)", graph);
+  
+  var setIn = this.addInputPin("Set", [0], this);
+  var resetIn = this.addInputPin("Reset", [0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0], this);
+  var inverseOutputOut = this.addOutputPin("Inverse Output", [1], this);
+  
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    if (setIn.pinIsChanged() || resetIn.pinIsChanged()) {
+      for (var i=0; i<maxSize; i++) {
+        if (outputOut.values[i]==undefined)
+          outputOut.setValue(i, 0);
+        result = undefined;
+        if (Math.round(resetIn.getValue(i))>=1)
+          result = 0;
+        if (Math.round(setIn.getValue(i))>=1)
+          result = 1;
+        if (result!=undefined) {
+          outputOut.setValue(i, result);
+          inverseOutputOut.setValue(i, 1-result);
+        }
+      }
+    }
+    
+    
+  }
+
+}
+VVVV.Nodes.FlipFlop.prototype = new VVVV.Core.Node();
+
