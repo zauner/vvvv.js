@@ -123,3 +123,63 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
 
 }
 VVVV.Nodes.LinearFilter.prototype = new VVVV.Core.Node();
+
+
+
+VVVV.Nodes.Delay = function(id, graph) {
+  this.constructor(id, "Delay (Animation)", graph);
+  
+  var inputIn = this.addInputPin("Input", [0.0], this);
+  var timeIn = this.addInputPin("Time", [1.0], this);
+  var insertIn = this.addInputPin("Insert", [1], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+  
+  var queue = [];
+  var times = new Array(1024);
+  
+  /*function reset(value) {
+    for (var i=0; i<1024; i++) {
+      queue[i] = value;
+      times[i] = 0.0;
+    }
+  }
+  reset(0.0);
+  */
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    now = new Date().getTime();
+    
+    
+    if (insertIn.getValue(0)==1 && inputIn.pinIsChanged()) {
+      times.pop();
+      times.unshift(now);
+      for (var i=0; i<inputIn.values.length; i++) {
+        if (queue[i]==undefined)
+          queue[i] = new Array(1024);
+        if (queue[i].length>=1024)
+          queue[i].pop();
+        queue[i].unshift(inputIn.getValue(i));
+      }
+    }
+    
+    for (var i=0; i<maxSize; i++) {
+      var dt = now - timeIn.getValue(i)*1000;
+      var found = false;
+      for (j=0; j<1024; j++) {
+        if (times[j]<=dt) {
+          outputOut.setValue(i, queue[i%queue.length][j]);
+          found = true;
+          break;
+        }
+      }
+      if (!found)
+        outputOut.setValue(i, 0.0);
+    }
+    
+  }
+
+}
+VVVV.Nodes.Delay.prototype = new VVVV.Core.Node();
