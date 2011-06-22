@@ -183,3 +183,33 @@ VVVV.Nodes.Delay = function(id, graph) {
 
 }
 VVVV.Nodes.Delay.prototype = new VVVV.Core.Node();
+
+
+
+VVVV.Nodes.Change = function(id, graph) {
+  this.constructor(id, "Change (Animation)", graph);
+  
+  var inputIn = this.addInputPin("Input", [0.0], this);
+  
+  var changeOut = this.addOutputPin("OnChange", [0], this);
+  
+  var values = [];
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      if (values[i]!=undefined && values[i]!=inputIn.getValue(i))
+        changeOut.setValue(i, 1);
+      else
+        changeOut.setValue(i, 0);
+      values[i] = inputIn.getValue(i);
+    }
+    
+    
+  }
+
+}
+VVVV.Nodes.Change.prototype = new VVVV.Core.Node();
+
