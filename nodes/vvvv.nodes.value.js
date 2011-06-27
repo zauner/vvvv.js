@@ -87,10 +87,71 @@ VVVV.Nodes.CountValue.prototype = new VVVV.Core.Node();
 
 
 
+VVVV.Nodes.SwitchValueInput = function(id, graph) {
+  this.constructor(id, "Switch (Value Input)", graph);
+  
+  var switchIn = this.addInputPin("Switch", [0], this);
+  var inputIn = []
+  inputIn[0] = this.addInputPin("Input 1", [0.0], this);
+  inputIn[1] = this.addInputPin("Input 2", [0.0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    var pinsChanged = switchIn.pinIsChanged();
+    for (var i=0; i<inputIn.length; i++) {
+      pinsChanged = pinsChanged || inputIn[i].pinIsChanged();
+    }
+    
+    if (pinsChanged) {
+      if (switchIn.getValue(0)==undefined) {
+        outputOut.setValue(0, undefined);
+        return;
+      }
+      for (var i=0; i<maxSize; i++) {
+        outputOut.setValue(i, inputIn[switchIn.getValue(i)%inputIn.length].getValue(i));
+      }
+    }
+  }
+
+}
+VVVV.Nodes.SwitchValueInput.prototype = new VVVV.Core.Node();
 
 
 
+VVVV.Nodes.SelectValue = function(id, graph) {
+  this.constructor(id, "Select (Value)", graph);
+  
+  var inputIn = this.addInputPin("Input", [0.0], this);
+  var selectIn = this.addInputPin("Select", [1], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+  var formerSliceOut = this.addOutputPin("Former Slice", [0], this);
 
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    var pinsChanged = inputIn.pinIsChanged() || selectIn.pinIsChanged();
+    
+    if (pinsChanged) {
+      outputOut.values = [];
+      formerSliceOut.values = [];
+      
+      var outputIndex = 0;
+      for (var i=0; i<maxSize; i++) {
+        for (var j=0; j<selectIn.getValue(i); j++) {
+          outputOut.setValue(outputIndex, inputIn.getValue(i));
+          formerSliceOut.setValue(outputIndex, i);
+          outputIndex++;
+        }
+      }
+    }
+  }
+
+}
+VVVV.Nodes.SelectValue.prototype = new VVVV.Core.Node();
 
 
 
