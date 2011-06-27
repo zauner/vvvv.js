@@ -34,7 +34,7 @@ VVVV.Core.DOMInterface = function(graph) {
           iobox.values[i] = 0;
           $(this).bind(iobox.property, function() {
             iobox.values[i] = 1;
-            //return false;
+            return false;
           });
         });
       }
@@ -118,6 +118,8 @@ VVVV.Core.DOMInterface = function(graph) {
   }
   
   this.setDOMByIOBox= function(iobox) {
+    if (!iobox.node.IOBoxOutputPin().pinIsChanged())
+      return;
     var values = iobox.node.IOBoxInputPin().values;
     var elemCount = $(iobox.selector).length;
     if (iobox.property_class==undefined)
