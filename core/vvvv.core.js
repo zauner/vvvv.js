@@ -21,8 +21,6 @@ VVVV.Core = {
     this.active = false;
     
     this.getValue = function(i) {
-      //if (this.values.length===0)
-      //  return "not calculated";
       return this.values[i%this.values.length];
     }
     
@@ -37,11 +35,6 @@ VVVV.Core = {
     
     this.pinIsChanged = function() {
       var ret = this.changed;
-      //if (this.node.nodename=='LinearFilter (Animation)') {
-      //  console.log("querying pinchanged for "+this.pinname+' of node '+this.node.id+' to changed...');
-      //  if (ret)
-      //    console.log("it changed! resetting it, though...");
-      //}
       this.changed = false;
       return ret;
     }
