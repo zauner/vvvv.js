@@ -170,7 +170,8 @@ VVVV.Nodes.Delay = function(id, graph) {
       var found = false;
       for (j=0; j<1024; j++) {
         if (times[j]<=dt) {
-          outputOut.setValue(i, queue[i%queue.length][j]);
+          if (outputOut.values[i]!=queue[i%queue.length][j])
+            outputOut.setValue(i, queue[i%queue.length][j]);
           found = true;
           break;
         }
@@ -231,8 +232,10 @@ VVVV.Nodes.FlipFlop = function(id, graph) {
     
     if (setIn.pinIsChanged() || resetIn.pinIsChanged()) {
       for (var i=0; i<maxSize; i++) {
-        if (outputOut.values[i]==undefined)
+        if (outputOut.values[i]==undefined) {
           outputOut.setValue(i, 0);
+          inverseOutputOut.setValue(i, 0);
+        }
         result = undefined;
         if (Math.round(resetIn.getValue(i))>=1)
           result = 0;
