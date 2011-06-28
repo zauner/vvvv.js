@@ -75,6 +75,8 @@ VVVV.Nodes.AddString = function(id, graph) {
       for (var i=0; i<maxSize; i++) {
         var pieces = [];
         var intersperse = intersperseStringIn.getValue(i);
+        if (intersperse==undefined)
+          intersperse = '';
         for (var j=0; j<inputIn.length; j++) {
           pieces.push(inputIn[j].getValue(i));
         }
