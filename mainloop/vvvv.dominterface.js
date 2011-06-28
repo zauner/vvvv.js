@@ -124,23 +124,24 @@ VVVV.Core.DOMInterface = function(graph) {
     var elemCount = $(iobox.selector).length;
     if (iobox.property_class==undefined)
       $(iobox.selector).empty();
-    for (var i=0; i<values.length; i++) {
+    for (var i=0; i<Math.max(values.length, elemCount); i++) {
       var j = i%elemCount;
+      var k = i%values.length;
       
       if (iobox.property_class==undefined) {
         switch (this.nodeName) {
-          case "INPUT": $(iobox.selector).eq(j).val($(iobox.selector).eq(j).val()+values[i]);
+          case "INPUT": $(iobox.selector).eq(j).val($(iobox.selector).eq(j).val()+values[k]);
             break;
-          default: $(iobox.selector).eq(j).html($(iobox.selector).eq(j).html()+values[i]);
+          default: $(iobox.selector).eq(j).html($(iobox.selector).eq(j).html()+values[k]);
         }
       }
       
       if (iobox.property_class=="attribute") {
-        $(iobox.selector).eq(j).attr(iobox.property, values[i]);
+        $(iobox.selector).eq(j).attr(iobox.property, values[k]);
       }
       
       if (iobox.property_class=="style") {
-        $(iobox.selector).eq(j).css(iobox.property, values[i]);
+        $(iobox.selector).eq(j).css(iobox.property, values[k]);
       }
     }
     
