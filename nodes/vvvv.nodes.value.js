@@ -23,6 +23,117 @@ VVVV.Nodes.AddValue = function(id, graph) {
 }
 VVVV.Nodes.AddValue.prototype = new VVVV.Core.Node();
 
+
+
+VVVV.Nodes.SubtractValue = function(id, graph) {
+  this.constructor(id, "Subtract (Value)", graph);
+  
+  var input1In = this.addInputPin("Input 1", [0.0], this);
+  var input2In = this.addInputPin("Input 2", [0.0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+
+  this.evaluate = function() {
+    if (input1In.pinIsChanged() || input2In.pinIsChanged()) {
+      var maxSize = this.getMaxInputSliceCount();
+      
+      for (var i=0; i<maxSize; i++) {
+        outputOut.setValue(i, parseFloat(input1In.getValue(i))-parseFloat(input2In.getValue(i)));
+      }
+    }
+    
+  }
+
+}
+VVVV.Nodes.SubtractValue.prototype = new VVVV.Core.Node();
+
+
+
+VVVV.Nodes.EqValue = function(id, graph) {
+  this.constructor(id, "EQ (Value)", graph);
+  
+  var input1In = this.addInputPin("Input 1", [0.0], this);
+  var input2In = this.addInputPin("Input 2", [0.0], this);
+  var epsilonIn = this.addInputPin("Epsilon", [0.0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+  var invOutputOut = this.addOutputPin("Inverse Output", [0.0], this);
+
+  this.evaluate = function() {
+    if (input1In.pinIsChanged() || input2In.pinIsChanged() || epsilonIn.pinIsChanged()) {
+      var maxSize = this.getMaxInputSliceCount();
+      
+      for (var i=0; i<maxSize; i++) {
+        var result = 0;
+        if (input1In.getValue(i)==input2In.getValue(i))
+          result = 1;
+        outputOut.setValue(i, result);
+        invOutputOut.setValue(i, 1-result);
+      }
+    }
+    
+  }
+
+}
+VVVV.Nodes.EqValue.prototype = new VVVV.Core.Node();
+
+
+
+
+VVVV.Nodes.GtValue = function(id, graph) {
+  this.constructor(id, "GT (Value)", graph);
+  
+  var input1In = this.addInputPin("Input 1", [0.0], this);
+  var input2In = this.addInputPin("Input 2", [0.0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+
+  this.evaluate = function() {
+    if (input1In.pinIsChanged() || input2In.pinIsChanged()) {
+      var maxSize = this.getMaxInputSliceCount();
+      
+      for (var i=0; i<maxSize; i++) {
+        var result = 0;
+        if (input1In.getValue(i)>input2In.getValue(i))
+          result = 1;
+        outputOut.setValue(i, result);
+      }
+    }
+    
+  }
+
+}
+VVVV.Nodes.GtValue.prototype = new VVVV.Core.Node();
+
+
+
+VVVV.Nodes.LtValue = function(id, graph) {
+  this.constructor(id, "LT (Value)", graph);
+  
+  var input1In = this.addInputPin("Input 1", [0.0], this);
+  var input2In = this.addInputPin("Input 2", [0.0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+
+  this.evaluate = function() {
+    if (input1In.pinIsChanged() || input2In.pinIsChanged()) {
+      var maxSize = this.getMaxInputSliceCount();
+      
+      for (var i=0; i<maxSize; i++) {
+        var result = 0;
+        if (input1In.getValue(i)<input2In.getValue(i))
+          result = 1;
+        outputOut.setValue(i, result);
+      }
+    }
+    
+  }
+
+}
+VVVV.Nodes.LtValue.prototype = new VVVV.Core.Node();
+
+
+
 VVVV.Nodes.MultiplyValue = function(id, graph) {
   this.constructor(id, "Multiply (Value)", graph);
   
@@ -44,6 +155,30 @@ VVVV.Nodes.MultiplyValue = function(id, graph) {
 
 }
 VVVV.Nodes.MultiplyValue.prototype = new VVVV.Core.Node();
+
+
+
+VVVV.Nodes.DivideValue = function(id, graph) {
+  this.constructor(id, "Divide (Value)", graph);
+  
+  var input1In = this.addInputPin("Input", [0.0], this);
+  var input2In = this.addInputPin("Input 2", [0.0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+
+  this.evaluate = function() {
+    if (input1In.pinIsChanged() || input2In.pinIsChanged()) {
+      var maxSize = this.getMaxInputSliceCount();
+      
+      for (var i=0; i<maxSize; i++) {
+        outputOut.setValue(i, input1In.getValue(i)/input2In.getValue(i));
+      }
+    }
+    
+  }
+
+}
+VVVV.Nodes.DivideValue.prototype = new VVVV.Core.Node();
 
 
 
@@ -152,6 +287,62 @@ VVVV.Nodes.SelectValue = function(id, graph) {
 
 }
 VVVV.Nodes.SelectValue.prototype = new VVVV.Core.Node();
+
+
+
+
+VVVV.Nodes.AsString = function(id, graph) {
+  this.constructor(id, "AsString (Value)", graph);
+  
+  var inputIn = this.addInputPin("Input", [0.0], this);
+  var subtypeIn = this.addInputPin("SubType", [''], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    var pinsChanged = inputIn.pinIsChanged() || subtypeIn.pinIsChanged();
+    
+    if (pinsChanged) {
+      for (var i=0; i<maxSize; i++) {
+        outputOut.setValue(i, parseFloat(inputIn.getValue(i)).toFixed(4));
+      }
+    }
+  }
+
+}
+VVVV.Nodes.AsString.prototype = new VVVV.Core.Node();
+
+
+
+VVVV.Nodes.Frac = function(id, graph) {
+  this.constructor(id, "Frac (Value)", graph);
+  
+  var inputIn = this.addInputPin("Input", [0.0], this);
+  
+  var wholeOut = this.addOutputPin("Whole Part", [0], this);
+  var realOut = this.addOutputPin("Real Part", [0.5], this);
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    var pinsChanged = inputIn.pinIsChanged();
+    
+    if (pinsChanged) {
+      for (var i=0; i<maxSize; i++) {
+        var inValue = parseFloat(inputIn.getValue(i));
+        wholeOut.setValue(i, Math.floor(inValue));
+        realOut.setValue(i, inValue - Math.floor(inValue));
+      }
+    }
+  }
+
+}
+VVVV.Nodes.Frac.prototype = new VVVV.Core.Node();
+
+
+
 
 
 
