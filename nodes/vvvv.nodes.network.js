@@ -12,17 +12,20 @@ VVVV.Nodes.HTTPGet = function(id, graph) {
   var failOut = this.addOutputPin("Fail", [0], this);
   var successOut = this.addOutputPin("Success", [0], this);
   
-  var doResetOutPins = false;
+  var doResetOutPins = 0;
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
     
     var pinsChanged = urlIn.pinIsChanged() || nameIn.pinIsChanged() || valueIn.pinIsChanged() || (refreshIn.pinIsChanged() && refreshIn.getValue(0)==1);
     
-    if (doResetOutPins) {
+    if (doResetOutPins>=1) {
       failOut.setValue(0, 0);
       successOut.setValue(0, 0);
+      doResetOutPins = -1;
     }
+    if (doResetOutPins>=0)
+      doResetOutPins++;
     
     if (pinsChanged) {
       var i = 0;
@@ -38,13 +41,13 @@ VVVV.Nodes.HTTPGet = function(id, graph) {
           bodyOut.setValue(0, response);
           statusOut.setValue(0, xhr.status);
           successOut.setValue(0, 1);
-          doResetOutPins = true;
+          doResetOutPins = 0;
         },
         error: function(xhr, status) {
           bodyOut.setValue(0, '');
           failOut.setValue(0, 1);
           statusOut.setValue(0, xhr.status);
-          doResetOutPins = true;
+          doResetOutPins = 0;
         }
       });
     }
