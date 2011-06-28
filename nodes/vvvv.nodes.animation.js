@@ -153,7 +153,7 @@ VVVV.Nodes.Delay = function(id, graph) {
     now = new Date().getTime();
     
     
-    if (insertIn.getValue(0)==1 && inputIn.pinIsChanged()) {
+    if (insertIn.getValue(0)==1 && inputIn.pinIsChanged() && inputIn.getValue(0)!=undefined) {
       times.pop();
       times.unshift(now);
       for (var i=0; i<inputIn.values.length; i++) {
@@ -216,6 +216,42 @@ VVVV.Nodes.Change.prototype = new VVVV.Core.Node();
 
 
 
+VVVV.Nodes.TogEdge = function(id, graph) {
+  this.constructor(id, "TogEdge (Animation)", graph);
+  
+  var inputIn = this.addInputPin("Input", [0.0], this);
+  
+  var upOut = this.addOutputPin("Up Edge", [0], this);
+  var downOut = this.addOutputPin("Down Edge", [0], this);
+  
+  var values = [];
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      if (values[i]!=undefined) {
+        if (Math.round(values[i])<=0 && Math.round(inputIn.getValue(i))>=1)
+          upOut.setValue(i, 1);
+        else
+          upOut.setValue(i, 0);
+        if (Math.round(values[i])>=1 && Math.round(inputIn.getValue(i))<=0)
+          downOut.setValue(i, 1);
+        else
+          downOut.setValue(i, 0);
+      }
+      values[i] = inputIn.getValue(i);
+    }
+    
+    
+  }
+
+}
+VVVV.Nodes.TogEdge.prototype = new VVVV.Core.Node();
+
+
+
 VVVV.Nodes.FlipFlop = function(id, graph) {
   this.constructor(id, "FlipFlop (Animation)", graph);
   
@@ -225,6 +261,8 @@ VVVV.Nodes.FlipFlop = function(id, graph) {
   var outputOut = this.addOutputPin("Output", [0], this);
   var inverseOutputOut = this.addOutputPin("Inverse Output", [1], this);
   
+  var initialized = false;
+  
 
   this.evaluate = function() {
     
@@ -232,11 +270,7 @@ VVVV.Nodes.FlipFlop = function(id, graph) {
     
     if (setIn.pinIsChanged() || resetIn.pinIsChanged()) {
       for (var i=0; i<maxSize; i++) {
-        if (outputOut.values[i]==undefined) {
-          outputOut.setValue(i, 0);
-          inverseOutputOut.setValue(i, 0);
-        }
-        result = undefined;
+        var result = undefined;
         if (Math.round(resetIn.getValue(i))>=1)
           result = 0;
         if (Math.round(setIn.getValue(i))>=1)
@@ -245,6 +279,43 @@ VVVV.Nodes.FlipFlop = function(id, graph) {
           outputOut.setValue(i, result);
           inverseOutputOut.setValue(i, 1-result);
         }
+        else if (!initialized) {
+          outputOut.setValue(i, 0);
+          inverseOutputOut.setValue(i, 1);
+        }
+      }
+    }
+    initialized = true;
+
+  }
+
+}
+VVVV.Nodes.FlipFlop.prototype = new VVVV.Core.Node();
+
+
+
+
+VVVV.Nodes.SampleAndHold = function(id, graph) {
+  this.constructor(id, "S+H (Animation)", graph);
+  
+  var inputIn = this.addInputPin("Input", [0.0], this);
+  var setIn = this.addInputPin("Set", [0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+  
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    if (setIn.pinIsChanged() || inputIn.pinIsChanged()) {
+      for (var i=0; i<maxSize; i++) {
+        if (outputOut.values[i]==undefined) {
+          outputOut.setValue(i, 0);
+        }
+        if (Math.round(setIn.getValue(i))>=1) {
+          outputOut.setValue(i, inputIn.getValue(i));
+        }
       }
     }
     
@@ -252,5 +323,5 @@ VVVV.Nodes.FlipFlop = function(id, graph) {
   }
 
 }
-VVVV.Nodes.FlipFlop.prototype = new VVVV.Core.Node();
+VVVV.Nodes.SampleAndHold.prototype = new VVVV.Core.Node();
 
