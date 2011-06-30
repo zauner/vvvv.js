@@ -6,7 +6,7 @@ $(document).ready(function() {
   $('#patchxml').bind('paste', function() {
     setTimeout(function() {
       var graph = new VVVV.Core.Graph($('#patchxml').val());
-      VVVV.Core.MainLoop.run(graph);
+      var mainloop = new VVVV.Core.MainLoop(graph);
       var vvvviewer = new VVVV.VVVViewer(graph, '#patch2');
       $('#patchxml').remove();
     }, 100);
@@ -14,7 +14,7 @@ $(document).ready(function() {
   
   $('#visualizecode').click(function() {
     var graph1 = new VVVV.Core.Graph($('#patch1').text());
-    VVVV.Core.MainLoop.run(graph1);
+    var mainloop1 = new VVVV.Core.MainLoop(graph1);
     var vvvviewer = new VVVV.VVVViewer(graph1, '#patch1');
   });
   
@@ -25,7 +25,7 @@ $(document).ready(function() {
       dataType: 'text',
       success: function(r) {
         var graph3 = new VVVV.Core.Graph(r);
-        VVVV.Core.MainLoop.run(graph3);
+        var mainloop3 = new VVVV.Core.MainLoop(graph3);
         var vvvviewer = new VVVV.VVVViewer(graph3, '#patch3');
       }
     });
