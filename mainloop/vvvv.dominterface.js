@@ -47,7 +47,9 @@ VVVV.Core.DOMInterface = function(graph) {
       switch (iobox.property_class) {
         case "event":
           for (var i=0; i<iobox.values.length; i++) {
-            iobox.node.IOBoxInputPin().setValue(i, iobox.values[i]);
+            if (iobox.node.IOBoxInputPin().values[i]==undefined || iobox.values[i]!=iobox.node.IOBoxInputPin().values[i]) {
+              iobox.node.IOBoxInputPin().setValue(i, iobox.values[i]);
+            }
           }
           break;
         default:
