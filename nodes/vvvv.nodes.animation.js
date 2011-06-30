@@ -176,8 +176,9 @@ VVVV.Nodes.Delay = function(id, graph) {
           break;
         }
       }
-      if (!found)
+      if (!found && outputOut.values[i]!=0.0) {
         outputOut.setValue(i, 0.0);
+      }
     }
     
   }
