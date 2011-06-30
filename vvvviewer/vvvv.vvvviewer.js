@@ -198,6 +198,10 @@ VVVV.VVVViewer = function(graph, selector) {
       .text(function(d) { return d; });
   }
   
+  this.destroy = function() {
+    $(selector).empty();
+  }
+  
   graph.afterEvaluate = this.redraw;
   
 }
