@@ -150,9 +150,16 @@ VVVV.Nodes.Delay = function(id, graph) {
     
     var maxSize = this.getMaxInputSliceCount();
     now = new Date().getTime();
+    var pinChanged = inputIn.pinIsChanged();
     
+    if (inputIn.getValue(0)==undefined) {
+      if (pinChanged) {
+        outputOut.setValue(0, undefined);
+      }
+      return;
+    }
     
-    if (insertIn.getValue(0)==1 && inputIn.pinIsChanged() && inputIn.getValue(0)!=undefined) {
+    if (insertIn.getValue(0)==1 && pinChanged) {
       times.pop();
       times.unshift(now);
       for (var i=0; i<inputIn.values.length; i++) {
@@ -197,15 +204,22 @@ VVVV.Nodes.Change = function(id, graph) {
   var values = [];
 
   this.evaluate = function() {
-    
     var maxSize = this.getMaxInputSliceCount();
     
-    for (var i=0; i<maxSize; i++) {
-      if (values[i]!=undefined && values[i]!=inputIn.getValue(i))
-        changeOut.setValue(i, 1);
-      else
-        changeOut.setValue(i, 0);
-      values[i] = inputIn.getValue(i);
+    if (inputIn.pinIsChanged()) {
+      for (var i=0; i<maxSize; i++) {
+        if (values[i]!=inputIn.getValue(i)) {
+          changeOut.setValue(i, 1);
+        }
+        values[i] = inputIn.getValue(i);
+      }
+    }
+    else {
+      for (var i=0; i<maxSize; i++) {
+        if (changeOut.getValue(i)==1)
+          changeOut.setValue(i, 0);
+      }
+    
     }
     
     
