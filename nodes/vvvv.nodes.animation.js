@@ -96,7 +96,6 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
       }
         
       if (pinsChanged) {
-        dt = 0;
         deltaPos[i] = undefined;
         if (filterTime>0)
           velocity[i] = (targetPos-currPos[i])/(filterTime*1000);
