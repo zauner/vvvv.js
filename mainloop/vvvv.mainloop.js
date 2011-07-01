@@ -1,7 +1,7 @@
 
 VVVV.Core.MainLoop = function(graph) {
   
-  var fps = 30;
+  var fps = 60;
   var framecount = 0;
   var dom = new VVVV.Core.DOMInterface(graph);
   var run = true;
@@ -9,9 +9,9 @@ VVVV.Core.MainLoop = function(graph) {
   function update() {
     framecount ++;
     var start = new Date().getTime();
-    dom.populateIOBoxes();
+    dom.populateInputConnectors();
     graph.evaluate();
-    dom.processOutputIOBoxes();
+    dom.processOutputConnectors();
     var elapsed = new Date().getTime()-start;
     window.status = elapsed;
     if (run)
