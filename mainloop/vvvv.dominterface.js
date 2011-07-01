@@ -1,11 +1,11 @@
 
 
-VVVV.Core.DOMInterface = function(graph) {
+VVVV.Core.DOMInterface = function(patch) {
 
   var inputConnectors = {};
   var outputConnectors = {};
   
-  _(graph.nodeList).each(function(n) {
+  _(patch.nodeList).each(function(n) {
     if (n.isIOBox) {
       if (n.inputPins["Descriptive Name"]==undefined)
         return;

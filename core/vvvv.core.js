@@ -27,7 +27,6 @@ VVVV.Core = {
     this.setValue = function(i, v) {
       this.values[i] = v;
       this.changed = true;
-      var that = this;
       _(this.links).each(function(l) {
         l.toPin.values[i] = v;
         l.toPin.changed = true;
@@ -45,7 +44,7 @@ VVVV.Core = {
     }
   },
   
-  Node: function(id, nodename, graph) {
+  Node: function(id, nodename, patch) {
   
     this.nodename = nodename;
     this.id = id;
@@ -60,28 +59,28 @@ VVVV.Core = {
     this.outputPins = {};
     this.invisiblePins = [];
     
-    this.graph = graph;
-    if (graph)
-      this.graph.nodeMap[id] = this;
+    this.patch = patch;
+    if (patch)
+      this.patch.nodeMap[id] = this;
     
     this.addInputPin = function(pinname, value) {
       pin = new VVVV.Core.Pin(pinname, value, this);
       this.inputPins[pinname] = pin;
-      this.graph.pinMap[this.id+'_'+pinname] = pin;
+      this.patch.pinMap[this.id+'_'+pinname] = pin;
       return pin;
     }
     
     this.addOutputPin = function(pinname, value) {
       pin = new VVVV.Core.Pin(pinname, value, this);
       this.outputPins[pinname] = pin;
-      this.graph.pinMap[this.id+'_'+pinname] = pin;
+      this.patch.pinMap[this.id+'_'+pinname] = pin;
       return pin;
     }
     
     this.addInvisiblePin = function(pinname, value) {
       pin = new VVVV.Core.Pin(pinname, value, this);
       this.invisiblePins.push(pin);
-      this.graph.pinMap[this.id+'_'+pinname] = pin;
+      this.patch.pinMap[this.id+'_'+pinname] = pin;
       return pin;
     }
     
@@ -113,8 +112,8 @@ VVVV.Core = {
     }
     
     this.IOBoxRows = function() {
-      if (this.graph.pinMap[this.id+"_Rows"])
-        return this.graph.pinMap[this.id+"_Rows"].getValue(0);
+      if (this.patch.pinMap[this.id+"_Rows"])
+        return this.patch.pinMap[this.id+"_Rows"].getValue(0);
       else
         return 1;
     }
@@ -208,7 +207,7 @@ VVVV.Core = {
   },
 
 
-  Graph: function(ressource, success_handler) {
+  Patch: function(ressource, success_handler) {
     this.pinMap = {};
     this.nodeMap = {};
     this.nodeList = [];
@@ -227,24 +226,24 @@ VVVV.Core = {
       return v.split(separator).filter(function(d,i) { return d!=""});
     }
     
-    var thisGraph = this;
+    var thisPatch = this;
     
     _(VVVV.Nodes).each(function(n) {
-      var x = new n(0, thisGraph);
+      var x = new n(0, thisPatch);
       console.log("Registering "+x.nodename);
-      thisGraph.nodeLibrary[x.nodename] = n;
+      thisPatch.nodeLibrary[x.nodename] = n;
     });
     
     function doLoad(xml) {
     
       $windowBounds = $(xml).find('patch > bounds[type="Window"]').first();
       if ($windowBounds.length>0) {
-        thisGraph.width = $windowBounds.attr('width')/15;
-        thisGraph.height = $windowBounds.attr('height')/15;
+        thisPatch.width = $windowBounds.attr('width')/15;
+        thisPatch.height = $windowBounds.attr('height')/15;
       }
       else {
-        thisGraph.width = 500;
-        thisGraph.height = 500;
+        thisPatch.width = 500;
+        thisPatch.height = 500;
       }
       
       $(xml).find('node').each(function() {
@@ -256,13 +255,13 @@ VVVV.Core = {
         nodename = $(this).attr('systemname')!="" ? $(this).attr('systemname') : $(this).attr('nodename');
         if (nodename==undefined)
           return;
-        thisGraph.width = Math.max(thisGraph.width, $bounds.attr('left')/15+100);
-        thisGraph.height = Math.max(thisGraph.height, $bounds.attr('top')/15+25);
+        thisPatch.width = Math.max(thisPatch.width, $bounds.attr('left')/15+100);
+        thisPatch.height = Math.max(thisPatch.height, $bounds.attr('top')/15+25);
 
-        if (thisGraph.nodeLibrary[nodename]!=undefined)
-          var n = new thisGraph.nodeLibrary[nodename]($(this).attr('id'), thisGraph);
+        if (thisPatch.nodeLibrary[nodename]!=undefined)
+          var n = new thisPatch.nodeLibrary[nodename]($(this).attr('id'), thisPatch);
         else
-          var n = new VVVV.Core.Node($(this).attr('id'), nodename, thisGraph);
+          var n = new VVVV.Core.Node($(this).attr('id'), nodename, thisPatch);
         n.x = $bounds.attr('left')/15;
         n.y = $bounds.attr('top')/15;
         n.width = $bounds.attr('width');
@@ -296,19 +295,19 @@ VVVV.Core = {
         });
         
         n.initialize();
-        thisGraph.nodeList.push(n);
+        thisPatch.nodeList.push(n);
       });
     
       $(xml).find('link').each(function() {
-        srcPin = thisGraph.pinMap[$(this).attr('srcnodeid')+'_'+$(this).attr('srcpinname')];
-        dstPin = thisGraph.pinMap[$(this).attr('dstnodeid')+'_'+$(this).attr('dstpinname')];
+        srcPin = thisPatch.pinMap[$(this).attr('srcnodeid')+'_'+$(this).attr('srcpinname')];
+        dstPin = thisPatch.pinMap[$(this).attr('dstnodeid')+'_'+$(this).attr('dstpinname')];
         
         if (srcPin==undefined)
-          srcPin = thisGraph.nodeMap[$(this).attr('srcnodeid')].addOutputPin($(this).attr('srcpinname'), undefined);
+          srcPin = thisPatch.nodeMap[$(this).attr('srcnodeid')].addOutputPin($(this).attr('srcpinname'), undefined);
         if (dstPin==undefined)
-          dstPin = thisGraph.nodeMap[$(this).attr('dstnodeid')].addInputPin($(this).attr('dstpinname'), undefined);
+          dstPin = thisPatch.nodeMap[$(this).attr('dstnodeid')].addInputPin($(this).attr('dstpinname'), undefined);
         
-        thisGraph.linkList.push(new VVVV.Core.Link(srcPin, dstPin));
+        thisPatch.linkList.push(new VVVV.Core.Link(srcPin, dstPin));
       });
     }
     
