@@ -2,6 +2,13 @@
 VVVV.Nodes.GetSliceSpreads = function(id, graph) {
   this.constructor(id, "GetSlice (Spreads)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Bin Size not implemented']
+  };
+  
   this.addInputPin("Input", [0.0], this);
   this.addInputPin("Bin Size", [1], this);
   this.addInputPin("Index", [0], this);
@@ -23,6 +30,13 @@ VVVV.Nodes.GetSliceSpreads.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.RandomSpread = function(id, graph) {
   this.constructor(id, "RandomSpread (Spreads)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: ['http://www.webdeveloper.com/forum/showthread.php?t=140572'],
+    compatibility_issues: ['Doesnt handle spreaded inputs','random result will differ from original vvvv node because of different algorithm']
+  };
   
   this.addInputPin("Input", [0.0], this);
   this.addInputPin("Width", [1.0], this);
@@ -102,6 +116,13 @@ VVVV.Nodes.RandomSpread.prototype = new VVVV.Core.Node();
 VVVV.Nodes.SortSpreads = function(id, graph) {
   this.constructor(id, "Sort (Spreads)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
   this.addInputPin("Input", [0.0], this);
   
   this.addOutputPin("Output", [0.0], this);
@@ -126,6 +147,13 @@ VVVV.Nodes.SortSpreads.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.LinearSpread = function(id, graph) {
   this.constructor(id, "LinearSpread (Spreads)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Doesnt handle alignment enum']
+  };
   
   var inputIn = this.addInputPin("Input", [0.0], this);
   var widthIn = this.addInputPin("Width", [1.0], this);
@@ -164,6 +192,13 @@ VVVV.Nodes.LinearSpread.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.AvoidNil = function(id, graph) {
   this.constructor(id, "AvoidNIL (Spreads)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
   
   var inputIn = this.addInputPin("Input", [0.0], this);
   var defaultIn = this.addInputPin("Default", [0.0], this);

@@ -3,6 +3,13 @@
 VVVV.Nodes.MouseGlobal = function(id, graph) {
   this.constructor(id, "Mouse (System Global)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Cyclic mode not supported', 'No Mouse Wheel pin', 'No Left Button Pin', 'No Right Button Pin', 'No Middle Button Pin']
+  };
+  
   
   var xOut = this.addOutputPin("X", [0], this);
   var yOut = this.addOutputPin("Y", [0], this);
@@ -32,6 +39,12 @@ VVVV.Nodes.MouseGlobal.prototype = new VVVV.Core.Node();
 VVVV.Nodes.ShellExecute = function(id, graph) {
   this.constructor(id, "ShellExecute (Windows)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['This actually does something completely different from the original node: the origin node executes a shell command, this node evals javascript code']
+  };
   
   var fileIn = this.addInputPin("File", [0], this);
   var doExecuteIn = this.addInputPin("Do Execute", [0], this);
@@ -41,6 +54,7 @@ VVVV.Nodes.ShellExecute = function(id, graph) {
   this.evaluate = function() {
     
     if (Math.round(doExecuteIn.getValue(0))>=1) {
+      console.log('executing...'+fileIn.getValue(0));
       var result = eval(fileIn.getValue(0));
       if (!result instanceof Array)
         result = [ result ];

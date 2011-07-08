@@ -2,6 +2,13 @@
 VVVV.Nodes.IOBoxString = function(id, graph) {
   this.constructor(id, "IOBox (String)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
   this.addInputPin("SliceOffset", [0], this);
   this.addInputPin("Input String", [""], this);
   
@@ -21,6 +28,13 @@ VVVV.Nodes.IOBoxString.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.SwitchStringInput = function(id, graph) {
   this.constructor(id, "Switch (String Input)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['No dynamic pin count yet']
+  };
   
   var switchIn = this.addInputPin("Switch", [0], this);
   var inputIn = []
@@ -55,6 +69,13 @@ VVVV.Nodes.SwitchStringInput.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.AddString = function(id, graph) {
   this.constructor(id, "Add (String)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['No dynamic pin count yet', 'Intersperse *Enum* not implemented']
+  };
   
   var inputIn = []
   inputIn[0] = this.addInputPin("Input 1", ["text"], this);
@@ -94,6 +115,13 @@ VVVV.Nodes.AddString.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.GetSliceString = function(id, graph) {
   this.constructor(id, "GetSlice (String)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Bin Size not implemented']
+  };
   
   var inputIn = this.addInputPin("Input", ["text"], this);
   var binSizeIn = this.addInputPin("Bin Size", [1], this);

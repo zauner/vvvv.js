@@ -1,7 +1,7 @@
 
 VVVV.Core.MainLoop = function(patch) {
   
-  var fps = 60;
+  var fps = 30;
   var framecount = 0;
   var dom = new VVVV.Core.DOMInterface(patch);
   var run = true;
@@ -14,7 +14,7 @@ VVVV.Core.MainLoop = function(patch) {
     dom.processOutputConnectors();
     var elapsed = new Date().getTime()-start;
     window.status = elapsed;
-    if (run)
+    if (run) // && framecount<=150)
       window.setTimeout(update, Math.max(0, Math.round(1000/fps-elapsed)));
   }
   

@@ -2,6 +2,13 @@
 VVVV.Nodes.RGBJoin = function(id, graph) {
   this.constructor(id, "RGB (Color Join)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
   var redPin = this.addInputPin("Red", [1.0], this);
   var greenPin = this.addInputPin("Green", [1.0], this);
   var bluePin = this.addInputPin("Blue", [1.0], this);

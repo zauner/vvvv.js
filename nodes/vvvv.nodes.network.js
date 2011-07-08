@@ -2,6 +2,13 @@
 VVVV.Nodes.HTTPGet = function(id, graph) {
   this.constructor(id, "HTTP (Network Get)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Doesnt handle get variables yet','Doesnt support proxies','No header output pin yet']
+  };
+  
   var urlIn = this.addInputPin("URL", ["http://localhost"], this);
   var nameIn = this.addInputPin("Name", [""], this);
   var valueIn = this.addInputPin("Value", [""], this);

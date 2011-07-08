@@ -2,6 +2,13 @@
 VVVV.Nodes.LFO = function(id, graph) {
   this.constructor(id, "LFO (Animation)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Not spreadable yet']
+  };
+  
   this.addInputPin("Period", [1.0], this);
   this.addInputPin("Pause", [0], this);
   this.addInputPin("Reverse", [0], this);
@@ -56,6 +63,13 @@ VVVV.Nodes.LFO.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.LinearFilter = function(id, graph) {
   this.constructor(id, "LinearFilter (Animation)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Sometimes doesnt stop when target reached', 'Cyclic Pin not implemented', 'Acceleration and Velocitity Out are not set yet']
+  };
   
   var positionIn = this.addInputPin("Go To Position", [0.0], this);
   var filterTimeIn = this.addInputPin("FilterTime", [1.0], this);
@@ -128,6 +142,13 @@ VVVV.Nodes.LinearFilter.prototype = new VVVV.Core.Node();
 VVVV.Nodes.Delay = function(id, graph) {
   this.constructor(id, "Delay (Animation)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Reset not implemented', 'Linear Mode not implemented']
+  };
+  
   var inputIn = this.addInputPin("Input", [0.0], this);
   var timeIn = this.addInputPin("Time", [1.0], this);
   var insertIn = this.addInputPin("Insert", [1], this);
@@ -198,6 +219,13 @@ VVVV.Nodes.Delay.prototype = new VVVV.Core.Node();
 VVVV.Nodes.Change = function(id, graph) {
   this.constructor(id, "Change (Animation)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
   var inputIn = this.addInputPin("Input", [0.0], this);
   
   var changeOut = this.addOutputPin("OnChange", [0], this);
@@ -234,6 +262,13 @@ VVVV.Nodes.Change.prototype = new VVVV.Core.Node();
 VVVV.Nodes.TogEdge = function(id, graph) {
   this.constructor(id, "TogEdge (Animation)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
   var inputIn = this.addInputPin("Input", [0.0], this);
   
   var upOut = this.addOutputPin("Up Edge", [0], this);
@@ -267,6 +302,13 @@ VVVV.Nodes.TogEdge.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.FlipFlop = function(id, graph) {
   this.constructor(id, "FlipFlop (Animation)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
   
   var setIn = this.addInputPin("Set", [0], this);
   var resetIn = this.addInputPin("Reset", [0], this);
@@ -310,6 +352,13 @@ VVVV.Nodes.FlipFlop.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.SampleAndHold = function(id, graph) {
   this.constructor(id, "S+H (Animation)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
   
   var inputIn = this.addInputPin("Input", [0.0], this);
   var setIn = this.addInputPin("Set", [0], this);

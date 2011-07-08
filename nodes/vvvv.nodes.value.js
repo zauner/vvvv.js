@@ -4,6 +4,13 @@ VVVV.Nodes = {}
 VVVV.Nodes.AddValue = function(id, graph) {
   this.constructor(id, "Add (Value)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['No dynamic pin count yet']
+  };
+  
   this.addInputPin("Input 1", [0.0], this);
   this.addInputPin("Input 2", [0.0], this);
   
@@ -28,6 +35,13 @@ VVVV.Nodes.AddValue.prototype = new VVVV.Core.Node();
 VVVV.Nodes.SubtractValue = function(id, graph) {
   this.constructor(id, "Subtract (Value)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['No dynamic pin count yet']
+  };
+  
   var input1In = this.addInputPin("Input 1", [0.0], this);
   var input2In = this.addInputPin("Input 2", [0.0], this);
   
@@ -51,6 +65,13 @@ VVVV.Nodes.SubtractValue.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.EqValue = function(id, graph) {
   this.constructor(id, "EQ (Value)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Epsilon not implemented yet']
+  };
   
   var input1In = this.addInputPin("Input 1", [0.0], this);
   var input2In = this.addInputPin("Input 2", [0.0], this);
@@ -83,6 +104,13 @@ VVVV.Nodes.EqValue.prototype = new VVVV.Core.Node();
 VVVV.Nodes.GtValue = function(id, graph) {
   this.constructor(id, "GT (Value)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['No dynamic pin count yet']
+  };
+  
   var input1In = this.addInputPin("Input 1", [0.0], this);
   var input2In = this.addInputPin("Input 2", [0.0], this);
   
@@ -109,6 +137,13 @@ VVVV.Nodes.GtValue.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.LtValue = function(id, graph) {
   this.constructor(id, "LT (Value)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['No dynamic pin count yet']
+  };
   
   var input1In = this.addInputPin("Input 1", [0.0], this);
   var input2In = this.addInputPin("Input 2", [0.0], this);
@@ -137,6 +172,13 @@ VVVV.Nodes.LtValue.prototype = new VVVV.Core.Node();
 VVVV.Nodes.MultiplyValue = function(id, graph) {
   this.constructor(id, "Multiply (Value)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['No dynamic pin count yet']
+  };
+  
   this.addInputPin("Input 1", [0.0], this);
   this.addInputPin("Input 2", [0.0], this);
   
@@ -161,6 +203,13 @@ VVVV.Nodes.MultiplyValue.prototype = new VVVV.Core.Node();
 VVVV.Nodes.DivideValue = function(id, graph) {
   this.constructor(id, "Divide (Value)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
   var input1In = this.addInputPin("Input", [0.0], this);
   var input2In = this.addInputPin("Input 2", [0.0], this);
   
@@ -184,6 +233,13 @@ VVVV.Nodes.DivideValue.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.IOBoxValueAdvanced = function(id, graph) {
   this.constructor(id, "IOBox (Value Advanced)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
   
   this.addInputPin("SliceOffset", [0], this);
   this.addInputPin("X Input Value", [0.0], this);
@@ -216,14 +272,23 @@ VVVV.Nodes.IOBoxValueAdvanced.prototype = new VVVV.Core.Node();
 VVVV.Nodes.CountValue = function(id, graph) {
   this.constructor(id, "Count (Value)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
   this.addInputPin("Input", [0.0], this);
   
   this.addOutputPin("Count", [1.0], this);
   this.addOutputPin("High", [0.0], this);
 
   this.evaluate = function() {
-    this.outputPins["Count"].setValue(0, this.inputPins["Input"].values.length);
-    this.outputPins["High"].setValue(0, this.inputPins["Input"].values.length-1);
+    if (this.inputPins["Input"].pinIsChanged()) {
+      this.outputPins["Count"].setValue(0, this.inputPins["Input"].values.length);
+      this.outputPins["High"].setValue(0, this.inputPins["Input"].values.length-1);
+    }
   }
 
 }
@@ -233,6 +298,13 @@ VVVV.Nodes.CountValue.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.SwitchValueInput = function(id, graph) {
   this.constructor(id, "Switch (Value Input)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['No dynamic pin count yet']
+  };
   
   var switchIn = this.addInputPin("Switch", [0], this);
   var inputIn = []
@@ -255,7 +327,7 @@ VVVV.Nodes.SwitchValueInput = function(id, graph) {
         return;
       }
       for (var i=0; i<maxSize; i++) {
-        outputOut.setValue(i, inputIn[switchIn.getValue(i)%inputIn.length].getValue(i));
+        outputOut.setValue(i, inputIn[Math.round(switchIn.getValue(i))%inputIn.length].getValue(i));
       }
     }
   }
@@ -267,6 +339,13 @@ VVVV.Nodes.SwitchValueInput.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.SelectValue = function(id, graph) {
   this.constructor(id, "Select (Value)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
   
   var inputIn = this.addInputPin("Input", [0.0], this);
   var selectIn = this.addInputPin("Select", [1], this);
@@ -303,6 +382,13 @@ VVVV.Nodes.SelectValue.prototype = new VVVV.Core.Node();
 VVVV.Nodes.AsString = function(id, graph) {
   this.constructor(id, "AsString (Value)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['SubType not implemented, always returns float formatting']
+  };
+  
   var inputIn = this.addInputPin("Input", [0.0], this);
   var subtypeIn = this.addInputPin("SubType", [''], this);
   
@@ -327,6 +413,13 @@ VVVV.Nodes.AsString.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.Frac = function(id, graph) {
   this.constructor(id, "Frac (Value)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
   
   var inputIn = this.addInputPin("Input", [0.0], this);
   
