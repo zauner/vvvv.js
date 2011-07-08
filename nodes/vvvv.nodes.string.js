@@ -2,6 +2,7 @@
 VVVV.Nodes.IOBoxString = function(id, graph) {
   this.constructor(id, "IOBox (String)", graph);
   
+  this.addInputPin("SliceOffset", [0], this);
   this.addInputPin("Input String", [""], this);
   
   this.addOutputPin("Output String", [""], this);
@@ -33,7 +34,7 @@ VVVV.Nodes.SwitchStringInput = function(id, graph) {
     
     var pinsChanged = switchIn.pinIsChanged();
     for (var i=0; i<inputIn.length; i++) {
-      pinsChanged = pinsChanged || inputIn[i].pinIsChanged();
+      pinsChanged = inputIn[i].pinIsChanged() || pinsChanged;
     }
     
     if (pinsChanged) {
@@ -107,7 +108,8 @@ VVVV.Nodes.GetSliceString = function(id, graph) {
       outputOut.values = [];
       
       for (var i=0; i<indexIn.values.length; i++) {
-        outputOut.setValue(i, inputIn.getValue(indexIn.getValue(i)));
+        
+        outputOut.setValue(i, inputIn.getValue(Math.round((indexIn.getValue(i)))));
       }
     }
   }
