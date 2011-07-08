@@ -236,7 +236,7 @@ VVVV.Core = {
     
     function doLoad(xml) {
     
-      $windowBounds = $(xml).find('patch > bounds[type="Window"]').first();
+      $windowBounds = $(xml).find('bounds[type="Window"]').first();
       if ($windowBounds.length>0) {
         thisPatch.width = $windowBounds.attr('width')/15;
         thisPatch.height = $windowBounds.attr('height')/15;
@@ -272,17 +272,23 @@ VVVV.Core = {
         if (/\.fx$/.test($(this).attr('nodename')))
           n.isShader = true;
         
+        // PINS
         var that = this;
         $(this).find('pin').each(function() {
           pinname = $(this).attr('pinname');
           values = splitValues($(this).attr('values'));
+          
+          // if the output pin already exists (because the node created it), skip
           if (n.outputPins[pinname]!=undefined)
             return;
+            
+          // the input pin already exists (because the node created it), don't add it, but set values, if present in the xml
           if (n.inputPins[pinname]!=undefined) {
             if (values!=undefined)
               n.inputPins[pinname].values = values;
             return;
           }
+          
           if ($(this).attr('visible')==1 || $(this).attr('slicecount')!=undefined)
           {
             if ($(xml).find('link[srcnodeid='+n.id+']').filter('link[srcpinname='+pinname.replace(/[\[\]]/,'')+']').length > 0) // if it's an input pin
@@ -296,8 +302,10 @@ VVVV.Core = {
         
         n.initialize();
         thisPatch.nodeList.push(n);
+        
       });
     
+      // add pins which are either defined in the node, nor defined in the xml, but only appeare in the links (this is the case with shaders)
       $(xml).find('link').each(function() {
         srcPin = thisPatch.pinMap[$(this).attr('srcnodeid')+'_'+$(this).attr('srcpinname')];
         dstPin = thisPatch.pinMap[$(this).attr('dstnodeid')+'_'+$(this).attr('dstpinname')];
@@ -342,8 +350,12 @@ VVVV.Core = {
         //console.log('upstream nodes valid, calculating and deleting '+node.nodename);
         
         node.evaluate();
+        _(node.inputPins).each(function(inPin) {
+          inPin.changed = false;
+        });
         
-        /**
+        
+        /*
          *_(node.getDownstreamNodes()).each(function(downnode) {
          *  evaluateSubGraph(downnode);
          *});
