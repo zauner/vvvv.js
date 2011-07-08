@@ -124,26 +124,29 @@ VVVV.Core.DOMInterface = function(patch) {
       return;
     var values = ioboxConn.node.IOBoxInputPin().values;
     var elemCount = $(ioboxConn.selector).length;
-    if (ioboxConn.property_class==undefined)
+    if (ioboxConn.property_class==undefined) {
       $(ioboxConn.selector).empty();
+      $(ioboxConn.selector).val('');
+    }
     for (var i=0; i<Math.max(values.length, elemCount); i++) {
       var j = i%elemCount;
       var k = i%values.length;
+      var $elem = $(ioboxConn.selector).eq(j);
       
       if (ioboxConn.property_class==undefined) {
-        switch (this.nodeName) {
-          case "INPUT": $(ioboxConn.selector).eq(j).val($(ioboxConn.selector).eq(j).val()+values[k]);
+        switch ($elem[0].nodeName) {
+          case "INPUT": $elem.val($(ioboxConn.selector).eq(j).val()+values[k]);
             break;
-          default: $(ioboxConn.selector).eq(j).html($(ioboxConn.selector).eq(j).html()+values[k]);
+          default: $elem.html($(ioboxConn.selector).eq(j).html()+values[k]);
         }
       }
       
       if (ioboxConn.property_class=="attribute") {
-        $(ioboxConn.selector).eq(j).attr(ioboxConn.property, values[k]);
+        $elem.attr(ioboxConn.property, values[k]);
       }
       
       if (ioboxConn.property_class=="style") {
-        $(ioboxConn.selector).eq(j).css(ioboxConn.property, values[k]);
+        $elem.css(ioboxConn.property, values[k]);
       }
     }
     
