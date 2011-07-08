@@ -185,14 +185,23 @@ VVVV.Nodes.DivideValue.prototype = new VVVV.Core.Node();
 VVVV.Nodes.IOBoxValueAdvanced = function(id, graph) {
   this.constructor(id, "IOBox (Value Advanced)", graph);
   
+  this.addInputPin("SliceOffset", [0], this);
+  this.addInputPin("X Input Value", [0.0], this);
   this.addInputPin("Y Input Value", [0.0], this);
   
+  this.addOutputPin("X Output Value", [0.0], this);
   this.addOutputPin("Y Output Value", [0.0], this);
 
   this.evaluate = function() {
     if (this.inputPins["Y Input Value"].pinIsChanged()) {
       for (var i=0; i<this.inputPins["Y Input Value"].values.length; i++) {
         this.outputPins["Y Output Value"].setValue(i, parseFloat(this.inputPins["Y Input Value"].values[i]));
+      }
+    }
+    
+    if (this.inputPins["X Input Value"].pinIsChanged()) {
+      for (var i=0; i<this.inputPins["X Input Value"].values.length; i++) {
+        this.outputPins["X Output Value"].setValue(i, parseFloat(this.inputPins["X Input Value"].values[i]));
       }
     }
   }
