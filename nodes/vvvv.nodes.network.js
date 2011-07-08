@@ -12,20 +12,32 @@ VVVV.Nodes.HTTPGet = function(id, graph) {
   var failOut = this.addOutputPin("Fail", [0], this);
   var successOut = this.addOutputPin("Success", [0], this);
   
-  var doResetOutPins = 0;
+  var body;
+  var status;
+  var success;
+  var fail;
+  
+  var requestComplete = false;
+  
+  var doResetOutPins = -1;
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
     
     var pinsChanged = urlIn.pinIsChanged() || nameIn.pinIsChanged() || valueIn.pinIsChanged() || (refreshIn.pinIsChanged() && refreshIn.getValue(0)==1);
     
-    if (doResetOutPins>=1) {
+    if (successOut.getValue(0)==1)
+      successOut.setValue(0,0);
+    if (failOut.getValue(0)==1)
       failOut.setValue(0, 0);
-      successOut.setValue(0, 0);
-      doResetOutPins = -1;
+    
+    if (requestComplete) {
+      bodyOut.setValue(0, body);
+      statusOut.setValue(0, status);
+      successOut.setValue(0, success);
+      failOut.setValue(0, fail);
+      requestComplete = false;
     }
-    if (doResetOutPins>=0)
-      doResetOutPins++;
     
     if (pinsChanged) {
       var i = 0;
@@ -38,16 +50,16 @@ VVVV.Nodes.HTTPGet = function(id, graph) {
         url: urlIn.getValue(i),
         type: 'get',
         success: function(response, status, xhr) {
-          bodyOut.setValue(0, response);
-          statusOut.setValue(0, xhr.status);
-          successOut.setValue(0, 1);
-          doResetOutPins = 0;
+          body = response;
+          status = xhr.status;
+          success = 1;
+          requestComplete = true;
         },
         error: function(xhr, status) {
-          bodyOut.setValue(0, '');
-          failOut.setValue(0, 1);
-          statusOut.setValue(0, xhr.status);
-          doResetOutPins = 0;
+          body = '';
+          fail = 1;
+          status = xhr.status;
+          requestComplete = true;
         }
       });
     }
