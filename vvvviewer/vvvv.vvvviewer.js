@@ -89,8 +89,8 @@ VVVV.VVVViewer = function(graph, selector) {
           pinOffset = (d.node.getWidth()-4)/(_(d.node.inputPins).size()-1);
         d.y = 0;
         d.x = i*pinOffset;
-        if (d.node.isIOBox)
-          d.x = d.node.getWidth() - d.x - 4;
+        //if (d.node.isIOBox)
+        //  d.x = d.node.getWidth() - d.x - 4;
         return 'translate('+d.x+', 0)';
       })
       
@@ -135,8 +135,8 @@ VVVV.VVVViewer = function(graph, selector) {
           pinOffset = (d.node.getWidth()-4)/(_(d.node.outputPins).size()-1);
         d.y = d.node.getHeight()-4;
         d.x = i*pinOffset;
-        if (d.node.isIOBox)
-          d.x = d.node.getWidth() - d.x - 4;
+        //if (d.node.isIOBox)
+        //  d.x = d.node.getWidth() - d.x - 4;
         return 'translate('+d.x+', '+d.y+')';
       });
       
