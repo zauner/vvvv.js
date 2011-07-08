@@ -176,8 +176,9 @@ VVVV.Nodes.Delay = function(id, graph) {
       var found = false;
       for (j=0; j<1024; j++) {
         if (times[j]<=dt) {
-          if (outputOut.values[i]!=queue[i%queue.length][j])
+          if (outputOut.values[i]!=queue[i%queue.length][j]) {
             outputOut.setValue(i, queue[i%queue.length][j]);
+          }
           found = true;
           break;
         }
@@ -245,16 +246,14 @@ VVVV.Nodes.TogEdge = function(id, graph) {
     var maxSize = this.getMaxInputSliceCount();
     
     for (var i=0; i<maxSize; i++) {
-      if (values[i]!=undefined) {
-        if (Math.round(values[i])<=0 && Math.round(inputIn.getValue(i))>=1)
-          upOut.setValue(i, 1);
-        else
-          upOut.setValue(i, 0);
-        if (Math.round(values[i])>=1 && Math.round(inputIn.getValue(i))<=0)
-          downOut.setValue(i, 1);
-        else
-          downOut.setValue(i, 0);
-      }
+      if ((Math.round(values[i])<=0 || values[i]==undefined) && Math.round(inputIn.getValue(i))>=1)
+        upOut.setValue(i, 1);
+      else if (upOut.values[i]!=0)
+        upOut.setValue(i, 0);
+      if (Math.round(values[i])>=1 && Math.round(inputIn.getValue(i))<=0)
+        downOut.setValue(i, 1);
+      else if (downOut.values[i]!=0)
+        downOut.setValue(i, 0);
       values[i] = inputIn.getValue(i);
     }
     
