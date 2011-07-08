@@ -212,7 +212,6 @@ VVVV.Core = {
     this.nodeMap = {};
     this.nodeList = [];
     this.linkList = [];
-    this.nodeLibrary = {};
     
     this.success = success_handler;
     
@@ -227,12 +226,6 @@ VVVV.Core = {
     }
     
     var thisPatch = this;
-    
-    _(VVVV.Nodes).each(function(n) {
-      var x = new n(0, thisPatch);
-      console.log("Registering "+x.nodename);
-      thisPatch.nodeLibrary[x.nodename] = n;
-    });
     
     function doLoad(xml) {
     
@@ -258,8 +251,8 @@ VVVV.Core = {
         thisPatch.width = Math.max(thisPatch.width, $bounds.attr('left')/15+100);
         thisPatch.height = Math.max(thisPatch.height, $bounds.attr('top')/15+25);
 
-        if (thisPatch.nodeLibrary[nodename]!=undefined)
-          var n = new thisPatch.nodeLibrary[nodename]($(this).attr('id'), thisPatch);
+        if (VVVV.NodeLibrary[nodename]!=undefined)
+          var n = new VVVV.NodeLibrary[nodename]($(this).attr('id'), thisPatch);
         else
           var n = new VVVV.Core.Node($(this).attr('id'), nodename, thisPatch);
         n.x = $bounds.attr('left')/15;
