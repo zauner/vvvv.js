@@ -12,7 +12,7 @@ VVVV.Nodes.GetSliceSpreads = function(id, graph) {
     this.outputPins["Output"].values = [];
     
     for (var i=0; i<this.inputPins["Index"].values.length; i++) {
-      this.outputPins["Output"].setValue(i, parseFloat(this.inputPins["Input"].getValue(this.inputPins["Index"].getValue(i))));
+      this.outputPins["Output"].setValue(i, parseFloat(this.inputPins["Input"].getValue(Math.round(this.inputPins["Index"].getValue(i)))));
     }
   }
 
@@ -159,3 +159,31 @@ VVVV.Nodes.LinearSpread = function(id, graph) {
 
 }
 VVVV.Nodes.LinearSpread.prototype = new VVVV.Core.Node();
+
+
+
+VVVV.Nodes.AvoidNil = function(id, graph) {
+  this.constructor(id, "AvoidNIL (Spreads)", graph);
+  
+  var inputIn = this.addInputPin("Input", [0.0], this);
+  var defaultIn = this.addInputPin("Default", [0.0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+
+  this.evaluate = function() {
+    if (inputIn.pinIsChanged() || defaultIn.pinIsChanged()) {
+      var source = inputIn;
+      if (inputIn.values[0]==undefined) {
+        source = defaultIn;
+      }
+      outputOut.values = [];
+      for (var i=0; i<source.values.length; i++) {
+        outputOut.setValue(i, source.getValue(i));
+      }
+    }
+    
+
+  }
+
+}
+VVVV.Nodes.AvoidNil.prototype = new VVVV.Core.Node();
