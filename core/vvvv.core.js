@@ -240,6 +240,7 @@ VVVV.Core = {
       }
       
       $(xml).find('node').each(function() {
+      
         if ($(this).attr('componentmode')=="InABox")
           $bounds = $(this).find('bounds[type="Box"]').first();
         else
@@ -250,6 +251,8 @@ VVVV.Core = {
           return;
         thisPatch.width = Math.max(thisPatch.width, $bounds.attr('left')/15+100);
         thisPatch.height = Math.max(thisPatch.height, $bounds.attr('top')/15+25);
+        
+        $(nodelist_xml).find('node[systemname="'+nodename+'"]').length;
 
         if (VVVV.NodeLibrary[nodename]!=undefined)
           var n = new VVVV.NodeLibrary[nodename]($(this).attr('id'), thisPatch);
