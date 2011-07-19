@@ -195,7 +195,7 @@ VVVV.Nodes.AvoidNil = function(id, graph) {
   
   this.meta = {
     authors: ['Matthias Zauner'],
-    original_authors: ['VVVV Group'],
+    original_authors: ['Kalle'],
     credits: [],
     compatibility_issues: []
   };
@@ -222,3 +222,36 @@ VVVV.Nodes.AvoidNil = function(id, graph) {
 
 }
 VVVV.Nodes.AvoidNil.prototype = new VVVV.Core.Node();
+
+
+
+VVVV.Nodes.SwapDim = function(id, graph) {
+  this.constructor(id, "SwapDim (Spreads)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['BinSize not implemented']
+  };
+  
+  var inputIn = this.addInputPin("Input", [0.0], this);
+  var columnCountIn = this.addInputPin("Column Count", [0.0], this);
+  var rowCountIn = this.addInputPin("Row Count", [0.0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+
+  this.evaluate = function() {
+    if (inputIn.pinIsChanged() || rowCountIn.pinIsChanged() || columnCountIn.pinIsChanged()) {
+      var columnCount = parseInt(columnCountIn.getValue(0));
+      var rowCount = parseInt(rowCountIn.getValue(0));
+      for (var i=0; i<inputIn.values.length; i++) {
+        outputOut.setValue(i % columnCount * rowCount + i / columnCount, inputIn.getValue(i));
+      }
+    }
+    
+
+  }
+
+}
+VVVV.Nodes.SwapDim.prototype = new VVVV.Core.Node();

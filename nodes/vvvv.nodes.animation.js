@@ -240,6 +240,8 @@ VVVV.Nodes.Change = function(id, graph) {
         if (values[i]!=inputIn.getValue(i)) {
           changeOut.setValue(i, 1);
         }
+        else if (changeOut.getValue(i)==1)
+          changeOut.setValue(i, 0);
         values[i] = inputIn.getValue(i);
       }
     }
@@ -248,7 +250,7 @@ VVVV.Nodes.Change = function(id, graph) {
         if (changeOut.getValue(i)==1)
           changeOut.setValue(i, 0);
       }
-    
+      values[i] = inputIn.getValue(i);
     }
     
     

@@ -1,3 +1,10 @@
+if(!window.console) {
+	window.console = {
+		log : function(str) {
+		}
+	};
+}
+
 function initVVVV(path_to_vvvv, mode) {
 
   console.log('loading vvvv.js ...');
@@ -22,6 +29,7 @@ function initVVVV(path_to_vvvv, mode) {
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.animation.js"></script>'));
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.network.js"></script>'));
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.system.js"></script>'));
+    $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.canvas.js"></script>'));
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.transform.js"></script>'));
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.webgl.js"></script>'));
   }
@@ -30,6 +38,8 @@ function initVVVV(path_to_vvvv, mode) {
   }
   
   console.log('done ...');
+  
+  
   
 }
 
@@ -42,4 +52,6 @@ VVVV.NodeLibrary = {};
     console.log("Registering "+x.nodename);
     VVVV.NodeLibrary[x.nodename] = n;
   });
+
+
 
