@@ -1,9 +1,9 @@
-VVVV.js - Visual Webclient Programming
+VVVV.js - Visual Web Client Programming
 ======================================
 
 www.zauner900.net/vvvv_js
 
-**An open project, which aims to bringing the visual programming language VVVV to your web browser.**
+**An open project, which aims to bring the visual programming language VVVV to your web browser.**
 
 
 Setup / Run
