@@ -1,21 +1,21 @@
 
 
 $(document).ready(function() {
-  initVVVV('../', 'full');
+  //initVVVV('../', 'full');
 
   $('#patchxml').bind('paste', function() {
     setTimeout(function() {
-      var graph = new VVVV.Core.Graph($('#patchxml').val());
-      VVVV.Core.MainLoop.run(graph);
-      var vvvviewer = new VVVV.VVVViewer(graph, '#patch2');
+      var patch = new VVVV.Core.Patch($('#patchxml').val());
+      var mainloop = new VVVV.Core.MainLoop(patch);
+      var vvvviewer = new VVVV.VVVViewer(patch, '#patch2');
       $('#patchxml').remove();
     }, 100);
   });
   
   $('#visualizecode').click(function() {
-    var graph1 = new VVVV.Core.Graph($('#patch1').text());
-    VVVV.Core.MainLoop.run(graph1);
-    var vvvviewer = new VVVV.VVVViewer(graph1, '#patch1');
+    var patch1 = new VVVV.Core.Patch($('#patch1').text());
+    var mainloop1 = new VVVV.Core.MainLoop(patch1);
+    var vvvviewer = new VVVV.VVVViewer(patch1, '#patch1');
   });
   
   $('#loadpatchfile').click(function() {
@@ -24,9 +24,9 @@ $(document).ready(function() {
       type: 'get',
       dataType: 'text',
       success: function(r) {
-        var graph3 = new VVVV.Core.Graph(r);
-        VVVV.Core.MainLoop.run(graph3);
-        var vvvviewer = new VVVV.VVVViewer(graph3, '#patch3');
+        var patch3 = new VVVV.Core.Patch(r);
+        var mainloop3 = new VVVV.Core.MainLoop(patch3);
+        var vvvviewer = new VVVV.VVVViewer(patch3, '#patch3');
       }
     });
     return false;

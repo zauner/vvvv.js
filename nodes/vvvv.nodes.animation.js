@@ -2,6 +2,13 @@
 VVVV.Nodes.LFO = function(id, graph) {
   this.constructor(id, "LFO (Animation)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Not spreadable yet']
+  };
+  
   this.addInputPin("Period", [1.0], this);
   this.addInputPin("Pause", [0], this);
   this.addInputPin("Reverse", [0], this);
@@ -57,6 +64,13 @@ VVVV.Nodes.LFO.prototype = new VVVV.Core.Node();
 VVVV.Nodes.LinearFilter = function(id, graph) {
   this.constructor(id, "LinearFilter (Animation)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Sometimes doesnt stop when target reached', 'Cyclic Pin not implemented', 'Acceleration and Velocitity Out are not set yet']
+  };
+  
   var positionIn = this.addInputPin("Go To Position", [0.0], this);
   var filterTimeIn = this.addInputPin("FilterTime", [1.0], this);
   
@@ -83,11 +97,12 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
       if (lastUpdate[i]==undefined)
         lastUpdate[i] = new Date().getTime();
       var dt = new Date().getTime()-lastUpdate[i];
-      if (currPos[i]==undefined)
-        currPos[i] = 0.0;
         
       var targetPos = parseFloat(positionIn.getValue(i));
       var filterTime = parseFloat(filterTimeIn.getValue(i));
+      
+      if (currPos[i]==undefined)
+        currPos[i] = targetPos;
       
       if (!isFinite(targetPos) || !isFinite(filterTime)) {
         currPos[i] = undefined;
@@ -96,7 +111,6 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
       }
         
       if (pinsChanged) {
-        dt = 0;
         deltaPos[i] = undefined;
         if (filterTime>0)
           velocity[i] = (targetPos-currPos[i])/(filterTime*1000);
@@ -123,3 +137,256 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
 
 }
 VVVV.Nodes.LinearFilter.prototype = new VVVV.Core.Node();
+
+
+
+VVVV.Nodes.Delay = function(id, graph) {
+  this.constructor(id, "Delay (Animation)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Reset not implemented', 'Linear Mode not implemented']
+  };
+  
+  var inputIn = this.addInputPin("Input", [0.0], this);
+  var timeIn = this.addInputPin("Time", [1.0], this);
+  var insertIn = this.addInputPin("Insert", [1], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+  
+  var queue = [];
+  var times = new Array(1024);
+  
+  /*function reset(value) {
+    for (var i=0; i<1024; i++) {
+      queue[i] = value;
+      times[i] = 0.0;
+    }
+  }
+  reset(0.0);
+  */
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    now = new Date().getTime();
+    var pinChanged = inputIn.pinIsChanged();
+    
+    if (inputIn.getValue(0)==undefined) {
+      if (pinChanged) {
+        outputOut.setValue(0, undefined);
+      }
+      return;
+    }
+    
+    if (insertIn.getValue(0)==1 && pinChanged) {
+      times.pop();
+      times.unshift(now);
+      for (var i=0; i<inputIn.values.length; i++) {
+        if (queue[i]==undefined)
+          queue[i] = new Array(1024);
+        if (queue[i].length>=1024)
+          queue[i].pop();
+        queue[i].unshift(inputIn.getValue(i));
+      }
+    }
+    
+    for (var i=0; i<maxSize; i++) {
+      var dt = now - timeIn.getValue(i)*1000;
+      var found = false;
+      for (j=0; j<1024; j++) {
+        if (times[j]<=dt) {
+          if (outputOut.values[i]!=queue[i%queue.length][j]) {
+            outputOut.setValue(i, queue[i%queue.length][j]);
+          }
+          found = true;
+          break;
+        }
+      }
+      if (!found && outputOut.values[i]!=0.0) {
+        outputOut.setValue(i, 0.0);
+      }
+    }
+    
+  }
+
+}
+VVVV.Nodes.Delay.prototype = new VVVV.Core.Node();
+
+
+
+VVVV.Nodes.Change = function(id, graph) {
+  this.constructor(id, "Change (Animation)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var inputIn = this.addInputPin("Input", [0.0], this);
+  
+  var changeOut = this.addOutputPin("OnChange", [0], this);
+  
+  var values = [];
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    if (inputIn.pinIsChanged()) {
+      for (var i=0; i<maxSize; i++) {
+        if (values[i]!=inputIn.getValue(i)) {
+          changeOut.setValue(i, 1);
+        }
+        else if (changeOut.getValue(i)==1)
+          changeOut.setValue(i, 0);
+        values[i] = inputIn.getValue(i);
+      }
+    }
+    else {
+      for (var i=0; i<maxSize; i++) {
+        if (changeOut.getValue(i)==1)
+          changeOut.setValue(i, 0);
+      }
+      values[i] = inputIn.getValue(i);
+    }
+    
+    
+  }
+
+}
+VVVV.Nodes.Change.prototype = new VVVV.Core.Node();
+
+
+
+VVVV.Nodes.TogEdge = function(id, graph) {
+  this.constructor(id, "TogEdge (Animation)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var inputIn = this.addInputPin("Input", [0.0], this);
+  
+  var upOut = this.addOutputPin("Up Edge", [0], this);
+  var downOut = this.addOutputPin("Down Edge", [0], this);
+  
+  var values = [];
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      if ((Math.round(values[i])<=0 || values[i]==undefined) && Math.round(inputIn.getValue(i))>=1)
+        upOut.setValue(i, 1);
+      else if (upOut.values[i]!=0)
+        upOut.setValue(i, 0);
+      if (Math.round(values[i])>=1 && Math.round(inputIn.getValue(i))<=0)
+        downOut.setValue(i, 1);
+      else if (downOut.values[i]!=0)
+        downOut.setValue(i, 0);
+      values[i] = inputIn.getValue(i);
+    }
+    
+    
+  }
+
+}
+VVVV.Nodes.TogEdge.prototype = new VVVV.Core.Node();
+
+
+
+VVVV.Nodes.FlipFlop = function(id, graph) {
+  this.constructor(id, "FlipFlop (Animation)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var setIn = this.addInputPin("Set", [0], this);
+  var resetIn = this.addInputPin("Reset", [0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0], this);
+  var inverseOutputOut = this.addOutputPin("Inverse Output", [1], this);
+  
+  var initialized = false;
+  
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    if (setIn.pinIsChanged() || resetIn.pinIsChanged()) {
+      for (var i=0; i<maxSize; i++) {
+        var result = undefined;
+        if (Math.round(resetIn.getValue(i))>=1)
+          result = 0;
+        if (Math.round(setIn.getValue(i))>=1)
+          result = 1;
+        if (result!=undefined) {
+          outputOut.setValue(i, result);
+          inverseOutputOut.setValue(i, 1-result);
+        }
+        else if (!initialized) {
+          outputOut.setValue(i, 0);
+          inverseOutputOut.setValue(i, 1);
+        }
+      }
+    }
+    initialized = true;
+
+  }
+
+}
+VVVV.Nodes.FlipFlop.prototype = new VVVV.Core.Node();
+
+
+
+
+VVVV.Nodes.SampleAndHold = function(id, graph) {
+  this.constructor(id, "S+H (Animation)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var inputIn = this.addInputPin("Input", [0.0], this);
+  var setIn = this.addInputPin("Set", [0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+  
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    if (setIn.pinIsChanged() || inputIn.pinIsChanged()) {
+      for (var i=0; i<maxSize; i++) {
+        if (outputOut.values[i]==undefined) {
+          outputOut.setValue(i, 0);
+        }
+        if (Math.round(setIn.getValue(i))>=1) {
+          outputOut.setValue(i, inputIn.getValue(i));
+        }
+      }
+    }
+    
+    
+  }
+
+}
+VVVV.Nodes.SampleAndHold.prototype = new VVVV.Core.Node();
+

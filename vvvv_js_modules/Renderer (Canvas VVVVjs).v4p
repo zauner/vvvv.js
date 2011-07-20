@@ -1,0 +1,59 @@
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta25.1.dtd" >
+   <PATCH nodename="E:\vvvvnodes\vvvv_45beta25.1\modules\vvvv_js\Renderer (Canvas VVVVjs).vp4.v4p" filename="E:\vvvvnodes\vvvv_45beta25.1\modules\vvvv_js\Renderer (Canvas VVVVjs).vp4.v4p" systemname="Renderer (Canvas VVVVjs)">
+   <BOUNDS height="9855" left="2625" top="3735" type="Window" width="10500">
+   </BOUNDS>
+   <NODE componentmode="InABox" id="0" nodename="Renderer (GDI)" systemname="Renderer (GDI)">
+   <BOUNDS height="100" left="705" top="1620" type="Node" width="100">
+   </BOUNDS>
+   <BOUNDS height="6825" left="705" top="1620" type="Box" width="8385">
+   </BOUNDS>
+   <BOUNDS height="4860" left="7485" top="6105" type="Window" width="6120">
+   </BOUNDS>
+   <PIN pinname="Layers" slicecount="1" visible="1" values="||">
+   </PIN>
+   <PIN pinname="Background Color" visible="1">
+   </PIN>
+   <PIN pinname="Clear" visible="1">
+   </PIN>
+   </NODE>
+   <NODE componentmode="InABox" id="2" nodename="IOBox (Node)" systemname="IOBox (Node)">
+   <BOUNDS height="100" left="705" top="315" type="Node" width="100">
+   </BOUNDS>
+   <BOUNDS height="240" left="705" top="315" type="Box" width="795">
+   </BOUNDS>
+   <PIN pinname="Descriptive Name" slicecount="1" values="Layers">
+   </PIN>
+   <PIN pinname="Output Node" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="0" dstpinname="Layers" srcnodeid="2" srcpinname="Output Node">
+   </LINK>
+   <NODE systemname="IOBox (Color)" nodename="IOBox (Color)" componentmode="InABox" id="3">
+   <BOUNDS type="Node" left="3165" top="330" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="3165" top="330" width="1275" height="300">
+   </BOUNDS>
+   <PIN pinname="Descriptive Name" slicecount="1" values="|Background Color|">
+   </PIN>
+   <PIN pinname="Color Output" visible="1">
+   </PIN>
+   <PIN pinname="Color Input" slicecount="1" values="|0.00000,0.00000,0.00000,1.00000|">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="3" srcpinname="Color Output" dstnodeid="0" dstpinname="Background Color">
+   </LINK>
+   <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="4">
+   <BOUNDS type="Node" left="1785" top="405" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="1785" top="405" width="795" height="240">
+   </BOUNDS>
+   <PIN pinname="Descriptive Name" slicecount="1" values="Clear">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   <PIN pinname="Y Input Value" slicecount="1" values="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="4" srcpinname="Y Output Value" dstnodeid="0" dstpinname="Clear">
+   </LINK>
+   </PATCH>

@@ -1,3 +1,18 @@
+// VVVV.js -- Visual Webclient Programming
+// (c) 2011 Matthias Zauner
+// VVVV.js is freely distributable under the MIT license.
+// Additional authors of sub components are mentioned at the specific code locations.
+
+
+
+
+if(!window.console) {
+	window.console = {
+		log : function(str) {
+		}
+	};
+}
+
 function initVVVV(path_to_vvvv, mode) {
 
   console.log('loading vvvv.js ...');
@@ -16,9 +31,13 @@ function initVVVV(path_to_vvvv, mode) {
   
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.value.js"></script>'));
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.string.js"></script>'));
+    $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.boolean.js"></script>'));
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.color.js"></script>'));
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.spreads.js"></script>'));
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.animation.js"></script>'));
+    $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.network.js"></script>'));
+    $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.system.js"></script>'));
+    $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.canvas.js"></script>'));
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.transform.js"></script>'));
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.webgl.js"></script>'));
   }
@@ -28,4 +47,18 @@ function initVVVV(path_to_vvvv, mode) {
   
   console.log('done ...');
   
+  
+  
 }
+
+VVVV.NodeLibrary = {};
+
+var p = new VVVV.Core.Patch('');
+_(VVVV.Nodes).each(function(n) {
+  var x = new n(0, p);
+  console.log("Registering "+x.nodename);
+  VVVV.NodeLibrary[x.nodename] = n;
+});
+
+
+

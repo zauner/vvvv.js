@@ -21,8 +21,6 @@ VVVV.Core = {
     this.active = false;
     
     this.getValue = function(i) {
-      //if (this.values.length===0)
-      //  return "not calculated";
       return this.values[i%this.values.length];
     }
     
@@ -37,11 +35,6 @@ VVVV.Core = {
     
     this.pinIsChanged = function() {
       var ret = this.changed;
-      //if (this.node.nodename=='LinearFilter (Animation)') {
-      //  console.log("querying pinchanged for "+this.pinname+' of node '+this.node.id+' to changed...');
-      //  if (ret)
-      //    console.log("it changed! resetting it, though...");
-      //}
       this.changed = false;
       return ret;
     }
@@ -51,7 +44,7 @@ VVVV.Core = {
     }
   },
   
-  Node: function(id, nodename, graph) {
+  Node: function(id, nodename, patch) {
   
     this.nodename = nodename;
     this.id = id;
@@ -66,28 +59,28 @@ VVVV.Core = {
     this.outputPins = {};
     this.invisiblePins = [];
     
-    this.graph = graph;
-    if (graph)
-      this.graph.nodeMap[id] = this;
+    this.patch = patch;
+    if (patch)
+      this.patch.nodeMap[id] = this;
     
     this.addInputPin = function(pinname, value) {
       pin = new VVVV.Core.Pin(pinname, value, this);
       this.inputPins[pinname] = pin;
-      this.graph.pinMap[this.id+'_'+pinname] = pin;
+      this.patch.pinMap[this.id+'_'+pinname] = pin;
       return pin;
     }
     
     this.addOutputPin = function(pinname, value) {
       pin = new VVVV.Core.Pin(pinname, value, this);
       this.outputPins[pinname] = pin;
-      this.graph.pinMap[this.id+'_'+pinname] = pin;
+      this.patch.pinMap[this.id+'_'+pinname] = pin;
       return pin;
     }
     
     this.addInvisiblePin = function(pinname, value) {
       pin = new VVVV.Core.Pin(pinname, value, this);
       this.invisiblePins.push(pin);
-      this.graph.pinMap[this.id+'_'+pinname] = pin;
+      this.patch.pinMap[this.id+'_'+pinname] = pin;
       return pin;
     }
     
@@ -119,8 +112,8 @@ VVVV.Core = {
     }
     
     this.IOBoxRows = function() {
-      if (this.graph.pinMap[this.id+"_Rows"])
-        return this.graph.pinMap[this.id+"_Rows"].getValue(0);
+      if (this.patch.pinMap[this.id+"_Rows"])
+        return this.patch.pinMap[this.id+"_Rows"].getValue(0);
       else
         return 1;
     }
@@ -214,12 +207,13 @@ VVVV.Core = {
   },
 
 
-  Graph: function(xml) {
+  Patch: function(ressource, success_handler) {
     this.pinMap = {};
     this.nodeMap = {};
     this.nodeList = [];
     this.linkList = [];
-    this.nodeLibrary = {};
+    
+    this.success = success_handler;
     
     function splitValues(v) {
       if (v==undefined)
@@ -231,87 +225,93 @@ VVVV.Core = {
       return v.split(separator).filter(function(d,i) { return d!=""});
     }
     
-    var thisGraph = this;
+    var thisPatch = this;
     
-    _(VVVV.Nodes).each(function(n) {
-      var x = new n(0, thisGraph);
-      console.log("Registering "+x.nodename);
-      thisGraph.nodeLibrary[x.nodename] = n;
-    });
+    function doLoad(xml) {
     
-    $windowBounds = $(xml).find('patch > bounds[type="Window"]').first();
-    if ($windowBounds.length>0) {
-      this.width = $windowBounds.attr('width')/15;
-      this.height = $windowBounds.attr('height')/15;
-    }
-    else {
-      this.width = 500;
-      this.height = 500;
-    }
-    
-    $(xml).find('node').each(function() {
-      if ($(this).attr('componentmode')=="InABox")
-        $bounds = $(this).find('bounds[type="Box"]').first();
-      else
-        $bounds = $(this).find('bounds[type="Node"]').first();
-        
-      nodename = $(this).attr('systemname')!="" ? $(this).attr('systemname') : $(this).attr('nodename');
-      if (nodename==undefined)
-        return;
-      thisGraph.width = Math.max(thisGraph.width, $bounds.attr('left')/15+100);
-      thisGraph.height = Math.max(thisGraph.height, $bounds.attr('top')/15+25);
-
-      if (thisGraph.nodeLibrary[nodename]!=undefined)
-        var n = new thisGraph.nodeLibrary[nodename]($(this).attr('id'), thisGraph);
-      else
-        var n = new VVVV.Core.Node($(this).attr('id'), nodename, thisGraph);
-      n.x = $bounds.attr('left')/15;
-      n.y = $bounds.attr('top')/15;
-      n.width = $bounds.attr('width');
-      n.height = $bounds.attr('height');
+      $windowBounds = $(xml).find('bounds[type="Window"]').first();
+      if ($windowBounds.length>0) {
+        thisPatch.width = $windowBounds.attr('width')/15;
+        thisPatch.height = $windowBounds.attr('height')/15;
+      }
+      else {
+        thisPatch.width = 500;
+        thisPatch.height = 500;
+      }
       
-      if (/^IOBox/.test(nodename))
-        n.isIOBox = true;
-      if (/\.fx$/.test($(this).attr('nodename')))
-        n.isShader = true;
-      
-      var that = this;
-      $(this).find('pin').each(function() {
-        pinname = $(this).attr('pinname');
-        values = splitValues($(this).attr('values'));
-        if (n.outputPins[pinname]!=undefined)
-          return;
-        if (n.inputPins[pinname]!=undefined) {
-          if (values!=undefined)
-            n.inputPins[pinname].values = values;
-          return;
-        }
-        if ($(this).attr('visible')==1 || $(this).attr('slicecount')!=undefined)
-        {
-          if ($(xml).find('link[srcnodeid='+n.id+']').filter('link[srcpinname='+pinname.replace(/[\[\]]/,'')+']').length > 0) // if it's an input pin
-            n.addOutputPin(pinname, values);
-          else
-            n.addInputPin(pinname, values);
-        }
+      $(xml).find('node').each(function() {
+        if ($(this).attr('componentmode')=="InABox")
+          $bounds = $(this).find('bounds[type="Box"]').first();
         else
-          n.addInvisiblePin(pinname, values);
+          $bounds = $(this).find('bounds[type="Node"]').first();
+          
+        nodename = $(this).attr('systemname')!="" ? $(this).attr('systemname') : $(this).attr('nodename');
+        if (nodename==undefined)
+          return;
+        thisPatch.width = Math.max(thisPatch.width, $bounds.attr('left')/15+100);
+        thisPatch.height = Math.max(thisPatch.height, $bounds.attr('top')/15+25);
+
+        if (VVVV.NodeLibrary[nodename]!=undefined)
+          var n = new VVVV.NodeLibrary[nodename]($(this).attr('id'), thisPatch);
+        else
+          var n = new VVVV.Core.Node($(this).attr('id'), nodename, thisPatch);
+        n.x = $bounds.attr('left')/15;
+        n.y = $bounds.attr('top')/15;
+        n.width = $bounds.attr('width');
+        n.height = $bounds.attr('height');
+        
+        if (/^IOBox/.test(nodename))
+          n.isIOBox = true;
+        if (/\.fx$/.test($(this).attr('nodename')))
+          n.isShader = true;
+        
+        // PINS
+        var that = this;
+        $(this).find('pin').each(function() {
+          pinname = $(this).attr('pinname');
+          values = splitValues($(this).attr('values'));
+          
+          // if the output pin already exists (because the node created it), skip
+          if (n.outputPins[pinname]!=undefined)
+            return;
+            
+          // the input pin already exists (because the node created it), don't add it, but set values, if present in the xml
+          if (n.inputPins[pinname]!=undefined) {
+            if (values!=undefined)
+              n.inputPins[pinname].values = values;
+            return;
+          }
+          
+          if ($(this).attr('visible')==1 || $(this).attr('slicecount')!=undefined)
+          {
+            if ($(xml).find('link[srcnodeid='+n.id+']').filter('link[srcpinname='+pinname.replace(/[\[\]]/,'')+']').length > 0) // if it's an input pin
+              n.addOutputPin(pinname, values);
+            else
+              n.addInputPin(pinname, values);
+          }
+          else
+            n.addInvisiblePin(pinname, values);
+        });
+        
+        n.initialize();
+        thisPatch.nodeList.push(n);
+        
       });
-      
-      n.initialize();
-      thisGraph.nodeList.push(n);
-    });
     
-    $(xml).find('link').each(function() {
-      srcPin = thisGraph.pinMap[$(this).attr('srcnodeid')+'_'+$(this).attr('srcpinname')];
-      dstPin = thisGraph.pinMap[$(this).attr('dstnodeid')+'_'+$(this).attr('dstpinname')];
-      
-      if (srcPin==undefined)
-        srcPin = thisGraph.nodeMap[$(this).attr('srcnodeid')].addOutputPin($(this).attr('srcpinname'), undefined);
-      if (dstPin==undefined)
-        dstPin = thisGraph.nodeMap[$(this).attr('dstnodeid')].addInputPin($(this).attr('dstpinname'), undefined);
-      
-      thisGraph.linkList.push(new VVVV.Core.Link(srcPin, dstPin));
-    });
+      // add pins which are either defined in the node, nor defined in the xml, but only appeare in the links (this is the case with shaders)
+      $(xml).find('link').each(function() {
+        srcPin = thisPatch.pinMap[$(this).attr('srcnodeid')+'_'+$(this).attr('srcpinname')];
+        dstPin = thisPatch.pinMap[$(this).attr('dstnodeid')+'_'+$(this).attr('dstpinname')];
+        
+        if (srcPin==undefined)
+          srcPin = thisPatch.nodeMap[$(this).attr('srcnodeid')].addOutputPin($(this).attr('srcpinname'), undefined);
+        if (dstPin==undefined)
+          dstPin = thisPatch.nodeMap[$(this).attr('dstnodeid')].addInputPin($(this).attr('dstpinname'), undefined);
+        
+        thisPatch.linkList.push(new VVVV.Core.Link(srcPin, dstPin));
+      });
+    }
+    
     
     this.afterEvaluate = function() {
       
@@ -343,8 +343,12 @@ VVVV.Core = {
         //console.log('upstream nodes valid, calculating and deleting '+node.nodename);
         
         node.evaluate();
+        _(node.inputPins).each(function(inPin) {
+          inPin.changed = false;
+        });
         
-        /**
+        
+        /*
          *_(node.getDownstreamNodes()).each(function(downnode) {
          *  evaluateSubGraph(downnode);
          *});
@@ -364,5 +368,27 @@ VVVV.Core = {
       this.afterEvaluate();
       
     }
+    
+    
+    if (/\.v4p$/.test(ressource)) {
+      var that = this;
+      $.ajax({
+        url: ressource,
+        type: 'get',
+        dataType: 'text',
+        success: function(r) {
+          doLoad(r);
+          if (that.success)
+            that.success();
+        }
+      });
+    }
+    else {
+      doLoad(ressource);
+      if (this.success)
+        this.success();
+    }
+    
+    
   }
 }

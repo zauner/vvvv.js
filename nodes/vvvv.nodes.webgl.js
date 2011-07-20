@@ -37,6 +37,13 @@ VVVV.Types.Layer = function() {
 
 VVVV.Nodes.FileTexture = function(id, graph) {
   this.constructor(id, "FileTexture (EX9.Texture)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Always loads in background', 'No reload pin', 'No preload pin (preloading handled by browser)', 'No up and running pin', 'No texture info outputs']
+  };
 
   var filenamePin = this.addInputPin("Filename", [""], this);
   
@@ -77,6 +84,13 @@ VVVV.Nodes.FileTexture.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.Quad = function(id, graph) {
   this.constructor(id, "Quad (DX9)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['No Sampler States and Render States', 'No texture transform', 'No texture coord mapping', 'No enable pin']
+  };
   
   this.addInputPin("Transform", [], this);
   this.addInputPin("Texture", [], this);
@@ -218,6 +232,13 @@ VVVV.Nodes.Quad.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.RendererWebGL = function(id, graph) {
   this.constructor(id, "Renderer (EX9)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['No Clear Pin', 'No Background color pin', 'Backbuffer width and height defined by canvas size', 'No Fullscreen', 'No Enable Pin', 'No Aspect Ration and Viewport transform', 'No mouse output', 'No backbuffer dimesions output', 'No WebGL (EX9) Output Pin']
+  };
   
   this.addInputPin("Layers", [], this);
   this.addInputPin("View Transform", [], this);

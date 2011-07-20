@@ -4,6 +4,13 @@
 VVVV.Nodes.Rotate = function(id, graph) {
   this.constructor(id, "Rotate (Transform)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
   this.addInputPin("Transform In", [], this);
   this.addInputPin("X", [0.0], this);
   this.addInputPin("Y", [0.0], this);
@@ -46,6 +53,13 @@ VVVV.Nodes.Rotate.prototype = new VVVV.Core.Node();
 VVVV.Nodes.Translate = function(id, graph) {
   this.constructor(id, "Translate (Transform)", graph);
   
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
   this.addInputPin("Transform In", [], this);
   this.addInputPin("X", [0.0], this);
   this.addInputPin("Y", [0.0], this);
@@ -83,6 +97,13 @@ VVVV.Nodes.Translate.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.Scale = function(id, graph) {
   this.constructor(id, "Scale (Transform)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
   
   this.transform = mat4.create();
   mat4.identity(this.transform);
@@ -125,6 +146,13 @@ VVVV.Nodes.Scale.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.Perspective = function(id, graph) {
   this.constructor(id, "Perspective (Transform)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Not spreadable']
+  };
   
   this.transform = mat4.create();
   mat4.identity(this.transform);
