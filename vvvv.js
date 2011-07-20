@@ -1,3 +1,11 @@
+// VVVV.js -- Visual Webclient Programming
+// (c) 2011 Matthias Zauner
+// VVVV.js is freely distributable under the MIT license.
+// Additional authors of sub components are mentioned at the specific code locations.
+
+
+
+
 if(!window.console) {
 	window.console = {
 		log : function(str) {
@@ -45,13 +53,12 @@ function initVVVV(path_to_vvvv, mode) {
 
 VVVV.NodeLibrary = {};
 
-
-  var p = new VVVV.Core.Patch('');
-  _(VVVV.Nodes).each(function(n) {
-    var x = new n(0, p);
-    console.log("Registering "+x.nodename);
-    VVVV.NodeLibrary[x.nodename] = n;
-  });
+var p = new VVVV.Core.Patch('');
+_(VVVV.Nodes).each(function(n) {
+  var x = new n(0, p);
+  console.log("Registering "+x.nodename);
+  VVVV.NodeLibrary[x.nodename] = n;
+});
 
 
 
