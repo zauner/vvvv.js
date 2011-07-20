@@ -97,11 +97,12 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
       if (lastUpdate[i]==undefined)
         lastUpdate[i] = new Date().getTime();
       var dt = new Date().getTime()-lastUpdate[i];
-      if (currPos[i]==undefined)
-        currPos[i] = 0.0;
         
       var targetPos = parseFloat(positionIn.getValue(i));
       var filterTime = parseFloat(filterTimeIn.getValue(i));
+      
+      if (currPos[i]==undefined)
+        currPos[i] = targetPos;
       
       if (!isFinite(targetPos) || !isFinite(filterTime)) {
         currPos[i] = undefined;
