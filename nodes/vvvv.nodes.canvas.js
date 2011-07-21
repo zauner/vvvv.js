@@ -1,4 +1,15 @@
+// VVVV.js -- Visual Web Client Programming
+// (c) 2011 Matthias Zauner
+// VVVV.js is freely distributable under the MIT license.
+// Additional authors of sub components are mentioned at the specific code locations.
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Arc (Canvas VVVVjs)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
 VVVV.Nodes.ArcCanvas = function(id, graph) {
   this.constructor(id, "Arc (Canvas VVVVjs)", graph);
@@ -72,7 +83,12 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
 }
 VVVV.Nodes.ArcCanvas.prototype = new VVVV.Core.Node();
 
-
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: BezierCurve (Canvas VVVVjs)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
 VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
   this.constructor(id, "BezierCurve (Canvas VVVVjs)", graph);
@@ -176,7 +192,12 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
 VVVV.Nodes.BezierCurveCanvas.prototype = new VVVV.Core.Node();
 
 
-
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Renderer (Canvas VVVVjs)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
 VVVV.Nodes.RendererCanvas = function(id, graph) {
   this.constructor(id, "Renderer (Canvas VVVVjs)", graph);

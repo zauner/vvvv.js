@@ -1,3 +1,15 @@
+// VVVV.js -- Visual Web Client Programming
+// (c) 2011 Matthias Zauner
+// VVVV.js is freely distributable under the MIT license.
+// Additional authors of sub components are mentioned at the specific code locations.
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: GetSlice (Spreads)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
 VVVV.Nodes.GetSliceSpreads = function(id, graph) {
   this.constructor(id, "GetSlice (Spreads)", graph);
@@ -26,7 +38,13 @@ VVVV.Nodes.GetSliceSpreads = function(id, graph) {
 }
 VVVV.Nodes.GetSliceSpreads.prototype = new VVVV.Core.Node();
 
-
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: RandomSpread (Spreads)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
 VVVV.Nodes.RandomSpread = function(id, graph) {
   this.constructor(id, "RandomSpread (Spreads)", graph);
@@ -111,7 +129,13 @@ VVVV.Nodes.RandomSpread = function(id, graph) {
 }
 VVVV.Nodes.RandomSpread.prototype = new VVVV.Core.Node();
 
-
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Sort (Spreads)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
 VVVV.Nodes.SortSpreads = function(id, graph) {
   this.constructor(id, "Sort (Spreads)", graph);
@@ -143,7 +167,13 @@ VVVV.Nodes.SortSpreads = function(id, graph) {
 VVVV.Nodes.SortSpreads.prototype = new VVVV.Core.Node();
 
 
-
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: LinearSpread (Spreads)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
 VVVV.Nodes.LinearSpread = function(id, graph) {
   this.constructor(id, "LinearSpread (Spreads)", graph);
@@ -188,7 +218,13 @@ VVVV.Nodes.LinearSpread = function(id, graph) {
 }
 VVVV.Nodes.LinearSpread.prototype = new VVVV.Core.Node();
 
-
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: AvoidNil (Spreads)
+ Author(s): Matthias Zauner
+ Original Node Author(s): Kalle
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
 VVVV.Nodes.AvoidNil = function(id, graph) {
   this.constructor(id, "AvoidNIL (Spreads)", graph);
@@ -223,7 +259,13 @@ VVVV.Nodes.AvoidNil = function(id, graph) {
 }
 VVVV.Nodes.AvoidNil.prototype = new VVVV.Core.Node();
 
-
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: SwapDim (Spreads)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
 VVVV.Nodes.SwapDim = function(id, graph) {
   this.constructor(id, "SwapDim (Spreads)", graph);

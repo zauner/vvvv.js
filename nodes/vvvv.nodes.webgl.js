@@ -1,3 +1,8 @@
+// VVVV.js -- Visual Web Client Programming
+// (c) 2011 Matthias Zauner
+// VVVV.js is freely distributable under the MIT license.
+// Additional authors of sub components are mentioned at the specific code locations.
+
 
 var gl;
 var defaultShaderAttributes = [ "PosO", "TexCd" ];
@@ -34,6 +39,14 @@ VVVV.Types.Layer = function() {
     return "Layer";
   }
 }
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: FileTexture (EX9.Texture)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
 VVVV.Nodes.FileTexture = function(id, graph) {
   this.constructor(id, "FileTexture (EX9.Texture)", graph);
@@ -81,6 +94,15 @@ VVVV.Nodes.FileTexture = function(id, graph) {
 
 }
 VVVV.Nodes.FileTexture.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Quad (DX9)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
 VVVV.Nodes.Quad = function(id, graph) {
   this.constructor(id, "Quad (DX9)", graph);
@@ -229,6 +251,13 @@ VVVV.Nodes.Quad = function(id, graph) {
 }
 VVVV.Nodes.Quad.prototype = new VVVV.Core.Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Renderer (EX9)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
 VVVV.Nodes.RendererWebGL = function(id, graph) {
   this.constructor(id, "Renderer (EX9)", graph);
