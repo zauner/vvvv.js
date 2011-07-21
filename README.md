@@ -1,9 +1,17 @@
 VVVV.js - Visual Web Client Programming
 ======================================
 
-www.zauner900.net/vvvv_js
+vvvvjs.quasipartikel.at
 
 **An open project, which aims to bring the visual programming language VVVV to your web browser.**
+
+Licence
+-------
+
+VVVV.js is freely distributable under the MIT license (see details in LICENCE file). Concepts (e.g. nodes, pins, spreads) taken from VVVV (http://www.vvvv.org).
+
+This software uses jQuery, underscore.js, d3.js and glMatrix.js. See the corrensponding licence files in the lib folder for details.
+
 
 
 Setup / Run
