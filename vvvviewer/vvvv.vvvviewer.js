@@ -61,7 +61,12 @@ VVVV.VVVViewer = function(graph, selector) {
       else {
         ret = [];
         for (i=0; i<d.IOBoxRows(); i++) {
-          ret.push(d.IOBoxInputPin().getValue(i));
+          var v = d.IOBoxInputPin().getValue(i);
+          if (typeof v == "string")
+            v = v.substr(0,8);
+          else if (typeof v == "number")
+            v = v.toFixed(4);
+          ret.push(v);
         }
         return ret;
       }
@@ -190,7 +195,12 @@ VVVV.VVVViewer = function(graph, selector) {
         else {
           ret = [];
           for (i=0; i<d.IOBoxRows(); i++) {
-            ret.push(d.IOBoxInputPin().getValue(i));
+            var v = d.IOBoxInputPin().getValue(i);
+            if (typeof v == "string")
+              v = v.substr(0, d.getWidth()/5);
+            else if (typeof v == "number")
+              v = v.toFixed(4);
+          ret.push(v);
           }
           return ret;
         }
