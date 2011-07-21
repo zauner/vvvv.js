@@ -140,7 +140,7 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
       
       currPos[i] += velocity[i]*dt;
       
-      if (deltaPos[i]!=undefined && deltaPos[i]!=0 && sign(targetPos-currPos[i]) != sign(deltaPos[i])) {
+      if (deltaPos[i]!=undefined && sign(targetPos-currPos[i]) != sign(deltaPos[i])) {
         velocity[i] = 0;
         currPos[i] = targetPos;
       }
