@@ -110,9 +110,7 @@ VVVV.Nodes.EqValue = function(id, graph) {
       var maxSize = this.getMaxInputSliceCount();
       
       for (var i=0; i<maxSize; i++) {
-        var result = 0;
-        if (input1In.getValue(i)==input2In.getValue(i))
-          result = 1;
+        var result = Math.abs(input1In.getValue(i)-input2In.getValue(i)) <= epsilonIn.getValue(i) ? 1 : 0;
         outputOut.setValue(i, result);
         invOutputOut.setValue(i, 1-result);
       }
