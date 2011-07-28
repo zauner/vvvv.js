@@ -92,7 +92,7 @@ VVVV.Nodes.EqValue = function(id, graph) {
   this.constructor(id, "EQ (Value)", graph);
   
   this.meta = {
-    authors: ['Matthias Zauner'],
+    authors: ['Matthias Zauner', 'Fibo'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
@@ -111,7 +111,7 @@ VVVV.Nodes.EqValue = function(id, graph) {
       
       for (var i=0; i<maxSize; i++) {
         var result = 0;
-        if (Math.abs(input1In.getValue(i)-input2In.getValue(i))<Math.abs(epsilonIn.getValue(i)))
+        if (Math.abs(input1In.getValue(i)-input2In.getValue(i))<=Math.abs(epsilonIn.getValue(i)))
           result = 1;
         outputOut.setValue(i, result);
         invOutputOut.setValue(i, 1-result);
