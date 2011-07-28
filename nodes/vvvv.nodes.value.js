@@ -95,7 +95,7 @@ VVVV.Nodes.EqValue = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['Epsilon not implemented yet']
+    compatibility_issues: []
   };
   
   var input1In = this.addInputPin("Input 1", [0.0], this);
@@ -111,7 +111,7 @@ VVVV.Nodes.EqValue = function(id, graph) {
       
       for (var i=0; i<maxSize; i++) {
         var result = 0;
-        if (input1In.getValue(i)==input2In.getValue(i))
+        if (Math.abs(input1In.getValue(i)-input2In.getValue(i))<Math.abs(epsilonIn.getValue(i)))
           result = 1;
         outputOut.setValue(i, result);
         invOutputOut.setValue(i, 1-result);
