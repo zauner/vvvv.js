@@ -120,3 +120,129 @@ VVVV.Nodes.Join4dVector = function(id, graph) {
 }
 VVVV.Nodes.Join4dVector.prototype = new VVVV.Core.Node();
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Vector (2d Split)
+ Author(s): Julien Vulliet
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Split2dVector = function(id, graph) {
+  this.constructor(id, "Vector (2d Split)", graph);
+  
+  this.meta = {
+    authors: ['Julien Vulliet'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['']
+  };
+  
+  var xyIn = this.addInputPin("XY", [0.0], this);
+  
+  var xOut = this.addOutputPin("X", [0.0], this);
+  var yOut = this.addOutputPin("Y", [0.0], this);
+  
+  this.evaluate = function() 
+  {  
+      var maxSize = this.getMaxInputSliceCount();
+      
+	  var id = 0;
+      for (var i=0; i<maxSize; i+=2) 
+	  {
+		xOut.setValue(id,xyIn.getValue(i));
+		yOut.setValue(id,xyIn.getValue(i+1));	
+		id ++;
+      }
+  }
+
+}
+VVVV.Nodes.Split2dVector.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Vector (3d Split)
+ Author(s): Julien Vulliet
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Split3dVector = function(id, graph) {
+  this.constructor(id, "Vector (3d Split)", graph);
+  
+  this.meta = {
+    authors: ['Julien Vulliet'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['']
+  };
+  
+  var xyzIn = this.addInputPin("XYZ", [0.0], this);
+  
+  var xOut = this.addOutputPin("X", [0.0], this);
+  var yOut = this.addOutputPin("Y", [0.0], this);
+  var zOut = this.addOutputPin("Z", [0.0], this);
+  
+  this.evaluate = function() 
+  {  
+      var maxSize = this.getMaxInputSliceCount();
+      
+	  var id = 0;
+      for (var i=0; i<maxSize; i+=3) 
+	  {
+		xOut.setValue(id,xyzIn.getValue(i));
+		yOut.setValue(id,xyzIn.getValue(i+1));	
+		zOut.setValue(id,xyzIn.getValue(i+2));	
+		id ++;
+      }
+  }
+
+}
+VVVV.Nodes.Split3dVector.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Vector (4d Split)
+ Author(s): Julien Vulliet
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Split4dVector = function(id, graph) {
+  this.constructor(id, "Vector (4d Split)", graph);
+  
+  this.meta = {
+    authors: ['Julien Vulliet'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['']
+  };
+  
+  var xyzwIn = this.addInputPin("XYZW", [0.0,0.0,0.0,1.0], this);
+  
+  var xOut = this.addOutputPin("X", [0.0], this);
+  var yOut = this.addOutputPin("Y", [0.0], this);
+  var zOut = this.addOutputPin("Z", [0.0], this);
+  var wOut = this.addOutputPin("W", [0.0], this);
+  
+  this.evaluate = function() 
+  {  
+      var maxSize = this.getMaxInputSliceCount();
+      
+	  var id = 0;
+      for (var i=0; i<maxSize; i+=4) 
+	  {
+		xOut.setValue(id,xyzwIn.getValue(i));
+		yOut.setValue(id,xyzwIn.getValue(i+1));	
+		zOut.setValue(id,xyzwIn.getValue(i+2));	
+		wOut.setValue(id,xyzwIn.getValue(i+3));	
+		id ++;
+      }
+  }
+
+}
+VVVV.Nodes.Split4dVector.prototype = new VVVV.Core.Node();
+
+
