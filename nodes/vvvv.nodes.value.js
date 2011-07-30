@@ -92,10 +92,10 @@ VVVV.Nodes.EqValue = function(id, graph) {
   this.constructor(id, "EQ (Value)", graph);
   
   this.meta = {
-    authors: ['Matthias Zauner'],
+    authors: ['Matthias Zauner', 'Fibo'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['Epsilon not implemented yet']
+    compatibility_issues: []
   };
   
   var input1In = this.addInputPin("Input 1", [0.0], this);
@@ -110,7 +110,9 @@ VVVV.Nodes.EqValue = function(id, graph) {
       var maxSize = this.getMaxInputSliceCount();
       
       for (var i=0; i<maxSize; i++) {
-        var result = Math.abs(input1In.getValue(i)-input2In.getValue(i)) <= epsilonIn.getValue(i) ? 1 : 0;
+        var result = 0;
+        if (Math.abs(input1In.getValue(i)-input2In.getValue(i))<=Math.abs(epsilonIn.getValue(i)))
+          result = 1;
         outputOut.setValue(i, result);
         invOutputOut.setValue(i, 1-result);
       }
