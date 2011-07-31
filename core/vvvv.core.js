@@ -46,6 +46,14 @@ VVVV.Core = {
     this.getSliceCount = function() {
       return this.values.length;
     }
+	
+	this.setSliceCount = function(len) {
+      this.values.length = len;	   
+	   _(this.links).each(function(l) {
+        l.toPin.values.length = len;
+        l.toPin.changed = true;
+      });
+    }
   },
   
   Node: function(id, nodename, patch) {
@@ -183,6 +191,7 @@ VVVV.Core = {
     this.getMaxInputSliceCount = function() {
       var ret = 0;
       _(this.inputPins).each(function(p) {
+		if (p.values.length == 0) { return 0; }
         if (p.values.length>ret)
           ret = p.values.length;
       });
