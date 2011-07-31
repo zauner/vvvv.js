@@ -69,7 +69,9 @@ VVVV.Core = {
     
     this.inputPins = {};
     this.outputPins = {};
-    this.invisiblePins = [];
+    this.invisiblePins = {};
+	
+	
     
     this.patch = patch;
     if (patch)
@@ -81,7 +83,7 @@ VVVV.Core = {
       this.patch.pinMap[this.id+'_'+pinname] = pin;
       return pin;
     }
-    
+ 
     this.addOutputPin = function(pinname, value) {
       pin = new VVVV.Core.Pin(pinname, value, this);
       this.outputPins[pinname] = pin;
@@ -91,7 +93,7 @@ VVVV.Core = {
     
     this.addInvisiblePin = function(pinname, value) {
       pin = new VVVV.Core.Pin(pinname, value, this);
-      this.invisiblePins.push(pin);
+      this.invisiblePins[pinname] = pin;
       this.patch.pinMap[this.id+'_'+pinname] = pin;
       return pin;
     }
@@ -124,10 +126,10 @@ VVVV.Core = {
     }
     
     this.IOBoxRows = function() {
-      if (this.patch.pinMap[this.id+"_Rows"])
-        return this.patch.pinMap[this.id+"_Rows"].getValue(0);
-      else
-        return 1;
+		if (this.invisiblePins["Rows"])
+			return this.invisiblePins["Rows"].getValue(0);
+		else
+			return 1;
     }
     
     this.isComment = function() {
@@ -197,11 +199,17 @@ VVVV.Core = {
       });
       return ret;
     }
+	
+	this.setup = function() 
+	{
+		//Add descriptive name for all nodes
+		this.addInvisiblePin("Descriptive Name",[""]);
+	}
     
     this.initialize = function() {
-    
+		
     }
-    
+	   
     this.evaluate = function() {
       var that = this;
       _(this.outputPins).each(function(p) {
@@ -277,6 +285,9 @@ VVVV.Core = {
           n.isIOBox = true;
         if (/\.fx$/.test($(this).attr('nodename')))
           n.isShader = true;
+		  
+		//To add anything which relates to all nodes
+		n.setup();
         
         // PINS
         var that = this;
@@ -294,16 +305,14 @@ VVVV.Core = {
               n.inputPins[pinname].values = values;
             return;
           }
-          
-          if ($(this).attr('visible')==1 || $(this).attr('slicecount')!=undefined)
-          {
-            if ($(xml).find('link[srcnodeid='+n.id+']').filter('link[srcpinname='+pinname.replace(/[\[\]]/,'')+']').length > 0) // if it's an input pin
-              n.addOutputPin(pinname, values);
-            else
-              n.addInputPin(pinname, values);
+		  
+		  //Also set config (invisible pins)
+		  if (n.invisiblePins[pinname]!=undefined) {
+            if (values!=undefined)
+              n.invisiblePins[pinname].values = values;
+            return;
           }
-          else
-            n.addInvisiblePin(pinname, values);
+		  
         });
         
         n.initialize();
