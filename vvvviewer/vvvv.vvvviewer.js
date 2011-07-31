@@ -47,7 +47,7 @@ VVVV.VVVViewer = function(graph, selector) {
     .attr('width', function(d) { return d.getWidth(); })
     
   nodes.append('svg:text')
-    .text(function(d) { return (d.inputPins["Descriptive Name"]!=undefined) ? d.inputPins["Descriptive Name"].getValue(0) : null })
+    .text(function(d) { return (d.invisiblePins["Descriptive Name"]!=undefined) ? d.invisiblePins["Descriptive Name"].getValue(0) : null })
     .attr('class', 'vvvv-node-descriptive-name')
     .attr('shape-rendering', 'crispEdges')
     .attr('dy', function(d) { return d.getHeight()+12 })
