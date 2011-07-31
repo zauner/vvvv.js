@@ -117,7 +117,7 @@ VVVV.Nodes.RandomSpread = function(id, graph) {
       
       rng = new Rc4Random(randomseed.toString());
       
-      this.outputPins["Output"].values = [];
+      this.outputPins["Output"].setSliceCount(count);
       for (var i=0; i<count; i++) {
         this.outputPins["Output"].setValue(i, rng.getRandomNumber()*width-width/2+input);
       }
