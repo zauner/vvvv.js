@@ -29,6 +29,7 @@ VVVV.Nodes.Join2dVector = function(id, graph) {
   this.evaluate = function() 
   {  
       var maxSize = this.getMaxInputSliceCount();
+	  xyOut.setSliceCount(maxSize * 2);
       
       for (var i=0; i<maxSize; i++) 
 	  {
@@ -67,6 +68,7 @@ VVVV.Nodes.Join3dVector = function(id, graph) {
   this.evaluate = function() 
   {  
       var maxSize = this.getMaxInputSliceCount();
+	  xyzOut.setSliceCount(maxSize * 3);
       
       for (var i=0; i<maxSize; i++) 
 	  {
@@ -107,6 +109,7 @@ VVVV.Nodes.Join4dVector = function(id, graph) {
   this.evaluate = function() 
   {  
       var maxSize = this.getMaxInputSliceCount();
+	  xyzwOut.setSliceCount(maxSize * 4);
       
       for (var i=0; i<maxSize; i++) 
 	  {
@@ -147,7 +150,7 @@ VVVV.Nodes.Split2dVector = function(id, graph) {
   this.evaluate = function() 
   {  
       var maxSize = this.getMaxInputSliceCount();
-      
+	      
 	  var id = 0;
       for (var i=0; i<maxSize; i+=2) 
 	  {

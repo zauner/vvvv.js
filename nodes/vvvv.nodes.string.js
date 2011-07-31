@@ -22,6 +22,8 @@ VVVV.Nodes.IOBoxString = function(id, graph) {
     compatibility_issues: []
   };
   
+  this.addInvisiblePin("Rows",[1.0],this);
+  
   this.addInputPin("SliceOffset", [0], this);
   this.addInputPin("Input String", [""], this);
   
