@@ -14,10 +14,17 @@ VVVV.Types.Color = function(r, g, b, a) {
   }
 }
 
-VVVV.Core = {
+var PinDirection = { Input : 0,Output : 1,Configuration : 2 };
 
-  Pin: function(pinname, values, node) {
-    this.pinname = pinname;
+VVVV.Core = {	
+  PinDefault : function(pinname,values) {
+	this.pinname = pinname;
+	this.values = values;
+  },
+  
+  Pin: function(pinname,direction, values, node) {
+	this.direction = direction;
+	this.pinname = pinname;
     this.links = [];
     this.values = values;
     this.node = node;
@@ -42,9 +49,21 @@ VVVV.Core = {
       this.changed = false;
       return ret;
     }
+	
+	this.isConnected = function() {
+		return this.links.length > 0 ? true : false;
+	}
     
     this.getSliceCount = function() {
       return this.values.length;
+    }
+	
+	this.setSliceCount = function(len) {
+      this.values.length = len;	   
+	   _(this.links).each(function(l) {
+        l.toPin.values.length = len;
+        l.toPin.changed = true;
+      });
     }
   },
   
@@ -61,33 +80,54 @@ VVVV.Core = {
     
     this.inputPins = {};
     this.outputPins = {};
-    this.invisiblePins = [];
-    
+    this.invisiblePins = {} ;
+	
+	this.defaultPinValues = {};
+	
     this.patch = patch;
     if (patch)
       this.patch.nodeMap[id] = this;
-    
-    this.addInputPin = function(pinname, value) {
-      pin = new VVVV.Core.Pin(pinname, value, this);
-      this.inputPins[pinname] = pin;
-      this.patch.pinMap[this.id+'_'+pinname] = pin;
-      return pin;
+	  
+	this.addDefault = function(pinname, value) {
+      pin = new VVVV.Core.PinDefault(pinname, value);
+	  
+	  //If pin already exists, sets the default
+	  if (this.invisiblePins[pinname]!=undefined) {
+         this.invisiblePins[pinname].values = value;
+      }
+	  if (this.inputPins[pinname]!=undefined) {
+         this.inputPins[pinname].values = value;
+      }
+      this.defaultPinValues[pinname] = pin;
     }
     
+    this.addInputPin = function(pinname, value) {
+      pin = new VVVV.Core.Pin(pinname,PinDirection.Input, value, this);
+      this.inputPins[pinname] = pin;
+      this.patch.pinMap[this.id+'_'+pinname] = pin;
+	  if (this.defaultPinValues[pinname] != undefined) {
+		pin.values = this.defaultPinValues[pinname].values;
+	  }
+      return pin;
+    }
+ 
     this.addOutputPin = function(pinname, value) {
-      pin = new VVVV.Core.Pin(pinname, value, this);
+      pin = new VVVV.Core.Pin(pinname,PinDirection.Output, value, this);
       this.outputPins[pinname] = pin;
       this.patch.pinMap[this.id+'_'+pinname] = pin;
       return pin;
     }
     
     this.addInvisiblePin = function(pinname, value) {
-      pin = new VVVV.Core.Pin(pinname, value, this);
-      this.invisiblePins.push(pin);
+      pin = new VVVV.Core.Pin(pinname,PinDirection.Configuration, value, this);
+      this.invisiblePins[pinname] = pin;
       this.patch.pinMap[this.id+'_'+pinname] = pin;
+	  if (this.defaultPinValues[pinname] != undefined) {
+		pin.values = this.defaultPinValues[pinname].values;
+	  }
       return pin;
     }
-    
+	    
     this.IOBoxType = function() {
       match = /^IOBox \((.*)\)/.exec(this.nodename);
       if (match && match.length>1)
@@ -116,10 +156,10 @@ VVVV.Core = {
     }
     
     this.IOBoxRows = function() {
-      if (this.patch.pinMap[this.id+"_Rows"])
-        return this.patch.pinMap[this.id+"_Rows"].getValue(0);
-      else
-        return 1;
+		if (this.invisiblePins["Rows"])
+			return this.invisiblePins["Rows"].getValue(0);
+		else
+			return 1;
     }
     
     this.isComment = function() {
@@ -181,18 +221,25 @@ VVVV.Core = {
     }
     
     this.getMaxInputSliceCount = function() {
-      var ret = 0;
+      var ret = 1;
       _(this.inputPins).each(function(p) {
-        if (p.values.length>ret)
+		if (p.values.length == 0) { ret = 0; }
+        if (p.values.length>ret && ret > 0)
           ret = p.values.length;
       });
       return ret;
     }
-    
+	
+	this.setup = function() 
+	{
+		//Add descriptive name for all nodes
+		this.addInvisiblePin("Descriptive Name",[""]);
+	}
+	   
     this.initialize = function() {
-    
+		
     }
-    
+	   
     this.evaluate = function() {
       var that = this;
       _(this.outputPins).each(function(p) {
@@ -268,25 +315,31 @@ VVVV.Core = {
           n.isIOBox = true;
         if (/\.fx$/.test($(this).attr('nodename')))
           n.isShader = true;
+		  
+		//To add anything which relates to all nodes
+		n.setup();
         
-        // PINS
+        //First pass to add default pin values
         var that = this;
         $(this).find('pin').each(function() {
           pinname = $(this).attr('pinname');
           values = splitValues($(this).attr('values'));
-          
-          // if the output pin already exists (because the node created it), skip
-          if (n.outputPins[pinname]!=undefined)
-            return;
-            
-          // the input pin already exists (because the node created it), don't add it, but set values, if present in the xml
-          if (n.inputPins[pinname]!=undefined) {
+		  
+		  //Get all defaults from xml
+		  if (n.defaultPinValues[pinname] == undefined) {
             if (values!=undefined)
-              n.inputPins[pinname].values = values;
-            return;
-          }
-          
-          if ($(this).attr('visible')==1 || $(this).attr('slicecount')!=undefined)
+			{
+				if (values.length > 0)
+					n.addDefault(pinname, values);
+			}
+			return;
+		  }
+		  });
+		  
+		// PINS
+		$(this).find('pin').each(function() {  		    
+		  //CXheck for non implemented nodes
+		  if ($(this).attr('visible')==1 || $(this).attr('slicecount')!=undefined)
           {
             if ($(xml).find('link[srcnodeid='+n.id+']').filter('link[srcpinname='+pinname.replace(/[\[\]]/,'')+']').length > 0) // if it's an input pin
               n.addOutputPin(pinname, values);
@@ -295,9 +348,11 @@ VVVV.Core = {
           }
           else
             n.addInvisiblePin(pinname, values);
+		  	  
         });
-        
-        n.initialize();
+		
+		//Initialize node
+		n.initialize();
         thisPatch.nodeList.push(n);
         
       });

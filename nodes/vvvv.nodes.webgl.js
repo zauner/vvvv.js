@@ -58,9 +58,8 @@ VVVV.Nodes.FileTexture = function(id, graph) {
     compatibility_issues: ['Always loads in background', 'No reload pin', 'No preload pin (preloading handled by browser)', 'No up and running pin', 'No texture info outputs']
   };
 
-  var filenamePin = this.addInputPin("Filename", [""], this);
-  
-  var outputPin = this.addOutputPin("Texture Out", [], this);
+  this.filenamePin = this.addInputPin("Filename", [""], this);
+  this.outputPin = this.addOutputPin("Texture Out", [], this);
   
   var textures = [];
   
@@ -68,10 +67,10 @@ VVVV.Nodes.FileTexture = function(id, graph) {
     if (!gl)
       return;
   
-    if (filenamePin.pinIsChanged()) {
+    if (this.filenamePin.pinIsChanged()) {
       var maxSize = this.getMaxInputSliceCount();
       for (var i=0; i<maxSize; i++) {
-        var filename = filenamePin.getValue(i);
+        var filename = this.filenamePin.getValue(i);
         textures[i] = gl.createTexture();
         textures[i].image = new Image();
         textures[i].image.onload = (function(j) {
@@ -86,7 +85,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
         })(i);
         textures[i].image.src = filename;
       
-        outputPin.setValue(i, textures[i]);
+        this.outputPin.setValue(i, textures[i]);
       }
     }
   
@@ -184,6 +183,12 @@ VVVV.Nodes.Quad = function(id, graph) {
       if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
         alert("Could not initialise shaders");
       }
+	  
+	  var num = gl.getProgramParameter(shaderProgram,gl.ACTIVE_UNIFORMS);
+	  for (var u = 0; u < num; u++)
+	  {
+		var inf = gl.getActiveUniform(shaderProgram,u);
+	  }
       
       var maxSize = this.getMaxInputSliceCount();
       for (var j=0; j<maxSize; j++) {
@@ -274,10 +279,10 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   this.addInputPin("Projection Transform", [], this);
   
   this.initialize = function() {
-    if (!this.inputPins["Descriptive Name"])
+    if (!this.invisiblePins["Descriptive Name"])
       return;
   
-    var selector = this.inputPins["Descriptive Name"].getValue(0);
+    var selector = this.invisiblePins["Descriptive Name"].getValue(0);
     if (selector==undefined || selector=="")
       return;
     var canvas = $(selector);

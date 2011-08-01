@@ -7,9 +7,9 @@ VVVV.Core.DOMInterface = function(patch) {
   
   _(patch.nodeList).each(function(n) {
     if (n.isIOBox) {
-      if (n.inputPins["Descriptive Name"]==undefined)
+      if (n.invisiblePins["Descriptive Name"]==undefined)
         return;
-      var match = /([^\/]+)(\/(event|attribute|style)\/(.+))?/.exec(n.inputPins["Descriptive Name"].getValue(0));
+      var match = /([^\/]+)(\/(event|attribute|style)\/(.+))?/.exec(n.invisiblePins["Descriptive Name"].getValue(0));
       if (match==null)
         return;
       var ioboxConn = {
