@@ -24,17 +24,19 @@ VVVV.Nodes.Rotate = function(id, graph) {
   
   var ident = mat4.identity(mat4.create());
   
-  this.addInputPin("Transform In", [ident], this);
-  this.addInputPin("X", [0.0], this);
-  this.addInputPin("Y", [0.0], this);
-  this.addInputPin("Z", [0.0], this);
+  this.trIn = this.addInputPin("Transform In", [ident], this);
+  this.xIn = this.addInputPin("X", [0.0], this);
+  this.yIn = this.addInputPin("Y", [0.0], this);
+  this.zIn = this.addInputPin("Z", [0.0], this);
   
-  this.addOutputPin("Transform Out", [], this);
+  this.trOut = this.addOutputPin("Transform Out", [], this);
 
   this.evaluate = function() 
   { 
-    if (this.inputPins["Transform In"].pinIsChanged() || this.inputPins["X"].pinIsChanged() || this.inputPins["Y"].pinIsChanged() || this.inputPins["Z"].pinIsChanged()) {
-      var maxSize = this.getMaxInputSliceCount();
+	if (this.trIn.pinIsChanged() || this.xIn.pinIsChanged() || this.yIn.pinIsChanged() || this.zIn.pinIsChanged()) 
+	{
+		
+		  var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : Math.max(this.xIn.getSliceCount(),this.yIn.getSliceCount(),this.zIn.getSliceCount());
       
       for (var i=0; i<maxSize; i++) {
       
@@ -81,36 +83,36 @@ VVVV.Nodes.Translate = function(id, graph) {
   
   var ident = mat4.identity(mat4.create());
   
-  this.addInputPin("Transform In", [ident], this);
-  this.addInputPin("X", [0.0], this);
-  this.addInputPin("Y", [0.0], this);
-  this.addInputPin("Z", [0.0], this);
+  this.trIn = this.addInputPin("Transform In", [ident], this);
+  this.xIn = this.addInputPin("X", [0.0], this);
+  this.yIn = this.addInputPin("Y", [0.0], this);
+  this.zIn = this.addInputPin("Z", [0.0], this);
   
-  this.addOutputPin("Transform Out", [], this);
-
+  this.trOut = this.addOutputPin("Transform Out", [], this);
+  
   this.evaluate = function() {
-		if (this.inputPins["Transform In"].pinIsChanged() || this.inputPins["X"].pinIsChanged() || this.inputPins["Y"].pinIsChanged() || this.inputPins["Z"].pinIsChanged()) 
+		if (this.trIn.pinIsChanged() || this.xIn.pinIsChanged() || this.yIn.pinIsChanged() || this.zIn.pinIsChanged()) 
 		{
 		
-		  var maxSize = this.getMaxInputSliceCount();
+		  var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : Math.max(this.xIn.getSliceCount(),this.yIn.getSliceCount(),this.zIn.getSliceCount());
 		  
 		  for (var i=0; i<maxSize; i++) {
 			
-			var x = parseFloat(this.inputPins["X"].getValue(i));
-			var y = parseFloat(this.inputPins["Y"].getValue(i));
-			var z = -parseFloat(this.inputPins["Z"].getValue(i));
+			var x = parseFloat(this.xIn.getValue(i));
+			var y = parseFloat(this.yIn.getValue(i));
+			var z = -parseFloat(this.zIn.getValue(i));
 			
 			var t = mat4.create();
 			mat4.identity(t);
 			
 			mat4.translate(t, [x, y, z]);
-			if (this.inputPins["Transform In"].isConnected())
+			if (this.trIn.isConnected())
 			{
-				var transformin = this.inputPins["Transform In"].getValue(i);
+				var transformin = this.trIn.getValue(i);
 				mat4.multiply(transformin, t, t);
 			}
 			
-			this.outputPins["Transform Out"].setValue(i, t);
+			this.trOut.setValue(i, t);
 		  }
 		}	
   }
@@ -137,19 +139,20 @@ VVVV.Nodes.Scale = function(id, graph) {
   };
   
   var ident = mat4.identity(mat4.create());
-   
-  this.addInputPin("Transform In", [ident], this);
-  this.addInputPin("X", [1.0], this);
-  this.addInputPin("Y", [1.0], this);
-  this.addInputPin("Z", [1.0], this);
   
-  this.addOutputPin("Transform Out", [], this);
+  this.trIn = this.addInputPin("Transform In", [ident], this);
+  this.xIn = this.addInputPin("X", [0.0], this);
+  this.yIn = this.addInputPin("Y", [0.0], this);
+  this.zIn = this.addInputPin("Z", [0.0], this);
+  
+  this.trOut = this.addOutputPin("Transform Out", [], this);
 
   this.evaluate = function() {
-    var t = this.inputPins["Transform In"].isConnected();
-    if (this.inputPins["Transform In"].pinIsChanged() || this.inputPins["X"].pinIsChanged() || this.inputPins["Y"].pinIsChanged() || this.inputPins["Z"].pinIsChanged()) {
+	if (this.trIn.pinIsChanged() || this.xIn.pinIsChanged() || this.yIn.pinIsChanged() || this.zIn.pinIsChanged()) 
+	{
+		
+		var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : Math.max(this.xIn.getSliceCount(),this.yIn.getSliceCount(),this.zIn.getSliceCount());
     
-      var maxSize = this.getMaxInputSliceCount();
       
       for (var i=0; i<maxSize; i++) {
         var x = parseFloat(this.inputPins["X"].getValue(i));

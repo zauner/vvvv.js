@@ -17,7 +17,10 @@ VVVV.Types.Color = function(r, g, b, a) {
 var PinDirection = { Input : 0,Output : 1,Configuration : 2 };
 
 VVVV.Core = {	
-  
+  PinDefault : function(pinname,values) {
+	this.pinname = pinname;
+	this.values = values;
+  },
   
   Pin: function(pinname,direction, values, node) {
 	this.direction = direction;
@@ -77,16 +80,34 @@ VVVV.Core = {
     
     this.inputPins = {};
     this.outputPins = {};
-    this.invisiblePins = {};
+    this.invisiblePins = {} ;
+	
+	this.defaultPinValues = {};
 	
     this.patch = patch;
     if (patch)
       this.patch.nodeMap[id] = this;
+	  
+	this.addDefault = function(pinname, value) {
+      pin = new VVVV.Core.PinDefault(pinname, value);
+	  
+	  //If pin already exists, sets the default
+	  if (this.invisiblePins[pinname]!=undefined) {
+         this.invisiblePins[pinname].values = value;
+      }
+	  if (this.inputPins[pinname]!=undefined) {
+         this.inputPins[pinname].values = value;
+      }
+      this.defaultPinValues[pinname] = pin;
+    }
     
     this.addInputPin = function(pinname, value) {
       pin = new VVVV.Core.Pin(pinname,PinDirection.Input, value, this);
       this.inputPins[pinname] = pin;
       this.patch.pinMap[this.id+'_'+pinname] = pin;
+	  if (this.defaultPinValues[pinname] != undefined) {
+		pin.values = this.defaultPinValues[pinname].values;
+	  }
       return pin;
     }
  
@@ -101,6 +122,9 @@ VVVV.Core = {
       pin = new VVVV.Core.Pin(pinname,PinDirection.Configuration, value, this);
       this.invisiblePins[pinname] = pin;
       this.patch.pinMap[this.id+'_'+pinname] = pin;
+	  if (this.defaultPinValues[pinname] != undefined) {
+		pin.values = this.defaultPinValues[pinname].values;
+	  }
       return pin;
     }
 	    
@@ -211,7 +235,7 @@ VVVV.Core = {
 		//Add descriptive name for all nodes
 		this.addInvisiblePin("Descriptive Name",[""]);
 	}
-    
+	   
     this.initialize = function() {
 		
     }
@@ -295,33 +319,26 @@ VVVV.Core = {
 		//To add anything which relates to all nodes
 		n.setup();
         
-        // PINS
+        //First pass to add default pin values
         var that = this;
         $(this).find('pin').each(function() {
           pinname = $(this).attr('pinname');
           values = splitValues($(this).attr('values'));
-          
-          // if the output pin already exists (because the node created it), skip
-          if (n.outputPins[pinname]!=undefined)
-            return;
-            
-          // the input pin already exists (because the node created it), don't add it, but set values, if present in the xml
-          if (n.inputPins[pinname]!=undefined) {
-            if (values!=undefined) {
-				if (values.length > 0)
-				n.inputPins[pinname].values = values;
-				return;
-			}
-          }
 		  
-		  //Also set config (invisible pins)
-		  if (n.invisiblePins[pinname]!=undefined) {
+		  //Get all defaults from xml
+		  if (n.defaultPinValues[pinname] == undefined) {
             if (values!=undefined)
-              n.invisiblePins[pinname].values = values;
-            return;
-          }
-	  
-		  //this is not found at all, so just add for model
+			{
+				if (values.length > 0)
+					n.addDefault(pinname, values);
+			}
+			return;
+		  }
+		  });
+		  
+		// PINS
+		$(this).find('pin').each(function() {  		    
+		  //CXheck for non implemented nodes
 		  if ($(this).attr('visible')==1 || $(this).attr('slicecount')!=undefined)
           {
             if ($(xml).find('link[srcnodeid='+n.id+']').filter('link[srcpinname='+pinname.replace(/[\[\]]/,'')+']').length > 0) // if it's an input pin
@@ -333,8 +350,9 @@ VVVV.Core = {
             n.addInvisiblePin(pinname, values);
 		  	  
         });
-        
-        n.initialize();
+		
+		//Initialize node
+		n.initialize();
         thisPatch.nodeList.push(n);
         
       });
