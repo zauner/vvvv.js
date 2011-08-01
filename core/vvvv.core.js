@@ -14,10 +14,14 @@ VVVV.Types.Color = function(r, g, b, a) {
   }
 }
 
-VVVV.Core = {
+var PinDirection = { Input : 0,Output : 1,Configuration : 2 };
 
-  Pin: function(pinname, values, node) {
-    this.pinname = pinname;
+VVVV.Core = {	
+  
+  
+  Pin: function(pinname,direction, values, node) {
+	this.direction = direction;
+	this.pinname = pinname;
     this.links = [];
     this.values = values;
     this.node = node;
@@ -75,33 +79,31 @@ VVVV.Core = {
     this.outputPins = {};
     this.invisiblePins = {};
 	
-	
-    
     this.patch = patch;
     if (patch)
       this.patch.nodeMap[id] = this;
     
     this.addInputPin = function(pinname, value) {
-      pin = new VVVV.Core.Pin(pinname, value, this);
+      pin = new VVVV.Core.Pin(pinname,PinDirection.Input, value, this);
       this.inputPins[pinname] = pin;
       this.patch.pinMap[this.id+'_'+pinname] = pin;
       return pin;
     }
  
     this.addOutputPin = function(pinname, value) {
-      pin = new VVVV.Core.Pin(pinname, value, this);
+      pin = new VVVV.Core.Pin(pinname,PinDirection.Output, value, this);
       this.outputPins[pinname] = pin;
       this.patch.pinMap[this.id+'_'+pinname] = pin;
       return pin;
     }
     
     this.addInvisiblePin = function(pinname, value) {
-      pin = new VVVV.Core.Pin(pinname, value, this);
+      pin = new VVVV.Core.Pin(pinname,PinDirection.Configuration, value, this);
       this.invisiblePins[pinname] = pin;
       this.patch.pinMap[this.id+'_'+pinname] = pin;
       return pin;
     }
-    
+	    
     this.IOBoxType = function() {
       match = /^IOBox \((.*)\)/.exec(this.nodename);
       if (match && match.length>1)
@@ -318,7 +320,18 @@ VVVV.Core = {
               n.invisiblePins[pinname].values = values;
             return;
           }
-		  
+	  
+		  //this is not found at all, so just add for model
+		  if ($(this).attr('visible')==1 || $(this).attr('slicecount')!=undefined)
+          {
+            if ($(xml).find('link[srcnodeid='+n.id+']').filter('link[srcpinname='+pinname.replace(/[\[\]]/,'')+']').length > 0) // if it's an input pin
+              n.addOutputPin(pinname, values);
+            else
+              n.addInputPin(pinname, values);
+          }
+          else
+            n.addInvisiblePin(pinname, values);
+		  	  
         });
         
         n.initialize();
