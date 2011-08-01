@@ -42,6 +42,10 @@ VVVV.Core = {
       this.changed = false;
       return ret;
     }
+	
+	this.isConnected = function() {
+		return this.links.length > 0 ? true : false;
+	}
     
     this.getSliceCount = function() {
       return this.values.length;
@@ -301,9 +305,11 @@ VVVV.Core = {
             
           // the input pin already exists (because the node created it), don't add it, but set values, if present in the xml
           if (n.inputPins[pinname]!=undefined) {
-            if (values!=undefined)
-              n.inputPins[pinname].values = values;
-            return;
+            if (values!=undefined) {
+				if (values.length > 0)
+				n.inputPins[pinname].values = values;
+				return;
+			}
           }
 		  
 		  //Also set config (invisible pins)
