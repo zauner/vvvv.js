@@ -1,7 +1,7 @@
 
 
 $(document).ready(function() {
-  //initVVVV('../', 'full');
+  initVVVV('../', 'full');
 
   $('#patchxml').bind('paste', function() {
     setTimeout(function() {
