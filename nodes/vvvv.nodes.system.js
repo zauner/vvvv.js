@@ -22,6 +22,7 @@ VVVV.Nodes.MouseGlobal = function(id, graph) {
     compatibility_issues: ['Cyclic mode not supported', 'No Mouse Wheel pin', 'No Left Button Pin', 'No Right Button Pin', 'No Middle Button Pin']
   };
   
+  this.auto_evaluate = true;
   
   var xOut = this.addOutputPin("X", [0], this);
   var yOut = this.addOutputPin("Y", [0], this);

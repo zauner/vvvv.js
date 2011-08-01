@@ -57,6 +57,8 @@ VVVV.Nodes.FileTexture = function(id, graph) {
     credits: [],
     compatibility_issues: ['Always loads in background', 'No reload pin', 'No preload pin (preloading handled by browser)', 'No up and running pin', 'No texture info outputs']
   };
+  
+  this.auto_evaluate = true;
 
   var filenamePin = this.addInputPin("Filename", [""], this);
   
@@ -113,6 +115,8 @@ VVVV.Nodes.Quad = function(id, graph) {
     credits: [],
     compatibility_issues: ['No Sampler States and Render States', 'No texture transform', 'No texture coord mapping', 'No enable pin']
   };
+  
+  this.auto_evaluate = true;
   
   this.addInputPin("Transform", [], this);
   this.addInputPin("Texture", [], this);
@@ -268,6 +272,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     credits: [],
     compatibility_issues: ['No Clear Pin', 'No Background color pin', 'Backbuffer width and height defined by canvas size', 'No Fullscreen', 'No Enable Pin', 'No Aspect Ration and Viewport transform', 'No mouse output', 'No backbuffer dimesions output', 'No WebGL (EX9) Output Pin']
   };
+  
+  this.auto_evaluate = true;
   
   this.addInputPin("Layers", [], this);
   this.addInputPin("View Transform", [], this);

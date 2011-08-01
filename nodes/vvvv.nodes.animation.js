@@ -21,6 +21,8 @@ VVVV.Nodes.LFO = function(id, graph) {
     compatibility_issues: ['Not spreadable yet']
   };
   
+  this.auto_evaluate = true;
+  
   this.addInputPin("Period", [1.0], this);
   this.addInputPin("Pause", [0], this);
   this.addInputPin("Reverse", [0], this);
@@ -90,6 +92,8 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
     credits: [],
     compatibility_issues: ['Sometimes doesnt stop when target reached', 'Cyclic Pin not implemented', 'Acceleration and Velocitity Out are not set yet']
   };
+  
+  this.auto_evaluate = true;
   
   var positionIn = this.addInputPin("Go To Position", [0.0], this);
   var filterTimeIn = this.addInputPin("FilterTime", [1.0], this);
@@ -176,6 +180,8 @@ VVVV.Nodes.Delay = function(id, graph) {
     compatibility_issues: ['Reset not implemented', 'Linear Mode not implemented']
   };
   
+  this.auto_evaluate = true;
+  
   var inputIn = this.addInputPin("Input", [0.0], this);
   var timeIn = this.addInputPin("Time", [1.0], this);
   var insertIn = this.addInputPin("Insert", [1], this);
@@ -259,6 +265,8 @@ VVVV.Nodes.Change = function(id, graph) {
     compatibility_issues: []
   };
   
+  this.auto_evaluate = true;
+  
   var inputIn = this.addInputPin("Input", [0.0], this);
   
   var changeOut = this.addOutputPin("OnChange", [0], this);
@@ -309,6 +317,8 @@ VVVV.Nodes.TogEdge = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  
+  this.auto_evaluate = true;
   
   var inputIn = this.addInputPin("Input", [0.0], this);
   

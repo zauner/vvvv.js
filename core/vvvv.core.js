@@ -31,9 +31,11 @@ VVVV.Core = {
     this.setValue = function(i, v) {
       this.values[i] = v;
       this.changed = true;
+      this.node.dirty = true;
       _(this.links).each(function(l) {
         l.toPin.values[i] = v;
         l.toPin.changed = true;
+        l.toPin.node.dirty = true;
       });
     }
     
@@ -62,6 +64,10 @@ VVVV.Core = {
     this.inputPins = {};
     this.outputPins = {};
     this.invisiblePins = [];
+    
+    this.auto_evaluate = false;
+    
+    this.dirty = true;
     
     this.patch = patch;
     if (patch)
@@ -346,7 +352,11 @@ VVVV.Core = {
         }
         //console.log('upstream nodes valid, calculating and deleting '+node.nodename);
         
-        node.evaluate();
+        
+        if (node.dirty || node.auto_evaluate) {
+          node.evaluate();
+          node.dirty = false;
+        }
         _(node.inputPins).each(function(inPin) {
           inPin.changed = false;
         });

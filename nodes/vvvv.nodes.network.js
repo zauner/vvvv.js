@@ -22,6 +22,8 @@ VVVV.Nodes.HTTPGet = function(id, graph) {
     compatibility_issues: ['Doesnt handle get variables yet','Doesnt support proxies','No header output pin yet']
   };
   
+  this.auto_evaluate = true;
+  
   var urlIn = this.addInputPin("URL", ["http://localhost"], this);
   var nameIn = this.addInputPin("Name", [""], this);
   var valueIn = this.addInputPin("Value", [""], this);
