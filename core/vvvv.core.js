@@ -117,6 +117,8 @@ VVVV.Core = {
       this.patch.pinMap[this.id+'_'+pinname] = pin;
       return pin;
     }
+	
+	
     
     this.addInvisiblePin = function(pinname, value) {
       pin = new VVVV.Core.Pin(pinname,PinDirection.Configuration, value, this);
@@ -341,13 +343,31 @@ VVVV.Core = {
 		  //CXheck for non implemented nodes
 		  if ($(this).attr('visible')==1 || $(this).attr('slicecount')!=undefined)
           {
-            if ($(xml).find('link[srcnodeid='+n.id+']').filter('link[srcpinname='+pinname.replace(/[\[\]]/,'')+']').length > 0) // if it's an input pin
-              n.addOutputPin(pinname, values);
+            if ($(xml).find('link[srcnodeid='+n.id+']').filter('link[srcpinname='+pinname.replace(/[\[\]]/,'')+']').length > 0)
+			{
+				if (n.outputPins[pinname] == undefined)
+				{
+					//Add as output list if not already there
+					n.addOutputPin(pinname, values);
+				}
+			}
             else
-              n.addInputPin(pinname, values);
+			{
+				if (n.inputPins[pinname] == undefined && n.invisiblePins[pinname] == undefined)
+				{
+					//Add as intput is neither in invisible/input list
+					n.addInputPin(pinname, values);
+				}
+			}
           }
           else
-            n.addInvisiblePin(pinname, values);
+		  {
+			if (n.inputPins[pinname] == undefined && n.invisiblePins[pinname] == undefined)
+			{
+				//Add as invisible pin
+				n.addInvisiblePin(pinname, values);
+			}
+		  }
 		  	  
         });
 		

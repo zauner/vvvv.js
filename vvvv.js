@@ -48,16 +48,16 @@ function initVVVV(path_to_vvvv, mode) {
   
   console.log('done ...');
   
-  VVVV.NodeLibrary = {};
-
-  var p = new VVVV.Core.Patch('');
-  _(VVVV.Nodes).each(function(n) {
-    var x = new n(0, p);
-    console.log("Registering "+x.nodename);
-    VVVV.NodeLibrary[x.nodename] = n;
-  });
-  
 }
+
+VVVV.NodeLibrary = {};
+
+var p = new VVVV.Core.Patch('');
+_(VVVV.Nodes).each(function(n) {
+  var x = new n(0, p);
+  console.log("Registering "+x.nodename);
+  VVVV.NodeLibrary[x.nodename] = n;
+});
 
 
 
