@@ -17,14 +17,10 @@ VVVV.Types.Color = function(r, g, b, a) {
 var PinDirection = { Input : 0,Output : 1,Configuration : 2 };
 
 VVVV.Core = {	
-  PinDefault : function(pinname,values) {
-	this.pinname = pinname;
-	this.values = values;
-  },
   
   Pin: function(pinname,direction, values, node) {
-	this.direction = direction;
-	this.pinname = pinname;
+    this.direction = direction;
+    this.pinname = pinname;
     this.links = [];
     this.values = values;
     this.node = node;
@@ -95,16 +91,7 @@ VVVV.Core = {
       this.patch.nodeMap[id] = this;
 	  
     this.addDefault = function(pinname, value) {
-      pin = new VVVV.Core.PinDefault(pinname, value);
-	  
-      //If pin already exists, sets the default
-      if (this.invisiblePins[pinname]!=undefined) {
-        this.invisiblePins[pinname].values = value;
-      }
-      if (this.inputPins[pinname]!=undefined) {
-        this.inputPins[pinname].values = value;
-      }
-      this.defaultPinValues[pinname] = pin;
+      this.defaultPinValues[pinname] = value;
     }
     
     this.addInputPin = function(pinname, value) {
@@ -112,7 +99,7 @@ VVVV.Core = {
       this.inputPins[pinname] = pin;
       this.patch.pinMap[this.id+'_'+pinname] = pin;
       if (this.defaultPinValues[pinname] != undefined) {
-        pin.values = this.defaultPinValues[pinname].values;
+        pin.values = this.defaultPinValues[pinname];
       }
       return pin;
     }
@@ -123,15 +110,13 @@ VVVV.Core = {
       this.patch.pinMap[this.id+'_'+pinname] = pin;
       return pin;
     }
-	
-	
     
     this.addInvisiblePin = function(pinname, value) {
       pin = new VVVV.Core.Pin(pinname,PinDirection.Configuration, value, this);
       this.invisiblePins[pinname] = pin;
       this.patch.pinMap[this.id+'_'+pinname] = pin;
       if (this.defaultPinValues[pinname] != undefined) {
-        pin.values = this.defaultPinValues[pinname].values;
+        pin.values = this.defaultPinValues[pinname];
       }
       return pin;
     }
