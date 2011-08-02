@@ -327,11 +327,12 @@ VVVV.Core = {
         //To add anything which relates to all nodes
         n.setup();
         
-        //First pass to add default pin values
         var that = this;
+
+        // PINS
         $(this).find('pin').each(function() {
-          pinname = $(this).attr('pinname');
-          values = splitValues($(this).attr('values'));
+          var pinname = $(this).attr('pinname');
+          var values = splitValues($(this).attr('values'));
 		  
           //Get all defaults from xml
           if (n.defaultPinValues[pinname] == undefined) {
@@ -339,12 +340,26 @@ VVVV.Core = {
               if (values.length > 0)
                 n.addDefault(pinname, values);
             }
+          }
+          
+          // if the output pin already exists (because the node created it), skip
+          if (n.outputPins[pinname]!=undefined)
+            return;
+            
+          // the input pin already exists (because the node created it), don't add it, but set values, if present in the xml
+          if (n.inputPins[pinname]!=undefined) {
+            if (values!=undefined)
+              n.inputPins[pinname].values = values;
             return;
           }
-        });
-		  
-        // PINS
-        $(this).find('pin').each(function() {  		    
+          
+          // the input pin already exists (because the node created it), don't add it, but set values, if present in the xml
+          if (n.invisiblePins[pinname]!=undefined) {
+            if (values!=undefined)
+              n.invisiblePins[pinname].values = values;
+            return;
+          }
+  		    
           //CXheck for non implemented nodes
           if ($(this).attr('visible')==1 || $(this).attr('slicecount')!=undefined) {
             if ($(xml).find('link[srcnodeid='+n.id+']').filter('link[srcpinname='+pinname.replace(/[\[\]]/,'')+']').length > 0) {
