@@ -52,15 +52,15 @@ VVVV.Core = {
       return ret;
     }
 	
-	this.isConnected = function() {
-		return this.links.length > 0 ? true : false;
-	}
+    this.isConnected = function() {
+      return this.links.length > 0 ? true : false;
+    }
     
     this.getSliceCount = function() {
       return this.values.length;
     }
 	
-	this.setSliceCount = function(len) {
+    this.setSliceCount = function(len) {
       this.values.length = len;	   
 	   _(this.links).each(function(l) {
         l.toPin.values.length = len;
@@ -94,15 +94,15 @@ VVVV.Core = {
     if (patch)
       this.patch.nodeMap[id] = this;
 	  
-	this.addDefault = function(pinname, value) {
+    this.addDefault = function(pinname, value) {
       pin = new VVVV.Core.PinDefault(pinname, value);
 	  
-	  //If pin already exists, sets the default
-	  if (this.invisiblePins[pinname]!=undefined) {
-         this.invisiblePins[pinname].values = value;
+      //If pin already exists, sets the default
+      if (this.invisiblePins[pinname]!=undefined) {
+        this.invisiblePins[pinname].values = value;
       }
-	  if (this.inputPins[pinname]!=undefined) {
-         this.inputPins[pinname].values = value;
+      if (this.inputPins[pinname]!=undefined) {
+        this.inputPins[pinname].values = value;
       }
       this.defaultPinValues[pinname] = pin;
     }
@@ -111,9 +111,9 @@ VVVV.Core = {
       pin = new VVVV.Core.Pin(pinname,PinDirection.Input, value, this);
       this.inputPins[pinname] = pin;
       this.patch.pinMap[this.id+'_'+pinname] = pin;
-	  if (this.defaultPinValues[pinname] != undefined) {
-		pin.values = this.defaultPinValues[pinname].values;
-	  }
+      if (this.defaultPinValues[pinname] != undefined) {
+        pin.values = this.defaultPinValues[pinname].values;
+      }
       return pin;
     }
  
@@ -130,9 +130,9 @@ VVVV.Core = {
       pin = new VVVV.Core.Pin(pinname,PinDirection.Configuration, value, this);
       this.invisiblePins[pinname] = pin;
       this.patch.pinMap[this.id+'_'+pinname] = pin;
-	  if (this.defaultPinValues[pinname] != undefined) {
-		pin.values = this.defaultPinValues[pinname].values;
-	  }
+      if (this.defaultPinValues[pinname] != undefined) {
+        pin.values = this.defaultPinValues[pinname].values;
+      }
       return pin;
     }
 	    
@@ -238,11 +238,11 @@ VVVV.Core = {
       return ret;
     }
 	
-	this.setup = function() 
-	{
-		//Add descriptive name for all nodes
-		this.addInvisiblePin("Descriptive Name",[""]);
-	}
+    this.setup = function() 
+    {
+      //Add descriptive name for all nodes
+      this.addInvisiblePin("Descriptive Name",[""]);
+    }
 	   
     this.initialize = function() {
 		
@@ -324,8 +324,8 @@ VVVV.Core = {
         if (/\.fx$/.test($(this).attr('nodename')))
           n.isShader = true;
 		  
-		//To add anything which relates to all nodes
-		n.setup();
+        //To add anything which relates to all nodes
+        n.setup();
         
         //First pass to add default pin values
         var that = this;
@@ -333,52 +333,44 @@ VVVV.Core = {
           pinname = $(this).attr('pinname');
           values = splitValues($(this).attr('values'));
 		  
-		  //Get all defaults from xml
-		  if (n.defaultPinValues[pinname] == undefined) {
-            if (values!=undefined)
-			{
-				if (values.length > 0)
-					n.addDefault(pinname, values);
-			}
-			return;
-		  }
-		  });
-		  
-		// PINS
-		$(this).find('pin').each(function() {  		    
-		  //CXheck for non implemented nodes
-		  if ($(this).attr('visible')==1 || $(this).attr('slicecount')!=undefined)
-          {
-            if ($(xml).find('link[srcnodeid='+n.id+']').filter('link[srcpinname='+pinname.replace(/[\[\]]/,'')+']').length > 0)
-			{
-				if (n.outputPins[pinname] == undefined)
-				{
-					//Add as output list if not already there
-					n.addOutputPin(pinname, values);
-				}
-			}
-            else
-			{
-				if (n.inputPins[pinname] == undefined && n.invisiblePins[pinname] == undefined)
-				{
-					//Add as intput is neither in invisible/input list
-					n.addInputPin(pinname, values);
-				}
-			}
+          //Get all defaults from xml
+          if (n.defaultPinValues[pinname] == undefined) {
+            if (values!=undefined) {
+              if (values.length > 0)
+                n.addDefault(pinname, values);
+            }
+            return;
           }
-          else
-		  {
-			if (n.inputPins[pinname] == undefined && n.invisiblePins[pinname] == undefined)
-			{
-				//Add as invisible pin
-				n.addInvisiblePin(pinname, values);
-			}
-		  }
-		  	  
         });
-		
-		//Initialize node
-		n.initialize();
+		  
+        // PINS
+        $(this).find('pin').each(function() {  		    
+          //CXheck for non implemented nodes
+          if ($(this).attr('visible')==1 || $(this).attr('slicecount')!=undefined) {
+            if ($(xml).find('link[srcnodeid='+n.id+']').filter('link[srcpinname='+pinname.replace(/[\[\]]/,'')+']').length > 0) {
+              if (n.outputPins[pinname] == undefined) {
+                //Add as output list if not already there
+                n.addOutputPin(pinname, values);
+              }
+            }
+            else {
+              if (n.inputPins[pinname] == undefined && n.invisiblePins[pinname] == undefined) {
+                //Add as intput is neither in invisible/input list
+                n.addInputPin(pinname, values);
+              }
+            }
+          }
+          else {
+            if (n.inputPins[pinname] == undefined && n.invisiblePins[pinname] == undefined) {
+              //Add as invisible pin
+              n.addInvisiblePin(pinname, values);
+            }
+          }
+              
+        });
+        
+        //Initialize node
+        n.initialize();
         thisPatch.nodeList.push(n);
         
       });
