@@ -220,10 +220,10 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   var clear = 1;
   
   this.initialize = function() {
-    if (!this.inputPins["Descriptive Name"])
+    if (!this.invisiblePins["Descriptive Name"])
       return;
   
-    var selector = this.inputPins["Descriptive Name"].getValue(0);
+    var selector = this.invisiblePins["Descriptive Name"].getValue(0);
     if (selector==undefined || selector=="")
       return;
     var canvas = $(selector).get(0);

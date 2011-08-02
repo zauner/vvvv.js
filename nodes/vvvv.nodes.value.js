@@ -21,23 +21,40 @@ VVVV.Nodes.AddValue = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['No dynamic pin count yet']
+    compatibility_issues: ['']
   };
   
-  this.addInputPin("Input 1", [0.0], this);
-  this.addInputPin("Input 2", [0.0], this);
+  var cntCfg = this.addInvisiblePin("Input Count",[2.0],this); 
+  var inputPins = []; 
+  var outPin;
   
-  this.addOutputPin("Output", [0.0], this);
+  this.initialize = function() {
+	outPin = this.addOutputPin("Output", [0.0], this);
+	
+	var incnt = cntCfg.getValue(0);
+	for (var i = 0; i < incnt; i++)
+	{
+		var InPin = this.addInputPin("Input " + (i+1),[0.0],this);
+		inputPins[i] = InPin;
+	}
+  }
+  
 
-  this.evaluate = function() {
-    if (this.inputPins["Input 1"].pinIsChanged() || this.inputPins["Input 2"].pinIsChanged()) {
-      var maxSpreadSize = Math.max(this.inputPins["Input 1"].values.length, this.inputPins["Input 2"].values.length);
-      
-      for (var i=0; i<maxSpreadSize; i++) {
-        this.outputPins["Output"].setValue(i, parseFloat(this.inputPins["Input 1"].getValue(i)) + parseFloat(this.inputPins["Input 2"].getValue(i)));
-      }
-    }
-    
+  this.evaluate = function() 
+  {
+	var maxSpreadSize = this.getMaxInputSliceCount();
+	
+	outPin.setSliceCount(maxSpreadSize);
+	
+    for (var i=0; i<maxSpreadSize; i++) 
+	{
+		var o = parseFloat(inputPins[0].getValue(i));
+		for (var j=1; j < inputPins.length;j++)
+		{
+			o += parseFloat(inputPins[j].getValue(i));
+		}
+        outPin.setValue(i,o);
+    }  
   }
 
 }
@@ -58,27 +75,45 @@ VVVV.Nodes.SubtractValue = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['No dynamic pin count yet']
+    compatibility_issues: ['']
   };
   
-  var input1In = this.addInputPin("Input 1", [0.0], this);
-  var input2In = this.addInputPin("Input 2", [0.0], this);
+  var cntCfg = this.addInvisiblePin("Input Count",[2.0],this); 
+  var inputPins = []; 
+  var outPin;
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
+  this.initialize = function() {
+	outPin = this.addOutputPin("Output", [0.0], this);
+	
+	var incnt = cntCfg.getValue(0);
+	for (var i = 0; i < incnt; i++)
+	{
+		var InPin = this.addInputPin("Input " + (i+1),[0.0],this);
+		inputPins[i] = InPin;
+	}
+  }
+  
 
-  this.evaluate = function() {
-    if (input1In.pinIsChanged() || input2In.pinIsChanged()) {
-      var maxSize = this.getMaxInputSliceCount();
-      
-      for (var i=0; i<maxSize; i++) {
-        outputOut.setValue(i, parseFloat(input1In.getValue(i))-parseFloat(input2In.getValue(i)));
-      }
-    }
-    
+  this.evaluate = function() 
+  {
+	var maxSpreadSize = this.getMaxInputSliceCount();
+	
+	outPin.setSliceCount(maxSpreadSize);
+	
+    for (var i=0; i<maxSpreadSize; i++) 
+	{
+		var o = parseFloat(inputPins[0].getValue(i));
+		for (var j=1; j < inputPins.length;j++)
+		{
+			o -= parseFloat(inputPins[j].getValue(i));
+		}
+        outPin.setValue(i,o);
+    }  
   }
 
 }
 VVVV.Nodes.SubtractValue.prototype = new VVVV.Core.Node();
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -219,23 +254,40 @@ VVVV.Nodes.MultiplyValue = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['No dynamic pin count yet']
+    compatibility_issues: ['']
   };
   
-  this.addInputPin("Input 1", [0.0], this);
-  this.addInputPin("Input 2", [0.0], this);
+  var cntCfg = this.addInvisiblePin("Input Count",[2.0],this); 
+  var inputPins = []; 
+  var outPin;
   
-  this.addOutputPin("Output", [0.0], this);
+  this.initialize = function() {
+	outPin = this.addOutputPin("Output", [0.0], this);
+	
+	var incnt = cntCfg.getValue(0);
+	for (var i = 0; i < incnt; i++)
+	{
+		var InPin = this.addInputPin("Input " + (i+1),[0.0],this);
+		inputPins[i] = InPin;
+	}
+  }
+  
 
-  this.evaluate = function() {
-    if (this.inputPins["Input 1"].pinIsChanged() || this.inputPins["Input 2"].pinIsChanged()) {
-      var maxSpreadSize = Math.max(this.inputPins["Input 1"].values.length, this.inputPins["Input 2"].values.length);
-      
-      for (var i=0; i<maxSpreadSize; i++) {
-        this.outputPins["Output"].setValue(i, parseFloat(this.inputPins["Input 1"].getValue(i)) * parseFloat(this.inputPins["Input 2"].getValue(i)));
-      }
-    }
-    
+  this.evaluate = function() 
+  {
+	var maxSpreadSize = this.getMaxInputSliceCount();
+	
+	outPin.setSliceCount(maxSpreadSize);
+	
+    for (var i=0; i<maxSpreadSize; i++) 
+	{
+		var o = parseFloat(inputPins[0].getValue(i));
+		for (var j=1; j < inputPins.length;j++)
+		{
+			o *= parseFloat(inputPins[j].getValue(i));
+		}
+        outPin.setValue(i,o);
+    }  
   }
 
 }
@@ -259,15 +311,22 @@ VVVV.Nodes.DivideValue = function(id, graph) {
     compatibility_issues: []
   };
   
+  var inputCfg = this.addInvisiblePin("Inputs Count",[2.0],this);
   var input1In = this.addInputPin("Input", [0.0], this);
   var input2In = this.addInputPin("Input 2", [0.0], this);
   
   var outputOut = this.addOutputPin("Output", [0.0], this);
+  
+  
+  this.initialize = function() {
+	
+    
+  }
 
   this.evaluate = function() {
     if (input1In.pinIsChanged() || input2In.pinIsChanged()) {
       var maxSize = this.getMaxInputSliceCount();
-      
+
       for (var i=0; i<maxSize; i++) {
         outputOut.setValue(i, input1In.getValue(i)/input2In.getValue(i));
       }
@@ -299,6 +358,7 @@ VVVV.Nodes.IOBoxValueAdvanced = function(id, graph) {
   this.addInputPin("SliceOffset", [0], this);
   this.addInputPin("X Input Value", [0.0], this);
   this.addInputPin("Y Input Value", [0.0], this);
+  this.addInvisiblePin("Rows",[1.0],this);
   
   this.addOutputPin("X Output Value", [0.0], this);
   this.addOutputPin("Y Output Value", [0.0], this);

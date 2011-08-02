@@ -40,14 +40,13 @@ function initVVVV(path_to_vvvv, mode) {
       $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.system.js"></script>'));
       $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.canvas.js"></script>'));
       $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.transform.js"></script>'));
+      $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.vectors.js"></script>'));
       $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.webgl.js"></script>'));
     }
     if (mode=='vvvviewer' || mode=='full') {
       $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/vvvviewer/vvvv.vvvviewer.js"></script>'));
     }
   }
-  
-  console.log('done ...');
   
   VVVV.NodeLibrary = {};
 
@@ -57,6 +56,8 @@ function initVVVV(path_to_vvvv, mode) {
     console.log("Registering "+x.nodename);
     VVVV.NodeLibrary[x.nodename] = n;
   });
+  
+  console.log('done ...');
   
 }
 
