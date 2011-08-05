@@ -214,10 +214,9 @@ VVVV.Core = {
     }
     
     this.getMaxInputSliceCount = function() {
-      var ret = 1;
+      var ret = 0;
       _(this.inputPins).each(function(p) {
-		if (p.values.length == 0) { ret = 0; }
-        if (p.values.length>ret && ret > 0)
+        if (p.values.length>ret)
           ret = p.values.length;
       });
       return ret;
