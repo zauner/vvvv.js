@@ -12,6 +12,10 @@ VVVV.Types.CanvasRenderState = function() {
   this.lineWidth = 1.0;
   this.capStyle = VVVV.Types.CanvasCapStyle[0];
   this.joinStyle = VVVV.Types.CanvasCapStyle[0];
+  this.shadowOffsetX = 0.0;
+  this.shadowOffsetY = 0.0;
+  this.shadowBlur = 0.0;
+  this.shadowColor = [0.0, 0.0, 0.0, 1.0];
   
   this.copy_attributes = function(other) {
     this.fillColor = other.fillColor;
@@ -19,7 +23,10 @@ VVVV.Types.CanvasRenderState = function() {
     this.lineWidth = other.lineWidth;
     this.capStyle = other.capStyle;
     this.joinStyle = other.joinStyle;
-    
+    this.shadowOffsetX = other.shadowOffsetX;
+    this.shadowOffsetY = other.shadowOffsetY;
+    this.shadowBlur = other.shadowBlur;
+    this.shadowColor = other.shadowColor;
   }
   
   this.apply = function(ctx) {
@@ -28,6 +35,10 @@ VVVV.Types.CanvasRenderState = function() {
     ctx.lineWidth = this.lineWidth/ctx.canvas.height;
     ctx.lineCap = this.capStyle;
     ctx.lineJoin = this.joinStyle;
+    ctx.shadowOffsetX = this.shadowOffsetX;
+    ctx.shadowOffsetY = this.shadowOffsetY;
+    ctx.shadowBlur = this.shadowBlur;
+    ctx.shadowColor = 'rgba('+parseInt(this.shadowColor[0]*255)+','+parseInt(this.shadowColor[1]*255)+','+parseInt(this.shadowColor[2]*255)+','+this.shadowColor[3]+')';
   }
 }
 
@@ -126,6 +137,56 @@ VVVV.Nodes.StrokeCanvas = function(id, graph) {
   }
 }
 VVVV.Nodes.StrokeCanvas.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Shadow (Canvas VVVVjs RenderState)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.ShadowCanvas = function(id, graph) {
+  this.constructor(id, "Shadow (Canvas VVVVjs RenderState)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this);
+  var colorIn = this.addInputPin("Color", ['0.0, 0.0, 0.0, 1.0'], this);
+  var xOffsetIn = this.addInputPin("Offset X", [0.0], this);
+  var yOffsetIn = this.addInputPin("Offset Y", [0.0], this);
+  var blurIn = this.addInputPin("Blur", [0.0], this);
+  
+  var renderStateOut = this.addOutputPin("Render State Out", [defaultRenderState], this);
+  
+  var renderStates = [];
+  
+  this.evaluate = function() {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+      
+    for (var i=0; i<maxSpreadSize; i++) {
+      if (renderStates[i]==undefined) {
+        renderStates[i] = new VVVV.Types.CanvasRenderState();
+      }
+      if (renderStateIn.isConnected())
+        renderStates[i].copy_attributes(renderStateIn.getValue(i));
+      else
+        renderStates[i].copy_attributes(defaultRenderState);
+      renderStates[i].shadowOffsetX = xOffsetIn.getValue(i);
+      renderStates[i].shadowOffsetY = yOffsetIn.getValue(i);
+      renderStates[i].shadowBlur = blurIn.getValue(i);
+      renderStates[i].shadowColor = colorIn.getValue(i).split(',');
+      renderStateOut.setValue(i, renderStates[i]);
+    }
+    renderStateOut.setSliceCount(maxSpreadSize);
+    
+  }
+}
+VVVV.Nodes.ShadowCanvas.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
