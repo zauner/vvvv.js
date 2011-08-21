@@ -294,8 +294,8 @@ VVVV.Core = {
         thisPatch.width = Math.max(thisPatch.width, $bounds.attr('left')/15+100);
         thisPatch.height = Math.max(thisPatch.height, $bounds.attr('top')/15+25);
 
-        if (VVVV.NodeLibrary[nodename]!=undefined)
-          var n = new VVVV.NodeLibrary[nodename]($(this).attr('id'), thisPatch);
+        if (VVVV.NodeLibrary[nodename.toLowerCase()]!=undefined)
+          var n = new VVVV.NodeLibrary[nodename.toLowerCase()]($(this).attr('id'), thisPatch);
         else
           var n = new VVVV.Core.Node($(this).attr('id'), nodename, thisPatch);
         n.x = $bounds.attr('left')/15;
@@ -303,7 +303,7 @@ VVVV.Core = {
         n.width = $bounds.attr('width');
         n.height = $bounds.attr('height');
         
-        if (/^IOBox/.test(nodename))
+        if (/^iobox/.test(nodename.toLowerCase()))
           n.isIOBox = true;
         if (/\.fx$/.test($(this).attr('nodename')))
           n.isShader = true;
