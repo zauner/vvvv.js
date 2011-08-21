@@ -141,9 +141,9 @@ VVVV.Nodes.Scale = function(id, graph) {
   var ident = mat4.identity(mat4.create());
   
   this.trIn = this.addInputPin("Transform In", [ident], this);
-  this.xIn = this.addInputPin("X", [0.0], this);
-  this.yIn = this.addInputPin("Y", [0.0], this);
-  this.zIn = this.addInputPin("Z", [0.0], this);
+  this.xIn = this.addInputPin("X", [1.0], this);
+  this.yIn = this.addInputPin("Y", [1.0], this);
+  this.zIn = this.addInputPin("Z", [1.0], this);
   
   this.trOut = this.addOutputPin("Transform Out", [], this);
 

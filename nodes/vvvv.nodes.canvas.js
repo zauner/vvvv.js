@@ -3,19 +3,20 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
-VVVV.Types.CanvasCapStyle = [ 'butt', 'round', 'square' ];
-VVVV.Types.CanvasJoinStyle = [ 'miter', 'round', 'bevel' ];
+VVVV.Types.CanvasTexture = { imageObject: undefined, loaded: false };
 
 VVVV.Types.CanvasRenderState = function() {
-  this.fillColor = [0.0, 0.0, 0.0, 0.0];
-  this.strokeColor = [1.0, 1.0, 1.0, 1.0];
+  this.fillColor = [1.0, 1.0, 1.0, 1.0];
+  this.strokeColor = [0.0, 0.0, 0.0, 0.0];
   this.lineWidth = 1.0;
-  this.capStyle = VVVV.Types.CanvasCapStyle[0];
-  this.joinStyle = VVVV.Types.CanvasCapStyle[0];
+  this.capStyle = 'butt';
+  this.joinStyle = 'miter';
+  this.gradient = {type: 'none'};
   this.shadowOffsetX = 0.0;
   this.shadowOffsetY = 0.0;
   this.shadowBlur = 0.0;
   this.shadowColor = [0.0, 0.0, 0.0, 1.0];
+  this.blendMode = 'source-over';
   
   this.copy_attributes = function(other) {
     this.fillColor = other.fillColor;
@@ -23,14 +24,29 @@ VVVV.Types.CanvasRenderState = function() {
     this.lineWidth = other.lineWidth;
     this.capStyle = other.capStyle;
     this.joinStyle = other.joinStyle;
+    this.gradient = other.gradient;
     this.shadowOffsetX = other.shadowOffsetX;
     this.shadowOffsetY = other.shadowOffsetY;
     this.shadowBlur = other.shadowBlur;
     this.shadowColor = other.shadowColor;
+    this.blendMode = other.blendMode;
   }
   
   this.apply = function(ctx) {
-    ctx.fillStyle = 'rgba('+parseInt(this.fillColor[0]*255)+','+parseInt(this.fillColor[1]*255)+','+parseInt(this.fillColor[2]*255)+','+this.fillColor[3]+')';
+    if (this.gradient.type!='none') {
+      if (this.gradient.type=='linear')
+        var g = ctx.createLinearGradient(this.gradient.startX,this.gradient.startY,this.gradient.endX, this.gradient.endY);
+      
+      var numStops = Math.max(this.gradient.colors.length, this.gradient.colorPositions.length);
+      for (var i=0; i<numStops; i++) {
+        var color = this.gradient.colors[i];
+        g.addColorStop(this.gradient.colorPositions[i], 'rgba('+parseInt(color[0]*255)+','+parseInt(color[1]*255)+','+parseInt(color[2]*255)+','+color[3]+')');
+      }
+      ctx.fillStyle = g;
+    }
+    else
+      ctx.fillStyle = 'rgba('+parseInt(this.fillColor[0]*255)+','+parseInt(this.fillColor[1]*255)+','+parseInt(this.fillColor[2]*255)+','+this.fillColor[3]+')';
+     
     ctx.strokeStyle = 'rgba('+parseInt(this.strokeColor[0]*255)+','+parseInt(this.strokeColor[1]*255)+','+parseInt(this.strokeColor[2]*255)+','+this.strokeColor[3]+')';
     ctx.lineWidth = this.lineWidth/ctx.canvas.height;
     ctx.lineCap = this.capStyle;
@@ -39,6 +55,7 @@ VVVV.Types.CanvasRenderState = function() {
     ctx.shadowOffsetY = this.shadowOffsetY;
     ctx.shadowBlur = this.shadowBlur;
     ctx.shadowColor = 'rgba('+parseInt(this.shadowColor[0]*255)+','+parseInt(this.shadowColor[1]*255)+','+parseInt(this.shadowColor[2]*255)+','+this.shadowColor[3]+')';
+    ctx.globalCompositeOperation = this.blendMode;
   }
 }
 
@@ -108,8 +125,8 @@ VVVV.Nodes.StrokeCanvas = function(id, graph) {
   var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this);
   var colorIn = this.addInputPin("Color", ['1.0, 1.0, 1.0, 1.0'], this);
   var lineWidthIn = this.addInputPin("Width", [1.0], this);
-  var capStyleIn = this.addInputPin("Cap Style", [0], this);
-  var joinStyleIn = this.addInputPin("Join Style", [0], this);
+  var capStyleIn = this.addInputPin("Cap Style", ['butt'], this);
+  var joinStyleIn = this.addInputPin("Join Style", ['miter'], this);
   
   var renderStateOut = this.addOutputPin("Render State Out", [defaultRenderState], this);
   
@@ -126,10 +143,11 @@ VVVV.Nodes.StrokeCanvas = function(id, graph) {
         renderStates[i].copy_attributes(renderStateIn.getValue(i));
       else
         renderStates[i].copy_attributes(defaultRenderState);
+
       renderStates[i].strokeColor = colorIn.getValue(i).split(',');
       renderStates[i].lineWidth = lineWidthIn.getValue(i);
-      renderStates[i].capStyle = VVVV.Types.CanvasCapStyle[capStyleIn.getValue(i)%3];
-      renderStates[i].joinStyle = VVVV.Types.CanvasJoinStyle[joinStyleIn.getValue(i)%3];
+      renderStates[i].capStyle = capStyleIn.getValue(i);
+      renderStates[i].joinStyle = joinStyleIn.getValue(i);
       renderStateOut.setValue(i, renderStates[i]);
     }
     renderStateOut.setSliceCount(maxSpreadSize);
@@ -190,6 +208,113 @@ VVVV.Nodes.ShadowCanvas.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Blend (Canvas VVVVjs RenderState)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.BlendCanvas = function(id, graph) {
+  this.constructor(id, "Blend (Canvas VVVVjs RenderState)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this);
+  var modeIn = this.addInputPin("Mode", ['source-over'], this);
+  
+  var renderStateOut = this.addOutputPin("Render State Out", [defaultRenderState], this);
+  
+  var renderStates = [];
+  
+  this.evaluate = function() {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+      
+    for (var i=0; i<maxSpreadSize; i++) {
+      if (renderStates[i]==undefined) {
+        renderStates[i] = new VVVV.Types.CanvasRenderState();
+      }
+      if (renderStateIn.isConnected())
+        renderStates[i].copy_attributes(renderStateIn.getValue(i));
+      else
+        renderStates[i].copy_attributes(defaultRenderState);
+      renderStates[i].blendMode = modeIn.getValue(i);
+      renderStateOut.setValue(i, renderStates[i]);
+    }
+    renderStateOut.setSliceCount(maxSpreadSize);
+    
+  }
+}
+VVVV.Nodes.BlendCanvas.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: LinearGradient (Canvas VVVVjs RenderState)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.LinearGradientCanvas = function(id, graph) {
+  this.constructor(id, "LinearGradient (Canvas VVVVjs RenderState)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this);
+  var startXIn = this.addInputPin("Start X", [0.0], this);
+  var startYIn = this.addInputPin("Start Y", [0.0], this);
+  var endXIn = this.addInputPin("End X", [0.0], this);
+  var endYIn = this.addInputPin("End Y", [0.0], this);
+  var colorsIn = this.addInputPin("Colors", ['1.0, 1.0, 1.0, 1.0', '0.0, 0.0, 0.0, 1.0'], this);
+  var colorPositionsIn = this.addInputPin("Color Positions", [0.0, 1.0], this);
+  
+  var renderStateOut = this.addOutputPin("Render State Out", [defaultRenderState], this);
+  
+  var renderStates = [];
+  
+  this.evaluate = function() {
+    var maxSpreadSize = Math.max(renderStateIn.values.length, startXIn.values.length);
+    maxSpreadSize = Math.max(maxSpreadSize, startYIn.values.length);
+    maxSpreadSize = Math.max(maxSpreadSize, endXIn.values.length);
+    maxSpreadSize = Math.max(maxSpreadSize, endYIn.values.length);
+      
+    for (var i=0; i<maxSpreadSize; i++) {
+      if (renderStates[i]==undefined) {
+        renderStates[i] = new VVVV.Types.CanvasRenderState();
+      }
+      if (renderStateIn.isConnected())
+        renderStates[i].copy_attributes(renderStateIn.getValue(i));
+      else
+        renderStates[i].copy_attributes(defaultRenderState);
+      renderStates[i].gradient = {type: 'linear'};
+      renderStates[i].gradient.startX = startXIn.getValue(i);
+      renderStates[i].gradient.startY = startYIn.getValue(i);
+      renderStates[i].gradient.endX = endXIn.getValue(i);
+      renderStates[i].gradient.endY = endYIn.getValue(i);
+      renderStates[i].gradient.colors = [];
+      renderStates[i].gradient.colorPositions = [];
+      var numStops = Math.max(colorsIn.values.length, colorPositionsIn.values.length);
+      for (var j=0; j<numStops; j++) {
+        renderStates[i].gradient.colors.push(colorsIn.getValue(j).split(','));
+        renderStates[i].gradient.colorPositions.push(colorPositionsIn.getValue(j));
+      }
+      renderStateOut.setValue(i, renderStates[i]);
+    }
+    renderStateOut.setSliceCount(maxSpreadSize);
+    
+  }
+}
+VVVV.Nodes.LinearGradientCanvas.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Arc (Canvas VVVVjs)
  Author(s): Matthias Zauner
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -206,9 +331,7 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
   };
   
   var renderStateIn = this.addInputPin('Render State', [defaultRenderState], this);
-  var xIn = this.addInputPin('X', [0.0], this);
-  var yIn = this.addInputPin('Y', [0.0], this);
-  var rIn = this.addInputPin('R', [0.5], this);
+  var transformIn = this.addInputPin('Transform', [], this);
   var startAngleIn = this.addInputPin('Start Angle', [0.0], this);
   var endAngleIn = this.addInputPin('End Angle', [0.5], this);
   
@@ -217,9 +340,8 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
   var layers = [];
   
   var Arc = function() {
-    this.x = 0;
-    this.y = 0;
-    this.r = 0.5;
+    this.transform = mat4.create();
+    mat4.identity(this.transform);
     this.startAngle = 0;
     this.endAngle = 0.5;
     this.strokeColor = [1.0, 1.0, 1.0, 1.0];
@@ -227,11 +349,17 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
     this.renderState = defaultRenderState;
   
     this.draw = function(ctx) {
+      ctx.save();
+      if (this.transform)
+        ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
       ctx.beginPath();
       this.renderState.apply(ctx);
-      ctx.arc(this.x, this.y, this.r, this.startAngle, this.endAngle, false);
-      ctx.stroke();
-      ctx.fill();
+      ctx.arc(0, 0, 1, this.startAngle, this.endAngle, false);
+      if (this.renderState.fillColor[3]>0)
+        ctx.fill();
+      if (this.renderState.strokeColor[3]>0)
+        ctx.stroke();
+      ctx.restore();
     }
   }
   
@@ -243,9 +371,7 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
       for (var i=0; i<maxSpreadSize; i++) {
         if (layers[i]==undefined)
           layers[i] = new Arc();
-        layers[i].x = parseFloat(xIn.getValue(i));
-        layers[i].y = parseFloat(yIn.getValue(i));
-        layers[i].r = parseFloat(rIn.getValue(i));
+        layers[i].transform = transformIn.getValue(i);
         layers[i].startAngle = parseFloat(startAngleIn.getValue(i))*Math.PI*2;
         layers[i].endAngle = parseFloat(endAngleIn.getValue(i))*Math.PI*2;
         if (renderStateIn.isConnected()) {
@@ -269,6 +395,90 @@ VVVV.Nodes.ArcCanvas.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Text (Canvas VVVVjs)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.TextCanvas = function(id, graph) {
+  this.constructor(id, "Text (Canvas VVVVjs)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var renderStateIn = this.addInputPin('Render State', [defaultRenderState], this);
+  var transformIn = this.addInputPin('Transform', [], this);
+  var textIn = this.addInputPin('Text', ['VVVV.js'], this);
+  var fontIn = this.addInputPin('Font', ['10px sans-serif'], this);
+  var alignIn = this.addInputPin('Align', ['start'], this);
+  var baselineIn = this.addInputPin('Baseline', ['alphabetic'], this);
+  
+  var layersOut = this.addOutputPin('Layer', [], this);
+  
+  var layers = [];
+  
+  var Text = function() {
+    this.transform = mat4.create();
+    mat4.identity(this.transform);
+    this.text = "VVVV.js";
+    this.font = "sans-serif";
+    this.align = 'start';
+    this.baseline = 'top';
+    this.renderState = defaultRenderState;
+  
+    this.draw = function(ctx) {
+      ctx.save();
+      if (this.transform)
+        ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
+      ctx.scale(1/10, -1/10);
+      ctx.font = "10px "+this.font;
+      ctx.textAlign = this.align;
+      ctx.textBaseline = this.baseline;
+      this.renderState.apply(ctx);
+      if (this.renderState.fillColor[3]>0)
+        ctx.fillText(this.text, 0, 0);
+      if (this.renderState.strokeColor[3]>0)
+        ctx.strokeText(this.text, 0, 0);
+      ctx.restore();
+    }
+  }
+  
+  this.evaluate = function() {
+  
+    var maxSpreadSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSpreadSize; i++) {
+      if (layers[i]==undefined)
+        layers[i] = new Text();
+      layers[i].transform = transformIn.getValue(i);
+      layers[i].text = textIn.getValue(i);
+      layers[i].font = fontIn.getValue(i);
+      layers[i].align = alignIn.getValue(i);
+      layers[i].baseline = baselineIn.getValue(i);
+      if (renderStateIn.isConnected()) {
+        layers[i].renderState = renderStateIn.getValue(i);
+      }
+      else {
+        layers[i].renderState = defaultRenderState;
+      }
+    }
+    
+    for (var i=0; i<layers.length; i++) {
+      layersOut.setValue(i, layers[i]);
+    }
+    
+    layersOut.setSliceCount(maxSpreadSize);
+    
+  }
+}
+VVVV.Nodes.TextCanvas.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: BezierCurve (Canvas VVVVjs)
  Author(s): Matthias Zauner
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -285,6 +495,7 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
   };
   
   var renderStateIn = this.addInputPin('Render State', [defaultRenderState], this);
+  var transformIn = this.addInputPin('Transform', [], this);
   var xIn = this.addInputPin('X', [0.0], this);
   var yIn = this.addInputPin('Y', [0.0], this);
   var control1XIn = this.addInputPin('Control 1 X', [0.0], this);
@@ -298,6 +509,8 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
   var layers = [];
   
   var BezierCurve = function() {
+    this.transform = mat4.create();
+    mat4.identity(this.transform);
     this.x = [];
     this.y = [];
     this.c1x = [];
@@ -314,6 +527,10 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
         return;
       this.renderState.apply(ctx);
       
+      ctx.save();
+      if (this.transform)
+        ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
+      
       ctx.beginPath();
       ctx.moveTo(this.x[0], this.y[0]);
       for (var i=1; i<this.x.length; i++) {
@@ -326,8 +543,11 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
           this.y[i]
         );
       }
-      ctx.stroke();
-      ctx.fill();
+      if (this.renderState.fillColor[3]>0)
+        ctx.fill();
+      if (this.renderState.strokeColor[3]>0)
+        ctx.stroke();
+      ctx.restore();
     }
   }
   
@@ -349,6 +569,7 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
             layers[binNum].renderState = renderStateIn.getValue(binNum);
           else
             layers[binNum].renderState = defaultRenderState;
+          layers[binNum].transform = transformIn.getValue(binNum);
         }
         layers[binNum].x[subIndex] = parseFloat(xIn.getValue(j));
         layers[binNum].y[subIndex] = parseFloat(yIn.getValue(j));
@@ -372,6 +593,251 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
   }
 }
 VVVV.Nodes.BezierCurveCanvas.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: FileTexture (Canvas VVVVjs)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.FileTextureCanvas = function(id, graph) {
+  this.constructor(id, "FileTexture (Canvas VVVVjs)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = true;
+  
+  var filenameIn = this.addInputPin('Filename', [], this);
+  
+  var textureOut = this.addOutputPin('Texture Out', [], this);
+  var widthOut = this.addOutputPin('Width', [0], this);
+  var heightOut = this.addOutputPin('Height', [0], this);
+  var runningOut = this.addOutputPin('Up and Running', [0], this);
+  
+  var images = [];
+  var textureLoaded = false;
+  
+  this.evaluate = function() {
+  
+    var maxSpreadSize = this.getMaxInputSliceCount();
+    
+    if (filenameIn.pinIsChanged()) { 
+      for (var i=0; i<maxSpreadSize; i++) {
+        if (images[i]==undefined)
+          images[i] = new Image();
+        images[i].loaded = false;
+        var that = this;
+        var img = images[i];
+        images[i].onload = (function(j) {
+          return function() {
+            images[j].loaded = true;
+            textureLoaded = true;
+          }
+        })(i);
+        images[i].src = filenameIn.getValue(i);
+        runningOut.setValue(i, 0);
+        textureOut.setValue(i, images[i]);
+      }
+      textureOut.setSliceCount(maxSpreadSize);
+    }
+    
+    if (textureLoaded) {
+      for (var i=0; i<maxSpreadSize; i++) {
+        textureOut.setValue(i, images[i]);
+        widthOut.setValue(i, images[i].width);
+        heightOut.setValue(i, images[i].height);
+        runningOut.setValue(i, images[i].loaded ? 1:0);
+      }
+      textureLoaded = false;
+    }
+    
+  }
+}
+VVVV.Nodes.FileTextureCanvas.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: VideoTexture (Canvas VVVVjs)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.FileStreamCanvas = function(id, graph) {
+  this.constructor(id, "FileStream (Canvas VVVVjs)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = true;
+  
+  var playIn = this.addInputPin('Play', [1], this);
+  var loopIn = this.addInputPin('Loop', [0], this);
+  var filenameIn = this.addInputPin('Filename', ['http://html5doctor.com/demos/video-canvas-magic/video.ogg'], this);
+  
+  var videoOut = this.addOutputPin('Video', [], this);
+  var durationOut = this.addOutputPin('Duration', [0.0], this);
+  var positionOut = this.addOutputPin('Position', [0.0], this);
+  var widthOut = this.addOutputPin('Video Width', [0.0], this);
+  var heightOut = this.addOutputPin('Video Height', [0.0], this);
+  
+  var videos = [];
+  
+  this.evaluate = function() {
+  
+    var maxSpreadSize = this.getMaxInputSliceCount();
+    
+    if (filenameIn.pinIsChanged()) { 
+      for (var i=0; i<maxSpreadSize; i++) {
+        if (videos[i]==undefined) {
+          var $video = $('<video style="display:none"><source src="" type=video/ogg></video>');
+          $('body').append($video);
+          dasvideo = $video.get(0);
+          videos[i] = $video[0];
+        }
+        if (filenameIn.getValue(i)!=videos[i].currentSrc) {
+          $(videos[i]).find('source').first().attr('src', filenameIn.getValue(i));
+          videos[i].load();
+          if (playIn.getValue(i)>0.5)
+            videos[i].play();
+          else
+            videos[i].pause();
+          
+          videos[i].loaded = true;
+          videoOut.setValue(i, videos[i]);
+        }
+      }
+    }
+    
+    if (playIn.pinIsChanged()) {
+      for (var i=0; i<maxSpreadSize; i++) {
+        if (playIn.getValue(i)>0.5)
+          videos[i].play();
+        else
+          videos[i].pause();
+      }
+    }
+    
+    /*if (loopIn.pinIsChanged()) {
+      for (var i=0; i<maxSpreadSize; i++) {
+        if (loopIn.getValue(i)>0.5)
+          videos[i].loop = true;
+        else
+          videos[i].loop = false;
+      }
+    }
+    */
+    
+    for (var i=0; i<maxSpreadSize; i++) {
+      if (!videos[i].paused) {
+        videoOut.setValue(i, videos[i]);
+        durationOut.setValue(i, videos[i].duration);
+        positionOut.setValue(i, videos[i].currentTime);
+      }
+      widthOut.setValue(i, videos[i].videoWidth);
+      heightOut.setValue(i, videos[i].videoHeight);
+    }
+    
+    videoOut.setSliceCount(maxSpreadSize);
+    
+  }
+}
+VVVV.Nodes.FileStreamCanvas.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Quad (Canvas VVVVjs)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.QuadCanvas = function(id, graph) {
+  this.constructor(id, "Quad (Canvas VVVVjs)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var transformIn = this.addInputPin('Transform', [], this);
+  var textureIn = this.addInputPin('Texture', [], this);
+  var colorIn = this.addInputPin('Color', ['1.0', '1.0', '1.0', '1.0'], this);
+  
+  var layersOut = this.addOutputPin('Layer', [], this);
+  
+  var layers = [];
+  
+  var Quad = function() {
+    this.transform = mat4.create();
+    mat4.identity(this.transform);
+    this.texture = undefined;
+    this.color = [1.0, 1.0, 1.0, 1.0];
+  
+    this.draw = function(ctx) {
+      ctx.save();
+      if (this.transform)
+        ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
+        
+      if (this.texture) {
+        if (this.texture.loaded) {
+          ctx.globalAlpha = this.color[3];
+          ctx.save();
+            ctx.translate(-.5, .5);
+            if (this.texture.videoWidth)
+              ctx.scale(1/this.texture.videoWidth, -1/this.texture.videoHeight);
+            else
+              ctx.scale(1/this.texture.width, -1/this.texture.height);
+            ctx.drawImage(this.texture, 0, 0);
+          ctx.restore();
+          ctx.fillStyle = 'rgba(0, 0, 0, .001)';
+          ctx.fillRect(-.5, -.5, 1, 1);
+          ctx.globalAlpha = 1.0;
+        }
+      }
+      else {
+        ctx.fillStyle = 'rgba('+parseInt(this.color[0]*255)+', '+parseInt(this.color[1]*255)+', '+parseInt(this.color[2]*255)+', '+this.color[3]+')';
+        ctx.fillRect(-.5, -.5, 1, 1);
+      }
+      
+      ctx.restore();
+    }
+  }
+  
+  this.evaluate = function() {
+  
+    var maxSpreadSize = this.getMaxInputSliceCount();
+      
+    for (var i=0; i<maxSpreadSize; i++) {
+      if (layers[i]==undefined)
+        layers[i] = new Quad();
+      layers[i].transform = transformIn.getValue(i);
+      layers[i].texture = textureIn.getValue(i);
+      layers[i].color = colorIn.getValue(i).split(',');
+    }
+    
+    for (var i=0; i<layers.length; i++) {
+      layersOut.setValue(i, layers[i]);
+    }
+    
+    layersOut.setSliceCount(maxSpreadSize);
+    
+  }
+}
+VVVV.Nodes.QuadCanvas.prototype = new VVVV.Core.Node();
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -476,15 +942,14 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
       bgColor[2] = parseInt(bgColor[2]*255);
     }
       
-    if (layersIn.pinIsChanged() || bgColorIn.pinIsChanged() || clearIn.pinIsChanged()) {
+    if (true) {//layersIn.pinIsChanged() || bgColorIn.pinIsChanged() || clearIn.pinIsChanged()) {
+    
+      defaultRenderState.apply(ctx);
+      
+      if (true)
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      
       ctx.save();
-      
-      if (true) {//clearIn.getValue(0)>0.5) {
-        ctx.clearRect(0,0, canvasWidth, canvasHeight);
-        ctx.fillStyle = 'rgba('+bgColor[0]+','+bgColor[1]+','+bgColor[2]+','+bgColor[3]+')';
-        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-      }
-      
       ctx.translate(canvasWidth/2, canvasHeight/2);
       ctx.scale(canvasWidth/2, -canvasHeight/2);
       ctx.scale(1, canvasWidth/canvasHeight);
@@ -492,8 +957,15 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
       for (var i=0; i<layersIn.values.length; i++) {
         layersIn.getValue(i).draw(ctx);
       }
-      
       ctx.restore();
+      
+      defaultRenderState.apply(ctx);
+      ctx.globalCompositeOperation = 'destination-over';
+      
+      if (true) {//clearIn.getValue(0)>0.5) {
+        ctx.fillStyle = 'rgba('+bgColor[0]+','+bgColor[1]+','+bgColor[2]+','+bgColor[3]+')';
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+      }
     }
     
     

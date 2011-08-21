@@ -1,0 +1,51 @@
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta25.1.dtd" >
+   <PATCH nodename="E:\vvvvnodes\vvvv_45beta25.1\modules\vvvv_js\Group (Canvas VVVVjs).v4p" filename="E:\vvvvnodes\vvvv_45beta25.1\modules\vvvv_js\Group (Canvas VVVVjs).v4p" systemname="Group (Canvas VVVVjs)">
+   <BOUNDS height="4305" left="1725" top="3060" type="Window" width="4035">
+   </BOUNDS>
+   <NODE componentmode="InABox" id="0" nodename="IOBox (Node)" systemname="IOBox (Node)">
+   <BOUNDS height="100" left="555" top="435" type="Node" width="100">
+   </BOUNDS>
+   <BOUNDS height="240" left="555" top="435" type="Box" width="795">
+   </BOUNDS>
+   <PIN pinname="Descriptive Name" slicecount="1" values="|Layer 1|">
+   </PIN>
+   <PIN pinname="Output Node" visible="1">
+   </PIN>
+   </NODE>
+   <NODE componentmode="InABox" id="2" nodename="IOBox (Node)" systemname="IOBox (Node)">
+   <BOUNDS height="100" left="1815" top="360" type="Node" width="100">
+   </BOUNDS>
+   <BOUNDS height="240" left="1815" top="360" type="Box" width="795">
+   </BOUNDS>
+   <PIN pinname="Descriptive Name" slicecount="1" values="|Layer 2|">
+   </PIN>
+   <PIN pinname="Output Node" visible="1">
+   </PIN>
+   </NODE>
+   <NODE componentmode="InABox" id="4" nodename="IOBox (Node)" systemname="IOBox (Node)">
+   <BOUNDS height="100" left="510" top="2550" type="Node" width="100">
+   </BOUNDS>
+   <BOUNDS height="240" left="510" top="2550" type="Box" width="795">
+   </BOUNDS>
+   <PIN pinname="Descriptive Name" slicecount="1" values="Layer">
+   </PIN>
+   <PIN pinname="Input Node" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="Group (GDI)" nodename="Group (GDI)" componentmode="Hidden" id="11">
+   <BOUNDS type="Node" left="540" top="1770" width="2535" height="270">
+   </BOUNDS>
+   <PIN pinname="Layer 1" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Layer 2" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Layer" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="0" srcpinname="Output Node" dstnodeid="11" dstpinname="Layer 1">
+   </LINK>
+   <LINK srcnodeid="2" srcpinname="Output Node" dstnodeid="11" dstpinname="Layer 2">
+   </LINK>
+   <LINK srcnodeid="11" srcpinname="Layer" dstnodeid="4" dstpinname="Input Node">
+   </LINK>
+   </PATCH>
