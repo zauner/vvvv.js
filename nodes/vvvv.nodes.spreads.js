@@ -194,23 +194,21 @@ VVVV.Nodes.LinearSpread = function(id, graph) {
   var outputOut = this.addOutputPin("Output", [0.0], this);
 
   this.evaluate = function() {
-    var recalculate = false;
-    if (countIn.pinIsChanged()) {
-      outputOut.values = [];
-      recalculate = true;
+    
+    var count = parseInt(countIn.getValue(0));
+    var width = parseFloat(widthIn.getValue(0));
+    var phase = parseFloat(phaseIn.getValue(0));
+    var input = parseFloat(inputIn.getValue(0));
+    var stepSize = width/count;
+    var shift = stepSize/2;
+    var result;
+    for (var i=0; i<count; i++) {
+      result = (i*stepSize + shift + phase) % width;
+      result = input-width/2 + result;
+      outputOut.setValue(i, result.toFixed(4));
     }
     
-    recalculate = recalculate || inputIn.pinIsChanged() || widthIn.pinIsChanged() || alignmentIn.pinIsChanged() || countIn.pinIsChanged();
-    
-    if (recalculate) {
-      var stepSize = widthIn.getValue(0)/countIn.getValue(0);
-      var shift = stepSize/2;
-      var result;
-      for (var i=0; i<countIn.getValue(0); i++) {
-        result = inputIn.getValue(0)-widthIn.getValue(0)/2 + i*stepSize + shift + phaseIn.getValue(0);
-        outputOut.setValue(i, result.toFixed(4));
-      }
-    }
+    outputOut.setSliceCount(count);
     
 
   }
