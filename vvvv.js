@@ -54,7 +54,7 @@ function initVVVV(path_to_vvvv, mode) {
   _(VVVV.Nodes).each(function(n) {
     var x = new n(0, p);
     console.log("Registering "+x.nodename);
-    VVVV.NodeLibrary[x.nodename] = n;
+    VVVV.NodeLibrary[x.nodename.toLowerCase()] = n;
   });
   
   console.log('done ...');
