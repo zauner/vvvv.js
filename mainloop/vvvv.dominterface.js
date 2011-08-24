@@ -46,6 +46,8 @@ VVVV.Core.DOMInterface = function(patch) {
     _(inputConnectors).each(function(ioboxConn) {
       switch (ioboxConn.property_class) {
         case "event":
+          if (ioboxConn.values.length!=ioboxConn.node.IOBoxInputPin().values.length)
+            ioboxConn.node.IOBoxInputPin().setSliceCount(ioboxConn.values.length);
           for (var i=0; i<ioboxConn.values.length; i++) {
             if (ioboxConn.node.IOBoxInputPin().values[i]==undefined || ioboxConn.values[i]!=ioboxConn.node.IOBoxInputPin().values[i]) {
               ioboxConn.node.IOBoxInputPin().setValue(i, ioboxConn.values[i]);
@@ -54,6 +56,8 @@ VVVV.Core.DOMInterface = function(patch) {
           break;
         default:
           that.fetchValuesFromDOM(ioboxConn);
+          if (ioboxConn.values.length!=ioboxConn.node.IOBoxInputPin().values.length)
+            ioboxConn.node.IOBoxInputPin().setSliceCount(ioboxConn.values.length);
           for (var i=0; i<ioboxConn.values.length; i++) {
             if (ioboxConn.node.IOBoxInputPin().getValue(i)!=ioboxConn.values[i]) {
               ioboxConn.node.IOBoxInputPin().setValue(i, ioboxConn.values[i]);
@@ -92,6 +96,7 @@ VVVV.Core.DOMInterface = function(patch) {
   // helper
   
   this.fetchValuesFromDOM = function(ioboxConn) {
+    ioboxConn.values.length = 0;
     $(ioboxConn.selector).each(function(i) {
       var value;
       
