@@ -1,6 +1,6 @@
 <!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta26.dtd" >
-   <PATCH nodename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\vvvv_js_page\vvvv_js\examples\04_canvas_cloud\example04.v4p" systemname="example04" filename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\vvvv_js_page\vvvv_js\examples\04_canvas_cloud\example04.v4p">
-   <BOUNDS type="Window" left="10320" top="2070" width="10320" height="9840">
+   <PATCH nodename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\vvvv_js_page\vvvv_js\examples\04_canvas_cloud\example04.v4p" filename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\vvvv_js_page\vvvv_js\examples\04_canvas_cloud\example04.v4p" systemname="example04">
+   <BOUNDS height="9840" left="10320" top="2070" type="Window" width="10320">
    </BOUNDS>
    <NODE componentmode="Hidden" filename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\Renderer (Canvas VVVVjs).v4p" id="45" nodename="Renderer (Canvas VVVVjs)" systemname="Renderer (Canvas VVVVjs)">
    <BOUNDS height="100" left="1935" top="7740" type="Node" width="100">
@@ -193,7 +193,7 @@
    <LINK dstnodeid="31" dstpinname="Spread Count" srcnodeid="32" srcpinname="Y Output Value">
    </LINK>
    <NODE componentmode="Hidden" id="29" nodename="Rotate (Transform)" systemname="Rotate (Transform)">
-   <BOUNDS height="100" left="975" top="4875" type="Node" width="100">
+   <BOUNDS height="100" left="1080" top="4950" type="Node" width="100">
    </BOUNDS>
    <PIN pinname="Transform In" visible="1">
    </PIN>
@@ -283,6 +283,8 @@
    </PIN>
    <PIN pinname="Output" visible="1">
    </PIN>
+   <PIN pinname="Alpha" slicecount="1" values="1">
+   </PIN>
    </NODE>
    <NODE componentmode="Hidden" id="58" nodename="Vector (2d Join)" systemname="Vector (2d Join)">
    <BOUNDS height="100" left="4965" top="2430" type="Node" width="100">
@@ -313,7 +315,7 @@
    </BOUNDS>
    <PIN pinname="Render State Out" visible="1">
    </PIN>
-   <PIN pinname="Mode" slicecount="1" values="source-atop">
+   <PIN pinname="Mode" slicecount="1" values="source-in">
    </PIN>
    <PIN pinname="Render State In" slicecount="1" visible="1" values="||">
    </PIN>
@@ -349,7 +351,7 @@
    <LINK dstnodeid="59" dstpinname="Green" srcnodeid="62" srcpinname="XY">
    </LINK>
    <NODE componentmode="Hidden" filename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\Shadow (Canvas VVVVjs RenderState).v4p" id="63" nodename="Shadow (Canvas VVVVjs RenderState)" systemname="Shadow (Canvas VVVVjs RenderState)">
-   <BOUNDS height="100" left="15" top="4560" type="Node" width="100">
+   <BOUNDS height="100" left="60" top="4695" type="Node" width="100">
    </BOUNDS>
    <PIN pinname="Render State Out" visible="1">
    </PIN>
@@ -361,9 +363,9 @@
    </PIN>
    <PIN pinname="Offset Y" slicecount="1" values="0">
    </PIN>
+   <PIN pinname="Render State In" visible="1" slicecount="1" values="||">
+   </PIN>
    </NODE>
-   <LINK dstnodeid="37" dstpinname="Render State" srcnodeid="63" srcpinname="Render State Out">
-   </LINK>
    <NODE componentmode="Hidden" id="65" nodename="Multiply (Value)" systemname="Multiply (Value)">
    <BOUNDS height="100" left="1455" top="3585" type="Node" width="100">
    </BOUNDS>
@@ -406,12 +408,12 @@
    </NODE>
    <LINK dstnodeid="33" dstpinname="Input" srcnodeid="96" srcpinname="Output">
    </LINK>
-   <NODE nodename="IOBox (String)" componentmode="InABox" id="97" systemname="IOBox (String)">
-   <BOUNDS type="Node" left="1920" top="8370" width="225" height="270">
+   <NODE componentmode="InABox" id="97" nodename="IOBox (String)" systemname="IOBox (String)">
+   <BOUNDS height="270" left="1920" top="8370" type="Node" width="225">
    </BOUNDS>
-   <BOUNDS type="Box" left="1920" top="8370" width="225" height="270">
+   <BOUNDS height="270" left="1920" top="8370" type="Box" width="225">
    </BOUNDS>
-   <PIN pinname="Input String" visible="0" slicecount="1" values="a" encoded="0">
+   <PIN encoded="0" pinname="Input String" slicecount="1" visible="0" values="a">
    </PIN>
    <PIN pinname="Output String" visible="0">
    </PIN>
@@ -420,12 +422,12 @@
    <PIN pinname="String Type" slicecount="1" values="MultiLine">
    </PIN>
    </NODE>
-   <NODE nodename="IOBox (String)" componentmode="InABox" id="98" systemname="IOBox (String)">
-   <BOUNDS type="Node" left="390" top="135" width="1305" height="270">
+   <NODE componentmode="InABox" id="98" nodename="IOBox (String)" systemname="IOBox (String)">
+   <BOUNDS height="270" left="390" top="135" type="Node" width="1305">
    </BOUNDS>
-   <BOUNDS type="Box" left="390" top="135" width="1305" height="270">
+   <BOUNDS height="270" left="390" top="135" type="Box" width="1305">
    </BOUNDS>
-   <PIN pinname="Input String" visible="0" slicecount="1" values="|the cloud shape:|" encoded="0">
+   <PIN encoded="0" pinname="Input String" slicecount="1" visible="0" values="|the cloud shape:|">
    </PIN>
    <PIN pinname="Output String" visible="0">
    </PIN>
@@ -434,12 +436,12 @@
    <PIN pinname="String Type" slicecount="1" values="MultiLine">
    </PIN>
    </NODE>
-   <NODE nodename="IOBox (String)" componentmode="InABox" id="99" systemname="IOBox (String)">
-   <BOUNDS type="Node" left="3015" top="1950" width="3555" height="270">
+   <NODE componentmode="InABox" id="99" nodename="IOBox (String)" systemname="IOBox (String)">
+   <BOUNDS height="270" left="3015" top="1950" type="Node" width="3555">
    </BOUNDS>
-   <BOUNDS type="Box" left="3015" top="1950" width="3870" height="285">
+   <BOUNDS height="285" left="3015" top="1950" type="Box" width="3870">
    </BOUNDS>
-   <PIN pinname="Input String" visible="0" slicecount="1" values="|the cloud&apos;s gradient, blended with &quot;source-atop&quot;:|" encoded="0">
+   <PIN encoded="0" pinname="Input String" slicecount="1" visible="0" values="|the cloud&apos;s gradient, blended with &quot;source-in&quot;:|">
    </PIN>
    <PIN pinname="Output String" visible="0">
    </PIN>
@@ -448,12 +450,12 @@
    <PIN pinname="String Type" slicecount="1" values="MultiLine">
    </PIN>
    </NODE>
-   <NODE nodename="IOBox (String)" componentmode="InABox" id="100" systemname="IOBox (String)">
-   <BOUNDS type="Node" left="6345" top="2250" width="1335" height="270">
+   <NODE componentmode="InABox" id="100" nodename="IOBox (String)" systemname="IOBox (String)">
+   <BOUNDS height="270" left="6345" top="2250" type="Node" width="1335">
    </BOUNDS>
-   <BOUNDS type="Box" left="6345" top="2250" width="3810" height="270">
+   <BOUNDS height="270" left="6345" top="2250" type="Box" width="3810">
    </BOUNDS>
-   <PIN pinname="Input String" visible="0" slicecount="1" values="|the sky gradient, blended with &quot;destination-over&quot;:|" encoded="0">
+   <PIN encoded="0" pinname="Input String" slicecount="1" visible="0" values="|the sky gradient, blended with &quot;destination-over&quot;:|">
    </PIN>
    <PIN pinname="Output String" visible="0">
    </PIN>
@@ -462,4 +464,6 @@
    <PIN pinname="String Type" slicecount="1" values="MultiLine">
    </PIN>
    </NODE>
+   <LINK srcnodeid="63" srcpinname="Render State Out" dstnodeid="37" dstpinname="Render State">
+   </LINK>
    </PATCH>
