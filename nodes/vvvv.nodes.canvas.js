@@ -632,20 +632,26 @@ VVVV.Nodes.FileTextureCanvas = function(id, graph) {
       for (var i=0; i<maxSpreadSize; i++) {
         if (images[i]==undefined)
           images[i] = new Image();
-        images[i].loaded = false;
-        var that = this;
-        var img = images[i];
-        images[i].onload = (function(j) {
-          return function() {
-            images[j].loaded = true;
-            textureLoaded = true;
-          }
-        })(i);
-        images[i].src = filenameIn.getValue(i);
-        runningOut.setValue(i, 0);
-        textureOut.setValue(i, images[i]);
+        if (images[i].src!=filenameIn.getValue(i)) {
+          images[i].loaded = false;
+          var that = this;
+          var img = images[i];
+          images[i].onload = (function(j) {
+            return function() {
+              images[j].loaded = true;
+              textureLoaded = true;
+            }
+          })(i);
+          images[i].src = filenameIn.getValue(i);
+          runningOut.setValue(i, 0);
+          textureOut.setValue(i, images[i]);
+        }
       }
+      images.length = maxSpreadSize;
       textureOut.setSliceCount(maxSpreadSize);
+      widthOut.setSliceCount(maxSpreadSize);
+      heightOut.setSliceCount(maxSpreadSize);
+      runningOut.setValue(maxSpreadSize);
     }
     
     if (textureLoaded) {
