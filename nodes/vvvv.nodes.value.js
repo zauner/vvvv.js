@@ -489,21 +489,16 @@ VVVV.Nodes.SelectValue = function(id, graph) {
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
     
-    var pinsChanged = inputIn.pinIsChanged() || selectIn.pinIsChanged();
-    
-    if (pinsChanged) {
-      outputOut.values = [];
-      formerSliceOut.values = [];
-      
-      var outputIndex = 0;
-      for (var i=0; i<maxSize; i++) {
-        for (var j=0; j<selectIn.getValue(i); j++) {
-          outputOut.setValue(outputIndex, inputIn.getValue(i));
-          formerSliceOut.setValue(outputIndex, i);
-          outputIndex++;
-        }
+    var outputIndex = 0;
+    for (var i=0; i<maxSize; i++) {
+      for (var j=0; j<selectIn.getValue(i); j++) {
+        outputOut.setValue(outputIndex, inputIn.getValue(i));
+        formerSliceOut.setValue(outputIndex, i);
+        outputIndex++;
       }
     }
+    outputOut.setSliceCount(outputIndex);
+    formerSliceOut.setSliceCount(outputIndex);
   }
 
 }
