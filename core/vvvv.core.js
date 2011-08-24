@@ -57,10 +57,13 @@ VVVV.Core = {
     }
 	
     this.setSliceCount = function(len) {
-      this.values.length = len;	   
+      this.values.length = len;
+      this.changed = true;	  
+      this.node.dirty = true; 
 	   _(this.links).each(function(l) {
         l.toPin.values.length = len;
         l.toPin.changed = true;
+        l.toPin.node.dirty = true;
       });
     }
   },
