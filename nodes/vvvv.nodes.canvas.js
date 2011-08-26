@@ -687,8 +687,13 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
   
   this.auto_evaluate = true;
   
+  var networkStates = [ 'NETWORK_EMPTY', 'NETWORK_IDLE', 'NETWORK_LOADING', 'NETWORK_NO_SOURCE' ];
+  var readyStates = [ 'HAVE_NOTHING', 'HAVE_METADATA', 'HAVE_FUTURE_DATA', 'HAVE_ENOUGH_DATA', 'HAVE_CURRENT_DATA' ];
+  
   var playIn = this.addInputPin('Play', [1], this);
   var loopIn = this.addInputPin('Loop', [0], this);
+  var doSeekIn = this.addInputPin('Do Seek', [0], this);
+  var seekPosIn = this.addInputPin('Seek Position', [0.0], this);
   var filenameIn = this.addInputPin('Filename', ['http://html5doctor.com/demos/video-canvas-magic/video.ogg'], this);
   
   var videoOut = this.addOutputPin('Video', [], this);
@@ -696,6 +701,8 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
   var positionOut = this.addOutputPin('Position', [0.0], this);
   var widthOut = this.addOutputPin('Video Width', [0.0], this);
   var heightOut = this.addOutputPin('Video Height', [0.0], this);
+  var networkStatusOut = this.addOutputPin('Network Status', [''], this);
+  var readyStatusOut = this.addOutputPin('Ready Status', [''], this);
   
   var videos = [];
   
@@ -710,6 +717,15 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
           $('body').append($video);
           dasvideo = $video.get(0);
           videos[i] = $video[0];
+          var updateStatus = (function(j) {
+            return function() {
+              networkStatusOut.setValue(j, networkStates[videos[j].networkState]);
+              readyStatusOut.setValue(j, readyStates[videos[j].readyState]);
+            }
+          })(i);
+          videos[i].onprogress = updateStatus;
+          videos[i].oncanplay = updateStatus;
+          videos[i].oncanplaythrough = updateStatus;
         }
         if (filenameIn.getValue(i)!=videos[i].currentSrc) {
           $(videos[i]).find('source').first().attr('src', filenameIn.getValue(i));
@@ -734,21 +750,21 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
       }
     }
     
-    /*if (loopIn.pinIsChanged()) {
+    if (doSeekIn.pinIsChanged()) {
       for (var i=0; i<maxSpreadSize; i++) {
-        if (loopIn.getValue(i)>0.5)
-          videos[i].loop = true;
-        else
-          videos[i].loop = false;
+        if (videos[i%videos.length].loaded && doSeekIn.getValue(i)>=.5) {
+          videos[i%videos.length].currentTime = parseFloat(seekPosIn.getValue(i));
+        }
       }
     }
-    */
     
     for (var i=0; i<maxSpreadSize; i++) {
       if (!videos[i].paused) {
         videoOut.setValue(i, videos[i]);
         durationOut.setValue(i, videos[i].duration);
         positionOut.setValue(i, videos[i].currentTime);
+        if (loopIn.getValue(i)>=.5 && videos[i].currentTime>=videos[i].duration)
+          videos[i].currentTime = 0.0;
       }
       widthOut.setValue(i, videos[i].videoWidth);
       heightOut.setValue(i, videos[i].videoHeight);
