@@ -450,3 +450,58 @@ VVVV.Nodes.SampleAndHold = function(id, graph) {
 }
 VVVV.Nodes.SampleAndHold.prototype = new VVVV.Core.Node();
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Toggle (Animation)
+ Author(s): David Mórász (micro.D)
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Toggle = function(id, graph) {
+  this.constructor(id, "Toggle (Animation)", graph);
+  
+  this.meta = {
+    authors: ['David Mórász (micro.D)'],
+    original_authors: ['VVVV Group'],
+    credits: ['Matthias Zauner'],
+    compatibility_issues: []
+  };
+  
+  var inputIn = this.addInputPin("Input", [0], this);
+  var resetIn = this.addInputPin("Reset", [0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0], this);
+  var inverseOutputOut = this.addOutputPin("Inverse Output", [1], this);
+  
+  var initialized = false;
+  
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    if (inputIn.pinIsChanged() || resetIn.pinIsChanged()) {
+      for (var i=0; i<maxSize; i++) {
+        var result = undefined;
+        if (Math.round(resetIn.getValue(i))>=1)
+          result = 0;
+        if (Math.round(inputIn.getValue(i))>=1)
+          result = (result>=1) ? 0 : 1;
+        if (result!=undefined) {
+          outputOut.setValue(i, result);
+          inverseOutputOut.setValue(i, 1-result);
+        }
+        else if (!initialized) {
+          outputOut.setValue(i, 0);
+          inverseOutputOut.setValue(i, 1);
+        }
+      }
+    }
+    initialized = true;
+
+  }
+
+}
+VVVV.Nodes.Toggle.prototype = new VVVV.Core.Node();
