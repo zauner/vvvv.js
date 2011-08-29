@@ -539,8 +539,8 @@ VVVV.Nodes.Counter = function(id, graph) {
   var oflowOut = this.addOutputPin("Overflow", [0.0], this);
   
   this.evaluate = function() { 
-    var maxSize = this.getMaxInputSliceCount();
- oflowOut..setValue(i, 0);
+	var maxSize = this.getMaxInputSliceCount();
+	oflowOut..setValue(i, 0);
 	uflowOut..setValue(i, 0);
 	
 	if(upIn.pinIsChanged() || downIn.pinIsChanged() || minIn.pinIsChanged() || maxIn.pinIsChanged() || defaultIn.pinIsChanged() || resetIn.pinIsChanged() || modeIn.pinIsChanged())
