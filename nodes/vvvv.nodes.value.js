@@ -584,7 +584,52 @@ VVVV.Nodes.Frac = function(id, graph) {
 VVVV.Nodes.Frac.prototype = new VVVV.Core.Node();
 
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Add (Value Spectral)
+ Author(s): David Mórász (micro.D)
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
+VVVV.Nodes.AddValueSpectral = function(id, graph) {
+  this.constructor(id, "Add (Value Spectral)", graph);
+  
+  this.meta = {
+    authors: ['David Mórász (micro.D)'],
+    original_authors: ['VVVV Group'],
+    credits: ['Matthias Zauner'],
+    compatibility_issues: []
+  };
+  
+  this.addInputPin("Input", [0.0], this);
+  this.addInputPin("Bin Size", [-1], this);
+  
+  this.addOutputPin("Output", [0.0], this);
+
+  this.evaluate = function() {
+    if (this.inputPins["Input"].pinIsChanged() || this.inputPins["Bin Size"].pinIsChanged()) {
+      var maxSpreadSize = this.inputPins["Bin Size"].values.length;
+      for (var k=0; k<maxSpreadSize; k++) {
+      	var sum = 0;
+		if(this.inputPins["Bin Size"].getValue(k)<0) {
+			for(var i=0; i<this.inputPins["Input"].values.length; i++) {
+				sum += this.inputPins["Input"].getValue(i);
+			}
+		}
+		else {
+			for(var i=0; i<this.inputPins["Bin Size"].getValue(k); i++) {
+				sum += this.inputPins["Input"].getValue(i);
+			}
+		}
+        this.outputPins["Output"].setValue(k, sum);
+      }
+    }
+    
+  }
+
+}
+VVVV.Nodes.AddValueSpectral.prototype = new VVVV.Core.Node();
 
 
 
