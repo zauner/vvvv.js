@@ -88,3 +88,60 @@ VVVV.Nodes.ShellExecute = function(id, graph) {
 
 }
 VVVV.Nodes.ShellExecute.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: ScreenInfo (Windows)
+ Author(s): David Mórász (micro.D)
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.ScreenInfo = function(id, graph) {
+  this.constructor(id, "ScreenInfo (Windows)", graph);
+  
+  this.meta = {
+    authors: ['David Mórász (micro.D)'],
+    original_authors: ['VVVV Group'],
+    credits: ['Matthias Zauner'],
+    compatibility_issues: ['Outputs the window size (ResolutionXY) and the document size (Working AreaXY) only','no Bits per pixel']
+  };
+  
+  
+  var windowResOut = this.addOutputPin("ResolutionXY", [0], this);
+  var docResOut = this.addOutputPin("Working AreaXY", [0], this);
+  
+  var wx = 0;
+  var wy = 0;
+  var dx = 0;
+  var dy = 0;
+  
+  $(document).ready(function() {
+    wy = $(window).height();
+    wx = $(window).width();
+    dy = $(document).height();
+    dx = $(document).width();
+  });
+  
+  $(window).resize(function() {
+    wy = $(window).height();
+    wx = $(window).width();
+    dy = $(document).height();
+    dx = $(document).width();
+  });
+
+  this.evaluate = function() {
+    
+    if ((windowResOut.getValue(0)!=wx) || (windowResOut.getValue(1)!=wy)) {
+      windowResOut.setValue(0, wx);
+   windowResOut.setValue(1, wy);
+	}
+    if ((docResOut.getValue(0)!=dx) || (docResOut.getValue(1)!=dy)) {
+      docResOut.setValue(0, dx);
+	  docResOut.setValue(1, dy);
+	}
+  }
+
+}
+VVVV.Nodes.ScreenInfo.prototype = new VVVV.Core.Node();
