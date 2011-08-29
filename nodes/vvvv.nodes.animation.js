@@ -505,3 +505,94 @@ VVVV.Nodes.Toggle = function(id, graph) {
 
 }
 VVVV.Nodes.Toggle.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Counter (Animation)
+ Author(s): David Mórász (micro.D)
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Counter = function(id, graph) {
+  this.constructor(id, "Counter (Animation)", graph);
+  
+  this.meta = {
+    authors: ['David Mórász (micro.D)'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var upIn = this.addInputPin("Up", [0], this);
+  var downIn = this.addInputPin("Down", [0], this);
+  var minIn = this.addInputPin("Minimum", [0], this);
+  var maxIn = this.addInputPin("Maximum", [15], this);
+  var incrIn = this.addInputPin("Increment", [1], this);
+  var defaultIn = this.addInputPin("Default", [0], this);
+  var resetIn = this.addInputPin("Reset", [0], this);
+  var modeIn = this.addInputPin("Mode", ['Wrap'], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+  var uflowOut = this.addOutputPin("Underflow", [0.0], this);
+  var oflowOut = this.addOutputPin("Overflow", [0.0], this);
+  
+  this.evaluate = function() { 
+    var maxSize = this.getMaxInputSliceCount();
+ oflowOut..setValue(i, 0);
+	uflowOut..setValue(i, 0);
+	
+	if(upIn.pinIsChanged() || downIn.pinIsChanged() || minIn.pinIsChanged() || maxIn.pinIsChanged() || defaultIn.pinIsChanged() || resetIn.pinIsChanged() || modeIn.pinIsChanged())
+	{
+		for(var i=0; i<maxSize; i++) {
+			var mode = 0;
+			if(modeIn.getValue(i)=='Unlimited') mode=1;
+			if(modeIn.getValue(i)=='Clamp') mode=2;
+			switch(mode) {
+			case 1:
+				if(upIn.getValue(i)) {
+					outputOut.setValue(i, outputOut.getValue(i) + incrIn.getValue(i));
+				}
+				if(downIn.getValue(i)) {
+					outputOut.setValue(i, outputOut.getValue(i) - incrIn.getValue(i));
+				}
+				break;
+			case 2:
+				if(upIn.getValue(i)) {
+					outputOut.setValue(i, outputOut.getValue(i) + incrIn.getValue(i));
+				}
+				if(downIn.getValue(i)) {
+					outputOut.setValue(i, outputOut.getValue(i) - incrIn.getValue(i));
+				}
+				if(outputOut.getValue(i)>maxIn.getvalue(i)) {
+					outputOut.setValue(i, maxIn.getvalue(i));
+					oflowOut..setValue(i, 1);
+				}
+				if(outputOut.getValue(i)<minIn.getvalue(i)) {
+					outputOut.setValue(i, minIn.getvalue(i));
+					uflowOut..setValue(i, 1);
+				}
+				break;
+			default:
+				if(upIn.getValue(i)) {
+					outputOut.setValue(i, outputOut.getValue(i) + incrIn.getValue(i));
+				}
+				if(downIn.getValue(i)) {
+					outputOut.setValue(i, outputOut.getValue(i) - incrIn.getValue(i));
+				}
+				if(outputOut.getValue(i)>maxIn.getvalue(i)) {
+					outputOut.setValue(i, minIn.getvalue(i));
+					oflowOut..setValue(i, 1);
+				}
+				if(outputOut.getValue(i)<minIn.getvalue(i)) {
+					outputOut.setValue(i, maxIn.getvalue(i));
+					uflowOut..setValue(i, 1);
+				}
+			}
+			if(resetIn.getValue(i)) outputOut.setValue(i, defaultIn.getvalue(i));
+		}
+	}
+  }
+}
+VVVV.Nodes.Counter.prototype = new VVVV.Core.Node();
