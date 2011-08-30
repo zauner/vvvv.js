@@ -86,7 +86,6 @@ VVVV.Core = {
 	  this.defaultPinValues = {};
     
     this.auto_evaluate = false;
-    this.delays_output = false;
     
     this.dirty = true;
     
@@ -407,22 +406,20 @@ VVVV.Core = {
       function evaluateSubGraph(node) {
       
         //console.log("starting with "+node.nodename);
-        if (!node.delays_output) {
-          var upstreamNodesInvalid = false;
-          upstreamNodes = node.getUpstreamNodes();
-          _(upstreamNodes).each(function(upnode) {
-            //console.log('testing '+upnode.nodename);
-            if (todoNodes[upnode.id]!=undefined) {
-              upstreamNodesInvalid = true;
-              //console.log(upnode.nodename+' is still invalid ..');
-            }
-          });
-          if (upstreamNodesInvalid) {
-            //console.log('upstream nodes still invalid');
-            return false;
+        var upstreamNodesInvalid = false;
+        upstreamNodes = node.getUpstreamNodes();
+        _(upstreamNodes).each(function(upnode) {
+          //console.log('testing '+upnode.nodename);
+          if (todoNodes[upnode.id]!=undefined) {
+            upstreamNodesInvalid = true;
+            //console.log(upnode.nodename+' is still invalid ..');
           }
-          //console.log('upstream nodes valid, calculating and deleting '+node.nodename);
+        });
+        if (upstreamNodesInvalid) {
+          //console.log('upstream nodes still invalid');
+          return false;
         }
+        //console.log('upstream nodes valid, calculating and deleting '+node.nodename);
         
         
         if (node.dirty || node.auto_evaluate) {
