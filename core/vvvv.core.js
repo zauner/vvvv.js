@@ -400,13 +400,27 @@ VVVV.Core = {
     
     this.evaluate = function() {
       var todoNodes = {};
+      var checkedNodes = {};
       for (var i=0; i<this.nodeList.length; i++) {
         todoNodes[this.nodeList[i].id] = this.nodeList[i];
       }
+      var num = 0;
+      //console.log('==== frame ====');
+      
+      function markSubGraphAsChecked(node) {
+        checkedNodes[node.id] = true;
+        //console.log('mark '+node.nodename+' '+node.id+' as checked');
+        _(node.getDownstreamNodes()).each(function(downnode) {
+          markSubGraphAsChecked(downnode);
+        });
+      }
       
       function evaluateSubGraph(node) {
-      
-        //console.log("starting with "+node.nodename);
+        if (checkedNodes[node.id]==true)
+          return;
+        num++;
+        //console.log("starting with "+node.nodename+" ("+node.id+")");
+
         var upstreamNodesInvalid = false;
         upstreamNodes = node.getUpstreamNodes();
         _(upstreamNodes).each(function(upnode) {
@@ -417,7 +431,8 @@ VVVV.Core = {
           }
         });
         if (upstreamNodesInvalid) {
-          //console.log('upstream nodes still invalid');
+          //console.log('upstream nodes still invalid, marking subgraph as checked and return');
+          markSubGraphAsChecked(node);
           return false;
         }
         //console.log('upstream nodes valid, calculating and deleting '+node.nodename);
@@ -431,24 +446,26 @@ VVVV.Core = {
           inPin.changed = false;
         });
         
-        
-        /*
-         *_(node.getDownstreamNodes()).each(function(downnode) {
-         *  evaluateSubGraph(downnode);
-         *});
-         */
-
-        
         delete todoNodes[node.id];
+ 
+        _(node.getDownstreamNodes()).each(function(downnode) {
+          if (todoNodes[downnode.id]!=undefined)
+            evaluateSubGraph(downnode);
+        });
+        
         return true;
       }
       
       while (_(todoNodes).size() > 0) {
+        //console.log('--- loop --- ');
+        checkedNodes = {};
         _(todoNodes).each(function(n, id, index) {
+          //console.log('starting anew');
           evaluateSubGraph(n);
         });
       }
       
+      //console.log(num);
       this.afterEvaluate();
       
     }
