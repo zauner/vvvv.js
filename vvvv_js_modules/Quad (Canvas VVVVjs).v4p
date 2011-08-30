@@ -1,5 +1,5 @@
-<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta25.1.dtd" >
-   <PATCH nodename="E:\vvvvnodes\vvvv_45beta25.1\modules\vvvv_js_modules\Quad (Canvas VVVVjs).v4p" filename="E:\vvvvnodes\vvvv_45beta25.1\modules\vvvv_js_modules\Quad (Canvas VVVVjs).v4p" systemname="Quad (Canvas VVVVjs)">
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta26.dtd" >
+   <PATCH nodename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\Quad (Canvas VVVVjs).v4p" filename="E:\vvvvnodes\vvvv_45beta25.1\modules\vvvv_js_modules\Quad (Canvas VVVVjs).v4p" systemname="Quad (Canvas VVVVjs)">
    <BOUNDS height="6000" left="4695" top="3825" type="Window" width="9000">
    </BOUNDS>
    <NODE componentmode="Hidden" id="2" nodename="Translate (Transform)" systemname="Translate (Transform)">
@@ -7,13 +7,15 @@
    </BOUNDS>
    <PIN pinname="Transform In" slicecount="1" visible="1" values="||">
    </PIN>
+   <PIN pinname="Transform Out" visible="1">
+   </PIN>
    </NODE>
    <NODE componentmode="InABox" id="3" nodename="IOBox (Node)" systemname="IOBox (Node)">
    <BOUNDS height="100" left="450" top="390" type="Node" width="100">
    </BOUNDS>
    <BOUNDS height="240" left="450" top="390" type="Box" width="795">
    </BOUNDS>
-   <PIN pinname="Descriptive Name" slicecount="1" values="Transform">
+   <PIN pinname="Descriptive Name" slicecount="1" values="Transform" encoded="0">
    </PIN>
    <PIN pinname="Output Node" visible="1">
    </PIN>
@@ -25,61 +27,63 @@
    </BOUNDS>
    <BOUNDS height="240" left="1935" top="390" type="Box" width="795">
    </BOUNDS>
-   <PIN pinname="Descriptive Name" slicecount="1" values="Texture">
+   <PIN pinname="Descriptive Name" slicecount="1" values="Texture" encoded="0">
    </PIN>
    <PIN pinname="Output Node" visible="1">
    </PIN>
    </NODE>
-   <NODE componentmode="InABox" id="5" nodename="IOBox (Node)" systemname="IOBox (Node)">
-   <BOUNDS height="100" left="1950" top="1215" type="Node" width="100">
-   </BOUNDS>
-   <BOUNDS height="240" left="1950" top="1215" type="Box" width="795">
-   </BOUNDS>
-   <PIN pinname="Input Node" slicecount="1" visible="1" values="||">
-   </PIN>
-   </NODE>
-   <LINK dstnodeid="5" dstpinname="Input Node" srcnodeid="4" srcpinname="Output Node">
-   </LINK>
    <NODE componentmode="InABox" id="6" nodename="IOBox (Node)" systemname="IOBox (Node)">
    <BOUNDS height="100" left="990" top="4470" type="Node" width="100">
    </BOUNDS>
    <BOUNDS height="240" left="990" top="4470" type="Box" width="795">
    </BOUNDS>
-   <PIN pinname="Descriptive Name" slicecount="1" values="Layer">
+   <PIN pinname="Descriptive Name" slicecount="1" values="Layer" encoded="0">
    </PIN>
    <PIN pinname="Input Node" slicecount="1" visible="1" values="||">
    </PIN>
    </NODE>
-   <NODE componentmode="InABox" id="7" nodename="IOBox (Node)" systemname="IOBox (Node)">
-   <BOUNDS height="100" left="960" top="3435" type="Node" width="100">
+   <NODE componentmode="InABox" id="8" nodename="IOBox (Color)" systemname="IOBox (Color)">
+   <BOUNDS height="100" left="3600" top="315" type="Node" width="100">
    </BOUNDS>
-   <BOUNDS height="240" left="960" top="3435" type="Box" width="795">
+   <BOUNDS height="480" left="3600" top="315" type="Box" width="2250">
    </BOUNDS>
-   <PIN pinname="Output Node" visible="1">
-   </PIN>
-   </NODE>
-   <LINK dstnodeid="6" dstpinname="Input Node" srcnodeid="7" srcpinname="Output Node">
-   </LINK>
-   <NODE systemname="IOBox (Color)" nodename="IOBox (Color)" componentmode="InABox" id="8">
-   <BOUNDS type="Node" left="3600" top="315" width="100" height="100">
-   </BOUNDS>
-   <BOUNDS type="Box" left="3600" top="315" width="2250" height="480">
-   </BOUNDS>
-   <PIN pinname="Descriptive Name" slicecount="1" values="Color">
+   <PIN pinname="Descriptive Name" slicecount="1" values="Color" encoded="0">
    </PIN>
    <PIN pinname="Color Output" visible="1">
    </PIN>
    <PIN pinname="Color Input" slicecount="1" values="|1.00000,1.00000,1.00000,1.00000|">
    </PIN>
    </NODE>
-   <NODE systemname="IOBox (Color)" nodename="IOBox (Color)" componentmode="InABox" id="9">
-   <BOUNDS type="Node" left="3600" top="1515" width="100" height="100">
+   <NODE componentmode="InABox" id="9" nodename="IOBox (Color)" systemname="IOBox (Color)">
+   <BOUNDS height="100" left="3600" top="1515" type="Node" width="100">
    </BOUNDS>
-   <BOUNDS type="Box" left="3600" top="1515" width="2250" height="480">
+   <BOUNDS height="480" left="3600" top="1515" type="Box" width="2250">
    </BOUNDS>
    <PIN pinname="Color Input" visible="1">
    </PIN>
+   <PIN pinname="Color Output" visible="1">
+   </PIN>
    </NODE>
-   <LINK srcnodeid="8" srcpinname="Color Output" dstnodeid="9" dstpinname="Color Input">
+   <LINK dstnodeid="9" dstpinname="Color Input" srcnodeid="8" srcpinname="Color Output">
+   </LINK>
+   <NODE systemname="Quad (DX9)" nodename="Quad (DX9)" componentmode="Hidden" id="10">
+   <BOUNDS type="Node" left="1845" top="2730" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Layer" visible="1">
+   </PIN>
+   <PIN pinname="Texture" visible="1">
+   </PIN>
+   <PIN pinname="Transform" visible="1">
+   </PIN>
+   <PIN pinname="Color" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="10" srcpinname="Layer" dstnodeid="6" dstpinname="Input Node">
+   </LINK>
+   <LINK srcnodeid="4" srcpinname="Output Node" dstnodeid="10" dstpinname="Texture">
+   </LINK>
+   <LINK srcnodeid="2" srcpinname="Transform Out" dstnodeid="10" dstpinname="Transform">
+   </LINK>
+   <LINK srcnodeid="9" srcpinname="Color Output" dstnodeid="10" dstpinname="Color">
    </LINK>
    </PATCH>
