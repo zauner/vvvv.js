@@ -404,7 +404,6 @@ VVVV.Core = {
       for (var i=0; i<this.nodeList.length; i++) {
         todoNodes[this.nodeList[i].id] = this.nodeList[i];
       }
-      var num = 0;
       //console.log('==== frame ====');
       
       function markSubGraphAsChecked(node) {
@@ -418,7 +417,6 @@ VVVV.Core = {
       function evaluateSubGraph(node) {
         if (checkedNodes[node.id]==true)
           return;
-        num++;
         //console.log("starting with "+node.nodename+" ("+node.id+")");
 
         var upstreamNodesInvalid = false;
@@ -441,17 +439,20 @@ VVVV.Core = {
         if (node.dirty || node.auto_evaluate) {
           node.evaluate();
           node.dirty = false;
+          
+          _(node.inputPins).each(function(inPin) {
+            inPin.changed = false;
+          });
+          
+          delete todoNodes[node.id];
+   
+          _(node.getDownstreamNodes()).each(function(downnode) {
+            if (todoNodes[downnode.id]!=undefined)
+              evaluateSubGraph(downnode);
+          });
         }
-        _(node.inputPins).each(function(inPin) {
-          inPin.changed = false;
-        });
-        
-        delete todoNodes[node.id];
- 
-        _(node.getDownstreamNodes()).each(function(downnode) {
-          if (todoNodes[downnode.id]!=undefined)
-            evaluateSubGraph(downnode);
-        });
+        else
+          delete todoNodes[node.id];
         
         return true;
       }
@@ -465,7 +466,6 @@ VVVV.Core = {
         });
       }
       
-      //console.log(num);
       this.afterEvaluate();
       
     }
