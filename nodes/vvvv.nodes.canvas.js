@@ -670,7 +670,7 @@ VVVV.Nodes.FileTextureCanvas.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: VideoTexture (Canvas VVVVjs)
+ NODE: FileStream (Canvas VVVVjs)
  Author(s): Matthias Zauner
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -692,6 +692,8 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
   
   var playIn = this.addInputPin('Play', [1], this);
   var loopIn = this.addInputPin('Loop', [0], this);
+  var startTimeIn = this.addInputPin('Start Time', [0.0], this);
+  var endTimeIn = this.addInputPin('End Time', [-1.0], this);
   var doSeekIn = this.addInputPin('Do Seek', [0], this);
   var seekPosIn = this.addInputPin('Seek Position', [0.0], this);
   var filenameIn = this.addInputPin('Filename', ['http://html5doctor.com/demos/video-canvas-magic/video.ogg'], this);
@@ -715,7 +717,6 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
         if (videos[i]==undefined) {
           var $video = $('<video style="display:none"><source src="" type=video/ogg></video>');
           $('body').append($video);
-          dasvideo = $video.get(0);
           videos[i] = $video[0];
           var updateStatus = (function(j) {
             return function() {
@@ -754,6 +755,8 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
       for (var i=0; i<maxSpreadSize; i++) {
         if (videos[i%videos.length].loaded && doSeekIn.getValue(i)>=.5) {
           videos[i%videos.length].currentTime = parseFloat(seekPosIn.getValue(i));
+          if (playIn.getValue(i)>.5)
+            videos[i].play();
         }
       }
     }
@@ -763,8 +766,13 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
         videoOut.setValue(i, videos[i]);
         durationOut.setValue(i, videos[i].duration);
         positionOut.setValue(i, videos[i].currentTime);
-        if (loopIn.getValue(i)>=.5 && videos[i].currentTime>=videos[i].duration)
-          videos[i].currentTime = 0.0;
+        var endTime = parseFloat(endTimeIn.getValue(i));
+        if (videos[i].currentTime>=videos[i].duration || (endTime>=0 && videos[i].currentTime>=endTime)) {
+          if (loopIn.getValue(i)>=.5)
+            videos[i].currentTime = parseFloat(startTimeIn.getValue(i));
+          else
+            videos[i].pause();
+        }
       }
       widthOut.setValue(i, videos[i].videoWidth);
       heightOut.setValue(i, videos[i].videoHeight);
