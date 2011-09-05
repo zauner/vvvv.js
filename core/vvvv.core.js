@@ -86,6 +86,7 @@ VVVV.Core = {
 	  this.defaultPinValues = {};
     
     this.auto_evaluate = false;
+    this.delays_output = false;
     
     this.dirty = true;
     
@@ -399,42 +400,26 @@ VVVV.Core = {
     
     
     this.evaluate = function() {
-      var todoNodes = {};
-      var checkedNodes = {};
+      //console.log('==== frame ====');  
+      var invalidNodes = {};
+      var terminalNodes = {}
       for (var i=0; i<this.nodeList.length; i++) {
-        todoNodes[this.nodeList[i].id] = this.nodeList[i];
+        if (this.nodeList[i].getDownstreamNodes().length==0 || this.nodeList[i].auto_evaluate || this.nodeList[i].delays_output) {
+          terminalNodes[this.nodeList[i].id] = this.nodeList[i];
+        }
+        invalidNodes[this.nodeList[i].id] = this.nodeList[i];
       }
-      //console.log('==== frame ====');
       
-      function markSubGraphAsChecked(node) {
-        checkedNodes[node.id] = true;
-        //console.log('mark '+node.nodename+' '+node.id+' as checked');
-        _(node.getDownstreamNodes()).each(function(downnode) {
-          markSubGraphAsChecked(downnode);
-        });
-      }
       
       function evaluateSubGraph(node) {
-        if (checkedNodes[node.id]==true)
-          return;
         //console.log("starting with "+node.nodename+" ("+node.id+")");
 
-        var upstreamNodesInvalid = false;
         upstreamNodes = node.getUpstreamNodes();
         _(upstreamNodes).each(function(upnode) {
-          //console.log('testing '+upnode.nodename);
-          if (todoNodes[upnode.id]!=undefined) {
-            upstreamNodesInvalid = true;
-            //console.log(upnode.nodename+' is still invalid ..');
+          if (invalidNodes[upnode.id]!=undefined && !upnode.delays_output) {
+            evaluateSubGraph(upnode);
           }
         });
-        if (upstreamNodesInvalid) {
-          //console.log('upstream nodes still invalid, marking subgraph as checked and return');
-          markSubGraphAsChecked(node);
-          return false;
-        }
-        //console.log('upstream nodes valid, calculating and deleting '+node.nodename);
-        
         
         if (node.dirty || node.auto_evaluate) {
           node.evaluate();
@@ -443,28 +428,17 @@ VVVV.Core = {
           _(node.inputPins).each(function(inPin) {
             inPin.changed = false;
           });
-          
-          delete todoNodes[node.id];
-   
-          _(node.getDownstreamNodes()).each(function(downnode) {
-            if (todoNodes[downnode.id]!=undefined)
-              evaluateSubGraph(downnode);
-          });
         }
-        else
-          delete todoNodes[node.id];
+        delete invalidNodes[node.id];
         
         return true;
       }
       
-      while (_(todoNodes).size() > 0) {
-        //console.log('--- loop --- ');
-        checkedNodes = {};
-        _(todoNodes).each(function(n, id, index) {
-          //console.log('starting anew');
+      _(terminalNodes).each(function(n, id, index) {
+        //console.log('starting anew '+n.nodename);
+        if (invalidNodes[n.id]!=undefined)
           evaluateSubGraph(n);
-        });
-      }
+      });
       
       this.afterEvaluate();
       

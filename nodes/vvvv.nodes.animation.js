@@ -450,3 +450,47 @@ VVVV.Nodes.SampleAndHold = function(id, graph) {
 }
 VVVV.Nodes.SampleAndHold.prototype = new VVVV.Core.Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: FrameDelay (Animation)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.FrameDelay = function(id, graph) {
+  this.constructor(id, "FrameDelay (Animation)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['no dynamice pin count']
+  };
+  
+  this.delays_output = true;
+  
+  var input1In = this.addInputPin("Input 1", [0.0], this);
+  var default1In = this.addInputPin("Default 1", [0.0], this);
+  var initIn = this.addInputPin("Initialize", [0], this);
+  
+  var output1Out = this.addOutputPin("Output 1", [0.0], this);
+  
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      if (initIn.getValue(i)>0.5)
+        output1Out.setValue(i, default1In.getValue(i));
+      else
+        output1Out.setValue(i, input1In.getValue(i));
+    }
+    output1Out.setSliceCount(maxSize);
+    
+  }
+
+}
+VVVV.Nodes.FrameDelay.prototype = new VVVV.Core.Node();
+
