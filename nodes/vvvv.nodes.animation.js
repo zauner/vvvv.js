@@ -540,8 +540,8 @@ VVVV.Nodes.Counter = function(id, graph) {
   
   this.evaluate = function() { 
 	var maxSize = this.getMaxInputSliceCount();
-	oflowOut..setValue(i, 0);
-	uflowOut..setValue(i, 0);
+	oflowOut.setValue(i, 0);
+	uflowOut.setValue(i, 0);
 	
 	if(upIn.pinIsChanged() || downIn.pinIsChanged() || minIn.pinIsChanged() || maxIn.pinIsChanged() || defaultIn.pinIsChanged() || resetIn.pinIsChanged() || modeIn.pinIsChanged())
 	{
@@ -567,11 +567,11 @@ VVVV.Nodes.Counter = function(id, graph) {
 				}
 				if(outputOut.getValue(i)>maxIn.getvalue(i)) {
 					outputOut.setValue(i, maxIn.getvalue(i));
-					oflowOut..setValue(i, 1);
+					oflowOut.setValue(i, 1);
 				}
 				if(outputOut.getValue(i)<minIn.getvalue(i)) {
 					outputOut.setValue(i, minIn.getvalue(i));
-					uflowOut..setValue(i, 1);
+					uflowOut.setValue(i, 1);
 				}
 				break;
 			default:
@@ -583,11 +583,11 @@ VVVV.Nodes.Counter = function(id, graph) {
 				}
 				if(outputOut.getValue(i)>maxIn.getvalue(i)) {
 					outputOut.setValue(i, minIn.getvalue(i));
-					oflowOut..setValue(i, 1);
+					oflowOut.setValue(i, 1);
 				}
 				if(outputOut.getValue(i)<minIn.getvalue(i)) {
 					outputOut.setValue(i, maxIn.getvalue(i));
-					uflowOut..setValue(i, 1);
+					uflowOut.setValue(i, 1);
 				}
 			}
 			if(resetIn.getValue(i)) outputOut.setValue(i, defaultIn.getvalue(i));
