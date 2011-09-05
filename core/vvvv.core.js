@@ -86,6 +86,7 @@ VVVV.Core = {
 	  this.defaultPinValues = {};
     
     this.auto_evaluate = false;
+    this.delays_output = false;
     
     this.dirty = true;
     
@@ -398,55 +399,45 @@ VVVV.Core = {
     
     
     this.evaluate = function() {
-      var todoNodes = {};
+      //console.log('==== frame ====');  
+      var invalidNodes = {};
+      var terminalNodes = {}
       for (var i=0; i<this.nodeList.length; i++) {
-        todoNodes[this.nodeList[i].id] = this.nodeList[i];
+        if (this.nodeList[i].getDownstreamNodes().length==0 || this.nodeList[i].auto_evaluate || this.nodeList[i].delays_output) {
+          terminalNodes[this.nodeList[i].id] = this.nodeList[i];
+        }
+        invalidNodes[this.nodeList[i].id] = this.nodeList[i];
       }
       
-      function evaluateSubGraph(node) {
       
-        //console.log("starting with "+node.nodename);
-        var upstreamNodesInvalid = false;
+      function evaluateSubGraph(node) {
+        //console.log("starting with "+node.nodename+" ("+node.id+")");
+
         upstreamNodes = node.getUpstreamNodes();
         _(upstreamNodes).each(function(upnode) {
-          //console.log('testing '+upnode.nodename);
-          if (todoNodes[upnode.id]!=undefined) {
-            upstreamNodesInvalid = true;
-            //console.log(upnode.nodename+' is still invalid ..');
+          if (invalidNodes[upnode.id]!=undefined && !upnode.delays_output) {
+            evaluateSubGraph(upnode);
           }
         });
-        if (upstreamNodesInvalid) {
-          //console.log('upstream nodes still invalid');
-          return false;
-        }
-        //console.log('upstream nodes valid, calculating and deleting '+node.nodename);
-        
         
         if (node.dirty || node.auto_evaluate) {
           node.evaluate();
           node.dirty = false;
+          
+          _(node.inputPins).each(function(inPin) {
+            inPin.changed = false;
+          });
         }
-        _(node.inputPins).each(function(inPin) {
-          inPin.changed = false;
-        });
+        delete invalidNodes[node.id];
         
-        
-        /*
-         *_(node.getDownstreamNodes()).each(function(downnode) {
-         *  evaluateSubGraph(downnode);
-         *});
-         */
-
-        
-        delete todoNodes[node.id];
         return true;
       }
       
-      while (_(todoNodes).size() > 0) {
-        _(todoNodes).each(function(n, id, index) {
+      _(terminalNodes).each(function(n, id, index) {
+        //console.log('starting anew '+n.nodename);
+        if (invalidNodes[n.id]!=undefined)
           evaluateSubGraph(n);
-        });
-      }
+      });
       
       this.afterEvaluate();
       
