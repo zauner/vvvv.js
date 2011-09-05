@@ -86,6 +86,7 @@ VVVV.Core = {
 	  this.defaultPinValues = {};
     
     this.auto_evaluate = false;
+    this.delays_output = false;
     
     this.dirty = true;
     
@@ -403,7 +404,7 @@ VVVV.Core = {
       var invalidNodes = {};
       var terminalNodes = {}
       for (var i=0; i<this.nodeList.length; i++) {
-        if (this.nodeList[i].getDownstreamNodes().length==0 || this.nodeList[i].auto_evaluate) {
+        if (this.nodeList[i].getDownstreamNodes().length==0 || this.nodeList[i].auto_evaluate || this.nodeList[i].delays_output) {
           terminalNodes[this.nodeList[i].id] = this.nodeList[i];
         }
         invalidNodes[this.nodeList[i].id] = this.nodeList[i];
@@ -415,7 +416,7 @@ VVVV.Core = {
 
         upstreamNodes = node.getUpstreamNodes();
         _(upstreamNodes).each(function(upnode) {
-          if (invalidNodes[upnode.id]!=undefined) {
+          if (invalidNodes[upnode.id]!=undefined && !upnode.delays_output) {
             evaluateSubGraph(upnode);
           }
         });
