@@ -720,8 +720,7 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
           videos[i] = $video[0];
           var updateStatus = (function(j) {
             return function() {
-              networkStatusOut.setValue(j, networkStates[videos[j].networkState]);
-              readyStatusOut.setValue(j, readyStates[videos[j].readyState]);
+              
             }
           })(i);
           videos[i].onprogress = updateStatus;
@@ -764,18 +763,28 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
     for (var i=0; i<maxSpreadSize; i++) {
       if (!videos[i].paused) {
         videoOut.setValue(i, videos[i]);
-        durationOut.setValue(i, videos[i].duration);
+        if (durationOut.getValue(i)!=videos[i].duration)
+          durationOut.setValue(i, videos[i].duration);
         positionOut.setValue(i, videos[i].currentTime);
         var endTime = parseFloat(endTimeIn.getValue(i));
+        var startTime = parseFloat(startTimeIn.getValue(i));
+        if (videos[i].currentTime<startTime)
+          videos[i].currentTime = startTime;
         if (videos[i].currentTime>=videos[i].duration || (endTime>=0 && videos[i].currentTime>=endTime)) {
           if (loopIn.getValue(i)>=.5)
-            videos[i].currentTime = parseFloat(startTimeIn.getValue(i));
+            videos[i].currentTime = startTime;
           else
             videos[i].pause();
         }
       }
-      widthOut.setValue(i, videos[i].videoWidth);
-      heightOut.setValue(i, videos[i].videoHeight);
+      if (videos[i].videoWidth!=widthOut.getValue(i) || videos[i].videoHeight!=heightOut.getValue(i)) {
+        widthOut.setValue(i, videos[i].videoWidth);
+        heightOut.setValue(i, videos[i].videoHeight);
+      }
+      if (networkStatusOut.getValue(i)!=networkStates[videos[i].networkState])
+        networkStatusOut.setValue(i, networkStates[videos[i].networkState]);
+      if (readyStatusOut.getValue(i)!=readyStates[videos[i].readyState])
+        readyStatusOut.setValue(i, readyStates[videos[i].readyState]);
     }
     
     videoOut.setSliceCount(maxSpreadSize);
