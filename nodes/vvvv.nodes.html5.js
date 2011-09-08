@@ -107,6 +107,7 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
   var filenameIn = this.addInputPin('Filename', ['http://html5doctor.com/demos/video-canvas-magic/video.ogg'], this);
   
   var videoOut = this.addOutputPin('Video', [], this);
+  var audioOut = this.addOutputPin('Audio', [], this);               // this might be just the same output as the video out for now, since there's no audio tag support yet.
   var durationOut = this.addOutputPin('Duration', [0.0], this);
   var positionOut = this.addOutputPin('Position', [0.0], this);
   var widthOut = this.addOutputPin('Video Width', [0.0], this);
@@ -126,6 +127,7 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
           var $video = $('<video style="display:none"><source src="" type=video/ogg></video>');
           $('body').append($video);
           videos[i] = $video[0];
+          videos[i].volume = 0;
           var updateStatus = (function(j) {
             return function() {
               
@@ -145,6 +147,7 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
           
           videos[i].loaded = true;
           videoOut.setValue(i, videos[i]);
+          audioOut.setValue(i, videos[i]);
         }
       }
     }
@@ -171,6 +174,7 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
     for (var i=0; i<maxSpreadSize; i++) {
       if (!videos[i].paused) {
         videoOut.setValue(i, videos[i]);
+        audioOut.setValue(i, videos[i]);
         if (durationOut.getValue(i)!=videos[i].duration)
           durationOut.setValue(i, videos[i].duration);
         positionOut.setValue(i, videos[i].currentTime);
@@ -196,7 +200,45 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
     }
     
     videoOut.setSliceCount(maxSpreadSize);
+    audioOut.setSliceCount(maxSpreadSize);
     
   }
 }
 VVVV.Nodes.FileStreamCanvas.prototype = new VVVV.Core.Node();
+
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: AudioOut (HTML5 VVVVjs)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.AudioOutHTML5 = function(id, graph) {
+  this.constructor(id, "AudioOut (HTML5 VVVVjs)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var audioIn = this.addInputPin('Audio', [], this);
+  var volumeIn = this.addInputPin('Volume', [0.5], this);
+  
+  this.evaluate = function() {
+  
+    var maxSpreadSize = this.getMaxInputSliceCount();
+    
+    if (volumeIn.pinIsChanged()) {
+      for (var i=0; i<maxSpreadSize; i++) {
+        audioIn.getValue(i).volume = Math.max(0.0, Math.min(1.0, parseFloat(volumeIn.getValue(i))));
+      }
+    }
+    
+  }
+}
+VVVV.Nodes.AudioOutHTML5.prototype = new VVVV.Core.Node();
+
