@@ -555,7 +555,7 @@
    <NODE nodename="IOBox (String)" componentmode="InABox" id="91" systemname="IOBox (String)">
    <BOUNDS type="Node" left="6675" top="9075" width="2790" height="270">
    </BOUNDS>
-   <BOUNDS type="Box" left="6675" top="9075" width="2790" height="270">
+   <BOUNDS type="Box" left="6675" top="9075" width="3075" height="285">
    </BOUNDS>
    <PIN pinname="Input String" visible="0" slicecount="1" values="|&lt;&lt; hack: scale 0 seems to glitch in FF|" encoded="0">
    </PIN>

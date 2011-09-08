@@ -9,7 +9,7 @@
    </PIN>
    <PIN pinname="Layers" slicecount="1" visible="1" values="||">
    </PIN>
-   <BOUNDS type="Window" left="795" top="2190" width="9645" height="9855">
+   <BOUNDS height="9855" left="795" top="2190" type="Window" width="9645">
    </BOUNDS>
    </NODE>
    <NODE componentmode="Hidden" filename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\Quad (Canvas VVVVjs).v4p" id="1" nodename="Quad (Canvas VVVVjs)" systemname="Quad (Canvas VVVVjs)">
@@ -26,20 +26,6 @@
    </NODE>
    <LINK dstnodeid="0" dstpinname="Layers" srcnodeid="1" srcpinname="Layer">
    </LINK>
-   <NODE componentmode="Hidden" filename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\FileTexture (Canvas VVVVjs).v4p" id="2" nodename="FileTexture (Canvas VVVVjs)" systemname="FileTexture (Canvas VVVVjs)">
-   <BOUNDS height="100" left="2760" top="5235" type="Node" width="100">
-   </BOUNDS>
-   <PIN pinname="Filename" visible="1">
-   </PIN>
-   <PIN pinname="Texture Out" visible="1">
-   </PIN>
-   <PIN pinname="Up and Running" visible="1">
-   </PIN>
-   <PIN pinname="Height" visible="1">
-   </PIN>
-   <PIN pinname="Width" visible="1">
-   </PIN>
-   </NODE>
    <NODE componentmode="InABox" id="3" nodename="IOBox (String)" systemname="IOBox (String)">
    <BOUNDS height="100" left="525" top="120" type="Node" width="100">
    </BOUNDS>
@@ -75,10 +61,6 @@
    </PIN>
    </NODE>
    <LINK dstnodeid="4" dstpinname="Y" srcnodeid="5" srcpinname="Output">
-   </LINK>
-   <LINK dstnodeid="5" dstpinname="Input 2" srcnodeid="2" srcpinname="Width">
-   </LINK>
-   <LINK dstnodeid="5" dstpinname="Input" srcnodeid="2" srcpinname="Height">
    </LINK>
    <NODE componentmode="Hidden" id="8" nodename="Rotate (Transform)" systemname="Rotate (Transform)">
    <BOUNDS height="100" left="1245" top="4005" type="Node" width="100">
@@ -158,8 +140,6 @@
    <PIN pinname="Position Out" visible="1">
    </PIN>
    </NODE>
-   <LINK dstnodeid="14" dstpinname="Go To Position" srcnodeid="2" srcpinname="Up and Running">
-   </LINK>
    <LINK dstnodeid="13" dstpinname="Alpha" srcnodeid="14" srcpinname="Position Out">
    </LINK>
    <NODE componentmode="InABox" id="17" nodename="IOBox (Value Advanced)" systemname="IOBox (Value Advanced)">
@@ -256,14 +236,34 @@
    </LINK>
    <LINK dstnodeid="9" dstpinname="Y" srcnodeid="25" srcpinname="Position Out">
    </LINK>
-   <LINK dstnodeid="2" dstpinname="Filename" srcnodeid="3" srcpinname="Output String">
-   </LINK>
    <LINK dstnodeid="24" dstpinname="Go To Position" srcnodeid="22" srcpinname="Output">
    </LINK>
    <LINK dstnodeid="21" dstpinname="X" srcnodeid="24" srcpinname="Position Out">
    </LINK>
    <LINK dstnodeid="8" dstpinname="Transform In" srcnodeid="21" srcpinname="Transform Out">
    </LINK>
-   <LINK srcnodeid="2" srcpinname="Texture Out" dstnodeid="1" dstpinname="Texture">
+   <NODE systemname="FileTexture (HTML5 VVVVjs)" filename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\FileTexture (HTML5 VVVVjs).v4p" nodename="FileTexture (HTML5 VVVVjs)" componentmode="Hidden" id="26">
+   <BOUNDS type="Node" left="2895" top="5040" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Up and Running" visible="1">
+   </PIN>
+   <PIN pinname="Filename" visible="1">
+   </PIN>
+   <PIN pinname="Height" visible="1">
+   </PIN>
+   <PIN pinname="Width" visible="1">
+   </PIN>
+   <PIN pinname="Texture Out" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="26" srcpinname="Up and Running" dstnodeid="14" dstpinname="Go To Position">
+   </LINK>
+   <LINK srcnodeid="3" srcpinname="Output String" dstnodeid="26" dstpinname="Filename">
+   </LINK>
+   <LINK srcnodeid="26" srcpinname="Height" dstnodeid="5" dstpinname="Input">
+   </LINK>
+   <LINK srcnodeid="26" srcpinname="Width" dstnodeid="5" dstpinname="Input 2">
+   </LINK>
+   <LINK srcnodeid="26" srcpinname="Texture Out" dstnodeid="1" dstpinname="Texture">
    </LINK>
    </PATCH>

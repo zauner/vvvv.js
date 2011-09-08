@@ -5,7 +5,7 @@
    <NODE componentmode="InAWindow" filename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\Renderer (Canvas VVVVjs).v4p" id="26" nodename="Renderer (Canvas VVVVjs)" systemname="Renderer (Canvas VVVVjs)">
    <BOUNDS height="100" left="1230" top="12360" type="Node" width="100">
    </BOUNDS>
-   <BOUNDS height="9855" left="390" top="3405" type="Window" width="9645">
+   <BOUNDS height="9855" left="0" top="10080" type="Window" width="9645">
    </BOUNDS>
    <PIN encoded="0" pinname="Descriptive Name" slicecount="1" values="#renderer">
    </PIN>
@@ -26,38 +26,6 @@
    <PIN pinname="String Type" slicecount="1" values="MultiLine">
    </PIN>
    </NODE>
-   <NODE componentmode="Hidden" filename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\FileStream (Canvas VVVVjs).v4p" id="28" nodename="FileStream (Canvas VVVVjs)" systemname="FileStream (Canvas VVVVjs)">
-   <BOUNDS height="270" left="1635" top="4755" type="Node" width="3375">
-   </BOUNDS>
-   <PIN pinname="Video" visible="1">
-   </PIN>
-   <PIN pinname="Loop" slicecount="1" values="1">
-   </PIN>
-   <PIN pinname="Do Seek" visible="1">
-   </PIN>
-   <PIN pinname="Seek Position" visible="1">
-   </PIN>
-   <PIN pinname="Filename" visible="1">
-   </PIN>
-   <PIN pinname="Video Width" visible="1">
-   </PIN>
-   <PIN pinname="Video Height" visible="1">
-   </PIN>
-   <PIN pinname="End Time" visible="1">
-   </PIN>
-   <PIN pinname="Start Time" visible="1">
-   </PIN>
-   <PIN pinname="Ready Status" visible="1">
-   </PIN>
-   <PIN pinname="Network Status" visible="1">
-   </PIN>
-   <PIN pinname="Position" visible="1">
-   </PIN>
-   <PIN pinname="Duration" visible="1">
-   </PIN>
-   <PIN pinname="Play" slicecount="1" values="1">
-   </PIN>
-   </NODE>
    <NODE componentmode="Hidden" filename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\Quad (Canvas VVVVjs).v4p" id="29" nodename="Quad (Canvas VVVVjs)" systemname="Quad (Canvas VVVVjs)">
    <BOUNDS height="100" left="1260" top="7545" type="Node" width="100">
    </BOUNDS>
@@ -70,8 +38,6 @@
    <PIN pinname="Color" slicecount="1" values="|1.00000,1.00000,1.00000,1.00000|">
    </PIN>
    </NODE>
-   <LINK dstnodeid="29" dstpinname="Texture" srcnodeid="28" srcpinname="Video">
-   </LINK>
    <NODE componentmode="InABox" id="38" nodename="IOBox (String)" systemname="IOBox (String)">
    <BOUNDS height="100" left="4950" top="4215" type="Node" width="100">
    </BOUNDS>
@@ -82,8 +48,6 @@
    <PIN pinname="Output String" visible="1">
    </PIN>
    </NODE>
-   <LINK dstnodeid="28" dstpinname="Filename" srcnodeid="38" srcpinname="Output String">
-   </LINK>
    <NODE componentmode="Hidden" id="40" nodename="Divide (Value)" systemname="Divide (Value)">
    <BOUNDS height="100" left="1860" top="6300" type="Node" width="100">
    </BOUNDS>
@@ -107,10 +71,6 @@
    </PIN>
    </NODE>
    <LINK dstnodeid="29" dstpinname="Transform" srcnodeid="41" srcpinname="Transform Out">
-   </LINK>
-   <LINK dstnodeid="40" dstpinname="Input" srcnodeid="28" srcpinname="Video Width">
-   </LINK>
-   <LINK dstnodeid="40" dstpinname="Input 2" srcnodeid="28" srcpinname="Video Height">
    </LINK>
    <LINK dstnodeid="41" dstpinname="X" srcnodeid="40" srcpinname="Output">
    </LINK>
@@ -272,10 +232,6 @@
    </NODE>
    <LINK dstnodeid="61" dstpinname="Transform In" srcnodeid="64" srcpinname="Transform Out">
    </LINK>
-   <LINK dstnodeid="51" dstpinname="Input 2" srcnodeid="28" srcpinname="Network Status">
-   </LINK>
-   <LINK dstnodeid="62" dstpinname="Input 2" srcnodeid="28" srcpinname="Ready Status">
-   </LINK>
    <NODE componentmode="Hidden" id="65" nodename="Select (Value)" systemname="Select (Value)">
    <BOUNDS height="100" left="2730" top="1035" type="Node" width="100">
    </BOUNDS>
@@ -380,8 +336,6 @@
    </NODE>
    <LINK dstnodeid="74" dstpinname="Input" srcnodeid="72" srcpinname="Y Output Value">
    </LINK>
-   <LINK dstnodeid="28" dstpinname="Start Time" srcnodeid="74" srcpinname="Output">
-   </LINK>
    <NODE componentmode="Hidden" id="75" nodename="GetSlice (Spreads)" systemname="GetSlice (Spreads)">
    <BOUNDS height="100" left="3285" top="3795" type="Node" width="100">
    </BOUNDS>
@@ -393,8 +347,6 @@
    </PIN>
    </NODE>
    <LINK dstnodeid="75" dstpinname="Input" srcnodeid="73" srcpinname="Y Output Value">
-   </LINK>
-   <LINK dstnodeid="28" dstpinname="End Time" srcnodeid="75" srcpinname="Output">
    </LINK>
    <LINK dstnodeid="74" dstpinname="Index" srcnodeid="69" srcpinname="Y Output Value">
    </LINK>
@@ -484,10 +436,6 @@
    <PIN pinname="Output" visible="1">
    </PIN>
    </NODE>
-   <LINK dstnodeid="85" dstpinname="Input" srcnodeid="28" srcpinname="Position">
-   </LINK>
-   <LINK dstnodeid="85" dstpinname="Input 2" srcnodeid="28" srcpinname="Duration">
-   </LINK>
    <NODE componentmode="Hidden" id="86" nodename="RGB (Color Join)" systemname="RGB (Color Join)">
    <BOUNDS height="100" left="6030" top="10635" type="Node" width="100">
    </BOUNDS>
@@ -524,10 +472,6 @@
    </NODE>
    <LINK dstnodeid="86" dstpinname="Alpha" srcnodeid="88" srcpinname="XY">
    </LINK>
-   <LINK dstnodeid="28" dstpinname="Seek Position" srcnodeid="74" srcpinname="Output">
-   </LINK>
-   <LINK dstnodeid="28" dstpinname="Do Seek" srcnodeid="68" srcpinname="Output">
-   </LINK>
    <LINK dstnodeid="77" dstpinname="Layer 1" srcnodeid="50" srcpinname="Layer">
    </LINK>
    <LINK dstnodeid="77" dstpinname="Layer 2" srcnodeid="78" srcpinname="Layer">
@@ -538,8 +482,8 @@
    </LINK>
    <LINK dstnodeid="50" dstpinname="Layer 2" srcnodeid="55" srcpinname="Layer">
    </LINK>
-   <NODE systemname="Add (Value)" nodename="Add (Value)" componentmode="Hidden" id="90">
-   <BOUNDS type="Node" left="6150" top="9060" width="100" height="100">
+   <NODE componentmode="Hidden" id="90" nodename="Add (Value)" systemname="Add (Value)">
+   <BOUNDS height="100" left="6150" top="9060" type="Node" width="100">
    </BOUNDS>
    <PIN pinname="Input 1" visible="1">
    </PIN>
@@ -548,16 +492,16 @@
    <PIN pinname="Output" visible="1">
    </PIN>
    </NODE>
-   <LINK srcnodeid="85" srcpinname="Output" dstnodeid="90" dstpinname="Input 1">
+   <LINK dstnodeid="90" dstpinname="Input 1" srcnodeid="85" srcpinname="Output">
    </LINK>
-   <LINK srcnodeid="90" srcpinname="Output" dstnodeid="87" dstpinname="Y">
+   <LINK dstnodeid="87" dstpinname="Y" srcnodeid="90" srcpinname="Output">
    </LINK>
-   <NODE nodename="IOBox (String)" componentmode="InABox" id="91" systemname="IOBox (String)">
-   <BOUNDS type="Node" left="6675" top="9075" width="2790" height="270">
+   <NODE componentmode="InABox" id="91" nodename="IOBox (String)" systemname="IOBox (String)">
+   <BOUNDS height="270" left="6675" top="9075" type="Node" width="2790">
    </BOUNDS>
-   <BOUNDS type="Box" left="6675" top="9075" width="3075" height="285">
+   <BOUNDS height="285" left="6675" top="9075" type="Box" width="3075">
    </BOUNDS>
-   <PIN pinname="Input String" visible="0" slicecount="1" values="|&lt;&lt; hack: scale 0 seems to glitch in FF|" encoded="0">
+   <PIN encoded="0" pinname="Input String" slicecount="1" visible="0" values="|&lt;&lt; hack: scale 0 seems to glitch in FF|">
    </PIN>
    <PIN pinname="Output String" visible="0">
    </PIN>
@@ -566,4 +510,58 @@
    <PIN pinname="String Type" slicecount="1" values="MultiLine">
    </PIN>
    </NODE>
+   <NODE systemname="FileStream (HTML5 VVVVjs)" filename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\FileStream (HTML5 VVVVjs).v4p" nodename="FileStream (HTML5 VVVVjs)" componentmode="Hidden" id="92">
+   <BOUNDS type="Node" left="1365" top="4815" width="3660" height="270">
+   </BOUNDS>
+   <PIN pinname="Do Seek" visible="1">
+   </PIN>
+   <PIN pinname="Filename" visible="1">
+   </PIN>
+   <PIN pinname="Start Time" visible="1">
+   </PIN>
+   <PIN pinname="End Time" visible="1">
+   </PIN>
+   <PIN pinname="Loop" slicecount="1" values="1">
+   </PIN>
+   <PIN pinname="Video" visible="1">
+   </PIN>
+   <PIN pinname="Video Width" visible="1">
+   </PIN>
+   <PIN pinname="Video Height" visible="1">
+   </PIN>
+   <PIN pinname="Network Status" visible="1">
+   </PIN>
+   <PIN pinname="Ready Status" visible="1">
+   </PIN>
+   <PIN pinname="Duration" visible="1">
+   </PIN>
+   <PIN pinname="Position" visible="1">
+   </PIN>
+   <PIN pinname="Seek Position" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="68" srcpinname="Output" dstnodeid="92" dstpinname="Do Seek">
+   </LINK>
+   <LINK srcnodeid="38" srcpinname="Output String" dstnodeid="92" dstpinname="Filename">
+   </LINK>
+   <LINK srcnodeid="74" srcpinname="Output" dstnodeid="92" dstpinname="Start Time">
+   </LINK>
+   <LINK srcnodeid="75" srcpinname="Output" dstnodeid="92" dstpinname="End Time">
+   </LINK>
+   <LINK srcnodeid="92" srcpinname="Video" dstnodeid="29" dstpinname="Texture">
+   </LINK>
+   <LINK srcnodeid="92" srcpinname="Video Width" dstnodeid="40" dstpinname="Input">
+   </LINK>
+   <LINK srcnodeid="92" srcpinname="Video Height" dstnodeid="40" dstpinname="Input 2">
+   </LINK>
+   <LINK srcnodeid="92" srcpinname="Network Status" dstnodeid="51" dstpinname="Input 2">
+   </LINK>
+   <LINK srcnodeid="92" srcpinname="Ready Status" dstnodeid="62" dstpinname="Input 2">
+   </LINK>
+   <LINK srcnodeid="92" srcpinname="Duration" dstnodeid="85" dstpinname="Input 2">
+   </LINK>
+   <LINK srcnodeid="92" srcpinname="Position" dstnodeid="85" dstpinname="Input">
+   </LINK>
+   <LINK srcnodeid="74" srcpinname="Output" dstnodeid="92" dstpinname="Seek Position">
+   </LINK>
    </PATCH>
