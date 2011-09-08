@@ -539,6 +539,8 @@
    </PIN>
    <PIN pinname="Seek Position" visible="1">
    </PIN>
+   <PIN pinname="Audio" visible="1">
+   </PIN>
    </NODE>
    <LINK srcnodeid="68" srcpinname="Output" dstnodeid="92" dstpinname="Do Seek">
    </LINK>
@@ -563,5 +565,37 @@
    <LINK srcnodeid="92" srcpinname="Position" dstnodeid="85" dstpinname="Input">
    </LINK>
    <LINK srcnodeid="74" srcpinname="Output" dstnodeid="92" dstpinname="Seek Position">
+   </LINK>
+   <NODE systemname="AudioOut (HTML5 VVVVjs)" filename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\AudioOut (HTML5 VVVVjs).v4p" nodename="AudioOut (HTML5 VVVVjs)" componentmode="Hidden" id="96">
+   <BOUNDS type="Node" left="225" top="6375" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Audio" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Volume" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="92" srcpinname="Audio" dstnodeid="96" dstpinname="Audio">
+   </LINK>
+   <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="97">
+   <BOUNDS type="Node" left="405" top="5385" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="405" top="5385" width="795" height="240">
+   </BOUNDS>
+   <PIN pinname="Descriptive Name" slicecount="1" values="#mute" encoded="0">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="NOT (Boolean)" nodename="NOT (Boolean)" componentmode="Hidden" id="98">
+   <BOUNDS type="Node" left="1170" top="5865" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Input" visible="1">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="97" srcpinname="Y Output Value" dstnodeid="98" dstpinname="Input">
+   </LINK>
+   <LINK srcnodeid="98" srcpinname="Output" dstnodeid="96" dstpinname="Volume">
    </LINK>
    </PATCH>
