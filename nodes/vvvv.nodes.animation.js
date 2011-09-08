@@ -539,60 +539,60 @@ VVVV.Nodes.Counter = function(id, graph) {
   var oflowOut = this.addOutputPin("Overflow", [0.0], this);
   
   this.evaluate = function() { 
-	var maxSize = this.getMaxInputSliceCount();
-	oflowOut.setValue(i, 0);
-	uflowOut.setValue(i, 0);
-	
-	if(upIn.pinIsChanged() || downIn.pinIsChanged() || minIn.pinIsChanged() || maxIn.pinIsChanged() || defaultIn.pinIsChanged() || resetIn.pinIsChanged() || modeIn.pinIsChanged())
-	{
-		for(var i=0; i<maxSize; i++) {
-			var mode = 0;
-			if(modeIn.getValue(i)=='Unlimited') mode=1;
-			if(modeIn.getValue(i)=='Clamp') mode=2;
-			switch(mode) {
-			case 1:
-				if(upIn.getValue(i)) {
-					outputOut.setValue(i, outputOut.getValue(i) + incrIn.getValue(i));
-				}
-				if(downIn.getValue(i)) {
-					outputOut.setValue(i, outputOut.getValue(i) - incrIn.getValue(i));
-				}
-				break;
-			case 2:
-				if(upIn.getValue(i)) {
-					outputOut.setValue(i, outputOut.getValue(i) + incrIn.getValue(i));
-				}
-				if(downIn.getValue(i)) {
-					outputOut.setValue(i, outputOut.getValue(i) - incrIn.getValue(i));
-				}
-				if(outputOut.getValue(i)>maxIn.getvalue(i)) {
-					outputOut.setValue(i, maxIn.getvalue(i));
-					oflowOut.setValue(i, 1);
-				}
-				if(outputOut.getValue(i)<minIn.getvalue(i)) {
-					outputOut.setValue(i, minIn.getvalue(i));
-					uflowOut.setValue(i, 1);
-				}
-				break;
-			default:
-				if(upIn.getValue(i)) {
-					outputOut.setValue(i, outputOut.getValue(i) + incrIn.getValue(i));
-				}
-				if(downIn.getValue(i)) {
-					outputOut.setValue(i, outputOut.getValue(i) - incrIn.getValue(i));
-				}
-				if(outputOut.getValue(i)>maxIn.getvalue(i)) {
-					outputOut.setValue(i, minIn.getvalue(i));
-					oflowOut.setValue(i, 1);
-				}
-				if(outputOut.getValue(i)<minIn.getvalue(i)) {
-					outputOut.setValue(i, maxIn.getvalue(i));
-					uflowOut.setValue(i, 1);
-				}
-			}
-			if(resetIn.getValue(i)) outputOut.setValue(i, defaultIn.getvalue(i));
-		}
-	}
+    var maxSize = this.getMaxInputSliceCount();
+    oflowOut.setValue(i, 0);
+    uflowOut.setValue(i, 0);
+
+    if(upIn.pinIsChanged() || downIn.pinIsChanged() || minIn.pinIsChanged() || maxIn.pinIsChanged() || defaultIn.pinIsChanged() || resetIn.pinIsChanged() || modeIn.pinIsChanged())
+    {
+      for(var i=0; i<maxSize; i++) {
+        var mode = 0;
+        if(modeIn.getValue(i)=='Unlimited') mode=1;
+        if(modeIn.getValue(i)=='Clamp') mode=2;
+        switch(mode) {
+          case 1:
+            if(upIn.getValue(i)) {
+              outputOut.setValue(i, outputOut.getValue(i) + incrIn.getValue(i));
+            }
+            if(downIn.getValue(i)) {
+              outputOut.setValue(i, outputOut.getValue(i) - incrIn.getValue(i));
+            }
+          break;
+          case 2:
+            if(upIn.getValue(i)) {
+              outputOut.setValue(i, outputOut.getValue(i) + incrIn.getValue(i));
+            }
+            if(downIn.getValue(i)) {
+              outputOut.setValue(i, outputOut.getValue(i) - incrIn.getValue(i));
+            }
+            if(outputOut.getValue(i)>maxIn.getvalue(i)) {
+              outputOut.setValue(i, maxIn.getvalue(i));
+              oflowOut.setValue(i, 1);
+            }
+            if(outputOut.getValue(i)<minIn.getvalue(i)) {
+              outputOut.setValue(i, minIn.getvalue(i));
+              uflowOut.setValue(i, 1);
+            }
+          break;
+          default:
+            if(upIn.getValue(i)) {
+              outputOut.setValue(i, outputOut.getValue(i) + incrIn.getValue(i));
+            }
+            if(downIn.getValue(i)) {
+              outputOut.setValue(i, outputOut.getValue(i) - incrIn.getValue(i));
+            }
+            if(outputOut.getValue(i)>maxIn.getvalue(i)) {
+              outputOut.setValue(i, minIn.getvalue(i));
+              oflowOut.setValue(i, 1);
+            }
+            if(outputOut.getValue(i)<minIn.getvalue(i)) {
+              outputOut.setValue(i, maxIn.getvalue(i));
+              uflowOut.setValue(i, 1);
+            }
+        }
+        if(resetIn.getValue(i)) outputOut.setValue(i, defaultIn.getvalue(i));
+      }
+    }
   }
 }
 VVVV.Nodes.Counter.prototype = new VVVV.Core.Node();
