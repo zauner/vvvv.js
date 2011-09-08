@@ -295,3 +295,49 @@ VVVV.Nodes.SwapDim = function(id, graph) {
 
 }
 VVVV.Nodes.SwapDim.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: I (Spreads)
+ Author(s): David Mórász (micro.D)
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.I = function(id, graph) {
+  this.constructor(id, "I (Spreads)", graph);
+  
+  this.meta = {
+    authors: ['Mórász Dávid (micro.D)'],
+    original_authors: ['VVVV Group'],
+    credits: ['Matthias Zauner'],
+    compatibility_issues: ['This has no phase pin.','Smaller "from" than "to" isn\'t working yet']
+  };
+  
+  var fromIn = this.addInputPin("[ From ..", [0.0], this);
+  var toIn = this.addInputPin(".. To ]", [1.0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+
+  this.evaluate = function() {
+    var recalculate = false;
+    if (fromIn.pinIsChanged() || toIn.pinIsChanged()) {
+      outputOut.values = [];
+      recalculate = true;
+    }
+    
+    recalculate = recalculate || fromIn.pinIsChanged() || toIn.pinIsChanged();
+    
+    if (recalculate) {
+      var result;
+      for (var i=fromIn.getValue(0); i < (toIn.getValue(0) - fromIn.getValue(0)); i++ ) {
+        result = i;
+        outputOut.setValue(i, result.toFixed(4));
+      }
+    }
+    
+
+  }
+
+}
+VVVV.Nodes.I.prototype = new VVVV.Core.Node();
