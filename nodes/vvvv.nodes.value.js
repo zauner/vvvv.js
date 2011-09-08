@@ -612,22 +612,20 @@ VVVV.Nodes.AddValueSpectral = function(id, graph) {
       var maxSpreadSize = this.inputPins["Bin Size"].values.length;
       for (var k=0; k<maxSpreadSize; k++) {
       	var sum = 0;
-		if(this.inputPins["Bin Size"].getValue(k)<0) {
-			for(var i=0; i<this.inputPins["Input"].values.length; i++) {
-				sum += this.inputPins["Input"].getValue(i);
-			}
-		}
-		else {
-			for(var i=0; i<this.inputPins["Bin Size"].getValue(k); i++) {
-				sum += this.inputPins["Input"].getValue(i);
-			}
-		}
+        if(this.inputPins["Bin Size"].getValue(k)<0) {
+          for(var i=0; i<this.inputPins["Input"].values.length; i++) {
+            sum += this.inputPins["Input"].getValue(i);
+          }
+        }
+        else {
+          for(var i=0; i<this.inputPins["Bin Size"].getValue(k); i++) {
+            sum += this.inputPins["Input"].getValue(i);
+          }
+        }
         this.outputPins["Output"].setValue(k, sum);
       }
     }
-    
   }
-
 }
 VVVV.Nodes.AddValueSpectral.prototype = new VVVV.Core.Node();
 
