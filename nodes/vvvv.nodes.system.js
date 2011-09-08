@@ -135,13 +135,12 @@ VVVV.Nodes.ScreenInfo = function(id, graph) {
     
     if ((windowResOut.getValue(0)!=wx) || (windowResOut.getValue(1)!=wy)) {
       windowResOut.setValue(0, wx);
-   windowResOut.setValue(1, wy);
-	}
+      windowResOut.setValue(1, wy);
+    }
     if ((docResOut.getValue(0)!=dx) || (docResOut.getValue(1)!=dy)) {
       docResOut.setValue(0, dx);
-	  docResOut.setValue(1, dy);
-	}
+      docResOut.setValue(1, dy);
+    }
   }
-
 }
 VVVV.Nodes.ScreenInfo.prototype = new VVVV.Core.Node();
