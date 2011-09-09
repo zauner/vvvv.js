@@ -295,3 +295,41 @@ VVVV.Nodes.SwapDim = function(id, graph) {
 
 }
 VVVV.Nodes.SwapDim.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: I (Spreads)
+ Author(s): David Mórász (micro.D)
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.I = function(id, graph) {
+  this.constructor(id, "I (Spreads)", graph);
+  
+  this.meta = {
+    authors: ['Mórász Dávid (micro.D)'],
+    original_authors: ['VVVV Group'],
+    credits: ['Matthias Zauner'],
+    compatibility_issues: ['This has no phase pin.','Smaller "from" than "to" isn\'t working yet']
+  };
+  
+  var fromIn = this.addInputPin("[ From ..", [0], this);
+  var toIn = this.addInputPin(".. To [", [1], this);
+  
+  var outputOut = this.addOutputPin("Output", [0], this);
+
+  this.evaluate = function() {
+    
+    var from = fromIn.getValue(0);
+    var to = toIn.getValue(0);
+    var idx = 0;
+    for (var i=from; i < to; i++, idx++ ) {
+      outputOut.setValue(idx, i);
+    }
+    outputOut.setSliceCount(to-from);
+
+  }
+
+}
+VVVV.Nodes.I.prototype = new VVVV.Core.Node();

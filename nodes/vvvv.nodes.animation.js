@@ -450,6 +450,7 @@ VVVV.Nodes.SampleAndHold = function(id, graph) {
 }
 VVVV.Nodes.SampleAndHold.prototype = new VVVV.Core.Node();
 
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: FrameDelay (Animation)
@@ -494,3 +495,167 @@ VVVV.Nodes.FrameDelay = function(id, graph) {
 }
 VVVV.Nodes.FrameDelay.prototype = new VVVV.Core.Node();
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Toggle (Animation)
+ Author(s): David Mórász (micro.D)
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Toggle = function(id, graph) {
+  this.constructor(id, "Toggle (Animation)", graph);
+  
+  this.meta = {
+    authors: ['David Mórász (micro.D)'],
+    original_authors: ['VVVV Group'],
+    credits: ['Matthias Zauner'],
+    compatibility_issues: []
+  };
+  
+  var inputIn = this.addInputPin("Input", [0], this);
+  var resetIn = this.addInputPin("Reset", [0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0], this);
+  var inverseOutputOut = this.addOutputPin("Inverse Output", [1], this);
+  
+  var initialized = false;
+  
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      var result = undefined;
+      if (Math.round(resetIn.getValue(i))>=1)
+        result = 0;
+      if (Math.round(inputIn.getValue(i))>=1)
+        result = 1 - parseFloat(outputOut.getValue(i));
+      if (result!=undefined) {
+        outputOut.setValue(i, result);
+        inverseOutputOut.setValue(i, 1-result);
+      }
+      else if (!initialized) {
+        outputOut.setValue(i, 0);
+        inverseOutputOut.setValue(i, 1);
+      }
+    }
+    
+    initialized = true;
+
+  }
+
+}
+VVVV.Nodes.Toggle.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Counter (Animation)
+ Author(s): David Mórász (micro.D)
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Counter = function(id, graph) {
+  this.constructor(id, "Counter (Animation)", graph);
+  
+  this.meta = {
+    authors: ['David Mórász (micro.D)', 'Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = true;
+  
+  var upIn = this.addInputPin("Up", [0], this);
+  var downIn = this.addInputPin("Down", [0], this);
+  var minIn = this.addInputPin("Minimum", [0], this);
+  var maxIn = this.addInputPin("Maximum", [15], this);
+  var incrIn = this.addInputPin("Increment", [1], this);
+  var defaultIn = this.addInputPin("Default", [0], this);
+  var resetIn = this.addInputPin("Reset", [0], this);
+  var modeIn = this.addInputPin("Mode", ['Wrap'], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+  var uflowOut = this.addOutputPin("Underflow", [0.0], this);
+  var oflowOut = this.addOutputPin("Overflow", [0.0], this);
+  
+  var initialized = false;
+  
+  this.evaluate = function() { 
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      if (oflowOut.getValue(i)==1 || !initialized)
+        oflowOut.setValue(i, 0);
+      if (uflowOut.getValue(i)==1 || !initialized)
+        uflowOut.setValue(i, 0);
+      if (!initialized)
+        outputOut.setValue(i, 0);
+    }
+
+    if(upIn.pinIsChanged() || downIn.pinIsChanged() || minIn.pinIsChanged() || maxIn.pinIsChanged() || defaultIn.pinIsChanged() || resetIn.pinIsChanged() || modeIn.pinIsChanged())
+    {
+      for(var i=0; i<maxSize; i++) {
+        var incr = parseFloat(incrIn.getValue(i));
+        var output = parseFloat(outputOut.getValue(i));
+        var max = parseFloat(maxIn.getValue(i));
+        var min = parseFloat(minIn.getValue(i));
+      
+        var mode = 0;
+        if(modeIn.getValue(i)=='Unlimited') mode=1;
+        if(modeIn.getValue(i)=='Clamp') mode=2;
+        switch(mode) {
+          case 1:
+            if(upIn.getValue(i)>=.5) {
+              output = output + incr;
+            }
+            if(downIn.getValue(i)>=.5) {
+              output = output - incr;
+            }
+          break;
+          case 2:
+            if(upIn.getValue(i)>=.5) {
+              output = output + incr;
+            }
+            if(downIn.getValue(i)>=.5) {
+              output = output - incr;
+            }
+            if(output>max) {
+              output =  max;
+              oflowOut.setValue(i, 1);
+            }
+            if(output<min) {
+              output =  min;
+              uflowOut.setValue(i, 1);
+            }
+          break;
+          default:
+            if(upIn.getValue(i)>=.5) {
+              output =  output + incr;
+            }
+            if(downIn.getValue(i)>=.5) {
+              output =  output - incr;
+            }
+            if(output>max) {
+              output =  min;
+              oflowOut.setValue(i, 1);
+            }
+            if(output<min) {
+              output =  max;
+              uflowOut.setValue(i, 1);
+            }
+        }
+        if (outputOut.getValue(i)!=output)
+          outputOut.setValue(i, output);
+        if(resetIn.getValue(i)>=.5) outputOut.setValue(i, defaultIn.getValue(i));
+      }
+    }
+    initialized = true;
+  }
+}
+VVVV.Nodes.Counter.prototype = new VVVV.Core.Node();
