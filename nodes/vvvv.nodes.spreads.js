@@ -314,28 +314,20 @@ VVVV.Nodes.I = function(id, graph) {
     compatibility_issues: ['This has no phase pin.','Smaller "from" than "to" isn\'t working yet']
   };
   
-  var fromIn = this.addInputPin("[ From ..", [0.0], this);
-  var toIn = this.addInputPin(".. To ]", [1.0], this);
+  var fromIn = this.addInputPin("[ From ..", [0], this);
+  var toIn = this.addInputPin(".. To [", [1], this);
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
+  var outputOut = this.addOutputPin("Output", [0], this);
 
   this.evaluate = function() {
-    var recalculate = false;
-    if (fromIn.pinIsChanged() || toIn.pinIsChanged()) {
-      outputOut.values = [];
-      recalculate = true;
+    
+    var from = fromIn.getValue(0);
+    var to = toIn.getValue(0);
+    var idx = 0;
+    for (var i=from; i < to; i++, idx++ ) {
+      outputOut.setValue(idx, i);
     }
-    
-    recalculate = recalculate || fromIn.pinIsChanged() || toIn.pinIsChanged();
-    
-    if (recalculate) {
-      var result;
-      for (var i=fromIn.getValue(0); i < (toIn.getValue(0) - fromIn.getValue(0)); i++ ) {
-        result = i;
-        outputOut.setValue(i, result.toFixed(4));
-      }
-    }
-    
+    outputOut.setSliceCount(to-from);
 
   }
 
