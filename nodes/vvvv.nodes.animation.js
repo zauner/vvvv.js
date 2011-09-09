@@ -527,23 +527,22 @@ VVVV.Nodes.Toggle = function(id, graph) {
     
     var maxSize = this.getMaxInputSliceCount();
     
-    if (inputIn.pinIsChanged() || resetIn.pinIsChanged()) {
-      for (var i=0; i<maxSize; i++) {
-        var result = undefined;
-        if (Math.round(resetIn.getValue(i))>=1)
-          result = 0;
-        if (Math.round(inputIn.getValue(i))>=1)
-          result = (result>=1) ? 0 : 1;
-        if (result!=undefined) {
-          outputOut.setValue(i, result);
-          inverseOutputOut.setValue(i, 1-result);
-        }
-        else if (!initialized) {
-          outputOut.setValue(i, 0);
-          inverseOutputOut.setValue(i, 1);
-        }
+    for (var i=0; i<maxSize; i++) {
+      var result = undefined;
+      if (Math.round(resetIn.getValue(i))>=1)
+        result = 0;
+      if (Math.round(inputIn.getValue(i))>=1)
+        result = 1 - parseFloat(outputOut.getValue(i));
+      if (result!=undefined) {
+        outputOut.setValue(i, result);
+        inverseOutputOut.setValue(i, 1-result);
+      }
+      else if (!initialized) {
+        outputOut.setValue(i, 0);
+        inverseOutputOut.setValue(i, 1);
       }
     }
+    
     initialized = true;
 
   }
@@ -564,11 +563,13 @@ VVVV.Nodes.Counter = function(id, graph) {
   this.constructor(id, "Counter (Animation)", graph);
   
   this.meta = {
-    authors: ['David Mórász (micro.D)'],
+    authors: ['David Mórász (micro.D)', 'Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
+  
+  this.auto_evaluate = true;
   
   var upIn = this.addInputPin("Up", [0], this);
   var downIn = this.addInputPin("Down", [0], this);
@@ -583,61 +584,78 @@ VVVV.Nodes.Counter = function(id, graph) {
   var uflowOut = this.addOutputPin("Underflow", [0.0], this);
   var oflowOut = this.addOutputPin("Overflow", [0.0], this);
   
+  var initialized = false;
+  
   this.evaluate = function() { 
     var maxSize = this.getMaxInputSliceCount();
-    oflowOut.setValue(i, 0);
-    uflowOut.setValue(i, 0);
+    
+    for (var i=0; i<maxSize; i++) {
+      if (oflowOut.getValue(i)==1 || !initialized)
+        oflowOut.setValue(i, 0);
+      if (uflowOut.getValue(i)==1 || !initialized)
+        uflowOut.setValue(i, 0);
+      if (!initialized)
+        outputOut.setValue(i, 0);
+    }
 
     if(upIn.pinIsChanged() || downIn.pinIsChanged() || minIn.pinIsChanged() || maxIn.pinIsChanged() || defaultIn.pinIsChanged() || resetIn.pinIsChanged() || modeIn.pinIsChanged())
     {
       for(var i=0; i<maxSize; i++) {
+        var incr = parseFloat(incrIn.getValue(i));
+        var output = parseFloat(outputOut.getValue(i));
+        var max = parseFloat(maxIn.getValue(i));
+        var min = parseFloat(minIn.getValue(i));
+      
         var mode = 0;
         if(modeIn.getValue(i)=='Unlimited') mode=1;
         if(modeIn.getValue(i)=='Clamp') mode=2;
         switch(mode) {
           case 1:
-            if(upIn.getValue(i)) {
-              outputOut.setValue(i, outputOut.getValue(i) + incrIn.getValue(i));
+            if(upIn.getValue(i)>=.5) {
+              output = output + incr;
             }
-            if(downIn.getValue(i)) {
-              outputOut.setValue(i, outputOut.getValue(i) - incrIn.getValue(i));
+            if(downIn.getValue(i)>=.5) {
+              output = output - incr;
             }
           break;
           case 2:
-            if(upIn.getValue(i)) {
-              outputOut.setValue(i, outputOut.getValue(i) + incrIn.getValue(i));
+            if(upIn.getValue(i)>=.5) {
+              output = output + incr;
             }
-            if(downIn.getValue(i)) {
-              outputOut.setValue(i, outputOut.getValue(i) - incrIn.getValue(i));
+            if(downIn.getValue(i)>=.5) {
+              output = output - incr;
             }
-            if(outputOut.getValue(i)>maxIn.getvalue(i)) {
-              outputOut.setValue(i, maxIn.getvalue(i));
+            if(output>max) {
+              output =  max;
               oflowOut.setValue(i, 1);
             }
-            if(outputOut.getValue(i)<minIn.getvalue(i)) {
-              outputOut.setValue(i, minIn.getvalue(i));
+            if(output<min) {
+              output =  min;
               uflowOut.setValue(i, 1);
             }
           break;
           default:
-            if(upIn.getValue(i)) {
-              outputOut.setValue(i, outputOut.getValue(i) + incrIn.getValue(i));
+            if(upIn.getValue(i)>=.5) {
+              output =  output + incr;
             }
-            if(downIn.getValue(i)) {
-              outputOut.setValue(i, outputOut.getValue(i) - incrIn.getValue(i));
+            if(downIn.getValue(i)>=.5) {
+              output =  output - incr;
             }
-            if(outputOut.getValue(i)>maxIn.getvalue(i)) {
-              outputOut.setValue(i, minIn.getvalue(i));
+            if(output>max) {
+              output =  min;
               oflowOut.setValue(i, 1);
             }
-            if(outputOut.getValue(i)<minIn.getvalue(i)) {
-              outputOut.setValue(i, maxIn.getvalue(i));
+            if(output<min) {
+              output =  max;
               uflowOut.setValue(i, 1);
             }
         }
-        if(resetIn.getValue(i)) outputOut.setValue(i, defaultIn.getvalue(i));
+        if (outputOut.getValue(i)!=output)
+          outputOut.setValue(i, output);
+        if(resetIn.getValue(i)>=.5) outputOut.setValue(i, defaultIn.getValue(i));
       }
     }
+    initialized = true;
   }
 }
 VVVV.Nodes.Counter.prototype = new VVVV.Core.Node();
