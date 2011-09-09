@@ -587,7 +587,7 @@ VVVV.Nodes.Frac.prototype = new VVVV.Core.Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Add (Value Spectral)
- Author(s): David Mórász (micro.D)
+ Author(s): David Mórász (micro.D), Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -596,9 +596,9 @@ VVVV.Nodes.AddValueSpectral = function(id, graph) {
   this.constructor(id, "Add (Value Spectral)", graph);
   
   this.meta = {
-    authors: ['David Mórász (micro.D)'],
+    authors: ['David Mórász (micro.D)', 'Matthias Zauner'],
     original_authors: ['VVVV Group'],
-    credits: ['Matthias Zauner'],
+    credits: [],
     compatibility_issues: []
   };
   
@@ -608,29 +608,27 @@ VVVV.Nodes.AddValueSpectral = function(id, graph) {
   this.addOutputPin("Output", [0.0], this);
 
   this.evaluate = function() {
-    if (this.inputPins["Input"].pinIsChanged() || this.inputPins["Bin Size"].pinIsChanged()) {
-      var maxSpreadSize = this.inputPins["Bin Size"].values.length;
-      for (var k=0; k<maxSpreadSize; k++) {
-      	var sum = 0;
-        if(this.inputPins["Bin Size"].getValue(k)<0) {
-          for(var i=0; i<this.inputPins["Input"].values.length; i++) {
-            sum += this.inputPins["Input"].getValue(i);
-          }
+    var maxSpreadSize = this.getMaxInputSliceCount();
+    
+    var binNum = 0;
+    var subIndex = 0;
+    for (var j=0; j<=maxSpreadSize || (this.inputPins["Bin Size"].getValue(0)>0 && (subIndex>0 || binNum%this.inputPins["Bin Size"].values.length!=0)); j++) {
+      if (subIndex == 0)
+        var sum = 0;
+        
+      sum += this.inputPins["Input"].getValue(j);
+      
+      subIndex++;
+      if (this.inputPins["Bin Size"].getValue(0)>0) {
+        if (subIndex>=this.inputPins["Bin Size"].getValue(binNum)) {
+          this.outputPins["Output"].setValue(binNum, sum);
+          binNum++;
+          subIndex = 0;
         }
-        else {
-          for(var i=0; i<this.inputPins["Bin Size"].getValue(k); i++) {
-            sum += this.inputPins["Input"].getValue(i);
-          }
-        }
-        this.outputPins["Output"].setValue(k, sum);
       }
+      else
+        this.outputPins["Output"].setValue(0, sum);
     }
   }
 }
 VVVV.Nodes.AddValueSpectral.prototype = new VVVV.Core.Node();
-
-
-
-
-
-
