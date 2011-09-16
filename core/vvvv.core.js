@@ -262,6 +262,8 @@ VVVV.Core = {
     
     this.success = success_handler;
     
+    var print_timing = false;
+    
     function splitValues(v) {
       if (v==undefined)
         return [];
@@ -399,7 +401,8 @@ VVVV.Core = {
     
     
     this.evaluate = function() {
-      //console.log('==== frame ====');  
+      if (print_timing)
+        var start = new Date().getTime();
       var invalidNodes = {};
       var terminalNodes = {}
       for (var i=0; i<this.nodeList.length; i++) {
@@ -408,6 +411,8 @@ VVVV.Core = {
         }
         invalidNodes[this.nodeList[i].id] = this.nodeList[i];
       }
+      if (print_timing)
+        console.log('building node maps: '+(new Date().getTime() - start)+'ms')
       
       
       function evaluateSubGraph(node) {
@@ -421,7 +426,11 @@ VVVV.Core = {
         });
         
         if (node.dirty || node.auto_evaluate) {
+          if (print_timing)
+            var start = new Date().getTime();
           node.evaluate();
+          if (print_timing)
+            console.log(node.nodename+' / '+node.id+': '+(new Date().getTime() - start)+'ms')
           node.dirty = false;
           
           _(node.inputPins).each(function(inPin) {
@@ -439,9 +448,21 @@ VVVV.Core = {
           evaluateSubGraph(n);
       });
       
+      if (print_timing)
+        var start = new Date().getTime();
       this.afterEvaluate();
+      if (print_timing)
+        console.log('patch rendering: '+(new Date().getTime() - start)+'ms')
       
+      print_timing = false;
     }
+    
+    $(window).keydown(function(e) {
+  
+      // ctrl + alt + T to print execution times
+      if (e.which==84 && e.altKey && e.ctrlKey)
+        print_timing = true;
+    });
     
     
     if (/\.v4p$/.test(ressource)) {
