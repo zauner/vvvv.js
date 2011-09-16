@@ -558,7 +558,7 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
         
       var binNum = 0;
       var subIndex = 0;
-      for (var j=0; j<=maxSpreadSize || (subIndex>0 && binSizeIn.getValue(0)>0); j++) {
+      for (var j=0; j<maxSpreadSize || (binSizeIn.getValue(0)>0 && (subIndex>0 || binNum%transformIn.getSliceCount()>0)); j++) {
         
         if (layers[binNum]==undefined)
           layers[binNum] = new BezierCurve();
@@ -807,6 +807,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
         ctx.fillStyle = 'rgba('+bgColor[0]+','+bgColor[1]+','+bgColor[2]+','+bgColor[3]+')';
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
       }
+      
     }
     
     
