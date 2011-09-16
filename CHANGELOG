@@ -1,4 +1,77 @@
+v0.1.2-alpha / 2011-09-16
+=========================
+
+Besides some major changes under the hood (mostly regarding graph evaluation), this release introduces lots of nodes for canvas 2d drawing.
+
+From this version on, VVVV.js is only tested with VVVV versions >= beta26.
+
+Nodes
+-----
+
+new:
+
+* Vector (2d Join)
+* Vector (3d Join)
+* Vector (4d Join)
+* Vector (2d Split)
+* Vector (3d Split)
+* Vector (4d Split)
+* Fill (Canvas VVVVjs RenderState)
+* Stroke (Canvas VVVVjs RenderState)
+* LinearGradient (Canvas VVVVjs RenderState)
+* Shadow (Canvas VVVVjs RenderState)
+* Blend (Canvas VVVVjs RenderState)
+* Group (Canvas VVVVjs)
+* Quad (Canvas VVVVjs)
+* Text (Canvas VVVVjs)
+* FileStream (HTML5 VVVVjs)
+* FileTexture (HTML5 VVVVjs)
+* AudioOut (HTML5 VVVVjs)
+* Abs (Complex)
+* I (Spreads)
+* CircularSpread (Spreads)
+* Toggle (Animation)
+* Add (Value Spectral)
+* Counter (Animation)
+* FrameDelay (Animation)
+
+
+
+improved:
+
+* EQ (Value) has Epsilon pin
+* +, -, * (Value) have dynamic input pin count
+* Arc (Canvas VVVVjs) and BezierCurve (Canvas VVVVjs) use RenderState nodes for styling
+* LinearSpread (Spreads): fixed bug where node crashed on phase!=0
+
+
+
+
+Core Changes
+------------
+
+* "Descriptive Name" and "Rows" pin are now invisible (doesn't show up in VVVViewer)
+* only nodes with changed pins or nodes with auto_evaluate-flag is set to true are evaluated. this makes a lot of pinIsChanged() checks obsolete.
+* Graph evaluation now works bottom up, instead of top down
+* Graph evaluation now support frame-delayed nodes
+* improved/simplified patch loading
+* examples added
+* Systemname and nodename XML attributes are now case-insensitive, to keep compatible with VVVV 45beta26
+* DOM input connectors now respond to input slice count changes
+* added Ctrl+Alt+F Shortcut to log frame rate
+
+
+
+Node Interface Changes
+----------------------
+
+* Pin.setSliceCount() function added
+* Pin.isConnected() function added
+* Node.auto_evaluate flag added
+* Node.delays_output flag added, to flag nodes with frame-delayed output pins (e.g. FrameDelay)
+
+
 v0.1.1-alpha / 2011-07-21
--------------------------
+=========================
 
 * first alpha release
