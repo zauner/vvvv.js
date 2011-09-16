@@ -286,7 +286,7 @@ VVVV.Nodes.SwapDim = function(id, graph) {
       var columnCount = parseInt(columnCountIn.getValue(0));
       var rowCount = parseInt(rowCountIn.getValue(0));
       for (var i=0; i<inputIn.values.length; i++) {
-        outputOut.setValue(i % columnCount * rowCount + i / columnCount, inputIn.getValue(i));
+        outputOut.setValue(i % columnCount * rowCount + parseInt(i / columnCount), inputIn.getValue(i));
       }
     }
     
@@ -333,3 +333,74 @@ VVVV.Nodes.I = function(id, graph) {
 
 }
 VVVV.Nodes.I.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+NODE: CircularSpread (Spreads)
+Author(s): Matija Miloslavich
+Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+
+VVVV.Nodes.CircularSpread = function (id, graph) {
+  this.constructor(id, "CircularSpread (Spreads)", graph);
+
+  this.meta = {
+      authors: ['Matija Miloslavich'],
+      original_authors: ['VVVV Group'],
+      credits: [],
+      compatibility_issues: ['only x and y inputs are spreadable']
+  };
+
+  this.inpxin = this.addInputPin("Input X", [0.0], this);
+  this.inpyin = this.addInputPin("Input Y", [0.0], this);
+  this.widhin = this.addInputPin("Width", [1.0], this);
+  this.heightin = this.addInputPin("Height", [1.0], this);
+  this.factorin = this.addInputPin("Factor", [1.0], this);
+  this.phasein = this.addInputPin("Phase", [0.0], this);
+  this.sprcntin = this.addInputPin("Spread Count", [1], this);
+
+  this.xout = this.addOutputPin("Output X", [0.0], this);
+  this.yout = this.addOutputPin("Output Y", [0.0], this);
+
+  this.evaluate = function () {
+    
+    var cw = parseFloat(this.widhin.getValue(0)) * 0.5;
+    var ch = parseFloat(this.heightin.getValue(0)) * 0.5;
+    var cf = parseFloat(this.factorin.getValue(0));
+    var cph = parseFloat(this.phasein.getValue(0));
+
+    var spc = parseInt(this.sprcntin.getValue(0));
+
+    var pi2 = Math.PI * 2;
+    var ca = pi2 * cph;
+
+    var ovi = 0;
+
+    var insc = this.inpyin.values.length;
+    if (this.inpxin.values.length > insc) insc = this.inpxin.values.length;
+
+    
+    for (var insi = 0; insi < insc; insi++) {
+      var cxi = parseFloat(this.inpxin.getValue(insi));
+      var cyi = parseFloat(this.inpyin.getValue(insi));
+
+      for (var csi = 0; csi < spc; csi++) {
+        var csa = ca + pi2 * (csi / spc) * cf;
+
+        var ox = cxi + Math.cos(csa) * cw;
+        var oy = cyi + Math.sin(csa) * ch;
+
+        this.xout.setValue(ovi, ox);
+        this.yout.setValue(ovi, oy);
+
+        ovi++;
+      }
+    }
+    this.xout.setSliceCount(spc);
+    this.yout.setSliceCount(spc);
+  }
+}
+VVVV.Nodes.CircularSpread.prototype = new VVVV.Core.Node();
