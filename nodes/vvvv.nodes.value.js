@@ -612,7 +612,7 @@ VVVV.Nodes.AddValueSpectral = function(id, graph) {
     
     var binNum = 0;
     var subIndex = 0;
-    for (var j=0; j<=maxSpreadSize || (this.inputPins["Bin Size"].getValue(0)>0 && (subIndex>0 || binNum%this.inputPins["Bin Size"].values.length!=0)); j++) {
+    for (var j=0; j<maxSpreadSize || (this.inputPins["Bin Size"].getValue(0)>0 && (subIndex>0 || binNum%this.inputPins["Bin Size"].values.length!=0)); j++) {
       if (subIndex == 0)
         var sum = 0;
         
