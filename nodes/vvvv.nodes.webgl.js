@@ -5,8 +5,6 @@
 
 
 var gl;
-var defaultShaderAttributes = [ "PosO", "TexCd" ];
-var defaultShaderUniforms = [ "tP", "tV" ];
 
 VVVV.Types.VertexBuffer = function(position, texCoords) {
 
@@ -37,6 +35,7 @@ VVVV.Types.Layer = function() {
   this.toString = function() {
     return "Layer";
   }
+  
 }
 
 VVVV.Types.ShaderProgram = function() {
@@ -44,14 +43,42 @@ VVVV.Types.ShaderProgram = function() {
   this.uniformSpecs = {};
   this.attributeSpecs = {};
   
+  var vertexShaderCode = '';
+  var fragmentShaderCode = '';
+  
   var vertexShader;
   var fragmentShader;
   
   this.shaderProgram;
   
+  var thatShader = this;
+  
+  function extractSemantics(code) {
+    var pattern = /(uniform|attribute) ([a-zA-Z0-9_]+) ([a-zA-Z0-9_]+) <([^> ]+)>/g;
+    while ((match = pattern.exec(code))) {
+      if (match[1]=='attribute') {
+        thatShader.attributeSpecs[match[4]] = {
+          varname: match[3],
+          semantic: match[4],
+          position: gl.getAttribLocation(thatShader.shaderProgram, match[3])
+        };
+      }
+      else {
+        thatShader.uniformSpecs[match[4]] = {
+          varname: match[3],
+          semantic: match[4],
+          position: gl.getUniformLocation(thatShader.shaderProgram, match[3]),
+          type: match[2]
+        }
+      }
+    }
+  }
+  
   this.setVertexShader = function(code) {
+    vertexShaderCode = code;
+  
     vertexShader = gl.createShader(gl.VERTEX_SHADER);
-    gl.shaderSource(vertexShader, code);
+    gl.shaderSource(vertexShader, code.replace(/<[^>]+>/g, ''));
     gl.compileShader(vertexShader);
     
     if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
@@ -60,8 +87,10 @@ VVVV.Types.ShaderProgram = function() {
   }
   
   this.setFragmentShader =function(code) {
+    fragmentShaderCode = code;
+    
     fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(fragmentShader, code);
+    gl.shaderSource(fragmentShader, code.replace(/<[^>]+>/g, ''));
     gl.compileShader(fragmentShader);
     
     if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
@@ -78,8 +107,10 @@ VVVV.Types.ShaderProgram = function() {
     if (!gl.getProgramParameter(this.shaderProgram, gl.LINK_STATUS)) {
       alert("Could not initialise shaders");
     }
+    
+    extractSemantics(fragmentShaderCode);
+    extractSemantics(vertexShaderCode);
   }
-
 
 }
 
@@ -205,25 +236,13 @@ VVVV.Nodes.Quad = function(id, graph) {
       var fragmentShaderCode = "#ifdef GL_ES\n";
       fragmentShaderCode += "precision highp float;\n";
       fragmentShaderCode += "#endif\n";
-      fragmentShaderCode += "uniform vec4 col; uniform int useTexture; varying vec2 vs2psTexCd; uniform sampler2D Samp0; void main(void) { gl_FragColor = col; if (useTexture>0) gl_FragColor = gl_FragColor*texture2D(Samp0, vs2psTexCd);  }";
-      var vertexShaderCode = "attribute vec3 PosO; attribute vec2 TexCd; uniform mat4 tW; uniform mat4 tV; uniform mat4 tP; varying vec2 vs2psTexCd; void main(void) { gl_Position = tP * tV * tW * vec4(PosO, 1.0); vs2psTexCd = TexCd; }";
+      fragmentShaderCode += "uniform vec4 col <COLOR>; uniform int useTexture <USE_TEXTURE>; varying vec2 vs2psTexCd; uniform sampler2D Samp0; void main(void) { gl_FragColor = col; if (useTexture>0) gl_FragColor = gl_FragColor*texture2D(Samp0, vs2psTexCd);  }";
+      var vertexShaderCode = "attribute vec3 PosO <POSITION>; attribute vec2 TexCd <TEXCOORD0>; uniform mat4 tW <WORLD>; uniform mat4 tV <VIEW>; uniform mat4 tP <PROJECTION>; varying vec2 vs2psTexCd; void main(void) { gl_Position = tP * tV * tW * vec4(PosO, 1.0); vs2psTexCd = TexCd; }";
       
       shader = new VVVV.Types.ShaderProgram();
       shader.setFragmentShader(fragmentShaderCode);
       shader.setVertexShader(vertexShaderCode);
       shader.setup();
-      
-      for (var i=0; i<defaultShaderAttributes.length; i++) {
-        shader.attributeSpecs[defaultShaderAttributes[i]] = {semantic: null, varname: defaultShaderAttributes[i], position: gl.getAttribLocation(shader.shaderProgram, defaultShaderAttributes[i]) };
-      }
-      
-      for (var i=0; i<defaultShaderUniforms.length; i++) {
-        shader.uniformSpecs[defaultShaderUniforms[i]] = { semantic: null, varname: defaultShaderUniforms[i], position: gl.getUniformLocation(shader.shaderProgram, defaultShaderUniforms[i]) };
-      }
-      
-      shader.uniformSpecs['col'] = { position: gl.getUniformLocation(shader.shaderProgram, 'col'), setter: 'gl.uniform4fv' };
-      shader.uniformSpecs['tW'] = { position: gl.getUniformLocation(shader.shaderProgram, 'tW'), setter: 'gl.uniformMatrix4fv' };
-      shader.uniformSpecs['useTexture'] = { position: gl.getUniformLocation(shader.shaderProgram, 'useTexture'), setter: 'gl.uniform1i' };
       
       var maxSize = this.getMaxInputSliceCount();
       for (var j=0; j<maxSize; j++) {
@@ -231,12 +250,9 @@ VVVV.Nodes.Quad = function(id, graph) {
         layers[j].mesh = mesh;
         layers[j].shader = shader;
         
-        for (var i=0; i<defaultShaderUniforms.length; i++) {
-          layers[j].uniforms[defaultShaderUniforms[i]] = { uniformSpec: shader.uniformSpecs[defaultShaderUniforms[i]], value: undefined };
-        }
-        layers[j].uniforms['col'] = { uniformSpec: shader.uniformSpecs['col'], value: undefined };
-        layers[j].uniforms['tW'] = { uniformSpec: shader.uniformSpecs['tW'], value: undefined };
-        layers[j].uniforms['useTexture'] = { uniformSpec: shader.uniformSpecs['useTexture'], value: undefined };
+        _(shader.uniformSpecs).each(function(u) {
+          layers[j].uniforms[u.semantic] = { uniformSpec: u, value: undefined };
+        });
         
       }
       
@@ -253,7 +269,7 @@ VVVV.Nodes.Quad = function(id, graph) {
       for (var i=0; i<maxSize; i++) {
         var color = this.inputPins["Color"].getValue(i);
         var rgba = _(color.split(',')).map(function(x) { return parseFloat(x) });
-        layers[i].uniforms['col'].value = new Float32Array(rgba);
+        layers[i].uniforms['COLOR'].value = new Float32Array(rgba);
       }
     }
     
@@ -264,7 +280,7 @@ VVVV.Nodes.Quad = function(id, graph) {
           layers[i].transform = transform;
         else
           mat4.identity(layers[i].transform);
-        layers[i].uniforms['tW'].value = layers[i].transform;
+        layers[i].uniforms['WORLD'].value = layers[i].transform;
       }
     }
     
@@ -274,10 +290,10 @@ VVVV.Nodes.Quad = function(id, graph) {
         tex = this.inputPins["Texture"].getValue(i);
         if (tex!=undefined) {
           layers[i].textures[0] = { position: gl.getUniformLocation(layers[i].shader.shaderProgram, "Samp0"), texture: tex };
-          layers[i].uniforms["useTexture"].value = 1;
+          layers[i].uniforms["USE_TEXTURE"].value = 1;
         }
         else
-          layers[i].uniforms["useTexture"].value = 0;
+          layers[i].uniforms["USE_TEXTURE"].value = 0;
       }
     }
     
@@ -375,24 +391,24 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         currentShaderProgram = layer.shader.shaderProgram;
       }
       
-      gl.enableVertexAttribArray(layer.shader.attributeSpecs["PosO"].position);
+      gl.enableVertexAttribArray(layer.shader.attributeSpecs["POSITION"].position);
       gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.positionBuffer);
-      gl.vertexAttribPointer(layer.shader.attributeSpecs["PosO"].position, 3, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribPointer(layer.shader.attributeSpecs["POSITION"].position, 3, gl.FLOAT, false, 0, 0);
       
-      gl.enableVertexAttribArray(layer.shader.attributeSpecs["TexCd"].position);
+      gl.enableVertexAttribArray(layer.shader.attributeSpecs["TEXCOORD0"].position);
       gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.texCoordBuffer);
-      gl.vertexAttribPointer(layer.shader.attributeSpecs["TexCd"].position, 2, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribPointer(layer.shader.attributeSpecs["TEXCOORD0"].position, 2, gl.FLOAT, false, 0, 0);
       
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
-      gl.uniformMatrix4fv(layer.shader.uniformSpecs["tP"].position, false, pMatrix);
-      gl.uniformMatrix4fv(layer.shader.uniformSpecs["tV"].position, false, vMatrix);
+      gl.uniformMatrix4fv(layer.shader.uniformSpecs["PROJECTION"].position, false, pMatrix);
+      gl.uniformMatrix4fv(layer.shader.uniformSpecs["VIEW"].position, false, vMatrix);
       _(layer.uniforms).each(function(u) {
         if (u.value==undefined)
           return;
-        switch (u.uniformSpec.setter) {
-          case "gl.uniformMatrix4fv": gl.uniformMatrix4fv(u.uniformSpec.position, false, u.value); break;
-          case "gl.uniform4fv": gl.uniform4fv(u.uniformSpec.position, u.value); break;
-          case "gl.uniform1i": gl.uniform1i(u.uniformSpec.position, u.value); break;
+        switch (u.uniformSpec.type) {
+          case "mat4": gl.uniformMatrix4fv(u.uniformSpec.position, false, u.value); break;
+          case "vec4": gl.uniform4fv(u.uniformSpec.position, u.value); break;
+          case "int": gl.uniform1i(u.uniformSpec.position, u.value); break;
         }
       });
       
