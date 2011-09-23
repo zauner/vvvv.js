@@ -29,8 +29,6 @@ VVVV.Types.Layer = function() {
   this.textures = [];
   this.shader = null;
   this.uniforms = {};
-  this.transform = mat4.create();
-  mat4.identity(this.transform);
   
   this.toString = function() {
     return "Layer";
@@ -38,10 +36,15 @@ VVVV.Types.Layer = function() {
   
 }
 
+VVVV.DefaultTexture = undefined;
+
 VVVV.Types.ShaderProgram = function() {
 
   this.uniformSpecs = {};
   this.attributeSpecs = {};
+  
+  this.attribSemanticMap = {};
+  this.uniformSemanticMap = {};
   
   var vertexShaderCode = '';
   var fragmentShaderCode = '';
@@ -54,22 +57,26 @@ VVVV.Types.ShaderProgram = function() {
   var thatShader = this;
   
   function extractSemantics(code) {
-    var pattern = /(uniform|attribute) ([a-zA-Z0-9_]+) ([a-zA-Z0-9_]+) <([^> ]+)>/g;
+    var pattern = /(uniform|attribute) ([a-zA-Z0-9_]+) ([a-zA-Z0-9_]+)( <([^> ]+)>)?/g;
     while ((match = pattern.exec(code))) {
       if (match[1]=='attribute') {
-        thatShader.attributeSpecs[match[4]] = {
+        thatShader.attributeSpecs[match[3]] = {
           varname: match[3],
-          semantic: match[4],
+          semantic: match[5],
           position: gl.getAttribLocation(thatShader.shaderProgram, match[3])
         };
+        if (match[5]!=undefined)
+          thatShader.attribSemanticMap[match[5]] = match[3];
       }
       else {
-        thatShader.uniformSpecs[match[4]] = {
+        thatShader.uniformSpecs[match[3]] = {
           varname: match[3],
-          semantic: match[4],
+          semantic: match[5],
           position: gl.getUniformLocation(thatShader.shaderProgram, match[3]),
           type: match[2]
         }
+        if (match[5]!=undefined)
+          thatShader.uniformSemanticMap[match[5]] = match[3];
       }
     }
   }
@@ -173,6 +180,188 @@ VVVV.Nodes.FileTexture.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Grid (EX9.Geometry)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Grid = function(id, graph) {
+  this.constructor(id, "Grid (EX9.Geometry)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var xIn = this.addInputPin("Resolution X", [2], this);
+  var yIn = this.addInputPin("Resolution Y", [2], this);
+  
+  var meshOut = this.addOutputPin("Mesh", [], this);
+  
+  var mesh = null;
+  
+  this.evaluate = function() {
+  
+    if (!gl)
+      return;
+  
+      
+    var vertices = [
+       0.5,  0.5,  0.0,
+      -0.5,  0.5,  0.0,
+       0.5, -0.5,  0.0,
+      -0.5, -0.5,  0.0
+    ];
+    
+    var texCoords = [
+      1.0, 0.0,
+      0.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0
+    ];
+    
+    vertexBuffer = new VVVV.Types.VertexBuffer(vertices, texCoords);
+    mesh = new VVVV.Types.Mesh();
+    mesh.vertexBuffer = vertexBuffer;
+    mesh.indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint8Array([ 0, 1, 2, 1, 3, 2 ]), gl.STATIC_DRAW);
+    mesh.numIndices = 6;
+      
+    meshOut.setValue(0, mesh);
+    
+  }
+
+}
+VVVV.Nodes.Grid.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Shader (WebGL)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Shader = function(id, graph) {
+  this.constructor(id, "Constant (EX9.Effect)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.shaderFile = '';
+  
+  var meshIn = this.addInputPin("Mesh", [], this);
+  var transformIn = this.addInputPin("Transform", [], this);
+  
+  var layerOut = this.addOutputPin("Layer", [], this);
+  
+  var layers = [];
+  var mesh = null;
+  var shader = null;
+  
+  var shaderPins = [];
+  
+  var initialized = false;
+  
+  this.initialize = function() {
+    
+    var fragmentShaderCode = "#ifdef GL_ES\n";
+    fragmentShaderCode += "precision highp float;\n";
+    fragmentShaderCode += "#endif\n";
+    fragmentShaderCode += "uniform vec4 Color <COLOR>; varying vec2 vs2psTexCd; uniform sampler2D Texture; void main(void) { gl_FragColor = Color * texture2D(Texture, vs2psTexCd);  }";
+    var vertexShaderCode = "attribute vec3 PosO <POSITION>; attribute vec2 TexCd <TEXCOORD0>; uniform mat4 Texture_Transform; uniform mat4 tW <WORLD>; uniform mat4 tV <VIEW>; uniform mat4 tP <PROJECTION>; varying vec2 vs2psTexCd; void main(void) { gl_Position = tP * tV * tW * vec4(PosO, 1.0); vs2psTexCd = TexCd; }";
+    
+    shader = new VVVV.Types.ShaderProgram();
+    shader.setFragmentShader(fragmentShaderCode);
+    shader.setVertexShader(vertexShaderCode);
+    shader.setup();
+    
+    var thatNode = this;
+    _(shader.uniformSpecs).each(function(u) {
+      if (u.semantic=="VIEW" || u.semantic=="PROJECTION" || u.semantic=="WORLD")
+        return;
+      var defaultValue = [0.0];
+      if (u.semantic == 'COLOR' && u.type=='vec4')
+        defaultValue = ['1.0, 1.0, 1.0, 1.0'];
+      if (u.type=='mat4')
+        defaultValue = [mat4.identity(mat4.create())];
+      if (u.type=='sampler2D')
+        defaultValue = [VVVV.DefaultTexture];
+      var pin = thatNode.addInputPin(u.varname.replace('_',' '), defaultValue, thatNode);
+      shaderPins.push(pin);
+    });
+  }
+  
+  this.evaluate = function() {
+  
+    if (!gl)
+      return;
+      
+    var maxSize = this.getMaxInputSliceCount();
+
+    if (!initialized) {
+      for (var j=0; j<maxSize; j++) {
+        layers[j] = new VVVV.Types.Layer();
+        layers[j].mesh = meshIn.getValue(0);
+        layers[j].shader = shader;
+        _(shader.uniformSpecs).each(function(u) {
+          layers[j].uniforms[u.varname] = { uniformSpec: u, value: undefined };
+        });
+        
+      }
+    }
+    initialized = true;
+    
+    for (var i=0; i<shaderPins.length; i++) {
+        var pinname = shaderPins[i].pinname.replace(' ', '_');
+        if (shaderPins[i].pinIsChanged()) {
+          for (var j=0; j<maxSize; j++) {
+            var value = shaderPins[i].getValue(j);
+            console.log('setting uniform value for layer '+j);
+            if (shader.uniformSpecs[pinname].type=='vec4' && shader.uniformSpecs[pinname].semantic=='COLOR') {
+              var rgba = _(value.split(',')).map(function(x) { return parseFloat(x) });
+              layers[j].uniforms[pinname].value = new Float32Array(rgba);
+            }
+            else {
+              layers[j].uniforms[pinname].value = value;
+            }
+          }
+        }
+    }
+    
+    if (transformIn.pinIsChanged()) {
+      for (var i=0; i<maxSize; i++) {
+        var transform = this.inputPins["Transform"].getValue(i);
+        if (transform==undefined)
+          mat4.identity(transform);
+        layers[i].uniforms[layers[i].shader.uniformSemanticMap['WORLD']].value = transform;
+      }
+    }
+    
+    
+    for (var i=0; i<maxSize; i++) {
+      this.outputPins["Layer"].setValue(i, layers[i]);
+    }
+    
+        
+  }
+    
+
+}
+VVVV.Nodes.Shader.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Quad (DX9)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
@@ -236,7 +425,7 @@ VVVV.Nodes.Quad = function(id, graph) {
       var fragmentShaderCode = "#ifdef GL_ES\n";
       fragmentShaderCode += "precision highp float;\n";
       fragmentShaderCode += "#endif\n";
-      fragmentShaderCode += "uniform vec4 col <COLOR>; uniform int useTexture <USE_TEXTURE>; varying vec2 vs2psTexCd; uniform sampler2D Samp0; void main(void) { gl_FragColor = col; if (useTexture>0) gl_FragColor = gl_FragColor*texture2D(Samp0, vs2psTexCd);  }";
+      fragmentShaderCode += "uniform vec4 col; varying vec2 vs2psTexCd; uniform sampler2D Samp0; void main(void) { gl_FragColor = col*texture2D(Samp0, vs2psTexCd);  }";
       var vertexShaderCode = "attribute vec3 PosO <POSITION>; attribute vec2 TexCd <TEXCOORD0>; uniform mat4 tW <WORLD>; uniform mat4 tV <VIEW>; uniform mat4 tP <PROJECTION>; varying vec2 vs2psTexCd; void main(void) { gl_Position = tP * tV * tW * vec4(PosO, 1.0); vs2psTexCd = TexCd; }";
       
       shader = new VVVV.Types.ShaderProgram();
@@ -251,7 +440,7 @@ VVVV.Nodes.Quad = function(id, graph) {
         layers[j].shader = shader;
         
         _(shader.uniformSpecs).each(function(u) {
-          layers[j].uniforms[u.semantic] = { uniformSpec: u, value: undefined };
+          layers[j].uniforms[u.varname] = { uniformSpec: u, value: undefined };
         });
         
       }
@@ -269,18 +458,16 @@ VVVV.Nodes.Quad = function(id, graph) {
       for (var i=0; i<maxSize; i++) {
         var color = this.inputPins["Color"].getValue(i);
         var rgba = _(color.split(',')).map(function(x) { return parseFloat(x) });
-        layers[i].uniforms['COLOR'].value = new Float32Array(rgba);
+        layers[i].uniforms['col'].value = new Float32Array(rgba);
       }
     }
     
     if (true) {
       for (var i=0; i<maxSize; i++) {
         var transform = this.inputPins["Transform"].getValue(i);
-        if (transform!=undefined)
-          layers[i].transform = transform;
-        else
-          mat4.identity(layers[i].transform);
-        layers[i].uniforms['WORLD'].value = layers[i].transform;
+        if (transform==undefined)
+          mat4.identity(transform);
+        layers[i].uniforms[layers[i].shader.uniformSemanticMap['WORLD']].value = transform;
       }
     }
     
@@ -288,12 +475,7 @@ VVVV.Nodes.Quad = function(id, graph) {
       for (var i=0; i<maxSize; i++) {
         console.log('setting texture for layer '+i);
         tex = this.inputPins["Texture"].getValue(i);
-        if (tex!=undefined) {
-          layers[i].textures[0] = { position: gl.getUniformLocation(layers[i].shader.shaderProgram, "Samp0"), texture: tex };
-          layers[i].uniforms["USE_TEXTURE"].value = 1;
-        }
-        else
-          layers[i].uniforms["USE_TEXTURE"].value = 0;
+        layers[i].uniforms["Samp0"].value = tex;
       }
     }
     
@@ -354,7 +536,18 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         alert("Oh gosh, can't initialize WebGL. If you're on Chrome, try launching like this: chrome.exe --ignore-gpu-blacklist . If you're on Firefox 4, go to page about:config and try to set webgl-force-enable to true.");
         return;
     }
-  
+    
+    // create default white texture
+ 
+    var pixels = new Uint8Array([255, 255, 255]);
+    VVVV.DefaultTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, VVVV.DefaultTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
     
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     //gl.enable(gl.DEPTH_TEST);
@@ -391,17 +584,20 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         currentShaderProgram = layer.shader.shaderProgram;
       }
       
-      gl.enableVertexAttribArray(layer.shader.attributeSpecs["POSITION"].position);
+      gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["POSITION"]].position);
       gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.positionBuffer);
-      gl.vertexAttribPointer(layer.shader.attributeSpecs["POSITION"].position, 3, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["POSITION"]].position, 3, gl.FLOAT, false, 0, 0);
       
-      gl.enableVertexAttribArray(layer.shader.attributeSpecs["TEXCOORD0"].position);
+      gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["TEXCOORD0"]].position);
       gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.texCoordBuffer);
-      gl.vertexAttribPointer(layer.shader.attributeSpecs["TEXCOORD0"].position, 2, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["TEXCOORD0"]].position, 2, gl.FLOAT, false, 0, 0);
       
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
-      gl.uniformMatrix4fv(layer.shader.uniformSpecs["PROJECTION"].position, false, pMatrix);
-      gl.uniformMatrix4fv(layer.shader.uniformSpecs["VIEW"].position, false, vMatrix);
+      gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["PROJECTION"]].position, false, pMatrix);
+      gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEW"]].position, false, vMatrix);
+      
+      var textureIdx = 0;
+      
       _(layer.uniforms).each(function(u) {
         if (u.value==undefined)
           return;
@@ -409,15 +605,14 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
           case "mat4": gl.uniformMatrix4fv(u.uniformSpec.position, false, u.value); break;
           case "vec4": gl.uniform4fv(u.uniformSpec.position, u.value); break;
           case "int": gl.uniform1i(u.uniformSpec.position, u.value); break;
+          case "sampler2D":
+            gl.activeTexture(gl['TEXTURE'+textureIdx]);
+            gl.bindTexture(gl.TEXTURE_2D, u.value);
+            gl.uniform1i(u.uniformSpec.position, textureIdx);
+            textureIdx++;
+            break;
         }
       });
-      
-      if (layer.textures.length>0) {
-        var t = layer.textures[0];
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, t.texture);
-        gl.uniform1i(t.position, 0);
-      }
       
       gl.drawElements(gl.TRIANGLES, layer.mesh.numIndices, gl.UNSIGNED_BYTE, 0);
     });
