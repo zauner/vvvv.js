@@ -302,6 +302,12 @@ VVVV.Core = {
 
         if (VVVV.NodeLibrary[nodename.toLowerCase()]!=undefined)
           var n = new VVVV.NodeLibrary[nodename.toLowerCase()]($(this).attr('id'), thisPatch);
+        else if (/.fx$/.test($(this).attr('filename'))) {
+          var n = new VVVV.Nodes.GenericShader($(this).attr('id'), thisPatch);
+          n.isShader = true;
+          n.shaderFile = $(this).attr('filename');
+          n.nodename = nodename;
+        }
         else
           var n = new VVVV.Core.Node($(this).attr('id'), nodename, thisPatch);
         n.x = $bounds.attr('left')/15;
@@ -311,8 +317,6 @@ VVVV.Core = {
         
         if (/^iobox/.test(nodename.toLowerCase()))
           n.isIOBox = true;
-        if (/\.fx$/.test($(this).attr('nodename')))
-          n.isShader = true;
 		  
         //To add anything which relates to all nodes
         n.setup();
