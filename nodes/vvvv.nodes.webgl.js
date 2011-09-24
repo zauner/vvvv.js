@@ -58,6 +58,7 @@ VVVV.Types.ShaderProgram = function() {
   
   function extractSemantics(code) {
     var pattern = /(uniform|attribute) ([a-zA-Z0-9_]+) ([a-zA-Z0-9_]+)( <([^> ]+)>)?/g;
+    var match;
     while ((match = pattern.exec(code))) {
       if (match[1]=='attribute') {
         thatShader.attributeSpecs[match[3]] = {
@@ -241,14 +242,14 @@ VVVV.Nodes.Grid.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: Shader (WebGL)
+ NODE: GenericShader (EX9.Effect)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-VVVV.Nodes.Shader = function(id, graph) {
-  this.constructor(id, "Constant (EX9.Effect)", graph);
+VVVV.Nodes.GenericShader = function(id, graph) {
+  this.constructor(id, "GenericShader (EX9.Effect)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -274,31 +275,51 @@ VVVV.Nodes.Shader = function(id, graph) {
   
   this.initialize = function() {
     
-    var fragmentShaderCode = "#ifdef GL_ES\n";
-    fragmentShaderCode += "precision highp float;\n";
-    fragmentShaderCode += "#endif\n";
-    fragmentShaderCode += "uniform vec4 Color <COLOR>; varying vec2 vs2psTexCd; uniform sampler2D Texture; void main(void) { gl_FragColor = Color * texture2D(Texture, vs2psTexCd);  }";
-    var vertexShaderCode = "attribute vec3 PosO <POSITION>; attribute vec2 TexCd <TEXCOORD0>; uniform mat4 Texture_Transform; uniform mat4 tW <WORLD>; uniform mat4 tV <VIEW>; uniform mat4 tP <PROJECTION>; varying vec2 vs2psTexCd; void main(void) { gl_Position = tP * tV * tW * vec4(PosO, 1.0); vs2psTexCd = TexCd; }";
-    
-    shader = new VVVV.Types.ShaderProgram();
-    shader.setFragmentShader(fragmentShaderCode);
-    shader.setVertexShader(vertexShaderCode);
-    shader.setup();
-    
     var thatNode = this;
-    _(shader.uniformSpecs).each(function(u) {
-      if (u.semantic=="VIEW" || u.semantic=="PROJECTION" || u.semantic=="WORLD")
-        return;
-      var defaultValue = [0.0];
-      if (u.semantic == 'COLOR' && u.type=='vec4')
-        defaultValue = ['1.0, 1.0, 1.0, 1.0'];
-      if (u.type=='mat4')
-        defaultValue = [mat4.identity(mat4.create())];
-      if (u.type=='sampler2D')
-        defaultValue = [VVVV.DefaultTexture];
-      var pin = thatNode.addInputPin(u.varname.replace('_',' '), defaultValue, thatNode);
-      shaderPins.push(pin);
+    
+    $.ajax({
+      url: thatNode.shaderFile.replace('%VVVV%', VVVV.Root),
+      async: false,
+      success: function(response) {
+        var match;
+        if ((match = /vertex_shader:((\n|.)+)fragment_shader:/.exec(response))==false) {
+          console.log('ERROR: No vertex shader code found');
+          return;
+        }
+        var vertexShaderCode = match[1];
+        
+        if ((match = /fragment_shader:((\n|.)+)$/.exec(response))==false) {
+          console.log('ERROR: No fragment shader code found');
+          return;
+        }
+        var fragmentShaderCode = match[1];
+        
+        shader = new VVVV.Types.ShaderProgram();
+        shader.setFragmentShader(fragmentShaderCode);
+        shader.setVertexShader(vertexShaderCode);
+        shader.setup();
+        
+        _(shader.uniformSpecs).each(function(u) {
+          if (u.semantic=="VIEW" || u.semantic=="PROJECTION" || u.semantic=="WORLD")
+            return;
+          var defaultValue = [0.0];
+          if (u.semantic == 'COLOR' && u.type=='vec4')
+            defaultValue = ['1.0, 1.0, 1.0, 1.0'];
+          if (u.type=='mat4')
+            defaultValue = [mat4.identity(mat4.create())];
+          if (u.type=='sampler2D')
+            defaultValue = [VVVV.DefaultTexture];
+          var pin = thatNode.addInputPin(u.varname.replace('_',' '), defaultValue, thatNode);
+          shaderPins.push(pin);
+        });
+        
+      },
+      error: function() {
+        console.log('ERROR: Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVV.Root));
+      }
     });
+    
+ 
   }
   
   this.evaluate = function() {
@@ -326,7 +347,6 @@ VVVV.Nodes.Shader = function(id, graph) {
         if (shaderPins[i].pinIsChanged()) {
           for (var j=0; j<maxSize; j++) {
             var value = shaderPins[i].getValue(j);
-            console.log('setting uniform value for layer '+j);
             if (shader.uniformSpecs[pinname].type=='vec4' && shader.uniformSpecs[pinname].semantic=='COLOR') {
               var rgba = _(value.split(',')).map(function(x) { return parseFloat(x) });
               layers[j].uniforms[pinname].value = new Float32Array(rgba);
@@ -357,7 +377,7 @@ VVVV.Nodes.Shader = function(id, graph) {
     
 
 }
-VVVV.Nodes.Shader.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GenericShader.prototype = new VVVV.Core.Node();
 
 
 /*
