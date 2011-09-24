@@ -57,27 +57,29 @@ VVVV.Types.ShaderProgram = function() {
   var thatShader = this;
   
   function extractSemantics(code) {
-    var pattern = /(uniform|attribute) ([a-zA-Z0-9_]+) ([a-zA-Z0-9_]+)( <([^> ]+)>)?/g;
+    var pattern = /(uniform|attribute) ([a-zA-Z]+)([0-9xD]*) ([a-zA-Z0-9_]+)( <([^> ]+)>)?/g;
     var match;
     while ((match = pattern.exec(code))) {
       if (match[1]=='attribute') {
-        thatShader.attributeSpecs[match[3]] = {
-          varname: match[3],
-          semantic: match[5],
-          position: gl.getAttribLocation(thatShader.shaderProgram, match[3])
+        thatShader.attributeSpecs[match[4]] = {
+          varname: match[4],
+          semantic: match[6],
+          position: gl.getAttribLocation(thatShader.shaderProgram, match[4])
         };
-        if (match[5]!=undefined)
-          thatShader.attribSemanticMap[match[5]] = match[3];
+        if (match[6]!=undefined)
+          thatShader.attribSemanticMap[match[6]] = match[4];
       }
       else {
-        thatShader.uniformSpecs[match[3]] = {
-          varname: match[3],
-          semantic: match[5],
-          position: gl.getUniformLocation(thatShader.shaderProgram, match[3]),
-          type: match[2]
+        var dimension = match[3]=='' ? 1 : match[3];
+        thatShader.uniformSpecs[match[4]] = {
+          varname: match[4],
+          semantic: match[6],
+          position: gl.getUniformLocation(thatShader.shaderProgram, match[4]),
+          type: match[2],
+          dimension: dimension
         }
-        if (match[5]!=undefined)
-          thatShader.uniformSemanticMap[match[5]] = match[3];
+        if (match[6]!=undefined)
+          thatShader.uniformSemanticMap[match[6]] = match[4];
       }
     }
   }
@@ -303,11 +305,11 @@ VVVV.Nodes.GenericShader = function(id, graph) {
           if (u.semantic=="VIEW" || u.semantic=="PROJECTION" || u.semantic=="WORLD")
             return;
           var defaultValue = [0.0];
-          if (u.semantic == 'COLOR' && u.type=='vec4')
+          if (u.semantic == 'COLOR' && u.type=='vec')
             defaultValue = ['1.0, 1.0, 1.0, 1.0'];
-          if (u.type=='mat4')
+          if (u.type=='mat')
             defaultValue = [mat4.identity(mat4.create())];
-          if (u.type=='sampler2D')
+          if (u.type=='sampler')
             defaultValue = [VVVV.DefaultTexture];
           var pin = thatNode.addInputPin(u.varname.replace('_',' '), defaultValue, thatNode);
           shaderPins.push(pin);
@@ -347,7 +349,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
         if (shaderPins[i].pinIsChanged()) {
           for (var j=0; j<maxSize; j++) {
             var value = shaderPins[i].getValue(j);
-            if (shader.uniformSpecs[pinname].type=='vec4' && shader.uniformSpecs[pinname].semantic=='COLOR') {
+            if (shader.uniformSpecs[pinname].type=='vec' && shader.uniformSpecs[pinname].semantic=='COLOR') {
               var rgba = _(value.split(',')).map(function(x) { return parseFloat(x) });
               layers[j].uniforms[pinname].value = new Float32Array(rgba);
             }
@@ -622,12 +624,13 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         if (u.value==undefined)
           return;
         switch (u.uniformSpec.type) {
-          case "mat4": gl.uniformMatrix4fv(u.uniformSpec.position, false, u.value); break;
-          case "vec4": gl.uniform4fv(u.uniformSpec.position, u.value); break;
-          case "int": gl.uniform1i(u.uniformSpec.position, u.value); break;
-          case "sampler2D":
+          case "mat": gl['uniformMatrix'+u.uniformSpec.dimension+'fv'](u.uniformSpec.position, false, u.value); break;
+          case "vec": gl['uniform'+u.uniformSpec.dimension+'fv'](u.uniformSpec.position, u.value); break;
+          case "int": gl['uniform'+u.uniformSpec.dimension+'i'](u.uniformSpec.position, u.value); break;
+          case "float": gl['uniform'+u.uniformSpec.dimension+'f'](u.uniformSpec.position, u.value); break;
+          case "sampler":
             gl.activeTexture(gl['TEXTURE'+textureIdx]);
-            gl.bindTexture(gl.TEXTURE_2D, u.value);
+            gl.bindTexture(gl['TEXTURE_'+u.uniformSpec.dimension], u.value);
             gl.uniform1i(u.uniformSpec.position, textureIdx);
             textureIdx++;
             break;
