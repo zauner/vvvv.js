@@ -284,13 +284,13 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       async: false,
       success: function(response) {
         var match;
-        if ((match = /vertex_shader:((\n|.)+)fragment_shader:/.exec(response))==false) {
+        if ((match = /vertex_shader:((\r?\n|.)+)fragment_shader:/.exec(response))==undefined) {
           console.log('ERROR: No vertex shader code found');
           return;
         }
         var vertexShaderCode = match[1];
         
-        if ((match = /fragment_shader:((\n|.)+)$/.exec(response))==false) {
+        if ((match = /fragment_shader:((\r?\n|.)+)$/.exec(response))==undefined) {
           console.log('ERROR: No fragment shader code found');
           return;
         }
@@ -311,7 +311,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
             defaultValue = [mat4.identity(mat4.create())];
           if (u.type=='sampler')
             defaultValue = [VVVV.DefaultTexture];
-          var pin = thatNode.addInputPin(u.varname.replace('_',' '), defaultValue, thatNode);
+          var pin = thatNode.addInputPin(u.varname.replace(/_/g,' '), defaultValue, thatNode);
           shaderPins.push(pin);
         });
         
@@ -328,8 +328,16 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   
     if (!gl)
       return;
-      
-    var maxSize = this.getMaxInputSliceCount();
+    
+    // find out input slice count with respect to the input pin dimension, defined by the shader code  
+    var maxSize = 0;
+    _(this.inputPins).each(function(p) {
+      var sliceCount = p.getSliceCount();
+      if (shader.uniformSpecs[p.pinname] && shader.uniformSpecs[p.pinname].type=='vec')
+        sliceCount = parseInt(sliceCount/shader.uniformSpecs[p.pinname].dimension);
+      if (sliceCount > maxSize)
+        maxSize = sliceCount;
+    });
 
     if (!initialized) {
       for (var j=0; j<maxSize; j++) {
@@ -345,26 +353,34 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     initialized = true;
     
     for (var i=0; i<shaderPins.length; i++) {
-        var pinname = shaderPins[i].pinname.replace(' ', '_');
-        if (shaderPins[i].pinIsChanged()) {
-          for (var j=0; j<maxSize; j++) {
-            var value = shaderPins[i].getValue(j);
-            if (shader.uniformSpecs[pinname].type=='vec' && shader.uniformSpecs[pinname].semantic=='COLOR') {
-              var rgba = _(value.split(',')).map(function(x) { return parseFloat(x) });
+      var pinname = shaderPins[i].pinname.replace(/ /g, '_');
+      if (shaderPins[i].pinIsChanged()) {
+        for (var j=0; j<maxSize; j++) {
+          if (shader.uniformSpecs[pinname].type=='vec') {
+            if (shader.uniformSpecs[pinname].semantic=='COLOR') {
+              var rgba = _(shaderPins[i].getValue(j).split(',')).map(function(x) { return parseFloat(x) });
               layers[j].uniforms[pinname].value = new Float32Array(rgba);
             }
             else {
-              layers[j].uniforms[pinname].value = value;
+              var arr = [];
+              for (var d=0; d<shader.uniformSpecs[pinname].dimension; d++) {
+                arr[d] = shaderPins[i].getValue(i*shader.uniformSpecs[pinname].dimension+d)
+              }
+              layers[j].uniforms[pinname].value = new Float32Array(arr);
             }
           }
+          else {
+            layers[j].uniforms[pinname].value = shaderPins[i].getValue(j);
+          }
         }
+      }
     }
     
     if (transformIn.pinIsChanged()) {
       for (var i=0; i<maxSize; i++) {
         var transform = this.inputPins["Transform"].getValue(i);
         if (transform==undefined)
-          mat4.identity(transform);
+          mat4.identity(mat4.create());
         layers[i].uniforms[layers[i].shader.uniformSemanticMap['WORLD']].value = transform;
       }
     }
@@ -532,8 +548,11 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   this.auto_evaluate = true;
   
   this.addInputPin("Layers", [], this);
-  this.addInputPin("View Transform", [], this);
-  this.addInputPin("Projection Transform", [], this);
+  var viewIn = this.addInputPin("View", [], this);
+  var projIn = this.addInputPin("Projection", [], this);
+  
+  var pMatrix;
+  var vMatrix;
   
   this.initialize = function() {
     if (!this.invisiblePins["Descriptive Name"])
@@ -572,7 +591,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
     
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    //gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   }
@@ -582,12 +601,17 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       return;
   
     var layers = this.inputPins["Layers"].values;
-    var pMatrix = this.inputPins["Projection Transform"].getValue(0);
-    var vMatrix = this.inputPins["View Transform"].getValue(0);
+    if (projIn.pinIsChanged()) {
+      pMatrix = projIn.getValue(0);
+      mat4.scale(pMatrix, [1, 1, -1]);
+    }
+    if (viewIn.pinIsChanged()) 
+      vMatrix = viewIn.getValue(0);
     
     if (pMatrix==undefined) {
       pMatrix = mat4.create();
       mat4.ortho(-1, 1, -1, 1, -100, 100, pMatrix);
+      mat4.scale(pMatrix, [1, 1, -1]);
     }
     
     if (vMatrix==undefined) {

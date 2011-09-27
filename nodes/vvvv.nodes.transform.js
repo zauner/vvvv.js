@@ -41,8 +41,8 @@ VVVV.Nodes.Rotate = function(id, graph) {
       for (var i=0; i<maxSize; i++) {
       
         var transformin = this.inputPins["Transform In"].getValue(i);
-        var x = -parseFloat(this.inputPins["X"].getValue(i));
-        var y = -parseFloat(this.inputPins["Y"].getValue(i));
+        var x = parseFloat(this.inputPins["X"].getValue(i));
+        var y = parseFloat(this.inputPins["Y"].getValue(i));
         var z = parseFloat(this.inputPins["Z"].getValue(i));
         
         var t = mat4.create();
@@ -100,7 +100,7 @@ VVVV.Nodes.Translate = function(id, graph) {
 			
 			var x = parseFloat(this.xIn.getValue(i));
 			var y = parseFloat(this.yIn.getValue(i));
-			var z = -parseFloat(this.zIn.getValue(i));
+			var z = parseFloat(this.zIn.getValue(i));
 			
 			var t = mat4.create();
 			mat4.identity(t);
