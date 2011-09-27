@@ -3,6 +3,7 @@ vertex_shader:
 
 attribute vec3 PosO <POSITION>;
 attribute vec2 TexCd <TEXCOORD0>;
+attribute vec3 NormO <NORMAL>;
 
 uniform mat4 Texture_Transform;
 uniform mat4 tW <WORLD>;
@@ -29,7 +30,6 @@ vec4 lit(float NdotL, float NdotH, float m) {
 }
 
 void main(void) {
-  vec3 NormO = vec3(0, 0, 1);
 
   mat4 tWV = tV * tW;
   mat4 tWVP = tP * tWV;
@@ -66,6 +66,6 @@ uniform float Alpha;
 
 void main(void) {
   gl_FragColor = texture2D(Texture, vs2psTexCd);
-  gl_FragColor *= vs2psDiffuse + vs2psSpecular;
-  gl_FragColor.a = Alpha;
+  gl_FragColor.rgb *= vs2psDiffuse.rgb + vs2psSpecular.rgb;
+  gl_FragColor.a *= Alpha;
 }
