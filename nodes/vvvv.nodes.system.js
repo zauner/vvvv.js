@@ -32,7 +32,7 @@ VVVV.Nodes.MouseGlobal = function(id, graph) {
   
   $(document).mousemove(function(e) {
     x = e.pageX*2/parseInt($('body').css('width')) - 1;
-    y = e.pageY*2/parseInt($('body').css('height')) -1;
+    y = e.pageY*2/parseInt($('body').css('height'))*-1 -1;
   });
 
   this.evaluate = function() {
