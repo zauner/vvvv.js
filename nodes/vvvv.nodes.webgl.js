@@ -241,9 +241,6 @@ VVVV.Nodes.VertexBufferJoin = function(id, graph) {
         texCoords0[i] = parseFloat(texCoord0In.getValue(i));
         normals[i] = parseFloat(normalIn.getValue(i));
       }
-      console.log(positions);
-      console.log(texCoords0);
-      console.log(normals);
       vertexBuffer = new VVVV.Types.VertexBuffer(positions);
       vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords0);
       vertexBuffer.setSubBuffer('NORMAL', 3, normals);
@@ -500,6 +497,11 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   var initialized = false;
   
   this.initialize = function() {
+    
+    if (!gl) {
+      console.log('ARGH! Sorry, due to some weirdness, it is necessary to create the Renderer _before_ the shader nodes :(');
+      return;
+    }
     
     var thatNode = this;
     
@@ -763,12 +765,22 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['No Clear Pin', 'No Background color pin', 'Backbuffer width and height defined by canvas size', 'No Fullscreen', 'No Enable Pin', 'No Aspect Ration and Viewport transform', 'No mouse output', 'No backbuffer dimesions output', 'No WebGL (EX9) Output Pin']
+    compatibility_issues: ['Disabling Clear doesn\'t work in Chrome', 'Backbuffer width and height defined by canvas size', 'No Fullscreen', 'No Enable Pin', 'No Aspect Ration and Viewport transform', 'No mouse output', 'No backbuffer dimesions output', 'No WebGL (EX9) Output Pin']
   };
   
   this.addInputPin("Layers", [], this);
+  var clearIn = this.addInputPin("Clear", [1], this);
+  var bgColIn = this.addInputPin("Background Color", ['0.0, 0.0, 0.0, 1.0'], this);
   var viewIn = this.addInputPin("View", [], this);
   var projIn = this.addInputPin("Projection", [], this);
+  
+  var enableDepthBufIn = this.addInvisiblePin("Windowed Depthbuffer Format", ['NONE'], this);
+  
+  var bufferWidthOut = this.addOutputPin("Actual Backbuffer Width", [0.0], this);
+  var bufferHeightOut = this.addOutputPin("Actual Backbuffer Height", [0.0], this);
+  
+  var width = 0.0;
+  var height = 0.0;
   
   var pMatrix;
   var vMatrix;
@@ -792,10 +804,12 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     } catch (e) {
       console.log(e);
     }
-    if (!gl) {
-        alert("Oh gosh, can't initialize WebGL. If you're on Chrome, try launching like this: chrome.exe --ignore-gpu-blacklist . If you're on Firefox 4, go to page about:config and try to set webgl-force-enable to true.");
-        return;
-    }
+    if (!gl)
+      return;
+      
+    // doing this afterwards, so we can use these values in the patch for checking, if webgl context was set up correctly
+    width = parseInt(canvas.get(0).width);
+    height = parseInt(canvas.get(0).height);
     
     // create default white texture
  
@@ -809,15 +823,37 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
     
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   }
+  
+  var initialized = false;
 
   this.evaluate = function() {
+    if (!initialized) {
+      bufferWidthOut.setValue(0, width);
+      bufferHeightOut.setValue(0, height);
+      initialized = true;
+    }
+    
     if (gl==undefined)
       return;
+      
+    if (bgColIn.pinIsChanged()) {
+      var col = _(bgColIn.getValue(0).split(',')).map(function(e) {
+        return parseFloat(e);
+      });
+      gl.clearColor(col[0], col[1], col[2], col[3]);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    }
+    
+    if (enableDepthBufIn.pinIsChanged()) {
+      console.log(enableDepthBufIn.getValue(0));
+      if (enableDepthBufIn.getValue(0)=='NONE')
+        gl.disable(gl.DEPTH);
+      else
+        gl.enable(gl.DEPTH_TEST);
+    }
   
     var layers = this.inputPins["Layers"].values;
     if (projIn.pinIsChanged()) {
@@ -839,7 +875,9 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     }
     
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    
+    if (clearIn.getValue(0)>.5)
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
     var currentShaderProgram = null;
 
@@ -850,21 +888,6 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       }
       
       gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
-      
-      /*if (layer.shader.attribSemanticMap["POSITION"]) {
-        gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["POSITION"]].position);
-        gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["POSITION"]].position, 3, gl.FLOAT, false, 0, 0);
-      }
-      
-      if (layer.shader.attribSemanticMap["TEXCOORD0"]) {
-        gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["TEXCOORD0"]].position);
-        gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["TEXCOORD0"]].position, 2, gl.FLOAT, false, 0, layer.mesh.vertexBuffer.offsets['texcoords']);
-      }
-      
-      if (layer.shader.attribSemanticMap["NORMAL"]) {
-        gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["NORMAL"]].position);
-        gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["NORMAL"]].position, 3, gl.FLOAT, false, 0, layer.mesh.vertexBuffer.offsets['normals']);
-      }*/
       _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
         gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
         gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, 0, b.offset);
