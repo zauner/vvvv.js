@@ -6,24 +6,31 @@
 
 var gl;
 
-VVVV.Types.VertexBuffer = function(position) {
-
-  this.positionBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(position), gl.STATIC_DRAW);
+VVVV.Types.VertexBuffer = function(p) {
   
-  this.texCoordBuffer = undefined;
-  this.setTexCoords = function(texCoords) {
-    this.texCoordBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texCoords), gl.STATIC_DRAW);
+  this.vbo = undefined;
+  this.subBuffers = {};
+  this.length = 0;
+  
+  this.setSubBuffer = function(u, s, d) {
+    this.subBuffers[u] = {
+      usage: u,
+      data: new Float32Array(d),
+      size: s,
+      offset: this.length
+    };
+    this.length += this.subBuffers[u].data.byteLength;
   }
+  this.setSubBuffer('POSITION', 3, p);
   
-  this.normalBuffer = undefined;
-  this.setNormals = function(normals) {
-    this.normalBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+  this.create = function() {
+    this.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, this.length, gl.STATIC_DRAW);
+    
+    _(this.subBuffers).each(function(b) {
+      gl.bufferSubData(gl.ARRAY_BUFFER, b.offset, b.data);
+    });
   }
   
 }
@@ -235,7 +242,6 @@ VVVV.Nodes.Grid = function(id, graph) {
         vertices.push(parseFloat(x)/(xRes-1)-0.5);
         vertices.push(0.5-parseFloat(y)/(yRes-1));
         vertices.push(0.0);
-        console.log(index+': '+(parseFloat(x)/(xRes-1)-0.5)+'/'+(0.5-parseFloat(y)/(yRes-1))+'/'+(0.0))
         index++;
         
         normals.push(0);
@@ -243,13 +249,14 @@ VVVV.Nodes.Grid = function(id, graph) {
         normals.push(1);
         
         texCoords.push(parseFloat(x)/(xRes-1));
-        texCoords.push(parseFloat(y)/(xRes-1));
+        texCoords.push(parseFloat(y)/(yRes-1));
       }
     }
     
     vertexBuffer = new VVVV.Types.VertexBuffer(vertices);
-    vertexBuffer.setTexCoords(texCoords);
-    vertexBuffer.setNormals(normals);
+    vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
+    vertexBuffer.setSubBuffer('NORMAL', 3, normals);
+    vertexBuffer.create();
     
     var indices = [];
     for (var y=0; y<yRes-1; y++) {
@@ -331,8 +338,9 @@ VVVV.Nodes.Sphere = function(id, graph) {
     }
     
     vertexBuffer = new VVVV.Types.VertexBuffer(vertices);
-    vertexBuffer.setTexCoords(texCoords);
-    vertexBuffer.setNormals(normals);
+    vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
+    vertexBuffer.setSubBuffer('NORMAL', 3, normals);
+    vertexBuffer.create();
     
     var indices = [];
     for (var y=0; y<yRes; y++) {
@@ -567,7 +575,8 @@ VVVV.Nodes.Quad = function(id, graph) {
       ];
       
       vertexBuffer = new VVVV.Types.VertexBuffer(vertices);
-      vertexBuffer.setTexCoords(texCoords);
+      vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
+      vertexBuffer.create();
       mesh = new VVVV.Types.Mesh(vertexBuffer, [ 0, 1, 2, 1, 3, 2 ]);
       
       // shaders
@@ -740,23 +749,26 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         currentShaderProgram = layer.shader.shaderProgram;
       }
       
-      if (layer.shader.attribSemanticMap["POSITION"]) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
+      
+      /*if (layer.shader.attribSemanticMap["POSITION"]) {
         gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["POSITION"]].position);
-        gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.positionBuffer);
         gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["POSITION"]].position, 3, gl.FLOAT, false, 0, 0);
       }
       
       if (layer.shader.attribSemanticMap["TEXCOORD0"]) {
         gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["TEXCOORD0"]].position);
-        gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.texCoordBuffer);
-        gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["TEXCOORD0"]].position, 2, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["TEXCOORD0"]].position, 2, gl.FLOAT, false, 0, layer.mesh.vertexBuffer.offsets['texcoords']);
       }
       
       if (layer.shader.attribSemanticMap["NORMAL"]) {
         gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["NORMAL"]].position);
-        gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.normalBuffer);
-        gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["NORMAL"]].position, 3, gl.FLOAT, false, 0, 0);
-      }
+        gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap["NORMAL"]].position, 3, gl.FLOAT, false, 0, layer.mesh.vertexBuffer.offsets['normals']);
+      }*/
+      _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
+        gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
+        gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, 0, b.offset);
+      });
       
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
       gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["PROJECTION"]].position, false, pMatrix);
