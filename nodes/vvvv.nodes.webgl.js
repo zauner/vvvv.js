@@ -32,7 +32,7 @@ VVVV.Types.Mesh = function(vertexBuffer, indices) {
   this.vertexBuffer = vertexBuffer;
   this.indexBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint8Array(indices), gl.STATIC_DRAW);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
   this.numIndices = indices.length;
 }
 
@@ -223,32 +223,48 @@ VVVV.Nodes.Grid = function(id, graph) {
     if (!gl)
       return;
   
+    var xRes = parseInt(xIn.getValue(0));
+    var yRes = parseInt(yIn.getValue(0));
       
-    var vertices = [
-       0.5,  0.5,  0.0,
-      -0.5,  0.5,  0.0,
-       0.5, -0.5,  0.0,
-      -0.5, -0.5,  0.0
-    ];
-    
-    var texCoords = [
-      1.0, 0.0,
-      0.0, 0.0,
-      1.0, 1.0,
-      0.0, 1.0
-    ];
-    
-    var normals = [
-      0.0, 0.0, 1.0,
-      0.0, 0.0, 1.0,
-      0.0, 0.0, 1.0,
-      0.0, 0.0, 1.0
-    ]
+    var vertices = [];
+    var normals = [];
+    var texCoords = [];
+    var index = 0;
+    for (var y=0; y<yRes; y++) {
+      for (var x=0; x<xRes; x++) {
+        vertices.push(parseFloat(x)/(xRes-1)-0.5);
+        vertices.push(0.5-parseFloat(y)/(yRes-1));
+        vertices.push(0.0);
+        console.log(index+': '+(parseFloat(x)/(xRes-1)-0.5)+'/'+(0.5-parseFloat(y)/(yRes-1))+'/'+(0.0))
+        index++;
+        
+        normals.push(0);
+        normals.push(0);
+        normals.push(1);
+        
+        texCoords.push(parseFloat(x)/(xRes-1));
+        texCoords.push(parseFloat(y)/(xRes-1));
+      }
+    }
     
     vertexBuffer = new VVVV.Types.VertexBuffer(vertices);
     vertexBuffer.setTexCoords(texCoords);
     vertexBuffer.setNormals(normals);
-    mesh = new VVVV.Types.Mesh(vertexBuffer, [ 0, 1, 2, 1, 3, 2 ]);
+    
+    var indices = [];
+    for (var y=0; y<yRes-1; y++) {
+      for (var x=0; x<xRes-1; x++) {
+        var refP = x+xRes*y;
+        indices.push(refP);
+        indices.push(refP+1);
+        indices.push(refP+xRes+1);
+        
+        indices.push(refP+xRes+1);
+        indices.push(refP+xRes);
+        indices.push(refP);
+      }
+    }
+    mesh = new VVVV.Types.Mesh(vertexBuffer, indices);
       
     meshOut.setValue(0, mesh);
     
@@ -256,6 +272,90 @@ VVVV.Nodes.Grid = function(id, graph) {
 
 }
 VVVV.Nodes.Grid.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Sphere (EX9.Geometry)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Sphere = function(id, graph) {
+  this.constructor(id, "Sphere (EX9.Geometry)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var rIn = this.addInputPin("Radius", [0.5], this);
+  var xIn = this.addInputPin("Resolution X", [15], this);
+  var yIn = this.addInputPin("Resolution Y", [15], this);
+  
+  var meshOut = this.addOutputPin("Mesh", [], this);
+  
+  var mesh = null;
+  
+  this.evaluate = function() {
+  
+    if (!gl)
+      return;
+  
+    var xRes = parseInt(xIn.getValue(0));
+    var yRes = parseInt(yIn.getValue(0));
+    var radius = parseFloat(rIn.getValue(0));
+      
+    var vertices = [];
+    var normals = [];
+    var texCoords = [];
+    for (var y=0; y<yRes+1; y++) {
+      var yPos = Math.cos(-parseFloat(y)/yRes*Math.PI);
+      for (var x=0; x<xRes; x++) {
+        var xPos = Math.cos(parseFloat(x)/xRes*2*Math.PI)*Math.cos(Math.asin(yPos));
+        var zPos = Math.sin(parseFloat(x)/xRes*2*Math.PI)*Math.cos(Math.asin(yPos));
+        vertices.push(xPos*radius);
+        vertices.push(yPos*radius);
+        vertices.push(zPos*radius);
+        
+        normals.push(xPos);
+        normals.push(yPos);
+        normals.push(zPos);
+        
+        texCoords.push(parseFloat(x)/(xRes));
+        texCoords.push(parseFloat(y)/(yRes));
+      }
+    }
+    
+    vertexBuffer = new VVVV.Types.VertexBuffer(vertices);
+    vertexBuffer.setTexCoords(texCoords);
+    vertexBuffer.setNormals(normals);
+    
+    var indices = [];
+    for (var y=0; y<yRes; y++) {
+      for (var x=0; x<xRes; x++) {
+        var yOff = xRes*y;
+        var refP = x+yOff;
+        indices.push(refP);
+        indices.push((refP+1)%xRes+yOff);
+        indices.push((refP+1)%xRes+xRes+yOff);
+        
+        indices.push((refP+1)%xRes+xRes+yOff);
+        indices.push(refP+xRes);
+        indices.push(refP);
+      }
+    }
+    mesh = new VVVV.Types.Mesh(vertexBuffer, indices);
+      
+    meshOut.setValue(0, mesh);
+    
+  }
+
+}
+VVVV.Nodes.Sphere.prototype = new VVVV.Core.Node();
 
 
 /*
@@ -557,8 +657,6 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     compatibility_issues: ['No Clear Pin', 'No Background color pin', 'Backbuffer width and height defined by canvas size', 'No Fullscreen', 'No Enable Pin', 'No Aspect Ration and Viewport transform', 'No mouse output', 'No backbuffer dimesions output', 'No WebGL (EX9) Output Pin']
   };
   
-  this.auto_evaluate = true;
-  
   this.addInputPin("Layers", [], this);
   var viewIn = this.addInputPin("View", [], this);
   var projIn = this.addInputPin("Projection", [], this);
@@ -615,7 +713,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     var layers = this.inputPins["Layers"].values;
     if (projIn.pinIsChanged()) {
       pMatrix = projIn.getValue(0);
-      mat4.scale(pMatrix, [1, 1, -1]);
+      if (pMatrix)
+        mat4.scale(pMatrix, [1, 1, -1]);
     }
     if (viewIn.pinIsChanged()) 
       vMatrix = viewIn.getValue(0);
@@ -623,7 +722,6 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     if (pMatrix==undefined) {
       pMatrix = mat4.create();
       mat4.ortho(-1, 1, -1, 1, -100, 100, pMatrix);
-      mat4.scale(pMatrix, [1, 1, -1]);
     }
     
     if (vMatrix==undefined) {
@@ -683,7 +781,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         }
       });
       
-      gl.drawElements(gl.TRIANGLES, layer.mesh.numIndices, gl.UNSIGNED_BYTE, 0);
+      gl.drawElements(gl.TRIANGLES, layer.mesh.numIndices, gl.UNSIGNED_SHORT, 0);
     });
     
   }
