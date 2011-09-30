@@ -202,6 +202,106 @@ VVVV.Nodes.FileTexture.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: VertexBuffer(EX9.Geometry Join)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.VertexBufferJoin = function(id, graph) {
+  this.constructor(id, "VertexBuffer (EX9.Geometry Join)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var posIn = this.addInputPin("Position XYZ", [0.0, 0.0, 0.0], this);
+  var normalIn = this.addInputPin("Normal XYZ", [0.0, 0.0, 0.0], this);
+  var texCoord0In = this.addInputPin("Texture Coordinate 0 XY", [0.0, 0.0], this);
+  var applyIn = this.addInputPin("Apply", [1], this);
+  
+  var vbOut = this.addOutputPin("Vertex Buffer", [], this);
+  
+  var vertexBuffer = null;
+  
+  this.evaluate = function() {
+  
+    if (!gl)
+      return;
+    
+    if (applyIn.getValue(0)>=.5) {
+      var positions = [];
+      var texCoords0 = [];
+      var normals = [];
+      for (var i=0; i<this.getMaxInputSliceCount(); i++) { // this is most likely wrong, because texcoord only has 2 elements, which might cause some shift glitch
+        positions[i] = parseFloat(posIn.getValue(i));
+        texCoords0[i] = parseFloat(texCoord0In.getValue(i));
+        normals[i] = parseFloat(normalIn.getValue(i));
+      }
+      console.log(positions);
+      console.log(texCoords0);
+      console.log(normals);
+      vertexBuffer = new VVVV.Types.VertexBuffer(positions);
+      vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords0);
+      vertexBuffer.setSubBuffer('NORMAL', 3, normals);
+      vertexBuffer.create();
+      
+      vbOut.setValue(0, vertexBuffer);
+    }
+    
+  }
+
+}
+VVVV.Nodes.VertexBufferJoin.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Mesh (EX9.Geometry Join)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.MeshJoin = function(id, graph) {
+  this.constructor(id, "Mesh (EX9.Geometry Join)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var vbIn = this.addInputPin("Vertex Buffer", [], this);
+  var indicesIn = this.addInputPin("Indices", [0], this);
+  var applyIn = this.addInputPin("Apply", [1], this);
+  
+  var meshOut = this.addOutputPin("Mesh", [], this);
+  
+  var mesh = null;
+  
+  this.evaluate = function() {
+  
+    if (!gl)
+      return;
+    
+    if (applyIn.getValue(0)>=.5) {
+      if (vbIn.getValue(0))
+      mesh = new VVVV.Types.Mesh(vbIn.getValue(0), indicesIn.values);
+      meshOut.setValue(0, mesh);
+    }
+    
+  }
+
+}
+VVVV.Nodes.MeshJoin.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Grid (EX9.Geometry)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
