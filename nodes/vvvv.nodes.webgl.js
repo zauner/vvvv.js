@@ -6,6 +6,40 @@
 
 var gl;
 
+VVVV.Types.WebGlRenderState = function() {
+  this.alphaBlending = true;
+  this.alphaFunc = gl.ALWAYS;
+  this.srcBlendMode = gl.SRC_ALPHA;
+  this.destBlendMode = gl.ONE_MINUS_SRC_ALPHA;
+  
+  this.enableZWrite = true;
+  this.depthFunc = gl.LEQUAL;
+  this.depthOffset = 0.0;
+  
+  this.copy_attributes = function(other) {
+    this.alphaBlending = other.alphaBlending;
+    this.alphaFunc = other.alphaFunc;
+    this.srcBlendMode = other.srcBlendMode;
+    this.destBlendMode = other.destBlendMode;
+    this.enableZwrite = other.enableZWrite;
+    this.depthFunc = other.depthFunc;
+    this.depthOffset = other.depthOffset;
+  }
+  
+  this.apply = function(ctx) {
+    if (this.alphaBlending)
+      gl.enable(gl.BLEND);
+    else
+      gl.disable(gl.BLEND);
+    gl.blendFunc(this.srcBlendMode, this.destBlendMode);
+    
+    gl.depthMask(this.enableZWrite);
+    gl.depthFunc(this.depthFunc);
+  }
+}
+
+var defaultWebGlRenderState = undefined;
+
 VVVV.Types.VertexBuffer = function(p) {
   
   this.vbo = undefined;
@@ -48,6 +82,7 @@ VVVV.Types.Layer = function() {
   this.textures = [];
   this.shader = null;
   this.uniforms = {};
+  this.renderState = defaultWebGlRenderState;
   
   this.toString = function() {
     return "Layer";
@@ -465,6 +500,138 @@ VVVV.Nodes.Sphere.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Blend (EX9.RenderState Advanced)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.BlendWebGLAdvanced = function(id, graph) {
+  this.constructor(id, "Blend (EX9.RenderState Advanced)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var renderStateIn = this.addInputPin("Render State In", [], this);
+  var alphaBlendingIn = this.addInputPin("Alpha Blending", [1], this);
+  var srcModeIn = this.addInputPin("Source Blend Mode", ['SrcAlpha'], this); 
+  var destModeIn = this.addInputPin("Destination Blend Mode", ['SrcAlpha'], this); 
+  
+  var renderStateOut = this.addOutputPin("Render State Out", [], this);
+  
+  var renderStates = [];
+  
+  function convertToWebGLBlendFactor(VVVVFactor) {
+    switch (VVVVFactor) {
+      case 'One': return gl.ONE;
+      case 'Zero': return gl.ZERO;
+      case 'SrcAlpha': return gl.SRC_ALPHA;
+      case 'InvSrcAlpha': return gl.ONE_MINUS_SRC_ALPHA;
+      case 'DestAlpha': return gl.DST_ALPHA;
+      case 'InvDestAlpha': return gl.ONE_MINUS_DST_ALPHA;
+      case 'SrcColor': return gl.SRC_COLOR;
+      case 'InvSrcColor': return gl.ONE_MINUS_SRC_COLOR;
+      case 'DestColor': return gl.DST_COLOR;
+      case 'InvDestColor': return gl.ONE_MINUS_DST_COLOR;
+    }
+    return null;
+  }
+  
+  this.evaluate = function() {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+  
+    for (var i=0; i<maxSpreadSize; i++) {
+      if (renderStates[i]==undefined) {
+        renderStates[i] = new VVVV.Types.WebGlRenderState();
+      }
+      if (renderStateIn.isConnected())
+        renderStates[i].copy_attributes(renderStateIn.getValue(i));
+      else
+        renderStates[i].copy_attributes(defaultWebGlRenderState);
+      renderStates[i].alphaBlending = parseFloat(alphaBlendingIn.getValue(i))>.5;
+      renderStates[i].srcBlendMode = convertToWebGLBlendFactor(srcModeIn.getValue(i));
+      renderStates[i].destBlendMode = convertToWebGLBlendFactor(destModeIn.getValue(i));
+      renderStateOut.setValue(i, renderStates[i]);
+    }
+    renderStateOut.setSliceCount(maxSpreadSize);
+    
+  }
+
+}
+VVVV.Nodes.BlendWebGLAdvanced.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: ZWriteEnable (EX9.RenderState)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.ZWriteEnableWebGL = function(id, graph) {
+  this.constructor(id, "ZWriteEnable (EX9.RenderState)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var renderStateIn = this.addInputPin("Render State In", [], this);
+  var enableZWriteIn = this.addInputPin("ZWrite Enable", [1], this);
+  var depthFuncIn = this.addInputPin("Compare Function", ['Always'], this); 
+  var biasIn = this.addInputPin("Depth Bias", [0.0], this); 
+  
+  var renderStateOut = this.addOutputPin("Render State Out", [], this);
+  
+  var renderStates = [];
+  
+  function convertToWebGLDepthFunc(VVVVFunc) {
+    switch (VVVVFunc) {
+      case 'Never': return gl.NEVER;
+      case 'Less': return gl.LESS;
+      case 'LessEqual': return gl.LEQUAL;
+      case 'Equal': return gl.EQUAL;
+      case 'NotEqual': return gl.NOTEQUAL;
+      case 'Greater': return gl.GREATER;
+      case 'GreaterEqual': return gl.GEQUAL;
+      case 'Always': return gl.ALWAYS;
+    }
+    return null;
+  }
+  
+  this.evaluate = function() {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+  
+    for (var i=0; i<maxSpreadSize; i++) {
+      if (renderStates[i]==undefined) {
+        renderStates[i] = new VVVV.Types.WebGlRenderState();
+      }
+      if (renderStateIn.isConnected())
+        renderStates[i].copy_attributes(renderStateIn.getValue(i));
+      else
+        renderStates[i].copy_attributes(defaultWebGlRenderState);
+      renderStates[i].enableZWrite = parseFloat(enableZWriteIn.getValue(i))>.5;
+      renderStates[i].depthFunc = convertToWebGLDepthFunc(depthFuncIn.getValue(i));
+      renderStates[i].depthOffset = parseFloat(biasIn.getValue(0));
+      renderStateOut.setValue(i, renderStates[i]);
+    }
+    renderStateOut.setSliceCount(maxSpreadSize);
+    
+  }
+
+}
+VVVV.Nodes.ZWriteEnableWebGL.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: GenericShader (EX9.Effect)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
@@ -483,6 +650,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   
   this.shaderFile = '';
   
+  var renderStateIn = this.addInputPin("Render State", [], this);
   var meshIn = this.addInputPin("Mesh", [], this);
   var transformIn = this.addInputPin("Transform", [], this);
   
@@ -602,6 +770,12 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       }
     }
     
+    if (renderStateIn.pinIsChanged()) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].renderState = renderStateIn.getValue(i);
+      }
+    }
+    
     if (transformIn.pinIsChanged()) {
       for (var i=0; i<maxSize; i++) {
         var transform = this.inputPins["Transform"].getValue(i);
@@ -644,6 +818,7 @@ VVVV.Nodes.Quad = function(id, graph) {
   
   this.auto_evaluate = true;
   
+  var renderStateIn = this.addInputPin("Render State", [], this);
   this.addInputPin("Transform", [], this);
   this.addInputPin("Texture", [], this);
   this.addInputPin("Color", ["1.0, 1.0, 1.0, 1.0"], this);
@@ -720,6 +895,12 @@ VVVV.Nodes.Quad = function(id, graph) {
         var color = this.inputPins["Color"].getValue(i);
         var rgba = _(color.split(',')).map(function(x) { return parseFloat(x) });
         layers[i].uniforms['col'].value = new Float32Array(rgba);
+      }
+    }
+    
+    if (renderStateIn.pinIsChanged()) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].renderState = renderStateIn.getValue(i);
       }
     }
     
@@ -823,8 +1004,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
     
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    defaultWebGlRenderState = new VVVV.Types.WebGlRenderState();
   }
   
   var initialized = false;
@@ -886,6 +1066,11 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         gl.useProgram(layer.shader.shaderProgram);
         currentShaderProgram = layer.shader.shaderProgram;
       }
+      
+      var renderState = layer.renderState;
+      if (!renderState)
+        renderState = defaultWebGlRenderState;
+      renderState.apply();
       
       gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
       _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
