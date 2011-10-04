@@ -8,7 +8,6 @@ var gl;
 
 VVVV.Types.WebGlRenderState = function() {
   this.alphaBlending = true;
-  this.alphaFunc = gl.ALWAYS;
   this.srcBlendMode = gl.SRC_ALPHA;
   this.destBlendMode = gl.ONE_MINUS_SRC_ALPHA;
   
@@ -563,6 +562,72 @@ VVVV.Nodes.BlendWebGLAdvanced = function(id, graph) {
 
 }
 VVVV.Nodes.BlendWebGLAdvanced.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Blend (EX9.RenderState)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.BlendWebGL = function(id, graph) {
+  this.constructor(id, "Blend (EX9.RenderState)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['results differ from VVVV', 'Multiply mode not supported']
+  };
+  
+  var renderStateIn = this.addInputPin("Render State In", [], this);
+  var drawModeIn = this.addInputPin("Draw Mode", ["Blend"], this);
+  
+  var renderStateOut = this.addOutputPin("Render State Out", [], this);
+  
+  var renderStates = [];
+  
+  this.evaluate = function() {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+  
+    for (var i=0; i<maxSpreadSize; i++) {
+      if (renderStates[i]==undefined) {
+        renderStates[i] = new VVVV.Types.WebGlRenderState();
+      }
+      if (renderStateIn.isConnected())
+        renderStates[i].copy_attributes(renderStateIn.getValue(i));
+      else
+        renderStates[i].copy_attributes(defaultWebGlRenderState);
+      switch (drawModeIn.getValue(i)) {
+        case "Add":
+          renderStates[i].srcBlendMode = gl.SRC_ALPHA;
+          renderStates[i].destBlendMode = gl.ONE;
+          break;
+        case "Multiply":
+          console.log("Multiply Blend Mode not supported (or we just missed it)");
+        case "Blend":
+          renderStates[i].srcBlendMode = gl.SRC_ALPHA;
+          renderStates[i].destBlendMode = gl.ONE_MINUS_SRC_ALPHA;
+          break;
+        case "ColorAsAlphaAdd":
+          renderStates[i].srcBlendMode = gl.SRC_COLOR;
+          renderStates[i].destBlendMode = gl.ONE;
+          break;
+        case "ColorAsAlphaBlend":
+          renderStates[i].srcBlendMode = gl.SRC_COLOR;
+          renderStates[i].destBlendMode = gl.ONE_MINUS_SRC_COLOR;
+          break;
+      }
+      renderStateOut.setValue(i, renderStates[i]);
+    }
+    renderStateOut.setSliceCount(maxSpreadSize);
+    
+  }
+
+}
+VVVV.Nodes.BlendWebGL.prototype = new VVVV.Core.Node();
 
 
 /*
