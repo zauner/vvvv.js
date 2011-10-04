@@ -15,6 +15,8 @@ VVVV.Types.WebGlRenderState = function() {
   this.depthFunc = gl.LEQUAL;
   this.depthOffset = 0.0;
   
+  this.polygonDrawMode = gl.TRIANGLES;
+  
   this.copy_attributes = function(other) {
     this.alphaBlending = other.alphaBlending;
     this.alphaFunc = other.alphaFunc;
@@ -23,6 +25,7 @@ VVVV.Types.WebGlRenderState = function() {
     this.enableZwrite = other.enableZWrite;
     this.depthFunc = other.depthFunc;
     this.depthOffset = other.depthOffset;
+    this.polygonDrawMode = other.polygonDrawMode;
   }
   
   this.apply = function(ctx) {
@@ -632,6 +635,60 @@ VVVV.Nodes.BlendWebGL.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Fill (EX9.RenderState)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.FillWebGL = function(id, graph) {
+  this.constructor(id, "Fill (EX9.RenderState)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['does not actually draw wireframe, because this is not supported in WebGL, but makes renderer use gl.LINE instead of gl.TRIANGLES when drawing']
+  };
+  
+  var renderStateIn = this.addInputPin("Render State In", [], this);
+  var fillModeIn = this.addInputPin("Fill Mode", ["Blend"], this);
+  
+  var renderStateOut = this.addOutputPin("Render State Out", [], this);
+  
+  var renderStates = [];
+  
+  this.evaluate = function() {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+  
+    for (var i=0; i<maxSpreadSize; i++) {
+      if (renderStates[i]==undefined) {
+        renderStates[i] = new VVVV.Types.WebGlRenderState();
+      }
+      if (renderStateIn.isConnected())
+        renderStates[i].copy_attributes(renderStateIn.getValue(i));
+      else
+        renderStates[i].copy_attributes(defaultWebGlRenderState);
+      switch (fillModeIn.getValue(i)) {
+        case 'Point':
+        case 'Solid':
+          renderStates[i].polygonDrawMode = gl.TRIANGLES;
+          break;
+        case 'WireFrame':
+          renderStates[i].polygonDrawMode = gl.LINES;
+      }
+      renderStateOut.setValue(i, renderStates[i]);
+    }
+    renderStateOut.setSliceCount(maxSpreadSize);
+    
+  }
+
+}
+VVVV.Nodes.FillWebGL.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: ZWriteEnable (EX9.RenderState)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
@@ -1166,7 +1223,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         }
       });
       
-      gl.drawElements(gl.TRIANGLES, layer.mesh.numIndices, gl.UNSIGNED_SHORT, 0);
+      gl.drawElements(renderState.polygonDrawMode, layer.mesh.numIndices, gl.UNSIGNED_SHORT, 0);
     });
     
   }
