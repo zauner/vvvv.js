@@ -16,8 +16,6 @@ if(!window.console) {
 function initVVVV(path_to_vvvv, mode) {
 
   console.log('loading vvvv.js ...');
-  
-  VVVV.Root = path_to_vvvv;
 
   if ($('script[src*=underscore]').length==0)
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/lib/underscore/underscore-min.js"></script>'));
@@ -52,6 +50,7 @@ function initVVVV(path_to_vvvv, mode) {
     }
   }
   
+  VVVV.Root = path_to_vvvv;
   VVVV.NodeLibrary = {};
 
   var p = new VVVV.Core.Patch('');
