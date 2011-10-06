@@ -305,7 +305,7 @@ VVVV.Core = {
         else if (/.fx$/.test($(this).attr('filename'))) {
           var n = new VVVV.Nodes.GenericShader($(this).attr('id'), thisPatch);
           n.isShader = true;
-          n.shaderFile = $(this).attr('filename').replace(/\\/g, '/');
+          n.shaderFile = $(this).attr('filename').replace(/\\/g, '/').replace(/\.fx$/, '.vvvvjs.fx');
           n.nodename = nodename;
         }
         else
