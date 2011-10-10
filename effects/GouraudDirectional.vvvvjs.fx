@@ -1,20 +1,20 @@
 
 vertex_shader:
 
-attribute vec3 PosO <POSITION>;
-attribute vec2 TexCd <TEXCOORD0>;
-attribute vec3 NormO <NORMAL>;
+attribute vec3 PosO : POSITION;
+attribute vec2 TexCd : TEXCOORD0;
+attribute vec3 NormO : NORMAL;
 
 uniform mat4 Texture_Transform;
-uniform mat4 tW <WORLD>;
-uniform mat4 tV <VIEW>;
-uniform mat4 tP <PROJECTION>;
+uniform mat4 tW : WORLD;
+uniform mat4 tV : VIEW;
+uniform mat4 tP : PROJECTION;
 
-uniform vec3 Light_Direction_XYZ;
-uniform vec4 Ambient_Color <COLOR>;
-uniform vec4 Diffuse_Color <COLOR>;
-uniform vec4 Specular_Color <COLOR>;
-uniform float Power;
+uniform vec3 Light_Direction_XYZ = {0.0, -5.0, 2.0};
+uniform vec4 Ambient_Color : COLOR = {0.15, 0.15, 0.15, 1.0};
+uniform vec4 Diffuse_Color : COLOR = {0.85, 0.85, 0.85, 1.0};
+uniform vec4 Specular_Color : COLOR = {0.35, 0.35, 0.35, 1.0};
+uniform float Power = 25.0;
 
 varying vec2 vs2psTexCd;
 varying vec4 vs2psDiffuse;
@@ -62,7 +62,7 @@ varying vec2 vs2psTexCd;
 varying vec4 vs2psDiffuse;
 varying vec4 vs2psSpecular;
 uniform sampler2D Texture;
-uniform float Alpha;
+uniform float Alpha = 1.0;
 
 void main(void) {
   gl_FragColor = texture2D(Texture, vs2psTexCd);

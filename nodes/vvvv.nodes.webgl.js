@@ -113,7 +113,7 @@ VVVV.Types.ShaderProgram = function() {
   var thatShader = this;
   
   function extractSemantics(code) {
-    var pattern = /(uniform|attribute) ([a-zA-Z]+)([0-9xD]*) ([a-zA-Z0-9_]+)( <([^> ]+)>)?/g;
+    var pattern = /(uniform|attribute) ([a-zA-Z]+)([0-9xD]*) ([a-zA-Z0-9_]+)( : ([A-Z0-9]+))?( = \{?([^;\}]+)\}?)?;/g;
     var match;
     while ((match = pattern.exec(code))) {
       if (match[1]=='attribute') {
@@ -127,13 +127,15 @@ VVVV.Types.ShaderProgram = function() {
       }
       else {
         var dimension = match[3]=='' ? 1 : match[3];
-        thatShader.uniformSpecs[match[4]] = {
+        var uniformSpec = {
           varname: match[4],
           semantic: match[6],
           position: gl.getUniformLocation(thatShader.shaderProgram, match[4]),
           type: match[2],
+          defaultValue: match[8],
           dimension: dimension
         }
+        thatShader.uniformSpecs[match[4]] = uniformSpec;
         if (match[6]!=undefined)
           thatShader.uniformSemanticMap[match[6]] = match[4];
       }
@@ -142,9 +144,8 @@ VVVV.Types.ShaderProgram = function() {
   
   this.setVertexShader = function(code) {
     vertexShaderCode = code;
-  
     vertexShader = gl.createShader(gl.VERTEX_SHADER);
-    gl.shaderSource(vertexShader, code.replace(/<[^>]+>/g, ''));
+    gl.shaderSource(vertexShader, code.replace(/((uniform|attribute) [a-zA-Z0-9]+ [a-zA-Z0-9_]+)[^;]*/g, '$1'));
     gl.compileShader(vertexShader);
     
     if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
@@ -156,7 +157,7 @@ VVVV.Types.ShaderProgram = function() {
     fragmentShaderCode = code;
     
     fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(fragmentShader, code.replace(/<[^>]+>/g, ''));
+    gl.shaderSource(fragmentShader, code.replace(/((uniform|attribute) [a-zA-Z0-9]+ [a-zA-Z0-9_]+)[^;]*/g, '$1'));
     gl.compileShader(fragmentShader);
     
     if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
@@ -820,13 +821,27 @@ VVVV.Nodes.GenericShader = function(id, graph) {
         _(shader.uniformSpecs).each(function(u) {
           if (u.semantic=="VIEW" || u.semantic=="PROJECTION" || u.semantic=="WORLD")
             return;
-          var defaultValue = [0.0];
-          if (u.semantic == 'COLOR' && u.type=='vec')
-            defaultValue = ['1.0, 1.0, 1.0, 1.0'];
-          if (u.type=='mat')
-            defaultValue = [mat4.identity(mat4.create())];
-          if (u.type=='sampler')
-            defaultValue = [VVVV.DefaultTexture];
+          switch (u.type) {
+            case 'mat':
+              defaultValue = [mat4.identity(mat4.create())];
+              break;
+            case 'sampler':
+              defaultValue = [VVVV.DefaultTexture];
+              break;
+            default:
+              if (u.semantic == 'COLOR')
+                defaultValue = ['1.0, 1.0, 1.0, 1.0'];
+              else
+                defaultValue = [0.0];
+              if (u.defaultValue) {
+                if (u.semantic != 'COLOR')
+                  defaultValue = _(u.defaultValue.split(',')).map(function(e) { return parseFloat(e); });
+                else
+                  defaultValue = [u.defaultValue];
+              }
+              
+          }
+            
           var pin = thatNode.addInputPin(u.varname.replace(/_/g,' '), defaultValue, thatNode);
           shaderPins.push(pin);
         });
@@ -1150,7 +1165,6 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     }
     
     if (enableDepthBufIn.pinIsChanged()) {
-      console.log(enableDepthBufIn.getValue(0));
       if (enableDepthBufIn.getValue(0)=='NONE')
         gl.disable(gl.DEPTH);
       else
@@ -1196,6 +1210,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       
       gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
       _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
+        if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]])
+          return;
         gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
         gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, 0, b.offset);
       });
