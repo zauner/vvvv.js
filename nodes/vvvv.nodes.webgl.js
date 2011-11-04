@@ -998,8 +998,8 @@ VVVV.Nodes.Quad = function(id, graph) {
       var fragmentShaderCode = "#ifdef GL_ES\n";
       fragmentShaderCode += "precision highp float;\n";
       fragmentShaderCode += "#endif\n";
-      fragmentShaderCode += "uniform vec4 col; varying vec2 vs2psTexCd; uniform sampler2D Samp0; void main(void) { gl_FragColor = col*texture2D(Samp0, vs2psTexCd);  }";
-      var vertexShaderCode = "attribute vec3 PosO <POSITION>; attribute vec2 TexCd <TEXCOORD0>; uniform mat4 tW <WORLD>; uniform mat4 tV <VIEW>; uniform mat4 tP <PROJECTION>; varying vec2 vs2psTexCd; void main(void) { gl_Position = tP * tV * tW * vec4(PosO, 1.0); vs2psTexCd = TexCd; }";
+      fragmentShaderCode += "uniform vec4 col : COLOR = {1.0, 1.0, 1.0, 1.0}; varying vec2 vs2psTexCd; uniform sampler2D Samp0; void main(void) { gl_FragColor = col*texture2D(Samp0, vs2psTexCd);  }";
+      var vertexShaderCode = "attribute vec3 PosO : POSITION; attribute vec2 TexCd : TEXCOORD0; uniform mat4 tW : WORLD; uniform mat4 tV : VIEW; uniform mat4 tP : PROJECTION; varying vec2 vs2psTexCd; void main(void) { gl_Position = tP * tV * tW * vec4(PosO, 1.0); vs2psTexCd = TexCd; }";
       
       shader = new VVVV.Types.ShaderProgram();
       shader.setFragmentShader(fragmentShaderCode);
@@ -1053,7 +1053,10 @@ VVVV.Nodes.Quad = function(id, graph) {
     if (textureChanged) {
       for (var i=0; i<maxSize; i++) {
         console.log('setting texture for layer '+i);
-        tex = this.inputPins["Texture"].getValue(i);
+        if (this.inputPins["Texture"].isConnected())
+          tex = this.inputPins["Texture"].getValue(i);
+        else
+          tex = VVVV.DefaultTexture;
         layers[i].uniforms["Samp0"].value = tex;
       }
     }
