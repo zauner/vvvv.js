@@ -747,11 +747,14 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   var clearIn = this.addInputPin("Clear", [1], this);
   var bgColorIn = this.addInputPin("Background Color", ["0.0, 0.0, 0.0, 1.0"], this);
   
+  var canvasOut = this.addOutputPin("Canvas Out", [], this);
+  
   var ctx;
   var canvasWidth;
   var canvasHeight;
   var bgColor = [0.0, 0.0, 0.0, 1.0];
   var clear = 1;
+  var canvas;
   
   this.initialize = function() {
     if (!this.invisiblePins["Descriptive Name"])
@@ -760,7 +763,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
     var selector = this.invisiblePins["Descriptive Name"].getValue(0);
     if (selector==undefined || selector=="")
       return;
-    var canvas = $(selector).get(0);
+    canvas = $(selector).get(0);
     canvasWidth = canvas.width;
     canvasHeight = canvas.height;
     
@@ -810,7 +813,8 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
       
     }
     
-    
+    canvas.loaded = true;
+    canvasOut.setValue(0, canvas);
 
 
   }
