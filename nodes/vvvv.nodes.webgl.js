@@ -240,6 +240,59 @@ VVVV.Nodes.FileTexture.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: DX9Texture (EX9.Texture)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.DX9Texture = function(id, graph) {
+  this.constructor(id, "DX9Texture (EX9.Texture)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var sourceIn = this.addInputPin("Source", [""], this);
+  var outputOut = this.addOutputPin("Texture Out", [], this);
+  
+  var texture;
+  
+  this.initialize = function() {
+    if (!gl)
+      return;
+    texture = gl.createTexture(); 
+  }
+  
+  this.evaluate = function() {
+    if (!gl)
+      return;
+  
+    if (sourceIn.isConnected()) {
+      var source = sourceIn.getValue(0);
+      if ( (source.width & (source.width-1)) != 0 || (source.height & (source.height-1)) != 0)
+        console.log("Warning: Source renderer's width/height is not a power of 2. DX9Texture will most likely not work.");
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+    
+      outputOut.setValue(0, texture);
+    }
+  
+  }
+
+}
+VVVV.Nodes.DX9Texture.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: VertexBuffer(EX9.Geometry Join)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
