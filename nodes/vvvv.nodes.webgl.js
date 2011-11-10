@@ -896,6 +896,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
           }
             
           var pin = thatNode.addInputPin(u.varname.replace(/_/g,' '), defaultValue, thatNode);
+          pin.dimensions = u.dimension;
           shaderPins.push(pin);
         });
         
@@ -917,8 +918,10 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     var maxSize = 0;
     _(this.inputPins).each(function(p) {
       var sliceCount = p.getSliceCount();
-      if (shader.uniformSpecs[p.pinname] && shader.uniformSpecs[p.pinname].type=='vec')
-        sliceCount = parseInt(sliceCount/shader.uniformSpecs[p.pinname].dimension);
+      var pinname = p.pinname.replace(/ /g,'_')
+      if (shader.uniformSpecs[pinname] && shader.uniformSpecs[pinname].type=='vec') {
+        sliceCount = parseInt(sliceCount/shader.uniformSpecs[pinname].dimension);
+      }
       if (sliceCount > maxSize)
         maxSize = sliceCount;
     });
@@ -946,10 +949,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
               layers[j].uniforms[pinname].value = new Float32Array(rgba);
             }
             else {
-              var arr = [];
-              for (var d=0; d<shader.uniformSpecs[pinname].dimension; d++) {
-                arr[d] = shaderPins[i].getValue(i*shader.uniformSpecs[pinname].dimension+d)
-              }
+              var arr = shaderPins[i].getValue(j, shaderPins[i].dimensions);
               layers[j].uniforms[pinname].value = new Float32Array(arr);
             }
           }
