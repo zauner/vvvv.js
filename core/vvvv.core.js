@@ -27,8 +27,14 @@ VVVV.Core = {
     this.changed = true;
     this.active = false;
     
-    this.getValue = function(i) {
-      return this.values[i%this.values.length];
+    this.getValue = function(i, binSize) {
+      if (!binSize || binSize==1)
+        return this.values[i%this.values.length];
+      var ret = [];
+      for (var j=0; j<binSize; j++) {
+        ret.push(this.values[(i*binSize+j)%this.values.length]);
+      }
+      return ret;
     }
     
     this.setValue = function(i, v) {
@@ -220,7 +226,7 @@ VVVV.Core = {
     this.getMaxInputSliceCount = function() {
       var ret = 0;
       _(this.inputPins).each(function(p) {
-        if (p.values.length>ret)
+        if (p.getSliceCount()>ret)
           ret = p.values.length;
       });
       return ret;
