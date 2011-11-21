@@ -44,6 +44,7 @@ function initVVVV(path_to_vvvv, mode) {
       $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.vectors.js"></script>'));
       $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.webgl.js"></script>'));
       $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.complex.js"></script>'));
+      $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/nodes/vvvv.nodes.enumerations.js"></script>'));
     }
     if (mode=='vvvviewer' || mode=='full') {
       $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/vvvviewer/vvvv.vvvviewer.js"></script>'));
