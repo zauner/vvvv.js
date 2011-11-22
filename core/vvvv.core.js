@@ -276,7 +276,7 @@ VVVV.Core = {
     
     var thisPatch = this;
     
-    function doLoad(xml) {
+    this.doLoad = function(xml) {
     
       $windowBounds = $(xml).find('bounds[type="Window"]').first();
       if ($windowBounds.length>0) {
@@ -472,14 +472,17 @@ VVVV.Core = {
         type: 'get',
         dataType: 'text',
         success: function(r) {
-          doLoad(r);
+          that.doLoad(r);
           if (that.success)
             that.success();
         }
       });
     }
+    else if (/^http:\/\//.test(ressource)) {
+      clientbridge = new VVVV.Core.ClientBridge(this, ressource);
+    }
     else {
-      doLoad(ressource);
+      this.doLoad(ressource);
       if (this.success)
         this.success();
     }

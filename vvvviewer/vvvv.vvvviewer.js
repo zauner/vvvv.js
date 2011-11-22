@@ -206,6 +206,13 @@ VVVV.VVVViewer = function(graph, selector) {
         }
       })
       .text(function(d) { return d; });
+      
+    nodes.attr('transform', function(d) { return 'translate('+d.x+','+d.y+')' });
+    
+    links.attr('x1', function(d) { return d.fromPin.x + d.fromPin.node.x + 2 + .5 })
+      .attr('y1', function(d) { return d.fromPin.y + d.fromPin.node.y + 4 + .5 })
+      .attr('x2', function(d) { return d.toPin.x + d.toPin.node.x + 2 + .5 })
+      .attr('y2', function(d) { return d.toPin.y + d.toPin.node.y + .5 });
   }
   
   this.destroy = function() {

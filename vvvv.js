@@ -26,6 +26,7 @@ function initVVVV(path_to_vvvv, mode) {
 
   if ($('script[src*=vvvv.core.js]').length==0) {
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/core/vvvv.core.js"></script>'));
+    $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/core/vvvv.core.clientbridge.js"></script>'));
     if (mode=='run' || mode=='full') {
       $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/mainloop/vvvv.mainloop.js"></script>'));
       $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/mainloop/vvvv.dominterface.js"></script>'));
