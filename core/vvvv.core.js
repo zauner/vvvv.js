@@ -300,10 +300,16 @@ VVVV.Core = {
         thisPatch.width = Math.max(thisPatch.width, $bounds.attr('left')/15+100);
         thisPatch.height = Math.max(thisPatch.height, $bounds.attr('top')/15+25);
 
-        if (VVVV.NodeLibrary[nodename.toLowerCase()]!=undefined)
-          var n = new VVVV.NodeLibrary[nodename.toLowerCase()]($(this).attr('id'), thisPatch);
+        var nodeExists = thisPatch.nodeMap[$(this).attr('id')]!=undefined;
+        if (!nodeExists) {
+          if (VVVV.NodeLibrary[nodename.toLowerCase()]!=undefined)
+            var n = new VVVV.NodeLibrary[nodename.toLowerCase()]($(this).attr('id'), thisPatch);
+          else
+            var n = new VVVV.Core.Node($(this).attr('id'), nodename, thisPatch);
+          console.log('inserted new node '+n.nodename);
+        }
         else
-          var n = new VVVV.Core.Node($(this).attr('id'), nodename, thisPatch);
+          n = thisPatch.nodeMap[$(this).attr('id')];
         n.x = $bounds.attr('left')/15;
         n.y = $bounds.attr('top')/15;
         n.width = $bounds.attr('width');
@@ -315,7 +321,8 @@ VVVV.Core = {
           n.isShader = true;
 		  
         //To add anything which relates to all nodes
-        n.setup();
+        if (!nodeExists)
+          n.setup();
         
         var that = this;
 
@@ -338,8 +345,12 @@ VVVV.Core = {
             
           // the input pin already exists (because the node created it), don't add it, but set values, if present in the xml
           if (n.inputPins[pinname]!=undefined) {
-            if (values!=undefined)
-              n.inputPins[pinname].values = values;
+            if (values!=undefined) {
+              for (var i=0; i<n.inputPins[pinname].values.length; i++) {
+                if (n.inputPins[pinname].values[i]!=values[i])
+                  n.inputPins[pinname].setValue(i, values[i]);
+              }
+            }
             return;
           }
           
@@ -375,22 +386,30 @@ VVVV.Core = {
         });
         
         //Initialize node
-        n.initialize();
-        thisPatch.nodeList.push(n);
+        if (!nodeExists) {
+          n.initialize();
+          thisPatch.nodeList.push(n);
+        }
         
       });
     
       // add pins which are either defined in the node, nor defined in the xml, but only appeare in the links (this is the case with shaders)
       $(xml).find('link').each(function() {
-        srcPin = thisPatch.pinMap[$(this).attr('srcnodeid')+'_'+$(this).attr('srcpinname')];
-        dstPin = thisPatch.pinMap[$(this).attr('dstnodeid')+'_'+$(this).attr('dstpinname')];
+        var srcPin = thisPatch.pinMap[$(this).attr('srcnodeid')+'_'+$(this).attr('srcpinname')];
+        var dstPin = thisPatch.pinMap[$(this).attr('dstnodeid')+'_'+$(this).attr('dstpinname')];
         
         if (srcPin==undefined)
           srcPin = thisPatch.nodeMap[$(this).attr('srcnodeid')].addOutputPin($(this).attr('srcpinname'), undefined);
         if (dstPin==undefined)
           dstPin = thisPatch.nodeMap[$(this).attr('dstnodeid')].addInputPin($(this).attr('dstpinname'), undefined);
-        
-        thisPatch.linkList.push(new VVVV.Core.Link(srcPin, dstPin));
+          
+        var linkExists = false;
+        for (var i=0; i<thisPatch.linkList.length; i++) {
+          if (thisPatch.linkList[i].fromPin.node.id==srcPin.node.id && thisPatch.linkList[i].toPin.node.id==dstPin.node.id)
+            linkExists = true;
+        }
+        if (!linkExists)
+          thisPatch.linkList.push(new VVVV.Core.Link(srcPin, dstPin));
       });
     }
     
@@ -399,6 +418,9 @@ VVVV.Core = {
       
     }
     
+    this.afterUpdate = function() {
+      
+    }
     
     this.evaluate = function() {
       if (print_timing)
