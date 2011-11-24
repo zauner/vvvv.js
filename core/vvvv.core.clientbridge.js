@@ -7,44 +7,21 @@ VVVV.Core.ClientBridge = function(patch, host) {
   
   this.patch = patch;
   
-  function initPatch() {
-    $.ajax({
-      url: host,
-      type: 'GET',
-      dataType: 'text',
-      success: function(xml) {
-        patch.doLoad(xml);
-        if (patch.success)
-          patch.success();
-      }
-    });
+  var socket = new WebSocket("ws://localhost:4444/devel");
+  var initialized = false;
+  socket.onopen = function() {
+    console.log("connected to VVVV ...");
   }
   
-  function syncPatchWith(remotePatch) {
-    for (var i=0; i<remotePatch.nodeList.length; i++) {
-      var remoteNode = remotePatch.nodeList[i];
-      var localNode = patch.nodeMap[remoteNode.id];
-      if (localNode) {
-        localNode.x = remoteNode.x;
-        localNode.y = remoteNode.y;
-      }
+  socket.onmessage = function(m) {
+    patch.doLoad(m.data);
+    if (!initialized) {
+      initialized = true;
+      if (patch.success)
+        patch.success();
     }
-    patch.afterEvaluate();
+    else
+      patch.afterUpdate();
   }
-  
-  function updatePatch() {
-    $.ajax({
-      url: host,
-      type: 'GET',
-      dataType: 'text',
-      success: function(xml) {
-        var remotePatch = new VVVV.Core.Patch(xml);
-        syncPatchWith(remotePatch);
-      }
-    });
-  }
-  
-  initPatch();
-  setInterval(updatePatch, 100);
   
 }
