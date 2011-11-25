@@ -1,6 +1,6 @@
 <html>
 <head>
-  <title>VVVV.js Example #8: Vertex Deforming Shader</title>
+  <title>VVVV.js Example #8: 2-pass Rendering + Height Map Shader</title>
   <link rel="stylesheet" type="text/css" href="../../vvvviewer/vvvv.css"/>
   <script language="JavaScript" src="../../lib/jquery/jquery-1.4.2.min.js"></script> 
   <script language="JavaScript" src="../../vvvv.js"></script>
@@ -46,8 +46,20 @@
 <input type="button" id="stop_button" value="Pause"/>
 <input type="button" id="show_button" value="Show Patch"/>
 <br/>
-<canvas id="texrenderer" width="256" height="256"></canvas>
-<canvas id="renderer" width="500" height="500"></canvas>
+<p>
+This example takes the contents of the Canvas Renderer (left), and uses it as a heightmap for the GLSL shader effect, which is rendered to the WebGL
+render (right). Display the patch to see that there are two renderers, one somehow flowing into the other. View the (HLSL flavoured) GLSL source here: <a href="DeformByHeightMap.vvvvjs.fx">DeformByHeightMap.vvvvjs.fx</a>.
+</p>
+<div style="margin-top:30px">
+  <div style="float:left">
+    <h2 style="font-size:inherit;margin-top:0">1st pass: the height-map texture</h2>
+    <canvas id="texrenderer" width="256" height="256"></canvas>
+  </div>
+  <div style="margin-left:300px">
+    <h2 style="font-size:inherit;margin-top:0">2nd pass: the WebGL renderer using the GLSL shader effect</h2>
+    <canvas id="renderer" width="500" height="500"></canvas>
+  </div>
+</div>
 
 <div id="viewer_pane"></div>
 
