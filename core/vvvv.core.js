@@ -346,7 +346,7 @@ VVVV.Core = {
           // the input pin already exists (because the node created it), don't add it, but set values, if present in the xml
           if (n.inputPins[pinname]!=undefined) {
             if (values!=undefined) {
-              for (var i=0; i<n.inputPins[pinname].values.length; i++) {
+              for (var i=0; i<values.length; i++) {
                 if (n.inputPins[pinname].values[i]!=values[i])
                   n.inputPins[pinname].setValue(i, values[i]);
               }
@@ -393,11 +393,11 @@ VVVV.Core = {
         
       });
     
-      // add pins which are either defined in the node, nor defined in the xml, but only appeare in the links (this is the case with shaders)
       $(xml).find('link').each(function() {
         var srcPin = thisPatch.pinMap[$(this).attr('srcnodeid')+'_'+$(this).attr('srcpinname')];
         var dstPin = thisPatch.pinMap[$(this).attr('dstnodeid')+'_'+$(this).attr('dstpinname')];
         
+				// add pins which are neither defined in the node, nor defined in the xml, but only appeare in the links (this is the case with shaders)
         if (srcPin==undefined)
           srcPin = thisPatch.nodeMap[$(this).attr('srcnodeid')].addOutputPin($(this).attr('srcpinname'), undefined);
         if (dstPin==undefined)
@@ -405,8 +405,12 @@ VVVV.Core = {
           
         var linkExists = false;
         for (var i=0; i<thisPatch.linkList.length; i++) {
-          if (thisPatch.linkList[i].fromPin.node.id==srcPin.node.id && thisPatch.linkList[i].toPin.node.id==dstPin.node.id)
+          if (thisPatch.linkList[i].fromPin.node.id==srcPin.node.id &&
+					    thisPatch.linkList[i].fromPin.pinname==srcPin.pinname &&
+							thisPatch.linkList[i].toPin.node.id==dstPin.node.id &&
+							thisPatch.linkList[i].toPin.pinname==dstPin.pinname) {
             linkExists = true;
+					}
         }
         if (!linkExists)
           thisPatch.linkList.push(new VVVV.Core.Link(srcPin, dstPin));
