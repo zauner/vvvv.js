@@ -21,7 +21,7 @@ varying vec3 NormV;
 varying vec3 ViewDirV;
 varying vec2 vs2psTexCd;
 
-vec3 deformPoint(vec3 p, float a) {
+vec3 deform(vec3 p, float a) {
   vec3 res = p;
   res.z -= a;
   return res;
@@ -38,26 +38,26 @@ void main(void) {
   TexCd2 += .5;
   
   vec4 texCol = texture2D(Texture, TexCd2);
-  vec3 PosO2 = deformPoint(PosO, texCol.r*deformAmount);
+  vec3 PosO2 = deform(PosO, texCol.r*deformAmount);
   
   vec4 texCol_right = texture2D(Texture, vec2(TexCd2.x+delta, TexCd2.y));
-  vec3 p_right = deformPoint(vec3(PosO.x+delta, PosO.yz), texCol_right.r*deformAmount);
+  vec3 p_right = deform(vec3(PosO.x+delta, PosO.yz), texCol_right.r*deformAmount);
   
   vec4 texCol_bottom = texture2D(Texture, vec2(TexCd2.x, TexCd2.y+delta));
-  vec3 p_bottom = deformPoint(vec3(PosO.x, PosO.y-delta, PosO.z), texCol_right.r*deformAmount);
+  vec3 p_bottom = deform(vec3(PosO.x, PosO.y-delta, PosO.z), texCol_right.r*deformAmount);
   
   vec4 texCol_left = texture2D(Texture, vec2(TexCd2.x-delta, TexCd2.y));
-  vec3 p_left = deformPoint(vec3(PosO.x-delta, PosO.yz), texCol_left.r*deformAmount);
+  vec3 p_left = deform(vec3(PosO.x-delta, PosO.yz), texCol_left.r*deformAmount);
   
   vec4 texCol_top = texture2D(Texture, vec2(TexCd2.x, TexCd2.y-delta));
-  vec3 p_top = deformPoint(vec3(PosO.x, PosO.y+delta, PosO.z), texCol_top.r*deformAmount);
+  vec3 p_top = deform(vec3(PosO.x, PosO.y+delta, PosO.z), texCol_top.r*deformAmount);
   
+  // calculate positions of neighbouring vertices, and get an average/smooth normal
   vec3 n1 = normalize(cross(p_right-PosO2, p_bottom-PosO2));
   vec3 n2 = normalize(cross(p_left-PosO2, p_top-PosO2));
   vec3 n3 = normalize(cross(p_bottom-PosO2, p_left-PosO2));
   vec3 n4 = normalize(cross(p_top-PosO2, p_right-PosO2));
   vec3 n = (n1+n2+n3+n4)/4.0;
-  
   
   LightDirV = normalize(-1.0*(tV*vec4(Light_Direction_XYZ,1))).xyz;
   NormV = normalize(tWV * vec4(n, 0)).xyz;

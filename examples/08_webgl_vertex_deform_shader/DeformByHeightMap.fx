@@ -59,6 +59,11 @@ vs2ps VS(
     float3 NormO: NORMAL,
     float4 TexCd : TEXCOORD0)
 {
+	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// Nothing happens here! This is only a placeholder for the VVVV.js GLSL shader,
+	// located in the .vvvvjs.fx file
+	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	
     //inititalize all fields of output struct with 0
     vs2ps Out = (vs2ps)0;
 	

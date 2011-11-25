@@ -170,38 +170,6 @@
    </NODE>
    <LINK dstnodeid="18" dstpinname="Projection" srcnodeid="23" srcpinname="Transform Out">
    </LINK>
-   <NODE componentmode="Hidden" filename="DeformByTexture.fx" id="31" nodename="DeformByTexture (EX9.Effect)" systemname="DeformByTexture (EX9.Effect)">
-   <BOUNDS height="270" left="1995" top="16140" type="Node" width="3000">
-   </BOUNDS>
-   <PIN pinname="Texture" visible="1">
-   </PIN>
-   <PIN pinname="Texture 2" slicecount="1" visible="1" values="||">
-   </PIN>
-   <PIN pinname="deformAmount" slicecount="1" values="0.12">
-   </PIN>
-   <PIN pinname="Texture Transform" slicecount="1" visible="1" values="||">
-   </PIN>
-   <PIN pinname="Render State" visible="1">
-   </PIN>
-   <PIN pinname="Ambient Color" slicecount="1" visible="1" values="|0.14902,0.14902,0.14902,1.00000|">
-   </PIN>
-   <PIN pinname="Specular Color" slicecount="1" values="|0.34902,0.34902,0.34902,1.00000|">
-   </PIN>
-   <PIN pinname="vertexCount" visible="1">
-   </PIN>
-   <PIN pinname="Diffuse Color" visible="1">
-   </PIN>
-   <PIN pinname="Light Direction XYZ" visible="1">
-   </PIN>
-   <PIN pinname="Alpha" slicecount="1" visible="1" values="1">
-   </PIN>
-   </NODE>
-   <LINK dstnodeid="31" dstpinname="Mesh" srcnodeid="2" srcpinname="Mesh">
-   </LINK>
-   <LINK dstnodeid="18" dstpinname="Layers" srcnodeid="31" srcpinname="Layer">
-   </LINK>
-   <LINK dstnodeid="31" dstpinname="Transform" srcnodeid="25" srcpinname="Transform Out">
-   </LINK>
    <NODE componentmode="InAWindow" filename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\Renderer (Canvas VVVVjs).v4p" id="33" nodename="Renderer (Canvas VVVVjs)" systemname="Renderer (Canvas VVVVjs)">
    <BOUNDS height="100" left="8400" top="13785" type="Node" width="100">
    </BOUNDS>
@@ -226,8 +194,6 @@
    </NODE>
    <LINK dstnodeid="36" dstpinname="Source" srcnodeid="33" srcpinname="Canvas Out">
    </LINK>
-   <LINK dstnodeid="31" dstpinname="Texture" srcnodeid="36" srcpinname="Texture Out">
-   </LINK>
    <NODE componentmode="Hidden" id="45" nodename="Fill (EX9.RenderState)" systemname="Fill (EX9.RenderState)">
    <BOUNDS height="100" left="390" top="15345" type="Node" width="100">
    </BOUNDS>
@@ -251,8 +217,6 @@
    <LINK dstnodeid="2" dstpinname="Resolution Y" srcnodeid="50" srcpinname="Y Output Value">
    </LINK>
    <LINK dstnodeid="18" dstpinname="View" srcnodeid="22" srcpinname="Transform Out">
-   </LINK>
-   <LINK dstnodeid="31" dstpinname="Light Direction XYZ" srcnodeid="26" srcpinname="XYZ">
    </LINK>
    <NODE componentmode="Hidden" filename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\Quad (Canvas VVVVjs).v4p" id="69" nodename="Quad (Canvas VVVVjs)" systemname="Quad (Canvas VVVVjs)">
    <BOUNDS height="100" left="12465" top="12510" type="Node" width="100">
@@ -619,8 +583,6 @@
    <LINK dstnodeid="118" dstpinname="Input" srcnodeid="117" srcpinname="Output">
    </LINK>
    <LINK dstnodeid="116" dstpinname="Blur" srcnodeid="118" srcpinname="Output">
-   </LINK>
-   <LINK dstnodeid="31" dstpinname="Render State" srcnodeid="45" srcpinname="Render State Out">
    </LINK>
    <NODE componentmode="InABox" id="119" nodename="IOBox (Value Advanced)" systemname="IOBox (Value Advanced)">
    <BOUNDS height="100" left="8700" top="6570" type="Node" width="100">
@@ -1059,17 +1021,17 @@
    <LINK dstnodeid="181" dstpinname="String Value" srcnodeid="188" srcpinname="Output String">
    </LINK>
    <NODE componentmode="Hidden" id="190" nodename="Vector (2d Join)" systemname="Vector (2d Join)">
-   <BOUNDS height="100" left="4035" top="14460" type="Node" width="100">
+   <BOUNDS height="100" left="4230" top="14430" type="Node" width="100">
    </BOUNDS>
    <PIN pinname="XY" visible="1">
    </PIN>
-   <PIN pinname="Y" slicecount="1" values="0">
+   <PIN pinname="Y" slicecount="1" values="0.31">
    </PIN>
    <PIN pinname="X" slicecount="1" values="0.85">
    </PIN>
    </NODE>
    <NODE componentmode="Hidden" id="191" nodename="RGB (Color Join)" systemname="RGB (Color Join)">
-   <BOUNDS height="270" left="3390" top="15105" type="Node" width="2010">
+   <BOUNDS height="270" left="3390" top="15105" type="Node" width="2310">
    </BOUNDS>
    <PIN pinname="Red" visible="1">
    </PIN>
@@ -1080,10 +1042,6 @@
    <PIN pinname="Output" visible="1">
    </PIN>
    </NODE>
-   <LINK dstnodeid="31" dstpinname="vertexCount" srcnodeid="50" srcpinname="Y Output Value">
-   </LINK>
-   <LINK dstnodeid="31" dstpinname="Diffuse Color" srcnodeid="191" srcpinname="Output">
-   </LINK>
    <NODE componentmode="Hidden" id="194" nodename="Vector (2d Join)" systemname="Vector (2d Join)">
    <BOUNDS height="100" left="3165" top="12900" type="Node" width="100">
    </BOUNDS>
@@ -1101,11 +1059,11 @@
    <LINK dstnodeid="191" dstpinname="Green" srcnodeid="190" srcpinname="XY">
    </LINK>
    <NODE componentmode="Hidden" id="199" nodename="Vector (2d Join)" systemname="Vector (2d Join)">
-   <BOUNDS height="100" left="3375" top="14460" type="Node" width="100">
+   <BOUNDS height="100" left="3405" top="14445" type="Node" width="100">
    </BOUNDS>
    <PIN pinname="XY" visible="1">
    </PIN>
-   <PIN pinname="Y" slicecount="1" values="1">
+   <PIN pinname="Y" slicecount="1" values="0">
    </PIN>
    <PIN pinname="X" slicecount="1" values="0.85">
    </PIN>
@@ -1113,11 +1071,11 @@
    <LINK dstnodeid="191" dstpinname="Red" srcnodeid="199" srcpinname="XY">
    </LINK>
    <NODE componentmode="Hidden" id="200" nodename="Vector (2d Join)" systemname="Vector (2d Join)">
-   <BOUNDS height="100" left="4725" top="14445" type="Node" width="100">
+   <BOUNDS height="100" left="5055" top="14430" type="Node" width="100">
    </BOUNDS>
    <PIN pinname="XY" visible="1">
    </PIN>
-   <PIN pinname="Y" slicecount="1" values="0">
+   <PIN pinname="Y" slicecount="1" values="0.44">
    </PIN>
    <PIN pinname="X" slicecount="1" values="0.85">
    </PIN>
@@ -1127,5 +1085,45 @@
    <LINK srcnodeid="111" srcpinname="Output" dstnodeid="116" dstpinname="Color">
    </LINK>
    <LINK srcnodeid="116" srcpinname="Render State Out" dstnodeid="107" dstpinname="Render State In">
+   </LINK>
+   <NODE systemname="DeformByHeightMap (EX9.Effect)" filename="DeformByHeightMap.fx" nodename="DeformByHeightMap (EX9.Effect)" componentmode="Hidden" id="201">
+   <BOUNDS type="Node" left="2010" top="16260" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Layer" visible="1">
+   </PIN>
+   <PIN pinname="Render State" visible="1">
+   </PIN>
+   <PIN pinname="Mesh" visible="1">
+   </PIN>
+   <PIN pinname="Light Direction XYZ" visible="1">
+   </PIN>
+   <PIN pinname="Ambient Color" visible="1" slicecount="1" values="|0.14902,0.14902,0.14902,1.00000|">
+   </PIN>
+   <PIN pinname="deformAmount" slicecount="1" values="0.12">
+   </PIN>
+   <PIN pinname="vertexCount" visible="1">
+   </PIN>
+   <PIN pinname="Diffuse Color" visible="1">
+   </PIN>
+   <PIN pinname="Texture" visible="1">
+   </PIN>
+   <PIN pinname="Transform" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="201" srcpinname="Layer" dstnodeid="18" dstpinname="Layers">
+   </LINK>
+   <LINK srcnodeid="45" srcpinname="Render State Out" dstnodeid="201" dstpinname="Render State">
+   </LINK>
+   <LINK srcnodeid="2" srcpinname="Mesh" dstnodeid="201" dstpinname="Mesh">
+   </LINK>
+   <LINK srcnodeid="26" srcpinname="XYZ" dstnodeid="201" dstpinname="Light Direction XYZ">
+   </LINK>
+   <LINK srcnodeid="50" srcpinname="Y Output Value" dstnodeid="201" dstpinname="vertexCount">
+   </LINK>
+   <LINK srcnodeid="191" srcpinname="Output" dstnodeid="201" dstpinname="Diffuse Color">
+   </LINK>
+   <LINK srcnodeid="36" srcpinname="Texture Out" dstnodeid="201" dstpinname="Texture">
+   </LINK>
+   <LINK srcnodeid="25" srcpinname="Transform Out" dstnodeid="201" dstpinname="Transform">
    </LINK>
    </PATCH>
