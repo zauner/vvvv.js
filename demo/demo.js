@@ -5,11 +5,10 @@ $(document).ready(function() {
 
   $('#patchxml').bind('paste', function() {
     setTimeout(function() {
-      var patch = new VVVV.Core.Patch("http://localhost/vvvv_proxy.php", function() {//new VVVV.Core.Patch($('#patchxml').val());
-        var mainloop = new VVVV.Core.MainLoop(patch);
-        var vvvviewer = new VVVV.VVVViewer(patch, '#patch2');
-        $('#patchxml').remove();
-      });
+      var patch = new VVVV.Core.Patch($('#patchxml').val());
+      var mainloop = new VVVV.Core.MainLoop(patch);
+      var vvvviewer = new VVVV.VVVViewer(patch, '#patch2');
+      $('#patchxml').remove();
     }, 100);
   });
   
