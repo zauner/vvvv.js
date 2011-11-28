@@ -3,6 +3,9 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+if (!WebSocket && MozWebSocket)
+  var WebSocket = MozWebSocket;
+
 VVVV.Core.ClientBridge = function(patch) {
   
   this.patch = patch;
