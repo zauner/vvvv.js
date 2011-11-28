@@ -316,6 +316,11 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   }
 
   this.evaluate = function() {
+    if (this.invisiblePins["Descriptive Name"].pinIsChanged()) {
+      console.log('descriptive name chaaaanged');
+      this.initialize();
+    }
+    
     if (gl==undefined)
       return;
   
