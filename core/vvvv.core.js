@@ -255,6 +255,9 @@ VVVV.Core = {
 
 
   Patch: function(ressource, success_handler) {
+    
+    this.ressource = ressource;
+    
     this.pinMap = {};
     this.nodeMap = {};
     this.nodeList = [];
@@ -263,6 +266,7 @@ VVVV.Core = {
     this.success = success_handler;
     
     var print_timing = false;
+    var clientbridge = new VVVV.Core.ClientBridge(this);
     
     function splitValues(v) {
       if (v==undefined)
@@ -504,8 +508,9 @@ VVVV.Core = {
         }
       });
     }
-    else if (/^http:\/\//.test(ressource)) {
-      clientbridge = new VVVV.Core.ClientBridge(this, ressource);
+    else if (/^ws:\/\//.test(ressource)) {
+      clientbridge.host = ressource;
+      clientbridge.enable();
     }
     else {
       this.doLoad(ressource);
