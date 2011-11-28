@@ -360,8 +360,12 @@ VVVV.Core = {
           
           // the input pin already exists (because the node created it), don't add it, but set values, if present in the xml
           if (n.invisiblePins[pinname]!=undefined) {
-            if (values!=undefined)
-              n.invisiblePins[pinname].values = values;
+            if (values!=undefined) {
+              for (var i=0; i<values.length; i++) {
+                if (n.invisiblePins[pinname].values[i]!=values[i])
+                  n.invisiblePins[pinname].setValue(i, values[i]);
+              }
+            }
             return;
           }
   		    
