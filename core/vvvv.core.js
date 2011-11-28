@@ -251,6 +251,12 @@ VVVV.Core = {
     
     this.fromPin.links.push(this);
     this.toPin.links.push(this);
+    
+    this.destroy = function() {
+      this.fromPin.links.splice(this.fromPin.links.indexOf(this), 1);
+      this.toPin.links.splice(this.toPin.links.indexOf(this), 1);
+      this.fromPin.node.patch.linkList.splice(this.fromPin.node.patch.linkList.indexOf(this));
+    }
   },
 
 
@@ -278,6 +284,12 @@ VVVV.Core = {
       return v.split(separator).filter(function(d,i) { return d!=""});
     }
     
+    // TEMP-HACK#1
+    var oldLinks = {};
+    var newLinks = {};
+    var oldNodes = {};
+    var newNodes = {};
+    
     var thisPatch = this;
     
     this.doLoad = function(xml) {
@@ -291,6 +303,9 @@ VVVV.Core = {
         thisPatch.width = 500;
         thisPatch.height = 500;
       }
+      
+      // TEMP-HACK#1
+      newNodes = {};
       
       $(xml).find('node').each(function() {
         if ($(this).attr('componentmode')=="InABox")
@@ -399,8 +414,27 @@ VVVV.Core = {
           thisPatch.nodeList.push(n);
         }
         
+        // TEMP-HACK#1
+        newNodes[n.id] = n;
+        
+      });
+      
+      // TEMP-HACK#1
+      _(oldNodes).each(function(n, id) {
+        if (newNodes[id]==undefined) {
+          console.log('removing node '+n.id);
+          thisPatch.nodeList.splice(thisPatch.nodeList.indexOf(n),1);
+          delete thisPatch.nodeMap[n.id];
+        }
+      });
+      oldNodes = {};
+      _(newNodes).each(function(n, id) {
+        oldNodes[id] = n;
       });
     
+      // TEMP-HACK#1
+      newLinks = {};
+      
       $(xml).find('link').each(function() {
         var srcPin = thisPatch.pinMap[$(this).attr('srcnodeid')+'_'+$(this).attr('srcpinname')];
         var dstPin = thisPatch.pinMap[$(this).attr('dstnodeid')+'_'+$(this).attr('dstpinname')];
@@ -411,18 +445,37 @@ VVVV.Core = {
         if (dstPin==undefined)
           dstPin = thisPatch.nodeMap[$(this).attr('dstnodeid')].addInputPin($(this).attr('dstpinname'), undefined);
           
-        var linkExists = false;
+        var link = false;
         for (var i=0; i<thisPatch.linkList.length; i++) {
           if (thisPatch.linkList[i].fromPin.node.id==srcPin.node.id &&
 					    thisPatch.linkList[i].fromPin.pinname==srcPin.pinname &&
 							thisPatch.linkList[i].toPin.node.id==dstPin.node.id &&
 							thisPatch.linkList[i].toPin.pinname==dstPin.pinname) {
-            linkExists = true;
+            link = thisPatch.linkList[i];
 					}
         }
-        if (!linkExists)
-          thisPatch.linkList.push(new VVVV.Core.Link(srcPin, dstPin));
+
+        if (!link) {
+          link = new VVVV.Core.Link(srcPin, dstPin);
+          thisPatch.linkList.push(link);
+        }
+          
+        // TEMP-HACK#1
+        newLinks[srcPin.node.id+'_'+srcPin.pinname+'-'+dstPin.node.id+'_'+dstPin.pinname] = link;
       });
+      
+      // TEMP-HACK#1
+      _(oldLinks).each(function(l, key) {
+        if (newLinks[key]==undefined) {
+          console.log('removing '+l.fromPin.pinname+' -> '+l.toPin.pinname);
+          l.destroy();
+        }
+      });
+      oldLinks = {};
+      _(newLinks).each(function(l, key) {
+        oldLinks[key] = l;
+      });
+      
     }
     
     
