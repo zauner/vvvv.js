@@ -1,13 +1,13 @@
 <!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta26.dtd" >
    <PATCH nodename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\Renderer (Canvas VVVVjs).v4p" filename="E:\vvvvnodes\vvvv_45beta25.1\modules\vvvv_js\Renderer (Canvas VVVVjs).vp4.v4p" systemname="Renderer (Canvas VVVVjs)">
-   <BOUNDS height="9855" left="14220" top="3975" type="Window" width="9645">
+   <BOUNDS height="12030" left="12675" top="1890" type="Window" width="9660">
    </BOUNDS>
    <NODE componentmode="InABox" id="2" nodename="IOBox (Node)" systemname="IOBox (Node)">
    <BOUNDS height="100" left="705" top="315" type="Node" width="100">
    </BOUNDS>
    <BOUNDS height="240" left="705" top="315" type="Box" width="795">
    </BOUNDS>
-   <PIN pinname="Descriptive Name" slicecount="1" values="Layers" encoded="0">
+   <PIN encoded="0" pinname="Descriptive Name" slicecount="1" values="Layers">
    </PIN>
    <PIN pinname="Output Node" visible="1">
    </PIN>
@@ -17,11 +17,11 @@
    </BOUNDS>
    <BOUNDS height="300" left="3165" top="330" type="Box" width="1275">
    </BOUNDS>
-   <PIN pinname="Descriptive Name" slicecount="1" values="|Background Color|" encoded="0">
+   <PIN encoded="0" pinname="Descriptive Name" slicecount="1" values="|Background Color|">
    </PIN>
    <PIN pinname="Color Output" visible="1">
    </PIN>
-   <PIN pinname="Color Input" slicecount="1" values="|0.00000,0.00000,0.00000,1.00000|">
+   <PIN pinname="Color Input" slicecount="1" values="|0.28395,0.88292,0.99619,1.00000|">
    </PIN>
    </NODE>
    <NODE componentmode="InABox" id="4" nodename="IOBox (Value Advanced)" systemname="IOBOX (VALUE ADVANCED)">
@@ -29,19 +29,19 @@
    </BOUNDS>
    <BOUNDS height="240" left="1785" top="405" type="Box" width="795">
    </BOUNDS>
-   <PIN pinname="Descriptive Name" slicecount="1" values="Clear" encoded="0">
+   <PIN encoded="0" pinname="Descriptive Name" slicecount="1" values="Clear">
    </PIN>
    <PIN pinname="Y Output Value" visible="1">
    </PIN>
    <PIN pinname="Y Input Value" slicecount="1" values="1">
    </PIN>
    </NODE>
-   <NODE systemname="Renderer (EX9)" nodename="Renderer (EX9)" componentmode="InABox" id="5">
-   <BOUNDS type="Node" left="810" top="2310" width="100" height="100">
+   <NODE componentmode="InABox" id="5" nodename="Renderer (EX9)" systemname="Renderer (EX9)">
+   <BOUNDS height="100" left="810" top="2310" type="Node" width="100">
    </BOUNDS>
-   <BOUNDS type="Box" left="810" top="2310" width="8175" height="6465">
+   <BOUNDS height="6465" left="810" top="2310" type="Box" width="8175">
    </BOUNDS>
-   <BOUNDS type="Window" left="16935" top="8310" width="6120" height="4860">
+   <BOUNDS height="4860" left="16935" top="8310" type="Window" width="6120">
    </BOUNDS>
    <PIN pinname="Clear" visible="1">
    </PIN>
@@ -49,11 +49,29 @@
    </PIN>
    <PIN pinname="Layers" visible="1">
    </PIN>
+   <PIN pinname="EX9 Out" visible="1">
+   </PIN>
+   <PIN pinname="Backbuffer Width" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Backbuffer Height" visible="1" slicecount="1" values="0">
+   </PIN>
    </NODE>
-   <LINK srcnodeid="4" srcpinname="Y Output Value" dstnodeid="5" dstpinname="Clear">
+   <LINK dstnodeid="5" dstpinname="Clear" srcnodeid="4" srcpinname="Y Output Value">
    </LINK>
-   <LINK srcnodeid="3" srcpinname="Color Output" dstnodeid="5" dstpinname="Background Color">
+   <LINK dstnodeid="5" dstpinname="Background Color" srcnodeid="3" srcpinname="Color Output">
    </LINK>
-   <LINK srcnodeid="2" srcpinname="Output Node" dstnodeid="5" dstpinname="Layers">
+   <LINK dstnodeid="5" dstpinname="Layers" srcnodeid="2" srcpinname="Output Node">
+   </LINK>
+   <NODE systemname="IOBox (Node)" nodename="IOBox (Node)" componentmode="InABox" id="12">
+   <BOUNDS type="Node" left="7995" top="9870" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="7995" top="9870" width="795" height="240">
+   </BOUNDS>
+   <PIN pinname="Descriptive Name" slicecount="1" values="|Canvas Out|" encoded="0">
+   </PIN>
+   <PIN pinname="Input Node" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="5" srcpinname="EX9 Out" dstnodeid="12" dstpinname="Input Node">
    </LINK>
    </PATCH>

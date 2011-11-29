@@ -182,4 +182,43 @@ VVVV.Nodes.GetSliceString = function(id, graph) {
 VVVV.Nodes.GetSliceString.prototype = new VVVV.Core.Node();
 
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: AsValue (String)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.AsValue = function(id, graph) {
+  this.constructor(id, "AsValue (String)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var inputIn = this.addInputPin("Input", [], this);
+  var defaultIn = this.addInputPin("Default", [0.0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+
+  this.evaluate = function() {
+    
+      var maxSize = this.getMaxInputSliceCount();
+      for (var i=0; i<maxSize; i++) {
+        var inp = inputIn.getValue(i);
+        if (/^[0-9.e]+$/.test(inp))
+          outputOut.setValue(i, inp);
+        else
+          outputOut.setValue(i, parseFloat(defaultIn.getValue(i)));
+      }
+  }
+
+}
+VVVV.Nodes.AsValue.prototype = new VVVV.Core.Node();
+
+
 

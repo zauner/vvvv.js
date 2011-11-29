@@ -26,13 +26,35 @@ VVVV.Nodes.MouseGlobal = function(id, graph) {
   
   var xOut = this.addOutputPin("X", [0], this);
   var yOut = this.addOutputPin("Y", [0], this);
+  var lbOut = this.addOutputPin("Left Button", [0], this);
+  var mbOut = this.addOutputPin("Middle Button", [0], this);
+  var rbOut = this.addOutputPin("Right Button", [0], this);
   
   var x = 0;
   var y = 0;
+  var lb = 0;
+  var mb = 0;
+  var rb = 0;
   
   $(document).mousemove(function(e) {
     x = e.pageX*2/parseInt($('body').css('width')) - 1;
-    y = e.pageY*2/parseInt($('body').css('height')) -1;
+    y = -(e.pageY*2/parseInt($('body').css('height')) - 1);
+  });
+  
+  $(document).mousedown(function(e) {
+    switch (e.which) {
+      case 1: lb = 1; break;
+      case 2: mb = 1; break;
+      case 3: rb = 1; break;
+    }
+  });
+  
+  $(document).mouseup(function(e) {
+    switch (e.which) {
+      case 1: lb = 0; break;
+      case 2: mb = 0; break;
+      case 3: rb = 0; break;
+    }
   });
 
   this.evaluate = function() {
@@ -41,6 +63,12 @@ VVVV.Nodes.MouseGlobal = function(id, graph) {
       xOut.setValue(0, x);
     if (yOut.getValue(0)!=y)
       yOut.setValue(0, y);
+    if (lbOut.getValue(0)!=lb)
+      lbOut.setValue(0, lb);
+    if (mbOut.getValue(0)!=mb)
+      mbOut.setValue(0, mb);
+    if (rbOut.getValue(0)!=rb)
+      rbOut.setValue(0, rb);
   }
 
 }
@@ -75,7 +103,7 @@ VVVV.Nodes.ShellExecute = function(id, graph) {
     if (Math.round(doExecuteIn.getValue(0))>=1) {
       console.log('executing...'+fileIn.getValue(0));
       var result = eval(fileIn.getValue(0));
-      if (!result instanceof Array)
+      if (!(result instanceof Array))
         result = [ result ];
       if (result==undefined)
         return;

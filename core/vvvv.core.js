@@ -27,8 +27,14 @@ VVVV.Core = {
     this.changed = true;
     this.active = false;
     
-    this.getValue = function(i) {
-      return this.values[i%this.values.length];
+    this.getValue = function(i, binSize) {
+      if (!binSize || binSize==1)
+        return this.values[i%this.values.length];
+      var ret = [];
+      for (var j=0; j<binSize; j++) {
+        ret.push(this.values[(i*binSize+j)%this.values.length]);
+      }
+      return ret;
     }
     
     this.setValue = function(i, v) {
@@ -220,7 +226,7 @@ VVVV.Core = {
     this.getMaxInputSliceCount = function() {
       var ret = 0;
       _(this.inputPins).each(function(p) {
-        if (p.values.length>ret)
+        if (p.getSliceCount()>ret)
           ret = p.values.length;
       });
       return ret;
@@ -323,6 +329,12 @@ VVVV.Core = {
         if (!nodeExists) {
           if (VVVV.NodeLibrary[nodename.toLowerCase()]!=undefined)
             var n = new VVVV.NodeLibrary[nodename.toLowerCase()]($(this).attr('id'), thisPatch);
+          else if (/.fx$/.test($(this).attr('filename'))) {
+            var n = new VVVV.Nodes.GenericShader($(this).attr('id'), thisPatch);
+            n.isShader = true;
+            n.shaderFile = $(this).attr('filename').replace(/\\/g, '/').replace(/\.fx$/, '.vvvvjs.fx');
+            n.nodename = nodename;
+          }
           else
             var n = new VVVV.Core.Node($(this).attr('id'), nodename, thisPatch);
           console.log('inserted new node '+n.nodename);
@@ -336,8 +348,6 @@ VVVV.Core = {
         
         if (/^iobox/.test(nodename.toLowerCase()))
           n.isIOBox = true;
-        if (/\.fx$/.test($(this).attr('nodename')))
-          n.isShader = true;
 		  
         //To add anything which relates to all nodes
         if (!nodeExists)
