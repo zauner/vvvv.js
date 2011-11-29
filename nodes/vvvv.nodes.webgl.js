@@ -1058,27 +1058,28 @@ VVVV.Nodes.Quad = function(id, graph) {
       shader.setFragmentShader(fragmentShaderCode);
       shader.setVertexShader(vertexShaderCode);
       shader.setup();
-      
-      var maxSize = this.getMaxInputSliceCount();
-      for (var j=0; j<maxSize; j++) {
-        layers[j] = new VVVV.Types.Layer();
-        layers[j].mesh = mesh;
-        layers[j].shader = shader;
-        
-        _(shader.uniformSpecs).each(function(u) {
-          layers[j].uniforms[u.varname] = { uniformSpec: u, value: undefined };
-        });
-        
-      }
-      
           
+    }
+    
+    var maxSize = this.getMaxInputSliceCount();
+    var currentLayerCount = layers.length;
+    // shorten layers array, if input slice count decreases
+    if (maxSize<currentLayerCount) {
+      layers.splice(maxSize, currentLayerCount-maxSize);
+    }
+    for (var j=currentLayerCount; j<maxSize; j++) {
+      layers[j] = new VVVV.Types.Layer();
+      layers[j].mesh = mesh;
+      layers[j].shader = shader;
+      
+      _(shader.uniformSpecs).each(function(u) {
+        layers[j].uniforms[u.varname] = { uniformSpec: u, value: undefined };
+      });
     }
     
     var colorChanged = this.inputPins["Color"].pinIsChanged();
     var transformChanged = this.inputPins["Transform"].pinIsChanged();
     var textureChanged = this.inputPins["Texture"].pinIsChanged();
-    
-    var maxSize = this.getMaxInputSliceCount();
     
     if (colorChanged) {
       for (var i=0; i<maxSize; i++) {
@@ -1114,6 +1115,7 @@ VVVV.Nodes.Quad = function(id, graph) {
       }
     }
     
+    this.outputPins["Layer"].setSliceCount(maxSize);
     for (var i=0; i<maxSize; i++) {
       this.outputPins["Layer"].setValue(i, layers[i]);
     }
