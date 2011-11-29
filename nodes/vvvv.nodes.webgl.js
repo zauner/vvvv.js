@@ -5,6 +5,7 @@
 
 
 var gl;
+var identity = mat4.identity(mat4.create());
 
 VVVV.Types.WebGlRenderState = function() {
   this.alphaBlending = true;
@@ -970,7 +971,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       for (var i=0; i<maxSize; i++) {
         var transform = this.inputPins["Transform"].getValue(i);
         if (transform==undefined)
-          mat4.identity(mat4.create());
+          transform = identity;
         layers[i].uniforms[layers[i].shader.uniformSemanticMap['WORLD']].value = transform;
       }
     }
@@ -1099,7 +1100,7 @@ VVVV.Nodes.Quad = function(id, graph) {
       for (var i=0; i<maxSize; i++) {
         var transform = this.inputPins["Transform"].getValue(i);
         if (transform==undefined)
-          mat4.identity(transform);
+          transform = identity
         layers[i].uniforms[layers[i].shader.uniformSemanticMap['WORLD']].value = transform;
       }
     }
