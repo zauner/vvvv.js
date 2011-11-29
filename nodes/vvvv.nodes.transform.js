@@ -55,7 +55,8 @@ VVVV.Nodes.Rotate = function(id, graph) {
         if (transformin!=undefined)
           mat4.multiply(transformin, t, t);
         
-        this.outputPins["Transform Out"].setValue(i, t);
+        this.trOut.setValue(i, t);
+        this.trOut.setSliceCount(maxSize);
       }
     }
   }
@@ -113,6 +114,7 @@ VVVV.Nodes.Translate = function(id, graph) {
 			}
 			
 			this.trOut.setValue(i, t);
+			this.trOut.setSliceCount(maxSize);
 		  }
 		}	
   }
@@ -170,7 +172,8 @@ VVVV.Nodes.Scale = function(id, graph) {
 			mat4.multiply(transformin, t, t);
 		}
 		    
-        this.outputPins["Transform Out"].setValue(i, t);
+        this.trOut.setValue(i, t);
+        this.trOut.setSliceCount(maxSize);
       }
     }
   }
