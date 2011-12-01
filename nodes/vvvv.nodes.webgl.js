@@ -926,23 +926,26 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       if (sliceCount > maxSize)
         maxSize = sliceCount;
     });
-
-    if (!initialized) {
-      for (var j=0; j<maxSize; j++) {
-        layers[j] = new VVVV.Types.Layer();
-        layers[j].mesh = meshIn.getValue(0);
-        layers[j].shader = shader;
-        _(shader.uniformSpecs).each(function(u) {
-          layers[j].uniforms[u.varname] = { uniformSpec: u, value: undefined };
-        });
-        
-      }
+    if (!meshIn.isConnected())
+      maxSize = 0;
+    
+    var currentLayerCount = layers.length;
+    // shorten layers array, if input slice count decreases
+    if (maxSize<currentLayerCount) {
+      layers.splice(maxSize, currentLayerCount-maxSize);
     }
-    initialized = true;
+    for (var j=currentLayerCount; j<maxSize; j++) {
+      layers[j] = new VVVV.Types.Layer();
+      layers[j].mesh = meshIn.getValue(0);
+      layers[j].shader = shader;
+      _(shader.uniformSpecs).each(function(u) {
+        layers[j].uniforms[u.varname] = { uniformSpec: u, value: undefined };
+      });
+    }
     
     for (var i=0; i<shaderPins.length; i++) {
       var pinname = shaderPins[i].pinname.replace(/ /g, '_');
-      if (shaderPins[i].pinIsChanged()) {
+      if (shaderPins[i].pinIsChanged() || currentLayerCount<maxSize) {
         for (var j=0; j<maxSize; j++) {
           if (shader.uniformSpecs[pinname].type=='vec') {
             if (shader.uniformSpecs[pinname].semantic=='COLOR') {
@@ -961,22 +964,27 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       }
     }
     
-    if (renderStateIn.pinIsChanged()) {
+    if (renderStateIn.pinIsChanged() || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
-        layers[i].renderState = renderStateIn.getValue(i);
+        if (renderStateIn.isConnected())
+          layers[i].renderState = renderStateIn.getValue(i);
+        else
+          layers[i].renderState = VVVV.DefaultRenderState;
       }
     }
     
-    if (transformIn.pinIsChanged()) {
+    if (transformIn.pinIsChanged() || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
-        var transform = this.inputPins["Transform"].getValue(i);
-        if (transform==undefined)
+        var transform;
+        if (this.inputPins["Transform"].isConnected())
+          transform = this.inputPins["Transform"].getValue(i);
+        else
           transform = identity;
         layers[i].uniforms[layers[i].shader.uniformSemanticMap['WORLD']].value = transform;
       }
     }
     
-    
+    this.outputPins["Layer"].setSliceCount(maxSize);
     for (var i=0; i<maxSize; i++) {
       this.outputPins["Layer"].setValue(i, layers[i]);
     }
@@ -1082,7 +1090,7 @@ VVVV.Nodes.Quad = function(id, graph) {
     var transformChanged = this.inputPins["Transform"].pinIsChanged();
     var textureChanged = this.inputPins["Texture"].pinIsChanged();
     
-    if (colorChanged) {
+    if (colorChanged || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
         var color = this.inputPins["Color"].getValue(i);
         var rgba = _(color.split(',')).map(function(x) { return parseFloat(x) });
@@ -1090,22 +1098,27 @@ VVVV.Nodes.Quad = function(id, graph) {
       }
     }
     
-    if (renderStateIn.pinIsChanged()) {
+    if (renderStateIn.pinIsChanged() || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
-        layers[i].renderState = renderStateIn.getValue(i);
+        if (renderStateIn.isConnected())
+          layers[i].renderState = renderStateIn.getValue(i);
+        else
+          layers[i].renderState = VVVV.DefaultRenderState;
       }
     }
     
-    if (true) {
+    if (transformChanged || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
-        var transform = this.inputPins["Transform"].getValue(i);
-        if (transform==undefined)
-          transform = identity
+        var transform;
+        if (this.inputPins["Transform"].isConnected())
+          transform = this.inputPins["Transform"].getValue(i);
+        else
+          transform = identity;
         layers[i].uniforms[layers[i].shader.uniformSemanticMap['WORLD']].value = transform;
       }
     }
     
-    if (textureChanged) {
+    if (textureChanged || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
         console.log('setting texture for layer '+i);
         if (this.inputPins["Texture"].isConnected())
@@ -1230,23 +1243,24 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         gl.enable(gl.DEPTH_TEST);
     }
   
-    var layers = this.inputPins["Layers"].values;
     if (projIn.pinIsChanged()) {
-      pMatrix = projIn.getValue(0);
-      if (pMatrix)
+      if (projIn.isConnected()) {
+        pMatrix = mat4.create();
+        mat4.set(projIn.getValue(0), pMatrix);
         mat4.scale(pMatrix, [1, 1, -1]);
+      }
+      else {
+        pMatrix = mat4.create();
+        mat4.ortho(-1, 1, -1, 1, -100, 100, pMatrix);
+      }
     }
-    if (viewIn.pinIsChanged()) 
-      vMatrix = viewIn.getValue(0);
-    
-    if (pMatrix==undefined) {
-      pMatrix = mat4.create();
-      mat4.ortho(-1, 1, -1, 1, -100, 100, pMatrix);
-    }
-    
-    if (vMatrix==undefined) {
-      vMatrix = mat4.create();
-      mat4.identity(vMatrix);
+    if (viewIn.pinIsChanged()) {
+      if (viewIn.isConnected())
+        vMatrix = viewIn.getValue(0);
+      else {
+        vMatrix = mat4.create();
+        mat4.identity(vMatrix);
+      }
     }
     
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
@@ -1256,50 +1270,53 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     
     var currentShaderProgram = null;
 
-    _(layers).each(function(layer) {
-      if (currentShaderProgram!=layer.shader.shaderProgram) {
-        gl.useProgram(layer.shader.shaderProgram);
-        currentShaderProgram = layer.shader.shaderProgram;
-      }
-      
-      var renderState = layer.renderState;
-      if (!renderState)
-        renderState = defaultWebGlRenderState;
-      renderState.apply();
-      
-      gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
-      _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
-        if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]])
-          return;
-        gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
-        gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, 0, b.offset);
-      });
-      
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
-      gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["PROJECTION"]].position, false, pMatrix);
-      gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEW"]].position, false, vMatrix);
-      
-      var textureIdx = 0;
-      
-      _(layer.uniforms).each(function(u) {
-        if (u.value==undefined)
-          return;
-        switch (u.uniformSpec.type) {
-          case "mat": gl['uniformMatrix'+u.uniformSpec.dimension+'fv'](u.uniformSpec.position, false, u.value); break;
-          case "vec": gl['uniform'+u.uniformSpec.dimension+'fv'](u.uniformSpec.position, u.value); break;
-          case "int": gl['uniform'+u.uniformSpec.dimension+'i'](u.uniformSpec.position, u.value); break;
-          case "float": gl['uniform'+u.uniformSpec.dimension+'f'](u.uniformSpec.position, u.value); break;
-          case "sampler":
-            gl.activeTexture(gl['TEXTURE'+textureIdx]);
-            gl.bindTexture(gl['TEXTURE_'+u.uniformSpec.dimension], u.value);
-            gl.uniform1i(u.uniformSpec.position, textureIdx);
-            textureIdx++;
-            break;
+    if (this.inputPins["Layers"].isConnected()) {
+      var layers = this.inputPins["Layers"].values;
+      _(layers).each(function(layer) {
+        if (currentShaderProgram!=layer.shader.shaderProgram) {
+          gl.useProgram(layer.shader.shaderProgram);
+          currentShaderProgram = layer.shader.shaderProgram;
         }
+        
+        var renderState = layer.renderState;
+        if (!renderState)
+          renderState = defaultWebGlRenderState;
+        renderState.apply();
+        
+        gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
+        _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
+          if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]])
+            return;
+          gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
+          gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, 0, b.offset);
+        });
+        
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
+        gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["PROJECTION"]].position, false, pMatrix);
+        gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEW"]].position, false, vMatrix);
+        
+        var textureIdx = 0;
+        
+        _(layer.uniforms).each(function(u) {
+          if (u.value==undefined)
+            return;
+          switch (u.uniformSpec.type) {
+            case "mat": gl['uniformMatrix'+u.uniformSpec.dimension+'fv'](u.uniformSpec.position, false, u.value); break;
+            case "vec": gl['uniform'+u.uniformSpec.dimension+'fv'](u.uniformSpec.position, u.value); break;
+            case "int": gl['uniform'+u.uniformSpec.dimension+'i'](u.uniformSpec.position, u.value); break;
+            case "float": gl['uniform'+u.uniformSpec.dimension+'f'](u.uniformSpec.position, u.value); break;
+            case "sampler":
+              gl.activeTexture(gl['TEXTURE'+textureIdx]);
+              gl.bindTexture(gl['TEXTURE_'+u.uniformSpec.dimension], u.value);
+              gl.uniform1i(u.uniformSpec.position, textureIdx);
+              textureIdx++;
+              break;
+          }
+        });
+        
+        gl.drawElements(renderState.polygonDrawMode, layer.mesh.numIndices, gl.UNSIGNED_SHORT, 0);
       });
-      
-      gl.drawElements(renderState.polygonDrawMode, layer.mesh.numIndices, gl.UNSIGNED_SHORT, 0);
-    });
+    }
     
   }
 
