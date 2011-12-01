@@ -4,25 +4,40 @@ VVVV.Core.DOMInterface = function(patch) {
 
   var inputConnectors = {};
   var outputConnectors = {};
+  patch.domInterface = this;
   
+  this.connect = function(node) {
+    _(inputConnectors).each(function(ioboxConn, key) {
+      if (ioboxConn.node.id == node.id)
+        delete inputConnectors[key];
+    });
+    _(outputConnectors).each(function(ioboxConn, key) {
+      if (ioboxConn.node.id == node.id)
+        delete outputConnectors[key];
+    });
+    
+    var match = /([^\/]+)(\/(event|attribute|style)\/(.+))?/.exec(node.invisiblePins["Descriptive Name"].getValue(0));
+    if (match==null)
+      return;
+    var ioboxConn = {
+      'selector': match[1],
+      'property_class': match[3],
+      'property': match[4],
+      'values': [],
+      'node': node
+    }
+    if (node.getUpstreamNodes().length==0)
+      inputConnectors[match[0]] = ioboxConn;
+    else if (node.getDownstreamNodes().length==0)
+      outputConnectors[match[0]] = ioboxConn;
+  }
+  
+  var that = this;
   _(patch.nodeList).each(function(n) {
     if (n.isIOBox) {
       if (n.invisiblePins["Descriptive Name"]==undefined)
         return;
-      var match = /([^\/]+)(\/(event|attribute|style)\/(.+))?/.exec(n.invisiblePins["Descriptive Name"].getValue(0));
-      if (match==null)
-        return;
-      var ioboxConn = {
-        'selector': match[1],
-        'property_class': match[3],
-        'property': match[4],
-        'values': [],
-        'node': n
-      }
-      if (n.getUpstreamNodes().length==0)
-        inputConnectors[match[0]] = ioboxConn;
-      else if (n.getDownstreamNodes().length==0)
-        outputConnectors[match[0]] = ioboxConn;
+      that.connect(n);
     }
   });
 

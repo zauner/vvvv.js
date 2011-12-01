@@ -40,6 +40,9 @@ VVVV.Core = {
         l.toPin.changed = true;
         l.toPin.node.dirty = true;
       });
+      if (this.node.isIOBox && this.pinname=='Descriptive Name' && this.node.patch.domInterface) {
+        this.node.patch.domInterface.connect(this.node);
+      }
     }
     
     this.markPinAsChanged = function() {
