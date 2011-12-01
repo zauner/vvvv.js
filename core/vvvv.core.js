@@ -48,6 +48,15 @@ VVVV.Core = {
       });
     }
     
+    this.markPinAsChanged = function() {
+      this.changed = true;
+      this.node.dirty = true;
+      _(this.links).each(function(l) {
+        l.toPin.changed = true;
+        l.toPin.node.dirty = true;
+      });
+    }
+    
     this.pinIsChanged = function() {
       var ret = this.changed;
       this.changed = false;
@@ -468,6 +477,9 @@ VVVV.Core = {
         if (!link) {
           link = new VVVV.Core.Link(srcPin, dstPin);
           thisPatch.linkList.push(link);
+          for (var i=0; i<srcPin.values.length; i++) {
+            dstPin.setValue(i, srcPin.getValue(i));
+          }
         }
           
         // TEMP-HACK#1
@@ -478,6 +490,7 @@ VVVV.Core = {
       _(oldLinks).each(function(l, key) {
         if (newLinks[key]==undefined) {
           console.log('removing '+l.fromPin.pinname+' -> '+l.toPin.pinname);
+          l.toPin.markPinAsChanged();
           l.destroy();
         }
       });
