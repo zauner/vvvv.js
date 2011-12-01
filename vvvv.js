@@ -60,6 +60,17 @@ function initVVVV(path_to_vvvv, mode) {
   });
   
   console.log('done ...');
+
+  VVVV.Patches = [];
+  VVVV.MainLoops = [];
+
+  $("script[language='VVVV']").each(function() {
+    var p = new VVVV.Core.Patch($(this).attr('src'), function() {
+      var m = new VVVV.Core.MainLoop(this);
+      VVVV.MainLoops.push(m);
+    });
+    VVVV.Patches.push(p);
+  });
   
 }
 
