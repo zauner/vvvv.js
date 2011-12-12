@@ -1,0 +1,33 @@
+<html>
+<head>
+  <title>VVVV.js Template</title>
+  <link rel="stylesheet" type="text/css" href="../vvvviewer/vvvv.css"/>
+  <script language="JavaScript" src="../lib/jquery/jquery-1.4.2.min.js"></script> 
+  <script language="JavaScript" src="../vvvv.js"></script>
+  <script language="VVVV" type="text/xml" src="template_patch.v4p"></script>
+  <script language="JavaScript">
+    $(document).ready(function() {
+      // initialize vvvv.js; this loads the rest of the .js files
+      // first argument is the path to the vvvv_js folder
+      // second argument is either 'run', to load only run components, 'view' to load only vvvviewer, or 'full' to load both
+      initVVVV("..", 'full');
+      
+      $('#show_button').click(function() {
+        console.log('aaaaiii');
+        console.log(VVVV.Patches[0]);
+        var vvvviewer = new VVVV.VVVViewer(VVVV.Patches[0], '#viewer_pane');
+        $(this).attr('disabled', true);
+      });
+    });
+  </script>
+</head>
+<body>
+<input type="button" id="show_button" value="Show Patch"/>
+<br/>
+
+<canvas id="renderer" width="500" height="500"></canvas>
+
+<div id="viewer_pane"></div>
+
+</body>
+</html>

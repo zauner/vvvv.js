@@ -1,0 +1,82 @@
+<html>
+<head>
+  <title>VVVV.js Example #9: Connector Playground</title>
+  
+  <link rel="stylesheet" type="text/css" href="../../vvvviewer/vvvv.css"/>
+  <script language="JavaScript" src="../../lib/jquery/jquery-1.4.2.min.js"></script>
+  
+  <script language="JavaScript" src="../../lib/underscore/underscore-min.js"></script>
+  <script language="JavaScript" src="../../lib/d3-v1.14/d3.min.js"></script>
+  <script language="JavaScript" src="../../lib/glMatrix-0.9.5.min.js"></script>
+  
+  <script language="JavaScript" src="../../core/vvvv.core.js"></script>
+  <script language="JavaScript" src="../../core/vvvv.core.clientbridge.js"></script>
+  
+  <script language="JavaScript" src="../../mainloop/vvvv.mainloop.js"></script>
+  <script language="JavaScript" src="../../mainloop/vvvv.dominterface.js"></script>
+    
+  <script language="JavaScript" src="../../nodes/vvvv.nodes.value.js"></script>
+  <script language="JavaScript" src="../../nodes/vvvv.nodes.string.js"></script>
+  <script language="JavaScript" src="../../nodes/vvvv.nodes.boolean.js"></script>
+  <script language="JavaScript" src="../../nodes/vvvv.nodes.color.js"></script>
+  <script language="JavaScript" src="../../nodes/vvvv.nodes.spreads.js"></script>
+  <script language="JavaScript" src="../../nodes/vvvv.nodes.animation.js"></script>
+  <script language="JavaScript" src="../../nodes/vvvv.nodes.network.js"></script>
+  <script language="JavaScript" src="../../nodes/vvvv.nodes.system.js"></script>
+  <script language="JavaScript" src="../../nodes/vvvv.nodes.transform.js"></script>
+  <script language="JavaScript" src="../../nodes/vvvv.nodes.canvas.js"></script>
+  <script language="JavaScript" src="../../nodes/vvvv.nodes.html5.js"></script>
+  <script language="JavaScript" src="../../nodes/vvvv.nodes.webgl.js"></script>
+  <script language="JavaScript" src="../../nodes/vvvv.nodes.vectors.js"></script>
+  <script language="JavaScript" src="../../vvvviewer/vvvv.vvvviewer.js"></script>
+  
+  <script language="JavaScript" src="../../vvvv.js"></script>
+  <script language="JavaScript">
+    var patch;
+    var mainloop;
+    $(document).ready(function() {
+      // initialize vvvv.js; this loads the rest of the .js files
+      // first argument is the path to the vvvv_js folder
+      // second argument is either 'run', to load only run components, 'view' to load only vvvviewer, or 'full' to load both
+      initVVVV("../..", 'full');
+      
+      // load the .v4p file and run the mainloop. this paragraph is basically all you need to run a vvvv patch
+      patch = new VVVV.Core.Patch("ws://localhost", function() {
+        mainloop = new VVVV.Core.MainLoop(this);
+      });
+      
+      // register button events
+
+      $('#start_button').click(function() {
+        mainloop.start();
+        $(this).attr('disabled', true);
+        $('#stop_button').attr('disabled',null);
+      });
+      
+      $('#stop_button').click(function() {
+        mainloop.stop();
+        $(this).attr('disabled', true);
+        $('#start_button').attr('disabled',null);
+      });
+      
+      $('#show_button').click(function() {
+        var vvvviewer = new VVVV.VVVViewer(patch, '#viewer_pane');
+        $(this).attr('disabled', true);
+      });
+      
+    });
+    
+  </script>
+</head>
+<body>
+<input type="button" id="start_button" value="Resume" disabled="disabled"/>
+<input type="button" id="stop_button" value="Pause"/>
+<input type="button" id="show_button" value="Show Patch"/>
+<br/>
+
+<canvas id="renderer" width="500" height="500"></canvas>
+
+<div id="viewer_pane"></div>
+
+</body>
+</html>
