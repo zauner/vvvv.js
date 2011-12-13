@@ -1,6 +1,6 @@
-<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta26.dtd" >
-   <PATCH nodename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\vvvv_js_page\vvvv_bridge\websocket_server.v4p" filename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\websocket_server.v4p" systemname="websocket_server">
-   <BOUNDS height="10995" left="15150" top="2820" type="Window" width="13245">
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45alpha26.1.dtd" >
+   <PATCH nodename="D:\Work\vvvvtools\modules\vvvv_js_modules\VVVVJsConnector (VVVVjs)\VVVVJsConnector (VVVVjs).v4p" filename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\websocket_server.v4p" systemname="websocket_server">
+   <BOUNDS height="13455" left="12075" top="465" type="Window" width="15765">
    </BOUNDS>
    <NODE componentmode="Hidden" id="8" nodename="GetPatch (VVVV)" systemname="GetPatch (VVVV)">
    <BOUNDS height="100" left="4530" top="1035" type="Node" width="100">
@@ -10,6 +10,8 @@
    <PIN pinname="Patch Description" visible="1">
    </PIN>
    <PIN pinname="Has Changed" visible="1">
+   </PIN>
+   <PIN pinname="Patch Changes" visible="1">
    </PIN>
    </NODE>
    <NODE componentmode="Hidden" id="7" nodename="PatchAlias (VVVV)" systemname="PatchAlias (VVVV)">
@@ -468,8 +470,6 @@
    </LINK>
    <LINK dstnodeid="117" dstpinname="Input 3" srcnodeid="121" srcpinname="Whole Part">
    </LINK>
-   <LINK dstnodeid="103" dstpinname="Input String" srcnodeid="8" srcpinname="Patch Description">
-   </LINK>
    <LINK dstnodeid="77" dstpinname="Input 1" srcnodeid="8" srcpinname="Has Changed">
    </LINK>
    <NODE componentmode="Hidden" id="126" nodename="FrameDelay (Animation)" systemname="FrameDelay (Animation)">
@@ -482,16 +482,36 @@
    </NODE>
    <LINK dstnodeid="126" dstpinname="Input 1" srcnodeid="96" srcpinname="Output 1">
    </LINK>
-   <NODE systemname="Delay (Animation)" nodename="Delay (Animation)" componentmode="Hidden" id="127">
-   <BOUNDS type="Node" left="6165" top="9330" width="100" height="100">
+   <NODE componentmode="Hidden" id="127" nodename="Delay (Animation)" systemname="Delay (Animation)">
+   <BOUNDS height="100" left="6165" top="9330" type="Node" width="100">
    </BOUNDS>
    <PIN pinname="Input" visible="1">
    </PIN>
    <PIN pinname="Output" visible="1">
    </PIN>
    </NODE>
-   <LINK srcnodeid="96" srcpinname="Output 1" dstnodeid="127" dstpinname="Input">
+   <LINK dstnodeid="127" dstpinname="Input" srcnodeid="96" srcpinname="Output 1">
    </LINK>
-   <LINK srcnodeid="127" srcpinname="Output" dstnodeid="77" dstpinname="Input 3">
+   <LINK dstnodeid="77" dstpinname="Input 3" srcnodeid="127" srcpinname="Output">
+   </LINK>
+   <NODE systemname="Switch (String Input)" nodename="Switch (String Input)" componentmode="Hidden" id="128">
+   <BOUNDS type="Node" left="7740" top="1944" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Input 2" visible="1">
+   </PIN>
+   <PIN pinname="Input 1" visible="1">
+   </PIN>
+   <PIN pinname="Switch" visible="1">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="8" srcpinname="Patch Description" dstnodeid="128" dstpinname="Input 2">
+   </LINK>
+   <LINK srcnodeid="8" srcpinname="Patch Changes" dstnodeid="128" dstpinname="Input 1">
+   </LINK>
+   <LINK srcnodeid="127" srcpinname="Output" dstnodeid="128" dstpinname="Switch">
+   </LINK>
+   <LINK srcnodeid="128" srcpinname="Output" dstnodeid="103" dstpinname="Input String">
    </LINK>
    </PATCH>
