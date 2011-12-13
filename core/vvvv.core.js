@@ -322,23 +322,22 @@ VVVV.Core = {
         thisPatch.height = 500;
       }
       
+      console.log(xml);
+      
       // TEMP-HACK#1
-      newNodes = {};
+      ////newNodes = {};
       
       $(xml).find('node').each(function() {
         if ($(this).attr('componentmode')=="InABox")
           $bounds = $(this).find('bounds[type="Box"]').first();
         else
           $bounds = $(this).find('bounds[type="Node"]').first();
-          
-        nodename = $(this).attr('systemname')!="" ? $(this).attr('systemname') : $(this).attr('nodename');
-        if (nodename==undefined)
-          return;
-        thisPatch.width = Math.max(thisPatch.width, $bounds.attr('left')/15+100);
-        thisPatch.height = Math.max(thisPatch.height, $bounds.attr('top')/15+25);
-
+        
         var nodeExists = thisPatch.nodeMap[$(this).attr('id')]!=undefined;
         if (!nodeExists) {
+          nodename = $(this).attr('systemname')!="" ? $(this).attr('systemname') : $(this).attr('nodename');
+          if (nodename==undefined)
+            return;       
           if (VVVV.NodeLibrary[nodename.toLowerCase()]!=undefined)
             var n = new VVVV.NodeLibrary[nodename.toLowerCase()]($(this).attr('id'), thisPatch);
           else if (/.fx$/.test($(this).attr('filename'))) {
@@ -353,12 +352,27 @@ VVVV.Core = {
         }
         else
           n = thisPatch.nodeMap[$(this).attr('id')];
-        n.x = $bounds.attr('left')/15;
-        n.y = $bounds.attr('top')/15;
-        n.width = $bounds.attr('width');
-        n.height = $bounds.attr('height');
+          
+        if ($(this).attr('deleteme')=='pronto') {
+          console.log('removing node '+n.id);
+          thisPatch.nodeList.splice(thisPatch.nodeList.indexOf(n),1);
+          delete thisPatch.nodeMap[n.id];
+        }
         
-        if (/^iobox/.test(nodename.toLowerCase()))
+        if ($bounds.length>0) {
+          if ($bounds.attr('left')) {
+            n.x = $bounds.attr('left')/15;
+            n.y = $bounds.attr('top')/15;
+            thisPatch.width = Math.max(thisPatch.width, n.x+100);
+            thisPatch.height = Math.max(thisPatch.height, n.y+25);
+          }
+          if ($bounds.attr('width')) {
+            n.width = $bounds.attr('width');
+            n.height = $bounds.attr('height');
+          }
+        }
+        
+        if (/^iobox/.test(n.nodename.toLowerCase()))
           n.isIOBox = true;
 		  
         //To add anything which relates to all nodes
@@ -437,12 +451,12 @@ VVVV.Core = {
         }
         
         // TEMP-HACK#1
-        newNodes[n.id] = n;
+        ////newNodes[n.id] = n;
         
       });
       
       // TEMP-HACK#1
-      _(oldNodes).each(function(n, id) {
+      /*_(oldNodes).each(function(n, id) {
         if (newNodes[id]==undefined) {
           console.log('removing node '+n.id);
           thisPatch.nodeList.splice(thisPatch.nodeList.indexOf(n),1);
@@ -456,6 +470,7 @@ VVVV.Core = {
     
       // TEMP-HACK#1
       newLinks = {};
+      */
       
       $(xml).find('link').each(function() {
         var srcPin = thisPatch.pinMap[$(this).attr('srcnodeid')+'_'+$(this).attr('srcpinname')];
@@ -484,13 +499,20 @@ VVVV.Core = {
             dstPin.setValue(i, srcPin.getValue(i));
           }
         }
+        else {
+          if ($(this).attr('deleteme')=='pronto') {
+            console.log('removing '+link.fromPin.pinname+' -> '+link.toPin.pinname);
+            link.toPin.markPinAsChanged();
+            link.destroy();
+          }
+        }
           
         // TEMP-HACK#1
-        newLinks[srcPin.node.id+'_'+srcPin.pinname+'-'+dstPin.node.id+'_'+dstPin.pinname] = link;
+        ////newLinks[srcPin.node.id+'_'+srcPin.pinname+'-'+dstPin.node.id+'_'+dstPin.pinname] = link;
       });
       
       // TEMP-HACK#1
-      _(oldLinks).each(function(l, key) {
+      /*_(oldLinks).each(function(l, key) {
         if (newLinks[key]==undefined) {
           console.log('removing '+l.fromPin.pinname+' -> '+l.toPin.pinname);
           l.toPin.markPinAsChanged();
@@ -501,6 +523,7 @@ VVVV.Core = {
       _(newLinks).each(function(l, key) {
         oldLinks[key] = l;
       });
+      */
       
     }
     
