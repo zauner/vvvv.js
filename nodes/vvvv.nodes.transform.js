@@ -48,8 +48,8 @@ VVVV.Nodes.Rotate = function(id, graph) {
         var t = mat4.create();
         mat4.identity(t);
         
-        mat4.rotate(t, x*Math.PI*2, [1, 0, 0]);
         mat4.rotate(t, y*Math.PI*2, [0, 1, 0]);
+        mat4.rotate(t, x*Math.PI*2, [1, 0, 0]);
         mat4.rotate(t, z*Math.PI*2, [0, 0, 1]);
         
         if (transformin!=undefined)
