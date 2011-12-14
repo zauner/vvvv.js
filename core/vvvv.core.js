@@ -275,6 +275,7 @@ VVVV.Core = {
   Patch: function(ressource, success_handler) {
     
     this.ressource = ressource;
+    this.vvvv_version = "45_26.1";
     
     this.pinMap = {};
     this.nodeMap = {};
@@ -296,15 +297,20 @@ VVVV.Core = {
       return v.split(separator).filter(function(d,i) { return d!=""});
     }
     
-    // TEMP-HACK#1
-    var oldLinks = {};
-    var newLinks = {};
-    var oldNodes = {};
-    var newNodes = {};
+    if (this.vvvv_version<="45_26") {
+      var oldLinks = {};
+      var newLinks = {};
+      var oldNodes = {};
+      var newNodes = {};
+    }
     
     var thisPatch = this;
     
     this.doLoad = function(xml) {
+      
+      var version_match = /^<!DOCTYPE\s+PATCH\s+SYSTEM\s+"(.+\\)*(.+)\.dtd/.exec(xml);
+      if (version_match)
+        thisPatch.vvvv_version = version_match[2].replace(/[a-zA-Z]+/, '_');
     
       $windowBounds = $(xml).find('bounds[type="Window"]').first();
       if ($windowBounds.length>0) {
@@ -316,8 +322,8 @@ VVVV.Core = {
         thisPatch.height = 500;
       }
       
-      // TEMP-HACK#1
-      ////newNodes = {};
+      if (thisPatch.vvvv_version<="45_26")
+        newNodes = {};
       
       $(xml).find('node').each(function() {
         if ($(this).attr('componentmode')=="InABox")
@@ -438,27 +444,27 @@ VVVV.Core = {
           thisPatch.nodeList.push(n);
         }
         
-        // TEMP-HACK#1
-        ////newNodes[n.id] = n;
+        if (thisPatch.vvvv_version<="45_26")
+          newNodes[n.id] = n;
         
       });
       
-      // TEMP-HACK#1
-      /*_(oldNodes).each(function(n, id) {
-        if (newNodes[id]==undefined) {
-          console.log('removing node '+n.id);
-          thisPatch.nodeList.splice(thisPatch.nodeList.indexOf(n),1);
-          delete thisPatch.nodeMap[n.id];
-        }
-      });
-      oldNodes = {};
-      _(newNodes).each(function(n, id) {
-        oldNodes[id] = n;
-      });
+      if (thisPatch.vvvv_version<="45_26") {
+        _(oldNodes).each(function(n, id) {
+          if (newNodes[id]==undefined) {
+            console.log('removing node '+n.id);
+            thisPatch.nodeList.splice(thisPatch.nodeList.indexOf(n),1);
+            delete thisPatch.nodeMap[n.id];
+          }
+        });
+        oldNodes = {};
+        _(newNodes).each(function(n, id) {
+          oldNodes[id] = n;
+        });
+      }
     
-      // TEMP-HACK#1
-      newLinks = {};
-      */
+      if (thisPatch.vvvv_version<="45_26")
+        newLinks = {};
       
       $(xml).find('link').each(function() {
         var srcPin = thisPatch.pinMap[$(this).attr('srcnodeid')+'_'+$(this).attr('srcpinname')];
@@ -495,23 +501,23 @@ VVVV.Core = {
           }
         }
           
-        // TEMP-HACK#1
-        ////newLinks[srcPin.node.id+'_'+srcPin.pinname+'-'+dstPin.node.id+'_'+dstPin.pinname] = link;
+        if (thisPatch.vvvv_version<="45_26")
+          newLinks[srcPin.node.id+'_'+srcPin.pinname+'-'+dstPin.node.id+'_'+dstPin.pinname] = link;
       });
       
-      // TEMP-HACK#1
-      /*_(oldLinks).each(function(l, key) {
-        if (newLinks[key]==undefined) {
-          console.log('removing '+l.fromPin.pinname+' -> '+l.toPin.pinname);
-          l.toPin.markPinAsChanged();
-          l.destroy();
-        }
-      });
-      oldLinks = {};
-      _(newLinks).each(function(l, key) {
-        oldLinks[key] = l;
-      });
-      */
+      if (thisPatch.vvvv_version<="45_26") {
+        _(oldLinks).each(function(l, key) {
+          if (newLinks[key]==undefined) {
+            console.log('removing '+l.fromPin.pinname+' -> '+l.toPin.pinname);
+            l.toPin.markPinAsChanged();
+            l.destroy();
+          }
+        });
+        oldLinks = {};
+        _(newLinks).each(function(l, key) {
+          oldLinks[key] = l;
+        });
+      }
       
     }
     
@@ -614,4 +620,6 @@ VVVV.Core = {
     
     
   }
+  
+  
 }

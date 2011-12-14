@@ -1,5 +1,5 @@
 <!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45alpha26.1.dtd" >
-   <PATCH nodename="D:\Work\vvvvtools\modules\vvvv_js_modules\VVVVJsConnector (VVVVjs)\VVVVJsConnector (VVVVjs).v4p" filename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\websocket_server.v4p" systemname="websocket_server">
+   <PATCH nodename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\VVVVJsConnector (VVVVjs)\VVVVJsConnector (VVVVjs).v4p" filename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\websocket_server.v4p" systemname="websocket_server">
    <BOUNDS height="13455" left="12075" top="465" type="Window" width="15765">
    </BOUNDS>
    <NODE componentmode="Hidden" id="8" nodename="GetPatch (VVVV)" systemname="GetPatch (VVVV)">
@@ -494,8 +494,8 @@
    </LINK>
    <LINK dstnodeid="77" dstpinname="Input 3" srcnodeid="127" srcpinname="Output">
    </LINK>
-   <NODE systemname="Switch (String Input)" nodename="Switch (String Input)" componentmode="Hidden" id="128">
-   <BOUNDS type="Node" left="7740" top="1944" width="100" height="100">
+   <NODE componentmode="Hidden" id="128" nodename="Switch (String Input)" systemname="Switch (String Input)">
+   <BOUNDS height="100" left="7710" top="2229" type="Node" width="100">
    </BOUNDS>
    <PIN pinname="Input 2" visible="1">
    </PIN>
@@ -506,12 +506,38 @@
    <PIN pinname="Output" visible="1">
    </PIN>
    </NODE>
-   <LINK srcnodeid="8" srcpinname="Patch Description" dstnodeid="128" dstpinname="Input 2">
+   <LINK dstnodeid="128" dstpinname="Input 2" srcnodeid="8" srcpinname="Patch Description">
    </LINK>
-   <LINK srcnodeid="8" srcpinname="Patch Changes" dstnodeid="128" dstpinname="Input 1">
+   <LINK dstnodeid="128" dstpinname="Input 1" srcnodeid="8" srcpinname="Patch Changes">
    </LINK>
-   <LINK srcnodeid="127" srcpinname="Output" dstnodeid="128" dstpinname="Switch">
+   <LINK dstnodeid="103" dstpinname="Input String" srcnodeid="128" srcpinname="Output">
    </LINK>
-   <LINK srcnodeid="128" srcpinname="Output" dstnodeid="103" dstpinname="Input String">
+   <NODE componentmode="Hidden" id="130" nodename="OR (Boolean)" systemname="OR (Boolean)">
+   <BOUNDS height="100" left="6735" top="1935" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Input 1" visible="1">
+   </PIN>
+   <PIN pinname="Input 2" visible="1">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="130" dstpinname="Input 1" srcnodeid="127" srcpinname="Output">
+   </LINK>
+   <LINK dstnodeid="128" dstpinname="Switch" srcnodeid="130" srcpinname="Output">
+   </LINK>
+   <NODE componentmode="Hidden" id="133" nodename="EQ (String)" systemname="EQ (String)">
+   <BOUNDS height="100" left="7575" top="1515" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Input 1" visible="1">
+   </PIN>
+   <PIN encoded="0" pinname="Input 2" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="133" dstpinname="Input 1" srcnodeid="8" srcpinname="Patch Changes">
+   </LINK>
+   <LINK dstnodeid="130" dstpinname="Input 2" srcnodeid="133" srcpinname="Output">
    </LINK>
    </PATCH>
