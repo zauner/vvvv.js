@@ -322,8 +322,6 @@ VVVV.Core = {
         thisPatch.height = 500;
       }
       
-      console.log(xml);
-      
       // TEMP-HACK#1
       ////newNodes = {};
       
@@ -421,8 +419,8 @@ VVVV.Core = {
           }
   		    
           //CXheck for non implemented nodes
-          if ($(this).attr('visible')==1 || $(this).attr('slicecount')!=undefined) {
-            if ($(xml).find('link[srcnodeid='+n.id+']').filter('link[srcpinname='+pinname.replace(/[\[\]]/,'')+']').length > 0) {
+          if ($(this).attr('visible')==1 && $(this).attr('pintype')!='Configuration') {
+            if ($(this).attr('pintype')=="Output" || $(xml).find('link[srcnodeid='+n.id+']').filter('link[srcpinname='+pinname.replace(/[\[\]]/,'')+']').length > 0) {
               if (n.outputPins[pinname] == undefined) {
                 //Add as output list if not already there
                 n.addOutputPin(pinname, values);
