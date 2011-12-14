@@ -48,6 +48,15 @@ VVVV.Core = {
       });
     }
     
+    this.markPinAsChanged = function() {
+      this.changed = true;
+      this.node.dirty = true;
+      _(this.links).each(function(l) {
+        l.toPin.changed = true;
+        l.toPin.node.dirty = true;
+      });
+    }
+    
     this.pinIsChanged = function() {
       var ret = this.changed;
       this.changed = false;
