@@ -202,8 +202,8 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   
   this.auto_evaluate = true;
 
-  this.filenamePin = this.addInputPin("Filename", [""], this);
-  this.outputPin = this.addOutputPin("Texture Out", [], this);
+  filenamePin = this.addInputPin("Filename", [""], this);
+  outputPin = this.addOutputPin("Texture Out", [], this);
   
   var textures = [];
   
@@ -211,10 +211,10 @@ VVVV.Nodes.FileTexture = function(id, graph) {
     if (!gl)
       return;
   
-    if (this.filenamePin.pinIsChanged()) {
+    if (filenamePin.pinIsChanged()) {
       var maxSize = this.getMaxInputSliceCount();
       for (var i=0; i<maxSize; i++) {
-        var filename = this.filenamePin.getValue(i);
+        var filename = filenamePin.getValue(i);
         textures[i] = gl.createTexture();
         textures[i].image = new Image();
         textures[i].image.onload = (function(j) {
@@ -225,11 +225,12 @@ VVVV.Nodes.FileTexture = function(id, graph) {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             gl.bindTexture(gl.TEXTURE_2D, null);
+            outputPin.markPinAsChanged();
           }
         })(i);
         textures[i].image.src = filename;
       
-        this.outputPin.setValue(i, textures[i]);
+        outputPin.setValue(i, textures[i]);
       }
     }
   
