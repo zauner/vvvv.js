@@ -330,7 +330,7 @@ VVVV.Core = {
       
       if (thisPatch.vvvv_version<="45_26")
         newNodes = {};
-      
+
       $(xml).find('node').each(function() {
         if ($(this).attr('componentmode')=="InABox")
           $bounds = $(this).find('bounds[type="Box"]').first();
@@ -347,7 +347,7 @@ VVVV.Core = {
           else if (/.fx$/.test($(this).attr('filename'))) {
             var n = new VVVV.Nodes.GenericShader($(this).attr('id'), thisPatch);
             n.isShader = true;
-            n.shaderFile = $(this).attr('filename').replace(/\\/g, '/').replace(/\.fx$/, '.vvvvjs.fx');
+            n.shaderFile = $(this).attr('filename').replace(/\\/g, '/').replace(/\.fx$/, '.vvvvjs.fx').replace('lib/nodes/', '');
             n.nodename = nodename;
           }
           else
