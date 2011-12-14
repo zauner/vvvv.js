@@ -478,7 +478,23 @@ VVVV.Core = {
       if (thisPatch.vvvv_version<="45_26")
         newLinks = {};
       
-      $(xml).find('link').each(function() {
+      // first delete marked links 
+      $(xml).find('link[deleteme="pronto"]').each(function() {
+        var link = false;
+        for (var i=0; i<thisPatch.linkList.length; i++) {
+          if (thisPatch.linkList[i].fromPin.node.id==$(this).attr('srcnodeid') &&
+              thisPatch.linkList[i].fromPin.pinname==$(this).attr('srcpinname') &&
+              thisPatch.linkList[i].toPin.node.id==$(this).attr('dstnodeid') &&
+              thisPatch.linkList[i].toPin.pinname==$(this).attr('dstpinname')) {
+            link = thisPatch.linkList[i];
+          }
+        }
+        console.log('removing '+link.fromPin.pinname+' -> '+link.toPin.pinname);
+        link.toPin.markPinAsChanged();
+        link.destroy();
+      });
+      
+      $(xml).find('link[deleteme!="pronto"]').each(function() {
         var srcPin = thisPatch.pinMap[$(this).attr('srcnodeid')+'_'+$(this).attr('srcpinname')];
         var dstPin = thisPatch.pinMap[$(this).attr('dstnodeid')+'_'+$(this).attr('dstpinname')];
         
@@ -503,13 +519,6 @@ VVVV.Core = {
           thisPatch.linkList.push(link);
           for (var i=0; i<srcPin.values.length; i++) {
             dstPin.setValue(i, srcPin.getValue(i));
-          }
-        }
-        else {
-          if ($(this).attr('deleteme')=='pronto') {
-            console.log('removing '+link.fromPin.pinname+' -> '+link.toPin.pinname);
-            link.toPin.markPinAsChanged();
-            link.destroy();
           }
         }
           
