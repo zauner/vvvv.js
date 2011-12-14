@@ -409,6 +409,7 @@ VVVV.Core = {
                 if (n.inputPins[pinname].values[i]!=values[i])
                   n.inputPins[pinname].setValue(i, values[i]);
               }
+              n.inputPins[pinname].setSliceCount(values.length);
             }
             return;
           }
@@ -420,6 +421,7 @@ VVVV.Core = {
                 if (n.invisiblePins[pinname].values[i]!=values[i])
                   n.invisiblePins[pinname].setValue(i, values[i]);
               }
+              n.invisiblePins[pinname].setSliceCount(values.length);
             }
             return;
           }
