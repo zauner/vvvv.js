@@ -1252,6 +1252,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       else {
         pMatrix = mat4.create();
         mat4.ortho(-1, 1, -1, 1, -100, 100, pMatrix);
+        mat4.scale(pMatrix, [1, 1, -1]);
       }
     }
     if (viewIn.pinIsChanged()) {
