@@ -1214,6 +1214,14 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
     
     defaultWebGlRenderState = new VVVV.Types.WebGlRenderState();
+    
+    // this is to ensure that all the input pins get evaluated, if the gl context has been set after the node creation
+    this.inputPins["Layers"].markPinAsChanged();
+    clearIn.markPinAsChanged();
+    bgColIn.markPinAsChanged();
+    viewIn.markPinAsChanged();
+    projIn.markPinAsChanged();
+    
   }
   
   var initialized = false;
