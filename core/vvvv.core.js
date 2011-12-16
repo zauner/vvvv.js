@@ -235,6 +235,18 @@ VVVV.Core = {
       return ret;
     }
     
+    this.findDownstreamNodes = function(name) {
+      var ret = [];
+    	_(this.outputPins).each(function(p) {
+        for (var j=0; j<p.links.length; j++) {
+          if (p.links[j].toPin.node.nodename==name)
+            ret.push(p.links[j].toPin.node);
+          ret = ret.concat(p.links[j].toPin.node.findDownstreamNodes(name));
+    	  }
+    	});
+    	return ret;
+    }
+    
     this.getMaxInputSliceCount = function() {
       var ret = 0;
       _(this.inputPins).each(function(p) {
