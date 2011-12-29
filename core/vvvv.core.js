@@ -84,6 +84,10 @@ VVVV.Core = {
         l.toPin.node.dirty = true;
       });
     }
+    
+    this.connectionChanged = function() {
+      
+    }
   },
   
   Node: function(id, nodename, patch) {
@@ -241,7 +245,8 @@ VVVV.Core = {
         for (var j=0; j<p.links.length; j++) {
           if (p.links[j].toPin.node.nodename==name)
             ret.push(p.links[j].toPin.node);
-          ret = ret.concat(p.links[j].toPin.node.findDownstreamNodes(name));
+          else
+            ret = ret.concat(p.links[j].toPin.node.findDownstreamNodes(name));
     	  }
     	});
     	return ret;
@@ -416,7 +421,7 @@ VVVV.Core = {
             
           // the input pin already exists (because the node created it), don't add it, but set values, if present in the xml
           if (n.inputPins[pinname]!=undefined) {
-            if (values!=undefined) {
+            if (values!=undefined && !n.inputPins[pinname].isConnected()) {
               for (var i=0; i<values.length; i++) {
                 if (n.inputPins[pinname].values[i]!=values[i])
                   n.inputPins[pinname].setValue(i, values[i]);
@@ -502,6 +507,8 @@ VVVV.Core = {
           }
         }
         console.log('removing '+link.fromPin.pinname+' -> '+link.toPin.pinname);
+        link.fromPin.connectionChanged();
+        link.toPin.connectionChanged();
         link.toPin.markPinAsChanged();
         link.destroy();
       });
@@ -528,6 +535,8 @@ VVVV.Core = {
 
         if (!link) {
           link = new VVVV.Core.Link(srcPin, dstPin);
+          srcPin.connectionChanged();
+          dstPin.connectionChanged();
           thisPatch.linkList.push(link);
           for (var i=0; i<srcPin.values.length; i++) {
             dstPin.setValue(i, srcPin.getValue(i));
@@ -542,6 +551,8 @@ VVVV.Core = {
         _(oldLinks).each(function(l, key) {
           if (newLinks[key]==undefined) {
             console.log('removing '+l.fromPin.pinname+' -> '+l.toPin.pinname);
+            l.fromPin.connectionChanged();
+            l.toPin.connectionChanged();
             l.toPin.markPinAsChanged();
             l.destroy();
           }
