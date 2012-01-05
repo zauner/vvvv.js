@@ -12,6 +12,8 @@ VVVV.Core.ClientBridge = function(patch) {
   this.host = false;
   var socket = false;
   
+  var that = this;
+  
   this.enable = function() {
     if (!this.host)
       return;
@@ -19,6 +21,10 @@ VVVV.Core.ClientBridge = function(patch) {
     var initialized = false;
     socket.onopen = function() {
       console.log("connected to VVVV ...");
+      that.pushCompletePatch();
+      window.setTimeout(function() {
+        that.pullCompletePatch();
+      }, 100);
     }
     
     socket.onmessage = function(m) {
@@ -42,7 +48,16 @@ VVVV.Core.ClientBridge = function(patch) {
     socket = false;
   }
   
-  var that = this;
+  this.pullCompletePatch = function() {
+    console.log('pulling patch...');
+    socket.send('PULL');
+  }
+  
+  this.pushCompletePatch = function() {
+    console.log('pushing patch ...');
+    socket.send('PUSH'+this.patch.XMLCode);
+  }
+  
   function checkLocationHash() {
     if (!socket && window.location.hash=='#devel_env/'+that.patch.ressource) {
       console.log('enabling devel env');
