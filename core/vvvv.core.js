@@ -307,8 +307,10 @@ VVVV.Core = {
     
     this.success = success_handler;
     
+    this.XMLCode = '';
+    this.clientbridge = new VVVV.Core.ClientBridge(this);
+    
     var print_timing = false;
-    var clientbridge = new VVVV.Core.ClientBridge(this);
     
     function splitValues(v) {
       if (v==undefined)
@@ -334,6 +336,10 @@ VVVV.Core = {
       var version_match = /^<!DOCTYPE\s+PATCH\s+SYSTEM\s+"(.+\\)*(.+)\.dtd/.exec(xml);
       if (version_match)
         thisPatch.vvvv_version = version_match[2].replace(/[a-zA-Z]+/, '_');
+      
+      // this is kind of a hacky way to determine, if the incoming XML is the complete patch, or a patch change
+      if ($(xml).children().eq(0).parent().attr('systemname'))
+        thisPatch.XMLCode = xml;
     
       $windowBounds = $(xml).find('bounds[type="Window"]').first();
       if ($windowBounds.length>0) {
@@ -653,8 +659,8 @@ VVVV.Core = {
       });
     }
     else if (/^ws:\/\//.test(ressource)) {
-      clientbridge.host = ressource;
-      clientbridge.enable();
+      this.clientbridge.host = ressource;
+      this.clientbridge.enable();
     }
     else {
       this.doLoad(ressource);
