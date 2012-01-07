@@ -75,6 +75,8 @@ VVVV.Core = {
     }
 	
     this.setSliceCount = function(len) {
+      if (this.values.length==len)
+        return;
       this.values.length = len;
       this.changed = true;	  
       this.node.dirty = true; 
@@ -547,6 +549,7 @@ VVVV.Core = {
           for (var i=0; i<srcPin.values.length; i++) {
             dstPin.setValue(i, srcPin.getValue(i));
           }
+          dstPin.setSliceCount(srcPin.getSliceCount());
         }
           
         if (thisPatch.vvvv_version<="45_26")
