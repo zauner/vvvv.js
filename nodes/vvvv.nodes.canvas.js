@@ -78,7 +78,7 @@ VVVV.Nodes.FillCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this);
+  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this, true);
   var colorIn = this.addInputPin("Color", ['1.0, 1.0, 1.0, 1.0'], this);
   
   var renderStateOut = this.addOutputPin("Render State Out", [defaultRenderState], this);
@@ -122,7 +122,7 @@ VVVV.Nodes.StrokeCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this);
+  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this, true);
   var colorIn = this.addInputPin("Color", ['1.0, 1.0, 1.0, 1.0'], this);
   var lineWidthIn = this.addInputPin("Width", [1.0], this);
   var capStyleIn = this.addInputPin("Cap Style", ['butt'], this);
@@ -173,7 +173,7 @@ VVVV.Nodes.ShadowCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this);
+  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this, true);
   var colorIn = this.addInputPin("Color", ['0.0, 0.0, 0.0, 1.0'], this);
   var xOffsetIn = this.addInputPin("Offset X", [0.0], this);
   var yOffsetIn = this.addInputPin("Offset Y", [0.0], this);
@@ -223,7 +223,7 @@ VVVV.Nodes.BlendCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this);
+  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this, true);
   var modeIn = this.addInputPin("Mode", ['source-over'], this);
   
   var renderStateOut = this.addOutputPin("Render State Out", [defaultRenderState], this);
@@ -267,7 +267,7 @@ VVVV.Nodes.LinearGradientCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this);
+  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this, true);
   var startXIn = this.addInputPin("Start X", [0.0], this);
   var startYIn = this.addInputPin("Start Y", [0.0], this);
   var endXIn = this.addInputPin("End X", [0.0], this);
@@ -330,8 +330,8 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin('Render State', [defaultRenderState], this);
-  var transformIn = this.addInputPin('Transform', [], this);
+  var renderStateIn = this.addInputPin('Render State', [defaultRenderState], this, true);
+  var transformIn = this.addInputPin('Transform', [], this, true);
   var startAngleIn = this.addInputPin('Start Angle', [0.0], this);
   var endAngleIn = this.addInputPin('End Angle', [0.5], this);
   
@@ -410,8 +410,8 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin('Render State', [defaultRenderState], this);
-  var transformIn = this.addInputPin('Transform', [], this);
+  var renderStateIn = this.addInputPin('Render State', [defaultRenderState], this, true);
+  var transformIn = this.addInputPin('Transform', [], this, true);
   var textIn = this.addInputPin('Text', ['VVVV.js'], this);
   var fontIn = this.addInputPin('Font', ['10px sans-serif'], this);
   var alignIn = this.addInputPin('Align', ['start'], this);
@@ -551,6 +551,15 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
     }
   }
   
+  function adjustVertexListSize(layer, idx) {
+    layer.x.splice(idx);
+    layer.y.splice(idx);
+    layer.c1x.splice(idx);
+    layer.c1y.splice(idx);
+    layer.c2x.splice(idx);
+    layer.c2y.splice(idx);
+  }
+  
   this.evaluate = function() {
   
     //if (xIn.pinIsChanged() || yIn.pinIsChanged() || control1XIn.pinIsChanged() || control2XIn.pinIsChanged()|| control2XIn.pinIsChanged() || control2YIn.pinIsChanged() || strokeColorIn.pinIsChanged() || lineWidthIn.pinIsChanged() || fillColorIn.pinIsChanged()) {
@@ -559,7 +568,6 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
       var binNum = 0;
       var subIndex = 0;
       for (var j=0; j<maxSpreadSize || (binSizeIn.getValue(0)>0 && (subIndex>0 || binNum%transformIn.getSliceCount()>0)); j++) {
-        
         if (layers[binNum]==undefined)
           layers[binNum] = new BezierCurve();
           
@@ -580,14 +588,24 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
         
         subIndex++;
         if (binSizeIn.getValue(0)>0 && subIndex>=binSizeIn.getValue(binNum)) {
+          if (subIndex<layers[binNum].x.length) {
+            adjustVertexListSize(layers[binNum], subIndex);
+          }
           binNum++;
           subIndex = 0;
         }
       }
+      if (binSizeIn.getValue(0)<0 && subIndex<layers[binNum].x.length) {
+        adjustVertexListSize(layers[binNum], subIndex);
+        layers.splice(1);
+      }
+      else
+        layers.splice(binNum);
       
       for (var i=0; i<layers.length; i++) {
         layersOut.setValue(i, layers[i]);
       }
+      layersOut.setSliceCount(layers.length);
     //}
     
   }
@@ -613,8 +631,8 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var transformIn = this.addInputPin('Transform', [], this);
-  var textureIn = this.addInputPin('Texture', [], this);
+  var transformIn = this.addInputPin('Transform', [], this, true);
+  var textureIn = this.addInputPin('Texture', [], this, true);
   var colorIn = this.addInputPin('Color', ['1.0', '1.0', '1.0', '1.0'], this);
   
   var layersOut = this.addOutputPin('Layer', [], this);
@@ -703,7 +721,7 @@ VVVV.Nodes.GroupCanvas = function(id, graph) {
   
   this.initialize = function() {
     for (var i=0; i<2; i++) {
-      layerIns[i] = this.addInputPin("Layer "+(i+1), [], this);
+      layerIns[i] = this.addInputPin("Layer "+(i+1), [], this, true);
     }
   }
   
@@ -775,6 +793,10 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   }
 
   this.evaluate = function() {
+    
+    if (this.invisiblePins["Descriptive Name"].pinIsChanged()) {
+      this.initialize();
+    }
   
     if (!ctx)
       return;
@@ -798,8 +820,10 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
       ctx.scale(canvasWidth/2, -canvasHeight/2);
       ctx.scale(1, canvasWidth/canvasHeight);
       
-      for (var i=0; i<layersIn.values.length; i++) {
-        layersIn.getValue(i).draw(ctx);
+      if (layersIn.isConnected()) {
+        for (var i=0; i<layersIn.values.length; i++) {
+          layersIn.getValue(i).draw(ctx);
+        }
       }
       ctx.restore();
       

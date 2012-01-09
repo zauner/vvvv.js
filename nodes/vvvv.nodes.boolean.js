@@ -38,7 +38,7 @@ VVVV.Nodes.And = function(id, graph) {
         else
           outputOut.setValue(i, 0);
       }
-      
+      outputOut.setSliceCount(this.getMaxInputSliceCount());
     }
     
     
@@ -81,6 +81,7 @@ VVVV.Nodes.Or = function(id, graph) {
         else
           outputOut.setValue(i, 0);
       }
+      outputOut.setSliceCount(this.getMaxInputSliceCount());
       
     }
     
@@ -120,6 +121,7 @@ VVVV.Nodes.Not = function(id, graph) {
       for (var i=0; i<this.getMaxInputSliceCount(); i++) {
         outputOut.setValue(i, 1-Math.round(parseFloat(inputIn.getValue(i))));
       }
+      outputOut.setSliceCount(this.getMaxInputSliceCount());
       
     }
     

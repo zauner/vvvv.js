@@ -31,6 +31,7 @@ VVVV.Nodes.String2Enum = function(id, graph) {
     for (var i=0; i<maxSize; i++) {
       outputOut.setValue(i, inputIn.getValue(i));
     }
+    outputOut.setSliceCount(maxSize);
   }
 
 }

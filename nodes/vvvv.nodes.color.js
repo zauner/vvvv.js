@@ -41,6 +41,7 @@ VVVV.Nodes.RGBJoin = function(id, graph) {
         
         outPin.setValue(i, r+","+g+","+b+","+a);
       }
+      outPin.setSliceCount(maxSize);
       
     }
    
