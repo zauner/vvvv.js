@@ -18,14 +18,15 @@ var PinDirection = { Input : 0,Output : 1,Configuration : 2 };
 
 VVVV.Core = {	
   
-  Pin: function(pinname,direction, values, node) {
+  Pin: function(pinname,direction, values, node, reset_on_disconnect) {
     this.direction = direction;
     this.pinname = pinname;
     this.links = [];
-    this.values = values;
+    this.values = values.slice(0); // use slice(0) to create a copy of the array
     this.node = node;
     this.changed = true;
     this.active = false;
+    this.reset_on_disconnect = reset_on_disconnect || false;
     
     this.getValue = function(i, binSize) {
       if (!binSize || binSize==1)
@@ -87,6 +88,11 @@ VVVV.Core = {
       });
     }
     
+    this.reset = function() {
+      this.values = values.splice(0);
+      this.markPinAsChanged();
+    }
+    
     this.connectionChanged = function() {
       
     }
@@ -122,8 +128,8 @@ VVVV.Core = {
       this.defaultPinValues[pinname] = value;
     }
     
-    this.addInputPin = function(pinname, value) {
-      pin = new VVVV.Core.Pin(pinname,PinDirection.Input, value, this);
+    this.addInputPin = function(pinname, value, _reserved, reset_on_disconnect) {
+      pin = new VVVV.Core.Pin(pinname,PinDirection.Input, value, this, reset_on_disconnect);
       this.inputPins[pinname] = pin;
       this.patch.pinMap[this.id+'_'+pinname] = pin;
       if (this.defaultPinValues[pinname] != undefined) {
@@ -518,6 +524,8 @@ VVVV.Core = {
         link.fromPin.connectionChanged();
         link.toPin.connectionChanged();
         link.toPin.markPinAsChanged();
+        if (link.toPin.reset_on_disconnect)
+          link.toPin.reset();
         link.destroy();
       });
       
@@ -563,6 +571,8 @@ VVVV.Core = {
             l.fromPin.connectionChanged();
             l.toPin.connectionChanged();
             l.toPin.markPinAsChanged();
+            if (l.toPin.reset_on_disconnect)
+              l.toPin.reset();
             l.destroy();
           }
         });
