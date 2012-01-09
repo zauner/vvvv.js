@@ -37,6 +37,7 @@ VVVV.Nodes.LFO = function(id, graph) {
   var lastUpdate = new Date().getTime();
 
   this.evaluate = function() {
+    
     var period = parseFloat(this.inputPins["Period"].getValue(0));
     var paused = parseInt(this.inputPins["Pause"].getValue(0));
     var reverse = parseInt(this.inputPins["Reverse"].getValue(0));
@@ -157,6 +158,14 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
       lastUpdate[i] = new Date().getTime();
     }
     
+    if (pinsChanged && positionOut.getSliceCount()!=maxSize) {
+      lastUpdate.splice(maxSize);
+      currPos.splice(maxSize);
+      velocity.splice(maxSize);
+      deltaPos.splice(maxSize);
+      positionOut.setSliceCount(maxSize);
+    }
+    
   }
 
 }
@@ -213,12 +222,17 @@ VVVV.Nodes.Delay = function(id, graph) {
       return;
     }
     
-    if (insertIn.getValue(0)==1 && pinChanged) {
+    if (insertIn.getValue(0)==1 && (pinChanged || timeIn.pinIsChanged())) {
       times.pop();
       times.unshift(now);
-      for (var i=0; i<inputIn.values.length; i++) {
-        if (queue[i]==undefined)
+      for (var i=0; i<maxSize; i++) {
+        if (queue[i]==undefined) {
           queue[i] = new Array(1024);
+          var j = 1024;
+          while (j--) {
+            queue[i][j] = 0.0;
+          }
+        }
         if (queue[i].length>=1024)
           queue[i].pop();
         queue[i].unshift(inputIn.getValue(i));
@@ -230,8 +244,8 @@ VVVV.Nodes.Delay = function(id, graph) {
       var found = false;
       for (j=0; j<1024; j++) {
         if (times[j]<=dt) {
-          if (outputOut.values[i]!=queue[i%queue.length][j]) {
-            outputOut.setValue(i, queue[i%queue.length][j]);
+          if (outputOut.values[i]!=queue[i][j]) {
+            outputOut.setValue(i, queue[i][j]);
           }
           found = true;
           break;
@@ -241,6 +255,9 @@ VVVV.Nodes.Delay = function(id, graph) {
         outputOut.setValue(i, 0.0);
       }
     }
+    
+    outputOut.setSliceCount(maxSize);
+    queue.splice(maxSize);
     
   }
 
@@ -285,11 +302,14 @@ VVVV.Nodes.Change = function(id, graph) {
           changeOut.setValue(i, 0);
         values[i] = inputIn.getValue(i);
       }
+      changeOut.setSliceCount(maxSize);
     }
     else {
       for (var i=0; i<maxSize; i++) {
-        if (changeOut.getValue(i)==1)
+        if (changeOut.getValue(i)==1) {
           changeOut.setValue(i, 0);
+          changeOut.setSliceCount(maxSize);
+        }
       }
       values[i] = inputIn.getValue(i);
     }
@@ -340,8 +360,11 @@ VVVV.Nodes.TogEdge = function(id, graph) {
         downOut.setValue(i, 1);
       else if (downOut.values[i]!=0)
         downOut.setValue(i, 0);
-      values[i] = inputIn.getValue(i);
+      values[i] = inputIn.getValue(i); 
     }
+    
+    upOut.setSliceCount(maxSize);
+    downOut.setSliceCount(maxSize);
     
     
   }
@@ -380,23 +403,32 @@ VVVV.Nodes.FlipFlop = function(id, graph) {
     
     var maxSize = this.getMaxInputSliceCount();
     
-    if (setIn.pinIsChanged() || resetIn.pinIsChanged()) {
-      for (var i=0; i<maxSize; i++) {
-        var result = undefined;
-        if (Math.round(resetIn.getValue(i))>=1)
-          result = 0;
-        if (Math.round(setIn.getValue(i))>=1)
-          result = 1;
-        if (result!=undefined) {
-          outputOut.setValue(i, result);
-          inverseOutputOut.setValue(i, 1-result);
-        }
-        else if (!initialized) {
-          outputOut.setValue(i, 0);
-          inverseOutputOut.setValue(i, 1);
-        }
+    var currSize = outputOut.getSliceCount();
+    if (maxSize>currSize) {
+      for (var i=currSize; i<maxSize; i++) {
+        outputOut.setValue(i, 0);
+        inverseOutputOut.setValue(i, 1);
       }
     }
+    
+    for (var i=0; i<maxSize; i++) {
+      var result = undefined;
+      if (Math.round(resetIn.getValue(i))>=1)
+        result = 0;
+      if (Math.round(setIn.getValue(i))>=1)
+        result = 1;
+      if (result!=undefined) {
+        outputOut.setValue(i, result);
+        inverseOutputOut.setValue(i, 1-result);
+      }
+      else if (!initialized) {
+        outputOut.setValue(i, 0);
+        inverseOutputOut.setValue(i, 1);
+      }
+    }
+    outputOut.setSliceCount(maxSize);
+    inverseOutputOut.setSliceCount(maxSize);
+
     initialized = true;
 
   }
@@ -420,7 +452,7 @@ VVVV.Nodes.SampleAndHold = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: []
+    compatibility_issues: ['different output slice count in pure VVVV, if Set pin has only one slice']
   };
   
   var inputIn = this.addInputPin("Input", [0.0], this);
@@ -436,12 +468,13 @@ VVVV.Nodes.SampleAndHold = function(id, graph) {
     if (setIn.pinIsChanged() || inputIn.pinIsChanged()) {
       for (var i=0; i<maxSize; i++) {
         if (outputOut.values[i]==undefined) {
-          outputOut.setValue(i, 0);
+          outputOut.setValue(i, 0.0);
         }
         if (Math.round(setIn.getValue(i))>=1) {
           outputOut.setValue(i, inputIn.getValue(i));
         }
       }
+      outputOut.setSliceCount(maxSize);
     }
     
     
@@ -514,6 +547,8 @@ VVVV.Nodes.Toggle = function(id, graph) {
     compatibility_issues: []
   };
   
+  this.auto_evaluate = true;
+  
   var inputIn = this.addInputPin("Input", [0], this);
   var resetIn = this.addInputPin("Reset", [0], this);
   
@@ -527,13 +562,21 @@ VVVV.Nodes.Toggle = function(id, graph) {
     
     var maxSize = this.getMaxInputSliceCount();
     
+    var currSize = outputOut.getSliceCount();
+    if (maxSize>currSize) {
+      for (var i=currSize; i<maxSize; i++) {
+        outputOut.setValue(i, 0);
+        inverseOutputOut.setValue(i, 1);
+      }
+    }
+    
     for (var i=0; i<maxSize; i++) {
       var result = undefined;
       if (Math.round(resetIn.getValue(i))>=1)
         result = 0;
       if (Math.round(inputIn.getValue(i))>=1)
         result = 1 - parseFloat(outputOut.getValue(i));
-      if (result!=undefined) {
+      if (result!=undefined && outputOut.getValue(i)!=result) {
         outputOut.setValue(i, result);
         inverseOutputOut.setValue(i, 1-result);
       }
@@ -542,6 +585,9 @@ VVVV.Nodes.Toggle = function(id, graph) {
         inverseOutputOut.setValue(i, 1);
       }
     }
+    
+    outputOut.setSliceCount(maxSize);
+    inverseOutputOut.setSliceCount(maxSize);
     
     initialized = true;
 
@@ -602,7 +648,7 @@ VVVV.Nodes.Counter = function(id, graph) {
     {
       for(var i=0; i<maxSize; i++) {
         var incr = parseFloat(incrIn.getValue(i));
-        var output = parseFloat(outputOut.getValue(i));
+        var output = i>=outputOut.getSliceCount() ? 0.0 : parseFloat(outputOut.getValue(i));
         var max = parseFloat(maxIn.getValue(i));
         var min = parseFloat(minIn.getValue(i));
       
@@ -654,6 +700,9 @@ VVVV.Nodes.Counter = function(id, graph) {
           outputOut.setValue(i, output);
         if(resetIn.getValue(i)>=.5) outputOut.setValue(i, defaultIn.getValue(i));
       }
+      outputOut.setSliceCount(maxSize);
+      uflowOut.setSliceCount(maxSize);
+      oflowOut.setSliceCount(maxSize);
     }
     initialized = true;
   }
