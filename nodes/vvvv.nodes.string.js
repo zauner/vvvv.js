@@ -30,12 +30,9 @@ VVVV.Nodes.IOBoxString = function(id, graph) {
   this.addOutputPin("Output String", [""], this);
 
   this.evaluate = function() {
-    if (this.inputPins["Input String"].pinIsChanged()) 
-	{
 	  this.outputPins["Output String"].setSliceCount(this.inputPins["Input String"].getSliceCount());
-      for (var i=0; i<this.inputPins["Input String"].values.length; i++) {
-        this.outputPins["Output String"].setValue(i, this.inputPins["Input String"].values[i]);
-      }
+    for (var i=0; i<this.inputPins["Input String"].getSliceCount(); i++) {
+      this.outputPins["Output String"].setValue(i, this.inputPins["Input String"].values[i]);
     }
   }
 
@@ -70,20 +67,14 @@ VVVV.Nodes.SwitchStringInput = function(id, graph) {
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
     
-    var pinsChanged = switchIn.pinIsChanged();
-    for (var i=0; i<inputIn.length; i++) {
-      pinsChanged = inputIn[i].pinIsChanged() || pinsChanged;
+    if (switchIn.getValue(0)==undefined) {
+      outputOut.setValue(0, undefined);
+      return;
     }
-    
-    if (pinsChanged) {
-      if (switchIn.getValue(0)==undefined) {
-        outputOut.setValue(0, undefined);
-        return;
-      }
-      for (var i=0; i<maxSize; i++) {
-        outputOut.setValue(i, inputIn[switchIn.getValue(i)%inputIn.length].getValue(i));
-      }
+    for (var i=0; i<maxSize; i++) {
+      outputOut.setValue(i, inputIn[switchIn.getValue(i)%inputIn.length].getValue(i));
     }
+    outputOut.setSliceCount(maxSize);
   }
 
 }
@@ -117,24 +108,18 @@ VVVV.Nodes.AddString = function(id, graph) {
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
-    
-    var pinsChanged = false;
-    for (var i=0; i<inputIn.length; i++) {
-      pinsChanged = pinsChanged || inputIn[i].pinIsChanged();
-    }
-    
-    if (pinsChanged) {
-      for (var i=0; i<maxSize; i++) {
-        var pieces = [];
-        var intersperse = intersperseStringIn.getValue(i);
-        if (intersperse==undefined)
-          intersperse = '';
-        for (var j=0; j<inputIn.length; j++) {
-          pieces.push(inputIn[j].getValue(i));
-        }
-        outputOut.setValue(i, pieces.join(intersperse));
+
+    for (var i=0; i<maxSize; i++) {
+      var pieces = [];
+      var intersperse = intersperseStringIn.getValue(i);
+      if (intersperse==undefined)
+        intersperse = '';
+      for (var j=0; j<inputIn.length; j++) {
+        pieces.push(inputIn[j].getValue(i));
       }
+      outputOut.setValue(i, pieces.join(intersperse));
     }
+    outputOut.setSliceCount(maxSize);
   }
 
 }
@@ -166,16 +151,10 @@ VVVV.Nodes.GetSliceString = function(id, graph) {
   var outputOut = this.addOutputPin("Output", ["text"], this);
 
   this.evaluate = function() {
-    var pinsChanged = inputIn.pinIsChanged() || indexIn.pinIsChanged();
-    
-    if (pinsChanged) {
-      outputOut.values = [];
-      
       for (var i=0; i<indexIn.values.length; i++) {
-        
         outputOut.setValue(i, inputIn.getValue(Math.round((indexIn.getValue(i)))));
       }
-    }
+      outputOut.setSliceCount(indexIn.getSliceCount());
   }
 
 }
@@ -207,14 +186,15 @@ VVVV.Nodes.AsValue = function(id, graph) {
 
   this.evaluate = function() {
     
-      var maxSize = this.getMaxInputSliceCount();
-      for (var i=0; i<maxSize; i++) {
-        var inp = inputIn.getValue(i);
-        if (/^[0-9.e]+$/.test(inp))
-          outputOut.setValue(i, inp);
-        else
-          outputOut.setValue(i, parseFloat(defaultIn.getValue(i)));
-      }
+    var maxSize = this.getMaxInputSliceCount();
+    for (var i=0; i<maxSize; i++) {
+      var inp = inputIn.getValue(i);
+      if (/^[0-9.e]+$/.test(inp))
+        outputOut.setValue(i, inp);
+      else
+        outputOut.setValue(i, parseFloat(defaultIn.getValue(i)));
+    }
+    outputOut.setSliceCount(maxSize);
   }
 
 }

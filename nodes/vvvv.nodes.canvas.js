@@ -633,7 +633,7 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
   
   var transformIn = this.addInputPin('Transform', [], this, true);
   var textureIn = this.addInputPin('Texture', [], this, true);
-  var colorIn = this.addInputPin('Color', ['1.0', '1.0', '1.0', '1.0'], this);
+  var colorIn = this.addInputPin('Color', ['1.0, 1.0, 1.0, 1.0'], this);
   
   var layersOut = this.addOutputPin('Layer', [], this);
   

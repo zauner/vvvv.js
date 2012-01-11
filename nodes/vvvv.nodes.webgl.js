@@ -271,6 +271,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
       
         outputPin.setValue(i, textures[i]);
       }
+      outputPin.setSliceCount(maxSize);
     }
   
   }
@@ -297,7 +298,7 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
     compatibility_issues: []
   };
 
-  var sourceIn = this.addInputPin("Source", [""], this);
+  var sourceIn = this.addInputPin("Source", [""], this, true);
   var outputOut = this.addOutputPin("Texture Out", [], this);
   this.setAsWebGlResourcePin(outputOut);
   
@@ -884,9 +885,9 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   
   this.shaderFile = '';
   
-  var renderStateIn = this.addInputPin("Render State", [], this);
-  var meshIn = this.addInputPin("Mesh", [], this);
-  var transformIn = this.addInputPin("Transform", [], this);
+  var renderStateIn = this.addInputPin("Render State", [], this, true);
+  var meshIn = this.addInputPin("Mesh", [], this, true);
+  var transformIn = this.addInputPin("Transform", [], this, true);
   
   var layerOut = this.addOutputPin("Layer", [], this);
   this.setAsWebGlResourcePin(layerOut);
@@ -981,7 +982,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     _(this.inputPins).each(function(p) {
       var sliceCount = p.getSliceCount();
       var pinname = p.pinname.replace(/ /g,'_')
-      if (shader.uniformSpecs[pinname] && shader.uniformSpecs[pinname].type=='vec') {
+      if (shader.uniformSpecs[pinname] && shader.uniformSpecs[pinname].type=='vec' && shader.uniformSpecs[pinname].semantic!='COLOR') {
         sliceCount = parseInt(sliceCount/shader.uniformSpecs[pinname].dimension);
       }
       if (sliceCount > maxSize)
@@ -1002,6 +1003,11 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       _(shader.uniformSpecs).each(function(u) {
         layers[j].uniforms[u.varname] = { uniformSpec: u, value: undefined };
       });
+    }
+    if (meshIn.pinIsChanged()) {
+      for (var j=0; j<maxSize; j++) {
+      	layers[j].mesh = meshIn.getValue(0);
+      }
     }
     
     for (var i=0; i<shaderPins.length; i++) {
@@ -1327,7 +1333,6 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     }
   
     if (projIn.pinIsChanged()) {
-      console.log('fetching perspective');
       if (projIn.isConnected()) {
         pMatrix = mat4.create();
         mat4.set(projIn.getValue(0), pMatrix);

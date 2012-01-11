@@ -59,7 +59,7 @@ VVVV.Nodes.FileTextureCanvas = function(id, graph) {
       textureOut.setSliceCount(maxSpreadSize);
       widthOut.setSliceCount(maxSpreadSize);
       heightOut.setSliceCount(maxSpreadSize);
-      runningOut.setValue(maxSpreadSize);
+      runningOut.setSliceCount(maxSpreadSize);
     }
     
     if (textureLoaded) {

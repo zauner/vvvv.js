@@ -28,11 +28,11 @@ VVVV.Nodes.GetSliceSpreads = function(id, graph) {
   this.addOutputPin("Output", [0.0], this);
 
   this.evaluate = function() {
-    this.outputPins["Output"].values = [];
-    
-    for (var i=0; i<this.inputPins["Index"].values.length; i++) {
+    var size = this.inputPins["Index"].values.length;
+    for (var i=0; i<size; i++) {
       this.outputPins["Output"].setValue(i, parseFloat(this.inputPins["Input"].getValue(Math.round(this.inputPins["Index"].getValue(i)))));
     }
+    this.outputPins["Output"].setSliceCount(size);
   }
 
 }
@@ -62,65 +62,63 @@ VVVV.Nodes.RandomSpread = function(id, graph) {
   this.addInputPin("Spread Count", [1], this);
   
   this.addOutputPin("Output", [0.0], this);
+  
+  // Rc4Random function taken from http://www.webdeveloper.com/forum/showthread.php?t=140572
+  function Rc4Random(seed)
+  {
+    var keySchedule = [];
+    var keySchedule_i = 0;
+    var keySchedule_j = 0;
+    
+    function init(seed) {
+      for (var i = 0; i < 256; i++)
+        keySchedule[i] = i;
+      
+      var j = 0;
+      for (var i = 0; i < 256; i++)
+      {
+        j = (j + keySchedule[i] + seed.charCodeAt(i % seed.length)) % 256;
+        
+        var t = keySchedule[i];
+        keySchedule[i] = keySchedule[j];
+        keySchedule[j] = t;
+      }
+    }
+    init(seed);
+    
+    function getRandomByte() {
+      keySchedule_i = (keySchedule_i + 1) % 256;
+      keySchedule_j = (keySchedule_j + keySchedule[keySchedule_i]) % 256;
+      
+      var t = keySchedule[keySchedule_i];
+      keySchedule[keySchedule_i] = keySchedule[keySchedule_j];
+      keySchedule[keySchedule_j] = t;
+      
+      return keySchedule[(keySchedule[keySchedule_i] + keySchedule[keySchedule_j]) % 256];
+    }
+    
+    this.getRandomNumber = function() {
+      var number = 0;
+      var multiplier = 1;
+      for (var i = 0; i < 8; i++) {
+        number += getRandomByte() * multiplier;
+        multiplier *= 256;
+      }
+      return number / 18446744073709551616;
+    }
+  }
 
   this.evaluate = function() {
-    if (this.inputPins["Spread Count"].pinIsChanged() || this.inputPins["Input"].pinIsChanged() || this.inputPins["Width"].pinIsChanged() || this.inputPins["Random Seed"].pinIsChanged()) {
-      var count = parseInt(this.inputPins["Spread Count"].getValue(0));
-      var input = parseFloat(this.inputPins["Input"].getValue(0));
-      var width = parseFloat(this.inputPins["Width"].getValue(0));
-      var randomseed = parseInt(this.inputPins["Random Seed"].getValue(0));
-      
-      // Rc4Random function taken from http://www.webdeveloper.com/forum/showthread.php?t=140572
-      function Rc4Random(seed)
-      {
-        var keySchedule = [];
-        var keySchedule_i = 0;
-        var keySchedule_j = 0;
-        
-        function init(seed) {
-          for (var i = 0; i < 256; i++)
-            keySchedule[i] = i;
-          
-          var j = 0;
-          for (var i = 0; i < 256; i++)
-          {
-            j = (j + keySchedule[i] + seed.charCodeAt(i % seed.length)) % 256;
-            
-            var t = keySchedule[i];
-            keySchedule[i] = keySchedule[j];
-            keySchedule[j] = t;
-          }
-        }
-        init(seed);
-        
-        function getRandomByte() {
-          keySchedule_i = (keySchedule_i + 1) % 256;
-          keySchedule_j = (keySchedule_j + keySchedule[keySchedule_i]) % 256;
-          
-          var t = keySchedule[keySchedule_i];
-          keySchedule[keySchedule_i] = keySchedule[keySchedule_j];
-          keySchedule[keySchedule_j] = t;
-          
-          return keySchedule[(keySchedule[keySchedule_i] + keySchedule[keySchedule_j]) % 256];
-        }
-        
-        this.getRandomNumber = function() {
-          var number = 0;
-          var multiplier = 1;
-          for (var i = 0; i < 8; i++) {
-            number += getRandomByte() * multiplier;
-            multiplier *= 256;
-          }
-          return number / 18446744073709551616;
-        }
-      }
-      
-      rng = new Rc4Random(randomseed.toString());
-      
-      this.outputPins["Output"].setSliceCount(count);
-      for (var i=0; i<count; i++) {
-        this.outputPins["Output"].setValue(i, rng.getRandomNumber()*width-width/2+input);
-      }
+    var count = parseInt(this.inputPins["Spread Count"].getValue(0));
+    var input = parseFloat(this.inputPins["Input"].getValue(0));
+    var width = parseFloat(this.inputPins["Width"].getValue(0));
+    var randomseed = parseInt(this.inputPins["Random Seed"].getValue(0));
+    
+    rng = new Rc4Random(randomseed.toString());
+    
+    this.outputPins["Output"].setSliceCount(count);
+    for (var i=0; i<count; i++) {
+      this.outputPins["Output"].setValue(i, rng.getRandomNumber()*width-width/2+input);
     }
   }
   
@@ -156,11 +154,12 @@ VVVV.Nodes.SortSpreads = function(id, graph) {
     var sorted = _(this.inputPins["Input"].values).map(function(v,i) { return [v, i]; });
     sorted = _(sorted).sortBy(function(x) { return x[0] });
     
-    this.outputPins["Output"].values = [];
     for (var i=0; i<sorted.length; i++) {
       this.outputPins["Output"].setValue(i, sorted[i][0]);
       this.outputPins["Former Index"].setValue(i, sorted[i][1]);
     }
+    this.outputPins["Output"].setSliceCount(sorted.length);
+    this.outputPins["Former Index"].setSliceCount(sorted.length);
   }
 
 }
@@ -282,15 +281,13 @@ VVVV.Nodes.SwapDim = function(id, graph) {
   var outputOut = this.addOutputPin("Output", [0.0], this);
 
   this.evaluate = function() {
-    if (inputIn.pinIsChanged() || rowCountIn.pinIsChanged() || columnCountIn.pinIsChanged()) {
-      var columnCount = parseInt(columnCountIn.getValue(0));
-      var rowCount = parseInt(rowCountIn.getValue(0));
-      for (var i=0; i<inputIn.values.length; i++) {
-        outputOut.setValue(i % columnCount * rowCount + parseInt(i / columnCount), inputIn.getValue(i));
-      }
+    var columnCount = parseInt(columnCountIn.getValue(0));
+    var rowCount = parseInt(rowCountIn.getValue(0));
+    var outputCount = columnCount * rowCount;
+    for (var i=0; i<outputCount; i++) {
+      outputOut.setValue(i % columnCount * rowCount + parseInt(i / columnCount), inputIn.getValue(i));
     }
-    
-
+    outputOut.setSliceCount(outputCount);
   }
 
 }
@@ -379,11 +376,9 @@ VVVV.Nodes.CircularSpread = function (id, graph) {
 
     var ovi = 0;
 
-    var insc = this.inpyin.values.length;
-    if (this.inpxin.values.length > insc) insc = this.inpxin.values.length;
-
+    var insc = Math.max(this.inpyin.getSliceCount(), this.inpxin.getSliceCount());
     
-    for (var insi = 0; insi < insc; insi++) {
+    for (var insi = 0; insi < insc*spc; insi++) {
       var cxi = parseFloat(this.inpxin.getValue(insi));
       var cyi = parseFloat(this.inpyin.getValue(insi));
 
@@ -399,8 +394,8 @@ VVVV.Nodes.CircularSpread = function (id, graph) {
         ovi++;
       }
     }
-    this.xout.setSliceCount(spc);
-    this.yout.setSliceCount(spc);
+    this.xout.setSliceCount(spc*insc);
+    this.yout.setSliceCount(spc*insc);
   }
 }
 VVVV.Nodes.CircularSpread.prototype = new VVVV.Core.Node();

@@ -24,7 +24,7 @@ VVVV.Nodes.Rotate = function(id, graph) {
   
   var ident = mat4.identity(mat4.create());
   
-  this.trIn = this.addInputPin("Transform In", [ident], this);
+  this.trIn = this.addInputPin("Transform In", [ident], this, true);
   this.xIn = this.addInputPin("X", [0.0], this);
   this.yIn = this.addInputPin("Y", [0.0], this);
   this.zIn = this.addInputPin("Z", [0.0], this);
@@ -33,32 +33,29 @@ VVVV.Nodes.Rotate = function(id, graph) {
 
   this.evaluate = function() 
   { 
-	if (this.trIn.pinIsChanged() || this.xIn.pinIsChanged() || this.yIn.pinIsChanged() || this.zIn.pinIsChanged()) 
-	{
 		
-		  var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : Math.max(this.xIn.getSliceCount(),this.yIn.getSliceCount(),this.zIn.getSliceCount());
+	  var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : Math.max(this.xIn.getSliceCount(),this.yIn.getSliceCount(),this.zIn.getSliceCount());
+    
+    for (var i=0; i<maxSize; i++) {
+    
+      var transformin = this.inputPins["Transform In"].getValue(i);
+      var x = parseFloat(this.inputPins["X"].getValue(i));
+      var y = parseFloat(this.inputPins["Y"].getValue(i));
+      var z = parseFloat(this.inputPins["Z"].getValue(i));
       
-      for (var i=0; i<maxSize; i++) {
+      var t = mat4.create();
+      mat4.identity(t);
       
-        var transformin = this.inputPins["Transform In"].getValue(i);
-        var x = parseFloat(this.inputPins["X"].getValue(i));
-        var y = parseFloat(this.inputPins["Y"].getValue(i));
-        var z = parseFloat(this.inputPins["Z"].getValue(i));
-        
-        var t = mat4.create();
-        mat4.identity(t);
-        
-        mat4.rotate(t, y*Math.PI*2, [0, 1, 0]);
-        mat4.rotate(t, x*Math.PI*2, [1, 0, 0]);
-        mat4.rotate(t, z*Math.PI*2, [0, 0, 1]);
-        
-        if (transformin!=undefined)
-          mat4.multiply(transformin, t, t);
-        
-        this.trOut.setValue(i, t);
-        this.trOut.setSliceCount(maxSize);
-      }
+      mat4.rotate(t, y*Math.PI*2, [0, 1, 0]);
+      mat4.rotate(t, x*Math.PI*2, [1, 0, 0]);
+      mat4.rotate(t, z*Math.PI*2, [0, 0, 1]);
+      
+      if (transformin!=undefined)
+        mat4.multiply(transformin, t, t);
+      
+      this.trOut.setValue(i, t);
     }
+    this.trOut.setSliceCount(maxSize);
   }
 
 }
@@ -84,7 +81,7 @@ VVVV.Nodes.Translate = function(id, graph) {
   
   var ident = mat4.identity(mat4.create());
   
-  this.trIn = this.addInputPin("Transform In", [ident], this);
+  this.trIn = this.addInputPin("Transform In", [ident], this, true);
   this.xIn = this.addInputPin("X", [0.0], this);
   this.yIn = this.addInputPin("Y", [0.0], this);
   this.zIn = this.addInputPin("Z", [0.0], this);
@@ -92,14 +89,12 @@ VVVV.Nodes.Translate = function(id, graph) {
   this.trOut = this.addOutputPin("Transform Out", [], this);
   
   this.evaluate = function() {
-		if (this.trIn.pinIsChanged() || this.xIn.pinIsChanged() || this.yIn.pinIsChanged() || this.zIn.pinIsChanged()) 
-		{
 		
-		  var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : Math.max(this.xIn.getSliceCount(),this.yIn.getSliceCount(),this.zIn.getSliceCount());
-		  
-		  for (var i=0; i<maxSize; i++) {
-			
-			var x = parseFloat(this.xIn.getValue(i));
+	  var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : Math.max(this.xIn.getSliceCount(),this.yIn.getSliceCount(),this.zIn.getSliceCount());
+	  
+	  for (var i=0; i<maxSize; i++) {
+		
+		  var x = parseFloat(this.xIn.getValue(i));
 			var y = parseFloat(this.yIn.getValue(i));
 			var z = parseFloat(this.zIn.getValue(i));
 			
@@ -114,9 +109,8 @@ VVVV.Nodes.Translate = function(id, graph) {
 			}
 			
 			this.trOut.setValue(i, t);
-			this.trOut.setSliceCount(maxSize);
-		  }
-		}	
+	  }
+	  this.trOut.setSliceCount(maxSize);
   }
  
 }
@@ -142,7 +136,7 @@ VVVV.Nodes.Scale = function(id, graph) {
   
   var ident = mat4.identity(mat4.create());
   
-  this.trIn = this.addInputPin("Transform In", [ident], this);
+  this.trIn = this.addInputPin("Transform In", [ident], this, true);
   this.xIn = this.addInputPin("X", [1.0], this);
   this.yIn = this.addInputPin("Y", [1.0], this);
   this.zIn = this.addInputPin("Z", [1.0], this);
@@ -150,32 +144,28 @@ VVVV.Nodes.Scale = function(id, graph) {
   this.trOut = this.addOutputPin("Transform Out", [], this);
 
   this.evaluate = function() {
-	if (this.trIn.pinIsChanged() || this.xIn.pinIsChanged() || this.yIn.pinIsChanged() || this.zIn.pinIsChanged()) 
-	{
 		
 		var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : Math.max(this.xIn.getSliceCount(),this.yIn.getSliceCount(),this.zIn.getSliceCount());
     
+    for (var i=0; i<maxSize; i++) {
+      var x = parseFloat(this.inputPins["X"].getValue(i));
+      var y = parseFloat(this.inputPins["Y"].getValue(i));
+      var z = parseFloat(this.inputPins["Z"].getValue(i));
       
-      for (var i=0; i<maxSize; i++) {
-        var x = parseFloat(this.inputPins["X"].getValue(i));
-        var y = parseFloat(this.inputPins["Y"].getValue(i));
-        var z = parseFloat(this.inputPins["Z"].getValue(i));
-        
-        var t = mat4.create();
-        mat4.identity(t);
-        
-        mat4.scale(t, [x, y, z]);
-		
-		if (this.inputPins["Transform In"].isConnected())
-		{
-			var transformin = this.inputPins["Transform In"].getValue(i);
-			mat4.multiply(transformin, t, t);
-		}
-		    
-        this.trOut.setValue(i, t);
-        this.trOut.setSliceCount(maxSize);
-      }
+      var t = mat4.create();
+      mat4.identity(t);
+      
+      mat4.scale(t, [x, y, z]);
+	
+  		if (this.inputPins["Transform In"].isConnected())
+  		{
+  			var transformin = this.inputPins["Transform In"].getValue(i);
+  			mat4.multiply(transformin, t, t);
+  		}
+	    
+      this.trOut.setValue(i, t);
     }
+    this.trOut.setSliceCount(maxSize);
   }
 
 }
@@ -210,24 +200,22 @@ VVVV.Nodes.Perspective = function(id, graph) {
   this.addOutputPin("Transform Out", [], this);
 
   this.evaluate = function() {
-    if (this.inputPins["Transform In"].pinIsChanged() || this.inputPins["FOV"].pinIsChanged() || this.inputPins["Near Plane"].pinIsChanged() || this.inputPins["Far Plane"].pinIsChanged())
-	{
-      var fov = parseFloat(this.inputPins["FOV"].getValue(0));
-      var near = parseFloat(this.inputPins["Near Plane"].getValue(0));
-      var far = parseFloat(this.inputPins["Far Plane"].getValue(0));
-      
-      var t = mat4.create();
-      mat4.identity(t);   
-      mat4.perspective(fov*360, 1, near, far, t);
-	  
-	 if (this.inputPins["Transform In"].isConnected())
-	 {
-		var transformin = this.inputPins["Transform In"].getValue(i);
-		mat4.multiply(transformin, t, t);
-	 }
-
-      this.outputPins["Transform Out"].setValue(0, t);
+    
+    var fov = parseFloat(this.inputPins["FOV"].getValue(0));
+    var near = parseFloat(this.inputPins["Near Plane"].getValue(0));
+    var far = parseFloat(this.inputPins["Far Plane"].getValue(0));
+    
+    var t = mat4.create();
+    mat4.identity(t);   
+    mat4.perspective(fov*360, 1, near, far, t);
+  
+    if (this.inputPins["Transform In"].isConnected())
+    {
+     	var transformin = this.inputPins["Transform In"].getValue(i);
+     	mat4.multiply(transformin, t, t);
     }
+
+    this.outputPins["Transform Out"].setValue(0, t);
   }
 
 }
