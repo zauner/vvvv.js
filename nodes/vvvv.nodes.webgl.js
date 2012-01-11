@@ -1212,6 +1212,59 @@ VVVV.Nodes.Quad.prototype = new VVVV.Core.WebGlResourceNode();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Group (EX9)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Group = function(id, graph) {
+  this.constructor(id, "Group (EX9)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var layerIns = [];
+  var enableIn = this.addInputPin("Enabled", [1], this);
+  var layerCountIn = this.addInvisiblePin("Layer Template Count", [2], this);
+  
+  var layerOut = this.addOutputPin("Layer", [], this);
+  this.setAsWebGlResourcePin(layerOut);
+  
+  this.initialize = function() {
+  	var layerCount = layerCountIn.getValue(0);
+    for (var i=layerIns.length; i<layerCount; i++) {
+      layerIns[i] = this.addInputPin("Layer "+(i+1), [], this, true);
+    }
+    layerIns.length = layerCount;
+  }
+  
+  this.evaluate = function() {
+  	if (layerCountIn.pinIsChanged()) {
+      this.initialize();
+  	}
+  	
+  	var outSliceIdx = 0;
+    if(enableIn.getValue(0) > .5) {
+      for(var i = 0; i < layerIns.length; i++) {
+        for(var j = 0; j < layerIns[i].getSliceCount(); j++) {
+          layerOut.setValue(outSliceIdx++, layerIns[i].getValue(j));
+        }
+      }
+    }
+    layerOut.setSliceCount(outSliceIdx);
+  }
+
+}
+VVVV.Nodes.Group.prototype = new VVVV.Core.WebGlResourceNode();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Renderer (EX9)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
