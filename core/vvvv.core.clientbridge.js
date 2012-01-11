@@ -59,13 +59,13 @@ VVVV.Core.ClientBridge = function(patch) {
   }
   
   function checkLocationHash() {
-    if (!socket && window.location.hash=='#devel_env/'+that.patch.ressource) {
+    if (!socket && window.location.hash=='#sync/'+that.patch.ressource) {
       console.log('enabling devel env');
       that.host = 'ws://localhost';
       that.enable();
     }
     else
-    if (socket && window.location.href!='#devel_env/'+that.patch.ressource)
+    if (socket && window.location.href!='#sync/'+that.patch.ressource)
       that.disable();
   }
   checkLocationHash();
