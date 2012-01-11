@@ -89,7 +89,7 @@ VVVV.Core = {
     }
     
     this.reset = function() {
-      this.values = values.splice(0);
+      this.values = values.slice(0);
       this.markPinAsChanged();
     }
     
