@@ -520,13 +520,16 @@ VVVV.Core = {
             link = thisPatch.linkList[i];
           }
         }
-        console.log('removing '+link.fromPin.pinname+' -> '+link.toPin.pinname);
-        link.fromPin.connectionChanged();
-        link.toPin.connectionChanged();
-        link.toPin.markPinAsChanged();
-        if (link.toPin.reset_on_disconnect)
-          link.toPin.reset();
-        link.destroy();
+        try {
+          console.log('removing '+link.fromPin.pinname+' -> '+link.toPin.pinname);
+          link.fromPin.connectionChanged();
+          link.toPin.connectionChanged();
+          link.toPin.markPinAsChanged();
+          if (link.toPin.reset_on_disconnect)
+            link.toPin.reset();
+          link.destroy();
+        }
+        catch (e) { alert("Oh, there went something wrong when deleting the link. Don't worry, your work is safe. You just might want to reload the page."); }
       });
       
       $(xml).find('link[deleteme!="pronto"]').each(function() {
