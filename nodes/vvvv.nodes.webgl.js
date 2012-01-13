@@ -4,12 +4,11 @@
 // Additional authors of sub components are mentioned at the specific code locations.
 
 
-//var gl;
 var identity = mat4.identity(mat4.create());
 
 VVVV.Core.WebGlResourceNode = function(id, nodename, graph) {
   this.constructor(id, nodename, graph);
-  this.renderContexts = [];
+  this.contextChanged = false;
   
   this.setAsWebGlResourcePin = function(pin) {
     var that = this;
@@ -17,9 +16,14 @@ VVVV.Core.WebGlResourceNode = function(id, nodename, graph) {
     pin.isWebGlResourcePin = true;
     pin.connectionChanged = function() {
       var renderers = that.findDownstreamNodes('Renderer (EX9)');
+      if (!that.renderContexts)
+        that.renderContexts = []; // this 'public property' should actually go to the top, right above this.setAsWebGlResourcePin. However, that doesnt work, values got overwritte by nodes of the same type.
       for (var i=0; i<renderers.length; i++) {
+        that.contextChanged |= (!that.renderContexts[i] || that.renderContexts[i].canvas.id!=renderers[i].ctxt.id)
         that.renderContexts[i] = renderers[i].ctxt;
       }
+      that.renderContexts.length = renderers.length;
+      
       _(that.inputPins).each(function(p) {
         p.markPinAsChanged();
         if (p.isConnected() && p.links[0].fromPin.isWebGlResourcePin) {
@@ -245,6 +249,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   
   this.evaluate = function() {
 
+    if (!this.renderContexts) return;
     var gl = this.renderContexts[0];
     
     if (!gl)
@@ -305,6 +310,7 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
   var texture;
   
   this.evaluate = function() {
+    if (!this.renderContexts) return;
     var gl = this.renderContexts[0];
     if (!gl)
       return;
@@ -326,6 +332,7 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
     }
     else {
       delete texture;
+      gl.deleteTexture(texture);
       outputOut.setValue(0, undefined);
     }
   
@@ -468,7 +475,8 @@ VVVV.Nodes.Grid = function(id, graph) {
   var mesh = null;
   
   this.evaluate = function() {
-  
+
+    if (!this.renderContexts) return;
     var gl = this.renderContexts[0];
     if (!gl)
       return;
@@ -496,7 +504,7 @@ VVVV.Nodes.Grid = function(id, graph) {
       }
     }
     
-    vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+    var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
     vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
     vertexBuffer.setSubBuffer('NORMAL', 3, normals);
     vertexBuffer.create();
@@ -553,6 +561,7 @@ VVVV.Nodes.Sphere = function(id, graph) {
   
   this.evaluate = function() {
   
+    if (!this.renderContexts) return;
     var gl = this.renderContexts[0];
     if (!gl)
       return;
@@ -582,7 +591,7 @@ VVVV.Nodes.Sphere = function(id, graph) {
       }
     }
     
-    vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+    var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
     vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
     vertexBuffer.setSubBuffer('NORMAL', 3, normals);
     vertexBuffer.create();
@@ -971,12 +980,13 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   }
   
   this.evaluate = function() {
+    if (!this.renderContexts) return;
     var gl = this.renderContexts[0];
     if (!gl)
       return;
-    if (!shader.isSetup)
+    if (!shader.isSetup || this.contextChanged)
       shader.setup(gl);
-    
+
     // find out input slice count with respect to the input pin dimension, defined by the shader code  
     var maxSize = 0;
     _(this.inputPins).each(function(p) {
@@ -992,6 +1002,8 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       maxSize = 0;
     
     var currentLayerCount = layers.length;
+    if (this.contextChanged)
+      currentLayerCount = 0;
     // shorten layers array, if input slice count decreases
     if (maxSize<currentLayerCount) {
       layers.splice(maxSize, currentLayerCount-maxSize);
@@ -1056,6 +1068,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       this.outputPins["Layer"].setValue(i, layers[i]);
     }
     
+    this.contextChanged = false;
         
   }
     
@@ -1099,13 +1112,13 @@ VVVV.Nodes.Quad = function(id, graph) {
   
   this.evaluate = function() {
   	
-  	var gl = this.renderContexts[0];
+    if (!this.renderContexts) return;
+    var gl = this.renderContexts[0];
   	
     if (!gl)
       return;
   
-    if (!initialized) {
-      
+    if (this.contextChanged) {
       var vertices = [
          0.5,  0.5,  0.0,
         -0.5,  0.5,  0.0,
@@ -1120,7 +1133,7 @@ VVVV.Nodes.Quad = function(id, graph) {
         0.0, 1.0
       ];
       
-      vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+      var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
       vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
       vertexBuffer.create();
       mesh = new VVVV.Types.Mesh(gl, vertexBuffer, [ 0, 1, 2, 1, 3, 2 ]);
@@ -1142,6 +1155,8 @@ VVVV.Nodes.Quad = function(id, graph) {
     
     var maxSize = this.getMaxInputSliceCount();
     var currentLayerCount = layers.length;
+    if (this.contextChanged)
+      currentLayerCount = 0;
     // shorten layers array, if input slice count decreases
     if (maxSize<currentLayerCount) {
       layers.splice(maxSize, currentLayerCount-maxSize);
@@ -1191,6 +1206,7 @@ VVVV.Nodes.Quad = function(id, graph) {
     if (textureChanged || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
         console.log('setting texture for layer '+i);
+        var tex;
         if (this.inputPins["Texture"].isConnected())
           tex = this.inputPins["Texture"].getValue(i);
         else
@@ -1204,7 +1220,8 @@ VVVV.Nodes.Quad = function(id, graph) {
       this.outputPins["Layer"].setValue(i, layers[i]);
     }
     
-    initialized = true;
+    this.contextChanged = false;
+    
   }
 
 }
@@ -1286,7 +1303,6 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var bgColIn = this.addInputPin("Background Color", ['0.0, 0.0, 0.0, 1.0'], this);
   var viewIn = this.addInputPin("View", [], this);
   var projIn = this.addInputPin("Projection", [], this);
-  XX = projIn;
   
   var enableDepthBufIn = this.addInvisiblePin("Windowed Depthbuffer Format", ['NONE'], this);
   
@@ -1313,7 +1329,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     
     if (!canvas)
       return;
-    
+
     try {
       gl = canvas.get(0).getContext("experimental-webgl");
       gl.viewportWidth = parseInt(canvas.get(0).width);
