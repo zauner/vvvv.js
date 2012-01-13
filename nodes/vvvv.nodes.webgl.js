@@ -300,7 +300,7 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: []
+    compatibility_issues: ['Using WebGL renderer as source doesnt work correctly in Chrome.']
   };
 
   var sourceIn = this.addInputPin("Source", [""], this, true);
@@ -1308,6 +1308,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   
   var bufferWidthOut = this.addOutputPin("Actual Backbuffer Width", [0.0], this);
   var bufferHeightOut = this.addOutputPin("Actual Backbuffer Height", [0.0], this);
+  var ex9Out = this.addOutputPin("EX9 Out", [], this);
   
   var width = 0.0;
   var height = 0.0;
@@ -1477,6 +1478,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       });
     }
     
+    ex9Out.setValue(0, this.ctxt.canvas);
   }
 
 }
