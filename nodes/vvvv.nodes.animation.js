@@ -65,8 +65,10 @@ VVVV.Nodes.LFO = function(id, graph) {
     if (reset>0)
       current = 0.0;
     
-    this.outputPins["Output"].setValue(0, (current+phase)%1);
-    this.outputPins["Cycles"].setValue(0, cycles);
+    if (paused<0.5) {
+      this.outputPins["Output"].setValue(0, (current+phase)%1);
+      this.outputPins["Cycles"].setValue(0, cycles);
+    }
     
     current = current %1;
   }
