@@ -1222,7 +1222,6 @@ VVVV.Nodes.Quad = function(id, graph) {
     
     if (textureChanged || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
-        //console.log('setting texture for layer '+i);
         var tex;
         if (this.inputPins["Texture"].isConnected())
           tex = this.inputPins["Texture"].getValue(i);
@@ -1341,6 +1340,35 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var bbufFramebuffer;
   var bbufTexture;
   
+  function attachMouseEvents(canvas) {
+    $(canvas).detach('mousemove');
+    $(canvas).detach('mousedown');
+    $(canvas).detach('mouseup');
+    VVVV.MousePositions[canvas.id] = {'x': 0.0, 'y': 0.0, 'lb': 0.0, 'mb': 0.0, 'rb': 0.0};
+    $(canvas).mousemove(function(e) {
+      var x = (e.pageX - $(this).offset().left) * 2 / $(this).width() - 1;
+      var y = -((e.pageY - $(this).offset().top) * 2 / $(this).height() - 1);
+      VVVV.MousePositions['_all'].x = x;
+      VVVV.MousePositions['_all'].y = y;
+      VVVV.MousePositions[canvas.id].x = x;
+      VVVV.MousePositions[canvas.id].y = y;
+    });
+    $(canvas).mousedown(function(e) {
+      switch (e.which) {
+        case 1: VVVV.MousePositions['_all'].lb = 1; VVVV.MousePositions[canvas.id].lb = 1; break;
+        case 2: VVVV.MousePositions['_all'].mb = 1; VVVV.MousePositions[canvas.id].mb = 1; break;
+        case 3: VVVV.MousePositions['_all'].rb = 1; VVVV.MousePositions[canvas.id].rb = 1; break;
+      }
+    });
+    $(canvas).mouseup(function(e) {
+      switch (e.which) {
+        case 1: VVVV.MousePositions['_all'].lb = 0; VVVV.MousePositions[canvas.id].lb = 0; break;
+        case 2: VVVV.MousePositions['_all'].mb = 0; VVVV.MousePositions[canvas.id].mb = 0; break;
+        case 3: VVVV.MousePositions['_all'].rb = 0; VVVV.MousePositions[canvas.id].rb = 0; break;
+      }
+    });
+  }
+  
   this.getContexts = function() {
     if (!this.invisiblePins["Descriptive Name"])
       return;
@@ -1352,6 +1380,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     
     if (!canvas)
       return;
+      
+    attachMouseEvents(canvas);
 
     try {
       canvasCtxt = canvas.get(0).getContext("experimental-webgl");

@@ -77,6 +77,50 @@ VVVV.Nodes.MouseGlobal.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Mouse (System Global)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.MouseWindow = function(id, graph) {
+  this.constructor(id, "Mouse (System Window)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Cyclic mode not supported', 'No Mouse Wheel pin', 'No Left Button Pin', 'No Right Button Pin', 'No Middle Button Pin']
+  };
+  
+  this.auto_evaluate = true;
+  
+  var xOut = this.addOutputPin("X", [0], this);
+  var yOut = this.addOutputPin("Y", [0], this);
+  var lbOut = this.addOutputPin("Left Button", [0], this);
+  var mbOut = this.addOutputPin("Middle Button", [0], this);
+  var rbOut = this.addOutputPin("Right Button", [0], this);
+
+  this.evaluate = function() {
+    
+    if (xOut.getValue(0)!=VVVV.MousePositions['_all'].x)
+      xOut.setValue(0, VVVV.MousePositions['_all'].x);
+    if (yOut.getValue(0)!=VVVV.MousePositions['_all'].y)
+      yOut.setValue(0, VVVV.MousePositions['_all'].y);
+    if (lbOut.getValue(0)!=VVVV.MousePositions['_all'].lb)
+      lbOut.setValue(0, VVVV.MousePositions['_all'].lb);
+    if (mbOut.getValue(0)!=VVVV.MousePositions['_all'].mb)
+      mbOut.setValue(0, VVVV.MousePositions['_all'].mb);
+    if (rbOut.getValue(0)!=VVVV.MousePositions['_all'].rb)
+      rbOut.setValue(0, VVVV.MousePositions['_all'].rb);
+  }
+
+}
+VVVV.Nodes.MouseWindow.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: ShellExecute (Windows)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group

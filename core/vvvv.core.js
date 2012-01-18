@@ -6,6 +6,8 @@
 VVVV = {}
 VVVV.Types = {}
 
+VVVV.MousePositions = {'_all': {'x': 0.0, 'y': 0.0, 'lb': 0.0, 'mb': 0.0, 'rb': 0.0}}
+
 VVVV.Types.Color = function(r, g, b, a) {
   this.rgba = [r, g, b, a];
   
