@@ -12,7 +12,6 @@ VVVV.Core.WebGlResourceNode = function(id, nodename, graph) {
   
   this.setAsWebGlResourcePin = function(pin) {
     var that = this;
-    console.log('setting '+pin.node.nodename+' / '+pin.pinname+' as resource pin');
     pin.isWebGlResourcePin = true;
     pin.connectionChanged = function() {
       var renderers = that.findDownstreamNodes('Renderer (EX9)');
@@ -22,12 +21,17 @@ VVVV.Core.WebGlResourceNode = function(id, nodename, graph) {
         that.contextChanged |= (!that.renderContexts[i] || that.renderContexts[i].canvas.id!=renderers[i].ctxt.id)
         that.renderContexts[i] = renderers[i].ctxt;
       }
-      that.renderContexts.length = renderers.length;
+      if (that.renderContexts.length!=renderers.length) {
+        that.renderContexts.length = renderers.length;
+        that.contextChanged = true;
+      }
       
       _(that.inputPins).each(function(p) {
         p.markPinAsChanged();
-        if (p.isConnected() && p.links[0].fromPin.isWebGlResourcePin) {
-          p.links[0].fromPin.connectionChanged(); 
+        if (that.nodename!="Renderer (EX9)") {
+          if (p.isConnected() && p.links[0].fromPin.isWebGlResourcePin) {
+            p.links[0].fromPin.connectionChanged(); 
+          }
         }
       });
     }
@@ -69,7 +73,7 @@ VVVV.Types.WebGlRenderState = function() {
   }
 }
 
-var defaultWebGlRenderState = undefined;
+var defaultWebGlRenderState = new VVVV.Types.WebGlRenderState();
 
 VVVV.Types.VertexBuffer = function(gl, p) {
   
@@ -241,8 +245,8 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   
   this.auto_evaluate = false;
 
-  filenamePin = this.addInputPin("Filename", [""], this);
-  outputPin = this.addOutputPin("Texture Out", [], this);
+  var filenamePin = this.addInputPin("Filename", [""], this);
+  var outputPin = this.addOutputPin("Texture Out", [], this);
   this.setAsWebGlResourcePin(outputPin);
   
   var textures = [];
@@ -255,7 +259,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
     if (!gl)
       return;
   
-    if (filenamePin.pinIsChanged()) {
+    if (filenamePin.pinIsChanged() || this.contextChanged) {
       var maxSize = this.getMaxInputSliceCount();
       for (var i=0; i<maxSize; i++) {
         var filename = filenamePin.getValue(i);
@@ -278,6 +282,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
       }
       outputPin.setSliceCount(maxSize);
     }
+    this.contextChanged = false;
   
   }
 
@@ -314,21 +319,26 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
     var gl = this.renderContexts[0];
     if (!gl)
       return;
-  
+
     if (sourceIn.isConnected()) {
-      if (texture==undefined)
-        texture = gl.createTexture();
       var source = sourceIn.getValue(0);
       if ( (source.width & (source.width-1)) != 0 || (source.height & (source.height-1)) != 0)
         console.log("Warning: Source renderer's width/height is not a power of 2. DX9Texture will most likely not work.");
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-      gl.bindTexture(gl.TEXTURE_2D, null);
-    
-      outputOut.setValue(0, texture);
+      if (source instanceof WebGLTexture) {
+        outputOut.setValue(0, source);
+      }
+      else {
+        if (texture==undefined)
+          texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+      
+        outputOut.setValue(0, texture);
+      }
     }
     else {
       delete texture;
@@ -951,12 +961,15 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     _(shader.uniformSpecs).each(function(u) {
       if (u.semantic=="VIEW" || u.semantic=="PROJECTION" || u.semantic=="WORLD")
         return;
+      var reset_on_disconnect = false;
       switch (u.type) {
         case 'mat':
           defaultValue = [mat4.identity(mat4.create())];
+          reset_on_disconnect = true;
           break;
         case 'sampler':
-          defaultValue = [VVVV.DefaultTexture];
+          defaultValue = [];
+          reset_on_disconnect = true;
           break;
         default:
           if (u.semantic == 'COLOR')
@@ -972,7 +985,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
           
       }
         
-      var pin = thatNode.addInputPin(u.varname.replace(/_/g,' '), defaultValue, thatNode);
+      var pin = thatNode.addInputPin(u.varname.replace(/_/g,' '), defaultValue, thatNode, reset_on_disconnect);
       pin.dimensions = u.dimension;
       shaderPins.push(pin);
     });
@@ -1037,7 +1050,11 @@ VVVV.Nodes.GenericShader = function(id, graph) {
             }
           }
           else {
-            layers[j].uniforms[pinname].value = shaderPins[i].getValue(j);
+            var v = shaderPins[i].getValue(j);
+            if (layers[j].uniforms[pinname].uniformSpec.type=='sampler' && v==undefined) {
+              v = VVVV.DefaultTexture;
+            }
+            layers[j].uniforms[pinname].value = v;
           }
         }
       }
@@ -1205,7 +1222,7 @@ VVVV.Nodes.Quad = function(id, graph) {
     
     if (textureChanged || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
-        console.log('setting texture for layer '+i);
+        //console.log('setting texture for layer '+i);
         var tex;
         if (this.inputPins["Texture"].isConnected())
           tex = this.inputPins["Texture"].getValue(i);
@@ -1309,6 +1326,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var bufferWidthOut = this.addOutputPin("Actual Backbuffer Width", [0.0], this);
   var bufferHeightOut = this.addOutputPin("Actual Backbuffer Height", [0.0], this);
   var ex9Out = this.addOutputPin("EX9 Out", [], this);
+  this.setAsWebGlResourcePin(ex9Out);
   
   var width = 0.0;
   var height = 0.0;
@@ -1316,10 +1334,14 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var pMatrix;
   var vMatrix;
   
-  this.ctxt = undefined;
-  var gl;
+  this.ctxt = undefined;              // the renderer's active context. might be the canvas context, or the context of a connected downstream renderer
+  var canvasCtxt = undefined;         // the context of the canvas which is connected to the renderer
+  var gl;                             // just a convenience variable for keeping the lines short 
   
-  this.initialize = function() {
+  var bbufFramebuffer;
+  var bbufTexture;
+  
+  this.getContexts = function() {
     if (!this.invisiblePins["Descriptive Name"])
       return;
   
@@ -1332,14 +1354,54 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       return;
 
     try {
-      gl = canvas.get(0).getContext("experimental-webgl");
-      gl.viewportWidth = parseInt(canvas.get(0).width);
-      gl.viewportHeight = parseInt(canvas.get(0).height);
+      canvasCtxt = canvas.get(0).getContext("experimental-webgl");
+      canvasCtxt.viewportWidth = parseInt(canvas.get(0).width);
+      canvasCtxt.viewportHeight = parseInt(canvas.get(0).height);
     } catch (e) {
       console.log(e);
     }
-    this.ctxt = gl;
-    if (!gl)
+    this.ctxt = canvasCtxt;
+
+    if (ex9Out.isConnected() && this.renderContexts && this.renderContexts[0]) {
+      this.ctxt = this.renderContexts[0];
+      
+      gl = this.ctxt;
+      
+      bbufFramebuffer = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, bbufFramebuffer);
+      bbufFramebuffer.width = canvas.get(0).width;
+      bbufFramebuffer.height = canvas.get(0).width;
+
+      bbufTexture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, bbufTexture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+      gl.generateMipmap(gl.TEXTURE_2D);
+
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, bbufFramebuffer.width, bbufFramebuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+      var renderbuffer = gl.createRenderbuffer();
+      gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+      gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, bbufFramebuffer.width, bbufFramebuffer.height);
+
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, bbufTexture, 0);
+      gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
+
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    }
+    else {
+      if (this.renderContexts && this.renderContexts[0]) {
+        this.renderContexts[0].deleteTexture(bbufTexture);
+        bbufTexture = undefined;
+        // TODO: destroy framebuffer resources ...
+      }
+    }
+    
+    if (!this.ctxt)
       return;
       
     // doing this afterwards, so we can use these values in the patch for checking, if webgl context was set up correctly
@@ -1347,6 +1409,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     height = parseInt(canvas.get(0).height);
     
     // create default white texture
+    
+    gl = this.ctxt;
  
     var pixels = new Uint8Array([255, 255, 255]);
     VVVV.DefaultTexture = gl.createTexture();
@@ -1357,8 +1421,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
-    
-    defaultWebGlRenderState = new VVVV.Types.WebGlRenderState(gl);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    VVVV.DefaultTexture.comment = "VVVV.js Default Texture";
     
     // this is to ensure that all the input pins get evaluated, if the gl context has been set after the node creation
     this.inputPins["Layers"].markPinAsChanged();
@@ -1374,8 +1438,11 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   this.evaluate = function() {
     gl = this.ctxt;
     
-    if (this.invisiblePins["Descriptive Name"].pinIsChanged()) {
-      this.initialize();
+    if (this.invisiblePins["Descriptive Name"].pinIsChanged() || this.contextChanged) {
+      this.getContexts();
+      if (this.inputPins["Layers"].isConnected())
+        this.inputPins["Layers"].links[0].fromPin.connectionChanged();
+      this.contextChanged = false;
     }
       
     if (!initialized) {
@@ -1386,8 +1453,15 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     
     if (gl==undefined)
       return;
+    
+    if (this.renderContexts && this.renderContexts[0] && gl==this.renderContexts[0]) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, bbufFramebuffer);
+    }
+    else {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
       
-    if (bgColIn.pinIsChanged()) {
+    if (true) {//bgColIn.pinIsChanged()) {
       var col = _(bgColIn.getValue(0).split(',')).map(function(e) {
         return parseFloat(e);
       });
@@ -1395,7 +1469,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     }
     
-    if (enableDepthBufIn.pinIsChanged()) {
+    if (true) {//enableDepthBufIn.pinIsChanged()) {
       if (enableDepthBufIn.getValue(0)=='NONE')
         gl.disable(gl.DEPTH);
       else
@@ -1413,6 +1487,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         mat4.ortho(-1, 1, -1, 1, -100, 100, pMatrix);
         mat4.scale(pMatrix, [1, 1, -1]);
       }
+      if (this.renderContexts && this.renderContexts[0]) // flip the output texture, if connected to downstream renderer
+        mat4.scale(pMatrix, [1, -1, 1]);
     }
     if (viewIn.pinIsChanged()) {
       if (viewIn.isConnected())
@@ -1424,10 +1500,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     }
     
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-    
-    if (clearIn.getValue(0)>.5)
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    
+      
     var currentShaderProgram = null;
 
     if (this.inputPins["Layers"].isConnected()) {
@@ -1456,7 +1529,6 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEW"]].position, false, vMatrix);
         
         var textureIdx = 0;
-        
         _(layer.uniforms).each(function(u) {
           if (u.value==undefined)
             return;
@@ -1478,8 +1550,14 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       });
     }
     
-    ex9Out.setValue(0, this.ctxt.canvas);
+    if (this.renderContexts && this.renderContexts[0]) {
+      gl.bindTexture(gl.TEXTURE_2D, bbufTexture);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.bindTexture(this.renderContexts[0].TEXTURE_2D, null);
+    }
+    
+    ex9Out.setValue(0, bbufTexture);
   }
 
 }
-VVVV.Nodes.RendererWebGL.prototype = new VVVV.Core.Node();
+VVVV.Nodes.RendererWebGL.prototype = new VVVV.Core.WebGlResourceNode();
