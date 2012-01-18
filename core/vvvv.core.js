@@ -522,12 +522,14 @@ VVVV.Core = {
         }
         try {
           console.log('removing '+link.fromPin.pinname+' -> '+link.toPin.pinname);
-          link.fromPin.connectionChanged();
-          link.toPin.connectionChanged();
-          link.toPin.markPinAsChanged();
-          if (link.toPin.reset_on_disconnect)
-            link.toPin.reset();
+          var fromPin = link.fromPin;
+          var toPin = link.toPin;
           link.destroy();
+          fromPin.connectionChanged();
+          toPin.connectionChanged();
+          toPin.markPinAsChanged();
+          if (toPin.reset_on_disconnect)
+            toPin.reset();
         }
         catch (e) { alert("Oh, there went something wrong when deleting the link. Don't worry, your work is safe. You just might want to reload the page."); }
       });
@@ -571,12 +573,15 @@ VVVV.Core = {
         _(oldLinks).each(function(l, key) {
           if (newLinks[key]==undefined) {
             console.log('removing '+l.fromPin.pinname+' -> '+l.toPin.pinname);
-            l.fromPin.connectionChanged();
-            l.toPin.connectionChanged();
-            l.toPin.markPinAsChanged();
-            if (l.toPin.reset_on_disconnect)
-              l.toPin.reset();
+            var fromPin = l.fromPin;
+            var toPin = l.toPin;
             l.destroy();
+            fromPin.connectionChanged();
+            toPin.connectionChanged();
+            toPin.markPinAsChanged();
+            if (toPin.reset_on_disconnect)
+              toPin.reset();
+            destroy();
           }
         });
         oldLinks = {};
