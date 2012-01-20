@@ -125,7 +125,7 @@ VVVV.Types.Layer = function() {
   
 }
 
-VVVV.DefaultTexture = undefined;
+VVVV.DefaultTexture = "Empty Texture";
 
 VVVV.Types.ShaderProgram = function() {
 
@@ -1443,8 +1443,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     gl = this.ctxt;
  
     var pixels = new Uint8Array([255, 255, 255]);
-    VVVV.DefaultTexture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, VVVV.DefaultTexture);
+    gl.DefaultTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, gl.DefaultTexture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -1452,7 +1452,6 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
     gl.bindTexture(gl.TEXTURE_2D, null);
-    VVVV.DefaultTexture.comment = "VVVV.js Default Texture";
     
     // this is to ensure that all the input pins get evaluated, if the gl context has been set after the node creation
     this.inputPins["Layers"].markPinAsChanged();
@@ -1568,8 +1567,11 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
             case "int": gl['uniform'+u.uniformSpec.dimension+'i'](u.uniformSpec.position, u.value); break;
             case "float": gl['uniform'+u.uniformSpec.dimension+'f'](u.uniformSpec.position, u.value); break;
             case "sampler":
+              var tex = u.value;
+              if (tex==VVVV.DefaultTexture)
+                tex = gl.DefaultTexture;
               gl.activeTexture(gl['TEXTURE'+textureIdx]);
-              gl.bindTexture(gl['TEXTURE_'+u.uniformSpec.dimension], u.value);
+              gl.bindTexture(gl['TEXTURE_'+u.uniformSpec.dimension], tex);
               gl.uniform1i(u.uniformSpec.position, textureIdx);
               textureIdx++;
               break;
