@@ -348,8 +348,11 @@ VVVV.Core = {
         thisPatch.vvvv_version = version_match[2].replace(/[a-zA-Z]+/, '_');
       
       // this is kind of a hacky way to determine, if the incoming XML is the complete patch, or a patch change
-      if ($(xml).children().eq(0).parent().attr('systemname'))
+      var syncmode = 'diff';
+      if ($(xml).children().eq(0).parent().attr('systemname') || thisPatch.vvvv_version<="45_26") {
+        syncmode = 'complete';
         thisPatch.XMLCode = xml;
+      }
     
       $windowBounds = $(xml).find('bounds[type="Window"]').first();
       if ($windowBounds.length>0) {
@@ -361,7 +364,7 @@ VVVV.Core = {
         thisPatch.height = 500;
       }
       
-      if (thisPatch.vvvv_version<="45_26")
+      if (syncmode=='complete')
         newNodes = {};
 
       $(xml).find('node').each(function() {
@@ -489,12 +492,12 @@ VVVV.Core = {
           thisPatch.nodeList.push(n);
         }
         
-        if (thisPatch.vvvv_version<="45_26")
+        if (syncmode=='complete')
           newNodes[n.id] = n;
         
       });
       
-      if (thisPatch.vvvv_version<="45_26") {
+      if (syncmode=='complete') {
         _(oldNodes).each(function(n, id) {
           if (newNodes[id]==undefined) {
             console.log('removing node '+n.id);
@@ -508,7 +511,7 @@ VVVV.Core = {
         });
       }
     
-      if (thisPatch.vvvv_version<="45_26")
+      if (syncmode=='complete')
         newLinks = {};
       
       // first delete marked links 
@@ -567,11 +570,11 @@ VVVV.Core = {
           dstPin.setSliceCount(srcPin.getSliceCount());
         }
           
-        if (thisPatch.vvvv_version<="45_26")
+        if (syncmode=='complete')
           newLinks[srcPin.node.id+'_'+srcPin.pinname+'-'+dstPin.node.id+'_'+dstPin.pinname] = link;
       });
       
-      if (thisPatch.vvvv_version<="45_26") {
+      if (syncmode=='complete') {
         _(oldLinks).each(function(l, key) {
           if (newLinks[key]==undefined) {
             console.log('removing '+l.fromPin.pinname+' -> '+l.toPin.pinname);
@@ -583,7 +586,6 @@ VVVV.Core = {
             toPin.markPinAsChanged();
             if (toPin.reset_on_disconnect)
               toPin.reset();
-            destroy();
           }
         });
         oldLinks = {};
