@@ -351,6 +351,62 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
 }
 VVVV.Nodes.DX9Texture.prototype = new VVVV.Core.WebGlResourceNode();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: VideoTexture (EX9.Texture VMR9)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.VideoTexture = function(id, graph) {
+  this.constructor(id, "VideoTexture (EX9.Texture VMR9)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Only supports power-of-2 sized videos', 'Has no output pins for meta data']
+  };
+
+  var sourceIn = this.addInputPin("Video", [], this, true);
+  var outputOut = this.addOutputPin("Texture Out", [], this);
+  this.setAsWebGlResourcePin(outputOut);
+  
+  var texture;
+  
+  this.evaluate = function() {
+    if (!this.renderContexts) return;
+    var gl = this.renderContexts[0];
+    if (!gl)
+      return;
+
+    if (sourceIn.isConnected()) {
+      var source = sourceIn.getValue(0);
+      if ( (source.videoWidth & (source.videoWidth-1)) != 0 || (source.videoHeight & (source.videoHeight-1)) != 0)
+        console.log("Warning: Video width/height is not a power of 2. VideoTexture will most likely not work.");
+      if (texture==undefined)
+        texture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+    
+      outputOut.setValue(0, texture);
+    }
+    else {
+      delete texture;
+      gl.deleteTexture(texture);
+      outputOut.setValue(0, undefined);
+    }
+  
+  }
+
+}
+VVVV.Nodes.VideoTexture.prototype = new VVVV.Core.WebGlResourceNode();
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
