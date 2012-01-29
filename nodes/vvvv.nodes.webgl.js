@@ -385,7 +385,7 @@ VVVV.Nodes.VideoTexture = function(id, graph) {
       var source = sourceIn.getValue(0);
       if ( (source.videoWidth & (source.videoWidth-1)) != 0 || (source.videoHeight & (source.videoHeight-1)) != 0)
         console.log("Warning: Video width/height is not a power of 2. VideoTexture will most likely not work.");
-      if (texture==undefined)
+      if (texture==undefined || this.contextChanged)
         texture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, texture);
       //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -395,6 +395,7 @@ VVVV.Nodes.VideoTexture = function(id, graph) {
       gl.bindTexture(gl.TEXTURE_2D, null);
     
       outputOut.setValue(0, texture);
+      this.contextChanged = false;
     }
     else {
       delete texture;
@@ -1373,6 +1374,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   this.addInputPin("Layers", [], this);
   var clearIn = this.addInputPin("Clear", [1], this);
   var bgColIn = this.addInputPin("Background Color", ['0.0, 0.0, 0.0, 1.0'], this);
+  var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], this);
+  var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], this);
   var viewIn = this.addInputPin("View", [], this);
   var projIn = this.addInputPin("Projection", [], this);
   
@@ -1430,9 +1433,19 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       return;
   
     var selector = this.invisiblePins["Descriptive Name"].getValue(0);
-    if (selector==undefined || selector=="")
-      return;
-    var canvas = $(selector);
+    var targetElement = $(selector).get(0);
+    var canvas;
+    if (!targetElement || targetElement.nodeName!='CANVAS') {
+      var w = parseInt(bufferWidthIn.getValue(0));
+      var h = parseInt(bufferHeightIn.getValue(0));
+      w = w > 0 ? w : 512;
+      h = h > 0 ? h : 512;
+      canvas = $('<canvas width="'+w+'" height="'+h+'" id="vvvv-js-generated-renderer-'+(new Date().getTime())+'" class="vvvv-js-generated-renderer"></canvas>');
+      if (!targetElement) targetElement = 'body';
+      $(targetElement).append(canvas);
+    }
+    else
+      canvas = $(targetElement);
     
     if (!canvas)
       return;
@@ -1524,12 +1537,14 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     gl = this.ctxt;
     
     if (this.invisiblePins["Descriptive Name"].pinIsChanged() || this.contextChanged) {
+      if (gl && $(gl.canvas).hasClass('vvvv-js-generated-renderer'))
+        $(gl.canvas).remove();
       this.getContexts();
       if (this.inputPins["Layers"].isConnected())
         this.inputPins["Layers"].links[0].fromPin.connectionChanged();
       this.contextChanged = false;
     }
-      
+    
     if (!initialized) {
       bufferWidthOut.setValue(0, width);
       bufferHeightOut.setValue(0, height);
@@ -1538,6 +1553,23 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     
     if (gl==undefined)
       return;
+      
+    if (bufferWidthIn.pinIsChanged() && !(this.renderContexts && this.renderContexts[0])) {
+      var w = parseInt(bufferWidthIn.getValue(0));
+      if (w>0) {
+        width = w;
+        $(canvasCtxt.canvas).attr('width', width);
+        bufferWidthOut.setValue(0, width);
+      }
+    }
+    if (bufferHeightIn.pinIsChanged() && !(this.renderContexts && this.renderContexts[0])) {
+      var h = parseInt(bufferHeightIn.getValue(0));
+      if (h>0) {
+        height = h;
+        $(canvasCtxt.canvas).attr('height', height);
+        bufferHeightOut.setValue(0, height);
+      }
+    }
     
     if (this.renderContexts && this.renderContexts[0] && gl==this.renderContexts[0]) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, bbufFramebuffer);
