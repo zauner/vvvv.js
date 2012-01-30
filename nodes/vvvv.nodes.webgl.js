@@ -689,6 +689,141 @@ VVVV.Nodes.Sphere.prototype = new VVVV.Core.WebGlResourceNode();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Cylinder (EX9.Geometry)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Cylinder = function(id, graph) {
+  this.constructor(id, "Cylinder (EX9.Geometry)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var r1In = this.addInputPin("Radius 1", [0.5], this);
+  var r2In = this.addInputPin("Radius 2", [0.5], this);
+  var lIn = this.addInputPin("Length", [1.0], this);
+  var cyclesIn = this.addInputPin("Cycles", [1.0], this);
+  var capsIn = this.addInputPin("Caps", [1], this);
+  var xIn = this.addInputPin("Resolution X", [15], this);
+  var yIn = this.addInputPin("Resolution Y", [1], this);
+  
+  var meshOut = this.addOutputPin("Mesh", [], this);
+  this.setAsWebGlResourcePin(meshOut);
+  
+  var mesh = null;
+  
+  this.evaluate = function() {
+  
+    if (!this.renderContexts) return;
+    var gl = this.renderContexts[0];
+    if (!gl)
+      return;
+  
+    var xRes = parseInt(xIn.getValue(0));
+    var yRes = parseInt(yIn.getValue(0));
+    var radius1 = parseFloat(r1In.getValue(0));
+    var radius2 = parseFloat(r2In.getValue(0));
+    var length = parseFloat(lIn.getValue(0));
+    var cycles = parseFloat(cyclesIn.getValue(0));
+      
+    var vertices = [];
+    var normals = [];
+    var texCoords = [];
+    
+    // cap vertices ...
+    vertices.push(0.0);
+    vertices.push(length/2);
+    vertices.push(0.0);
+    
+    normals.push(0.0);
+    normals.push(1.0);
+    normals.push(0.0);
+    
+    texCoords.push(0.0);
+    texCoords.push(0.0);
+    
+    vertices.push(0.0);
+    vertices.push(-length/2);
+    vertices.push(0.0);
+    
+    normals.push(0.0);
+    normals.push(-1.0);
+    normals.push(0.0);
+    
+    texCoords.push(0.0);
+    texCoords.push(0.0);
+    
+    // other vertices ...
+    for (var y=0; y<yRes+1; y++) {
+      var n = parseFloat(y)/yRes
+      var yPos = (n - 0.5) * -length;
+      for (var x=0; x<xRes+1; x++) {
+        var xPos = Math.cos((parseFloat(x)/xRes*2*Math.PI * cycles  - Math.PI*cycles -Math.PI/2));
+        var zPos = Math.sin((parseFloat(x)/xRes*2*Math.PI * cycles  - Math.PI*cycles -Math.PI/2));
+        var r = n*radius2 + (1-n)*radius1;
+        vertices.push(xPos*r);
+        vertices.push(yPos);
+        vertices.push(zPos*r);
+        
+        normals.push(xPos);
+        normals.push(0.0);
+        normals.push(zPos);
+        
+        texCoords.push(parseFloat(x)/(xRes));
+        texCoords.push(parseFloat(y)/(yRes));
+      }
+    }
+    
+    var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+    vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
+    vertexBuffer.setSubBuffer('NORMAL', 3, normals);
+    vertexBuffer.create();
+    
+    var indices = [];
+    
+    // caps indices ...
+    if (capsIn.getValue(0)>.5) {
+      for (var n=0; n<2; n++) {
+        for (var x=0; x<xRes; x++) {
+          indices.push(n);
+          indices.push(2+x+n+(n*yRes*(xRes+1)));
+          indices.push(2+x+(1-n)+(n*yRes*(xRes+1)));
+        }
+      }
+    }
+    
+    // other indices ...
+    for (var y=0; y<yRes; y++) {
+      for (var x=0; x<xRes; x++) {
+        var refP = x+xRes*y + 2;
+        indices.push(refP);
+        indices.push(refP+1);
+        indices.push(refP+xRes+2);
+        
+        indices.push(refP+xRes+2);
+        indices.push(refP+xRes+1);
+        indices.push(refP);
+      }
+    }
+    
+    mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
+      
+    meshOut.setValue(0, mesh);
+    
+  }
+
+}
+VVVV.Nodes.Cylinder.prototype = new VVVV.Core.WebGlResourceNode();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Blend (EX9.RenderState Advanced)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
