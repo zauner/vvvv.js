@@ -764,6 +764,8 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   var layersIn = this.addInputPin("Layers", [], this);
   var clearIn = this.addInputPin("Clear", [1], this);
   var bgColorIn = this.addInputPin("Background Color", ["0.0, 0.0, 0.0, 1.0"], this);
+  var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], this);
+  var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], this);
   
   var canvasOut = this.addOutputPin("Canvas Out", [], this);
   
@@ -804,14 +806,23 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
     });
   }
   
-  this.initialize = function() {
-    if (!this.invisiblePins["Descriptive Name"])
-      return;
-  
+  this.getContext = function() {
+
     var selector = this.invisiblePins["Descriptive Name"].getValue(0);
-    if (selector==undefined || selector=="")
-      return;
-    canvas = $(selector).get(0);
+    var targetElement = $(selector).get(0);
+    if (!targetElement || targetElement.nodeName!='CANVAS') {
+      var w = parseInt(bufferWidthIn.getValue(0));
+      var h = parseInt(bufferHeightIn.getValue(0));
+      w = w > 0 ? w : 512;
+      h = h > 0 ? h : 512;
+      canvas = $('<canvas width="'+w+'" height="'+h+'" id="vvvv-js-generated-renderer-'+(new Date().getTime())+'" class="vvvv-js-generated-renderer"></canvas>');
+      if (!targetElement) targetElement = 'body';
+      $(targetElement).append(canvas);
+      canvas = canvas.get(0);
+    }
+    else
+      canvas = targetElement;
+
     canvasWidth = canvas.width;
     canvasHeight = canvas.height;
     
@@ -827,11 +838,28 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   this.evaluate = function() {
     
     if (this.invisiblePins["Descriptive Name"].pinIsChanged()) {
-      this.initialize();
+      if ($(canvas).hasClass('vvvv-js-generated-renderer'))
+        $(canvas).remove();
+      this.getContext();
     }
   
     if (!ctx)
       return;
+      
+    if (bufferWidthIn.pinIsChanged()) {
+      var w = parseInt(bufferWidthIn.getValue(0));
+      if (w>0) {
+        canvasWidth = w;
+        $(canvas).attr('width', canvasWidth);
+      }
+    }
+    if (bufferHeightIn.pinIsChanged()) {
+      var h = parseInt(bufferHeightIn.getValue(0));
+      if (h>0) {
+        canvasHeight = h;
+        $(canvas).attr('height', canvasHeight);
+      }
+    }
       
     if (bgColorIn.pinIsChanged()) {
       bgColor = bgColorIn.getValue(0).split(',');
