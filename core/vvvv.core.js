@@ -349,8 +349,9 @@ VVVV.Core = {
       
       // this is kind of a hacky way to determine, if the incoming XML is the complete patch, or a patch change
       var syncmode = 'diff';
-      if ($(xml).children().eq(0).parent().attr('systemname') || thisPatch.vvvv_version<="45_26") {
+      if (/\s<PATCH/.test(xml) || thisPatch.vvvv_version<="45_26") {
         syncmode = 'complete';
+        console.log('complete');
         thisPatch.XMLCode = xml;
       }
     
@@ -670,7 +671,7 @@ VVVV.Core = {
     });
     
     
-    if (/\.v4p$/.test(ressource)) {
+    if (/\.v4p[^<>\s]*$/.test(ressource)) {
       var that = this;
       $.ajax({
         url: ressource,
