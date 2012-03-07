@@ -601,7 +601,6 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
       }
       else
         layers.splice(binNum);
-      
       for (var i=0; i<layers.length; i++) {
         layersOut.setValue(i, layers[i]);
       }
@@ -766,6 +765,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   var bgColorIn = this.addInputPin("Background Color", ["0.0, 0.0, 0.0, 1.0"], this);
   var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], this);
   var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], this);
+  var viewIn = this.addInputPin("View", [], this);
   
   var canvasOut = this.addOutputPin("Canvas Out", [], this);
   
@@ -878,7 +878,12 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
       ctx.save();
       ctx.translate(canvasWidth/2, canvasHeight/2);
       ctx.scale(canvasWidth/2, -canvasHeight/2);
-      ctx.scale(1, canvasWidth/canvasHeight);
+      //ctx.scale(1, canvasWidth/canvasHeight);
+      
+      if (viewIn.isConnected()) {
+        var view = viewIn.getValue(0);
+        ctx.transform(view[0], view[1], view[4], view[5], view[12], view[13]);
+      }
       
       if (layersIn.isConnected()) {
         for (var i=0; i<layersIn.values.length; i++) {
