@@ -201,4 +201,188 @@ VVVV.Nodes.AsValue = function(id, graph) {
 VVVV.Nodes.AsValue.prototype = new VVVV.Core.Node();
 
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Sort (String)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.SortString = function(id, graph) {
+  this.constructor(id, "Sort (String)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var inputIn = this.addInputPin('Input', ['text'], this);
+  var reversesortingIn = this.addInputPin('Reverse Sorting', [0], this);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', ['text'], this);
+  var formerindexOut = this.addOutputPin('Former Index', [0], this);
+
+  // invisible pins
+
+  
+  // initialize() will be called after node creation
+  this.initialize = function() {
+    
+  }
+
+  // evaluate() will be called each frame
+  // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
+  this.evaluate = function() {
+    xxx = inputIn.values;
+    var sorted = _(inputIn.values).map(function(v,i) { return [v, i]; });
+    sorted = _(sorted).sortBy(function(x) { return x[0] });
+    
+    for (var i=0; i<sorted.length; i++) {
+      outputOut.setValue(i, sorted[i][0]);
+      formerindexOut.setValue(i, sorted[i][1]);
+    }
+    outputOut.setSliceCount(sorted.length);
+    formerindexOut.setSliceCount(sorted.length);
+  }
+
+}
+VVVV.Nodes.SortString.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Length (String)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.LengthString = function(id, graph) {
+  this.constructor(id, "Length (String)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var inputIn = this.addInputPin('Input', ['text'], this);
+
+  // output pins
+  var countOut = this.addOutputPin('Count', [0], this);
+
+  // evaluate() will be called each frame
+  // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      var input = inputIn.getValue(i);
+      countOut.setValue(i, input.length);
+    }
+    
+    // you also might want to do stuff like this:
+    countOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.LengthString.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Sift (String)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.SiftString = function(id, graph) {
+  this.constructor(id, "Sift (String)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var inputIn = this.addInputPin('Input', ['text'], this);
+  var filterIn = this.addInputPin('Filter', ['text'], this);
+  var comparisonIn = this.addInputPin('Comparison', ['Matches'], this);
+  var casesensitiveIn = this.addInputPin('Case Sensitive', [0], this);
+
+  // output pins
+  var hitsOut = this.addOutputPin('Hits', [0], this);
+  var inputindexOut = this.addOutputPin('Input Index', [0], this);
+  var filterindexOut = this.addOutputPin('Filter Index', [0], this);
+  var foundatpositionOut = this.addOutputPin('Found At Position', [0], this);
+
+  // evaluate() will be called each frame
+  // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
+  this.evaluate = function() {
+    // to implement; maybe start with something like this:
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    hitsOut.setSliceCount(maxSize);
+    
+    var comparison = comparisonIn.getValue(0);
+    var casesensitive = casesensitiveIn.getValue(0);
+    
+    var hitIdx = 0;
+    for (var i=0; i<maxSize; i++) {
+      var input = inputIn.getValue(i);
+
+      var numToCheck = 1;
+      if (comparison=='MatchesAny' || comparison=='ContainsAny')
+        numToCheck = filterIn.getSliceCount();
+      
+      var hits = 0;
+      for (var j=0; j<numToCheck; j++) {
+        var filter = filterIn.getValue(j+i);
+        var foundAt = [];
+        if (comparison=='Matches' || comparison=='MatchesAny') {
+          if (filter == input)
+            foundAt.push(-1);
+        }
+        else {
+          var regex = new RegExp(filter, 'gi');
+          var result;
+          while (result = regex.exec(input)) {
+            foundAt.push(result.index);
+          }
+        }
+        for (var k=0; k<foundAt.length; k++) {
+          inputindexOut.setValue(hitIdx, i%inputIn.getSliceCount());
+          filterindexOut.setValue(hitIdx, (i+j)%filterIn.getSliceCount());
+          foundatpositionOut.setValue(hitIdx, foundAt[k]+1);
+          hitIdx++;
+          hits++;
+        }
+      }
+      hitsOut.setValue(i, hits);
+    }
+    inputindexOut.setSliceCount(hitIdx);
+    filterindexOut.setSliceCount(hitIdx);
+    foundatpositionOut.setSliceCount(hitIdx);
+    
+  }
+
+}
+VVVV.Nodes.SiftString.prototype = new VVVV.Core.Node();
 
