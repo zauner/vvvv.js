@@ -399,3 +399,58 @@ VVVV.Nodes.CircularSpread = function (id, graph) {
   }
 }
 VVVV.Nodes.CircularSpread.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Cons (Spreads Legacy)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.ConsSpreads = function(id, graph) {
+  this.constructor(id, "Cons (Spreads)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  var inputPins = [];
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [0], this);
+
+  // invisible pins
+  var inputcountIn = this.addInvisiblePin('Input Count', [2], this);
+  
+  // initialize() will be called after node creation
+  this.initialize = function() {
+    var inputCount = inputcountIn.getValue(0);
+    for (var i=inputPins.length; i<inputCount; i++) {
+      inputPins[i] = this.addInputPin("Input "+(i+1), [0.0], this);
+    }
+    inputPins.length = inputCount;
+  }
+
+  this.evaluate = function() {
+    if (inputcountIn.pinIsChanged()) {
+      this.initialize();
+    }
+    
+    var idx = 0;
+    for (var i=0; i<inputPins.length; i++) {
+      for (var j=0; j<inputPins[i].getSliceCount(); j++) {
+        outputOut.setValue(idx++, inputPins[i].getValue(j));
+      }
+    }
+    outputOut.setSliceCount(idx);
+  }
+
+}
+VVVV.Nodes.ConsSpreads.prototype = new VVVV.Core.Node();
