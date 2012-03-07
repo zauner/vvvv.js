@@ -1601,7 +1601,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     attachMouseEvents(canvas);
 
     try {
-      canvasCtxt = canvas.get(0).getContext("experimental-webgl");
+      canvasCtxt = canvas.get(0).getContext("experimental-webgl", {preserveDrawingBuffer: true});
       canvasCtxt.viewportWidth = parseInt(canvas.get(0).width);
       canvasCtxt.viewportHeight = parseInt(canvas.get(0).height);
     } catch (e) {
