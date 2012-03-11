@@ -11,7 +11,7 @@ VVVV.Core.ClientBridge = function(patch) {
   this.patch = patch;
   this.host = false;
   var socket = false;
-  
+
   var that = this;
   
   this.enable = function(opts) {
@@ -19,7 +19,9 @@ VVVV.Core.ClientBridge = function(patch) {
       return;
     socket = new WebSocket(this.host+":4444");
     var initialized = false;
+    var opened = false;
     socket.onopen = function() {
+      opened = true;
       console.log("connected to VVVV ...");
       that.pushCompletePatch();
       window.setTimeout(function() {
@@ -28,9 +30,10 @@ VVVV.Core.ClientBridge = function(patch) {
       if (opts.success)
         opts.success();
     }
-    socket.onerror = function() {
-      if (opts.error)
+    socket.onclose = function() {
+      if (!opened && opts.error)
         opts.error();
+      opened = false;
     }
     socket.onmessage = function(m) {
       patch.doLoad(m.data);
