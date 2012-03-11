@@ -14,7 +14,7 @@ VVVV.Core.ClientBridge = function(patch) {
   
   var that = this;
   
-  this.enable = function() {
+  this.enable = function(opts) {
     if (!this.host)
       return;
     socket = new WebSocket(this.host+":4444");
@@ -24,9 +24,14 @@ VVVV.Core.ClientBridge = function(patch) {
       that.pushCompletePatch();
       window.setTimeout(function() {
         that.pullCompletePatch();
-      }, 100);
+      }, 1000);
+      if (opts.success)
+        opts.success();
     }
-    
+    socket.onerror = function() {
+      if (opts.error)
+        opts.error();
+    }
     socket.onmessage = function(m) {
       patch.doLoad(m.data);
       if (!initialized) {
