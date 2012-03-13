@@ -38,45 +38,47 @@ VVVV.Nodes.LFO = function(id, graph) {
 
   this.evaluate = function() {
   
-		var maxSize = this.getMaxInputSliceCount();
-		//console.log('maxSize' + maxSize);
-			
-		for (var i=0; i<maxSize; i++) {
-			
-			var period = PeriodIn.getValue(i);
-			var paused = PauseIn.getValue(i);
-			var reverse = ReverseIn.getValue(i);
-			var reset = ResetIn.getValue(i);
-			var phase = PhaseIn.getValue(i);
-			
-			var dt = new Date().getTime()-lastUpdate;
-			
-			if (paused<=0 && period!=0 && isFinite(period)) {
-				
-				dv = (1/(period*1000)*dt);
-				if (reverse>0)
-				dv *= -1;
-				current += dv;
-				if (current<0) {
-					cycles -= Math.ceil(-current);
-					current = 1.0 + current;
-				}
-				if (current>1)
-					cycles += Math.floor(current);
-			}
-			
-			lastUpdate = new Date().getTime();
-			
-			if (reset>0)
-				current = 0.0;
-			
-			if (paused<0.5) {
-				
-				outputOut.setValue(i, (current+phase)%1);
-				CyclesOut.setValue(i, cycles);
-			}
-			
-			current = current %1;
+	var maxSize = this.getMaxInputSliceCount();
+	//console.log('maxSize' + maxSize);
+	
+	
+	for (var i=0; i<maxSize; i++) {
+    
+		var period = PeriodIn.getValue(i);
+		var paused = PauseIn.getValue(i);
+		var reverse = ReverseIn.getValue(i);
+		var reset = ResetIn.getValue(i);
+		var phase = PhaseIn.getValue(i);
+	  
+		var dt = new Date().getTime()-lastUpdate;
+		
+		if (paused<=0 && period!=0 && isFinite(period)) {
+		  
+		  dv = (1/(period*1000)*dt);
+		  if (reverse>0)
+			dv *= -1;
+		  current += dv;
+		  if (current<0) {
+			cycles -= Math.ceil(-current);
+			current = 1.0 + current;
+		  }
+		  if (current>1)
+			cycles += Math.floor(current);
+		}
+		
+		lastUpdate = new Date().getTime();
+		
+		if (reset>0)
+		  current = 0.0;
+		
+		if (paused<0.5) {
+		  
+		  outputOut.setValue(i, (current+phase)%1);
+		  CyclesOut.setValue(i, cycles);
+		  //console.log('output '+  i + " = " + current);
+		}
+		
+		current = current %1;
 		}
 		outputOut.setSliceCount(maxSize);
 		CyclesOut.setSliceCount(maxSize);
