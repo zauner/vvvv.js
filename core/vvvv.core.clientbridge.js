@@ -15,6 +15,7 @@ VVVV.Core.ClientBridge = function(patch) {
   var that = this;
   
   this.enable = function(opts) {
+    opts = opts || {}
     if (!this.host)
       return;
     socket = new WebSocket(this.host+":4444");
