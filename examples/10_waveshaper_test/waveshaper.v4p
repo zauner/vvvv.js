@@ -1,19 +1,11 @@
 <!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta27.1.dtd" >
-   <PATCH nodename="C:\_dev\vvvv.js\examples\10_waveshaper_test\waveshaper.v4p" systemname="waveshaper" filename="C:\_dev\vvvv.js\examples\10_waveshaper_test\waveshaper.v4p">
-   <BOUNDS type="Window" left="10170" top="6960" width="9000" height="6000">
+   <PATCH nodename="C:\_dev\vvvv.js\examples\10_waveshaper_test\waveshaper.v4p" filename="C:\_dev\vvvv.js\examples\10_waveshaper_test\waveshaper.v4p" systemname="waveshaper">
+   <BOUNDS height="6000" left="16395" top="8760" type="Window" width="9000">
    </BOUNDS>
    <NODE componentmode="Hidden" filename="..\..\vvvv_js_sdk\VVVVJsConnector (VVVVjs)\VVVVJsConnector (VVVVjs).v4p" id="10001" nodename="VVVVJsConnector (VVVVjs)" systemname="VVVVJsConnector (VVVVjs)">
    <BOUNDS height="100" left="0" top="0" type="Node" width="100">
    </BOUNDS>
    <BOUNDS height="11520" left="11370" top="10305" type="Window" width="18225">
-   </BOUNDS>
-   </NODE>
-   <NODE componentmode="InAWindow" filename="..\..\vvvv_js_sdk\Renderer (Canvas VVVVjs).v4p" id="10003" nodename="Renderer (Canvas VVVVjs)" systemname="Renderer (Canvas VVVVjs)">
-   <BOUNDS height="100" left="3225" top="4575" type="Node" width="100">
-   </BOUNDS>
-   <PIN pinname="Layers" visible="1">
-   </PIN>
-   <BOUNDS height="12030" left="17445" top="1245" type="Window" width="9660">
    </BOUNDS>
    </NODE>
    <NODE componentmode="Hidden" filename="..\..\vvvv_js_sdk\Quad (Canvas VVVVjs).v4p" id="10005" nodename="Quad (Canvas VVVVjs)" systemname="Quad (Canvas VVVVjs)">
@@ -24,8 +16,6 @@
    <PIN pinname="Transform" visible="1">
    </PIN>
    </NODE>
-   <LINK dstnodeid="10003" dstpinname="Layers" srcnodeid="10005" srcpinname="Layer">
-   </LINK>
    <NODE componentmode="Hidden" id="10006" nodename="LFO (Animation)" systemname="LFO (Animation)">
    <BOUNDS height="100" left="2925" top="1140" type="Node" width="100">
    </BOUNDS>
@@ -44,18 +34,18 @@
    <PIN pinname="Y" visible="1">
    </PIN>
    </NODE>
-   <NODE systemname="WaveShaper (Value)" nodename="WaveShaper (Value)" componentmode="Hidden" id="10012">
-   <BOUNDS type="Node" left="3060" top="1800" width="100" height="100">
+   <NODE componentmode="Hidden" id="10012" nodename="WaveShaper (Value)" systemname="WaveShaper (Value)">
+   <BOUNDS height="100" left="3060" top="1800" type="Node" width="100">
    </BOUNDS>
    <PIN pinname="Input" visible="1">
    </PIN>
    <PIN pinname="Output" visible="1">
    </PIN>
-   <PIN pinname="Shape" visible="1" slicecount="1" values="Sine">
+   <PIN pinname="Shape" slicecount="1" visible="1" values="Sine">
    </PIN>
    </NODE>
-   <NODE systemname="LinearSpread (Spreads)" nodename="LinearSpread (Spreads)" componentmode="Hidden" id="10033">
-   <BOUNDS type="Node" left="3855" top="315" width="100" height="100">
+   <NODE componentmode="Hidden" id="10033" nodename="LinearSpread (Spreads)" systemname="LinearSpread (Spreads)">
+   <BOUNDS height="100" left="3450" top="225" type="Node" width="100">
    </BOUNDS>
    <PIN pinname="Output" visible="1">
    </PIN>
@@ -63,31 +53,31 @@
    </PIN>
    <PIN pinname="Width" slicecount="1" values="3">
    </PIN>
-   <PIN pinname="Spread Count" slicecount="1" values="10">
+   <PIN pinname="Spread Count" slicecount="1" values="20">
    </PIN>
    </NODE>
-   <LINK srcnodeid="10033" srcpinname="Output" dstnodeid="10006" dstpinname="Period">
+   <LINK dstnodeid="10006" dstpinname="Period" srcnodeid="10033" srcpinname="Output">
    </LINK>
-   <LINK srcnodeid="10006" srcpinname="Output" dstnodeid="10012" dstpinname="Input">
+   <LINK dstnodeid="10012" dstpinname="Input" srcnodeid="10006" srcpinname="Output">
    </LINK>
-   <NODE systemname="Scale (Transform)" nodename="Scale (Transform)" componentmode="Hidden" id="10034">
-   <BOUNDS type="Node" left="3225" top="3405" width="100" height="100">
+   <NODE componentmode="Hidden" id="10034" nodename="Scale (Transform)" systemname="Scale (Transform)">
+   <BOUNDS height="100" left="3225" top="3405" type="Node" width="100">
    </BOUNDS>
    <PIN pinname="Transform In" visible="1">
    </PIN>
    <PIN pinname="Transform Out" visible="1">
    </PIN>
-   <PIN pinname="X" slicecount="1" values="0.23">
+   <PIN pinname="X" slicecount="1" values="0.06">
    </PIN>
-   <PIN pinname="Y" slicecount="1" values="0.1">
+   <PIN pinname="Y" slicecount="1" values="0.05">
    </PIN>
    </NODE>
-   <LINK srcnodeid="10008" srcpinname="Transform Out" dstnodeid="10034" dstpinname="Transform In">
+   <LINK dstnodeid="10034" dstpinname="Transform In" srcnodeid="10008" srcpinname="Transform Out">
    </LINK>
-   <LINK srcnodeid="10034" srcpinname="Transform Out" dstnodeid="10005" dstpinname="Transform">
+   <LINK dstnodeid="10005" dstpinname="Transform" srcnodeid="10034" srcpinname="Transform Out">
    </LINK>
-   <NODE systemname="Multiply (Value)" nodename="Multiply (Value)" componentmode="Hidden" id="10036">
-   <BOUNDS type="Node" left="4410" top="1350" width="100" height="100">
+   <NODE componentmode="Hidden" id="10036" nodename="Multiply (Value)" systemname="Multiply (Value)">
+   <BOUNDS height="100" left="4410" top="1350" type="Node" width="100">
    </BOUNDS>
    <PIN pinname="Input 1" visible="1">
    </PIN>
@@ -96,10 +86,10 @@
    <PIN pinname="Input 2" slicecount="1" values="0.5">
    </PIN>
    </NODE>
-   <LINK srcnodeid="10033" srcpinname="Output" dstnodeid="10036" dstpinname="Input 1">
+   <LINK dstnodeid="10036" dstpinname="Input 1" srcnodeid="10033" srcpinname="Output">
    </LINK>
-   <NODE systemname="Add (Value)" nodename="Add (Value)" componentmode="Hidden" id="10037">
-   <BOUNDS type="Node" left="4350" top="1875" width="100" height="100">
+   <NODE componentmode="Hidden" id="10037" nodename="Add (Value)" systemname="Add (Value)">
+   <BOUNDS height="100" left="4440" top="1890" type="Node" width="100">
    </BOUNDS>
    <PIN pinname="Input 1" visible="1">
    </PIN>
@@ -108,10 +98,32 @@
    <PIN pinname="Input 2" slicecount="1" values="-1">
    </PIN>
    </NODE>
-   <LINK srcnodeid="10036" srcpinname="Output" dstnodeid="10037" dstpinname="Input 1">
+   <LINK dstnodeid="10037" dstpinname="Input 1" srcnodeid="10036" srcpinname="Output">
    </LINK>
-   <LINK srcnodeid="10037" srcpinname="Output" dstnodeid="10008" dstpinname="Y">
+   <LINK dstnodeid="10008" dstpinname="Y" srcnodeid="10037" srcpinname="Output">
    </LINK>
-   <LINK srcnodeid="10012" srcpinname="Output" dstnodeid="10008" dstpinname="X">
+   <NODE componentmode="InAWindow" filename="..\..\vvvv_js_sdk\Renderer (Canvas VVVVjs).v4p" id="10003" nodename="Renderer (Canvas VVVVjs)" systemname="Renderer (Canvas VVVVjs)">
+   <BOUNDS height="100" left="3225" top="4575" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Layers" visible="1">
+   </PIN>
+   <BOUNDS height="12030" left="17445" top="1245" type="Window" width="9660">
+   </BOUNDS>
+   </NODE>
+   <LINK dstnodeid="10003" dstpinname="Layers" srcnodeid="10005" srcpinname="Layer">
+   </LINK>
+   <NODE systemname="Subtract (Value)" nodename="Subtract (Value)" componentmode="Hidden" id="10038">
+   <BOUNDS type="Node" left="3180" top="2265" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Input 1" visible="1">
+   </PIN>
+   <PIN pinname="Input 2" slicecount="1" values="0.5">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="10012" srcpinname="Output" dstnodeid="10038" dstpinname="Input 1">
+   </LINK>
+   <LINK srcnodeid="10038" srcpinname="Output" dstnodeid="10008" dstpinname="X">
    </LINK>
    </PATCH>

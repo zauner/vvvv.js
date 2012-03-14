@@ -6,7 +6,7 @@
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: LFO (Animation)
- Author(s): Matthias Zauner
+ Author(s): Matthias Zauner, sebl
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -15,7 +15,7 @@ VVVV.Nodes.LFO = function(id, graph) {
   this.constructor(id, "LFO (Animation)", graph);
   
   this.meta = {
-    authors: ['Matthias Zauner'],
+    authors: ['Matthias Zauner, sebl'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: ['Not spreadable yet']
@@ -32,56 +32,66 @@ VVVV.Nodes.LFO = function(id, graph) {
   var outputOut = this.addOutputPin("Output", [0.0], this);
   var CyclesOut = this.addOutputPin("Cycles", [0], this);
   
-  var current = 0.0;
-  var cycles = 0;
+  var current = [];
+  var cycles = [];
+	
+	var dt = new Date().getTime();
   var lastUpdate = new Date().getTime();
 
   this.evaluate = function() {
   
-	var maxSize = this.getMaxInputSliceCount();
-	//console.log('maxSize' + maxSize);
-	
-	
-	for (var i=0; i<maxSize; i++) {
-    
-		var period = PeriodIn.getValue(i);
-		var paused = PauseIn.getValue(i);
-		var reverse = ReverseIn.getValue(i);
-		var reset = ResetIn.getValue(i);
-		var phase = PhaseIn.getValue(i);
-	  
-		var dt = new Date().getTime()-lastUpdate;
+		var maxSize = this.getMaxInputSliceCount();
 		
-		if (paused<=0 && period!=0 && isFinite(period)) {
-		  
-		  dv = (1/(period*1000)*dt);
-		  if (reverse>0)
-			dv *= -1;
-		  current += dv;
-		  if (current<0) {
-			cycles -= Math.ceil(-current);
-			current = 1.0 + current;
-		  }
-		  if (current>1)
-			cycles += Math.floor(current);
+		dt = new Date().getTime()-lastUpdate;
+		
+		for (var i=0; i<maxSize; i++) {
+				 
+			var period = PeriodIn.getValue(i % PeriodIn.values.length);
+			var paused = PauseIn.getValue(i % PauseIn.values.length);
+			var reverse = ReverseIn.getValue(i % ReverseIn.values.length);
+			var reset = ResetIn.getValue(i % ResetIn.values.length);
+			var phase = PhaseIn.getValue(i % PhaseIn.values.length);
+
+			if (current[i]==undefined) current[i] = 0.0;
+			if (cycles[i]==undefined) cycles[i] = 0.0;
+				
+			if (paused<=0 && period!=0 && isFinite(period)) {
+				
+				dv = (1/(period*1000)*dt);
+				
+				if (reverse>0){
+					dv *= -1;
+				}
+				
+				current[i] += dv;
+				
+				if (current[i]<0) {
+					cycles[i] -= Math.ceil(-current[i]);
+					current[i] = 1.0 + current[i];
+				}
+				
+				if (current[i]>1){
+					cycles[i] += Math.floor(current[i]);
+				}
+			}
+			
+			lastUpdate = new Date().getTime();
+			
+			if (reset>0){
+				current[i] = 0.0;
+			}
+			
+			if (paused<0.5) { 
+				outputOut.setValue(i, (current[i]+phase)%1);
+				CyclesOut.setValue(i, cycles[i]);
+			}
+			
+			current[i] = current[i] %1;
 		}
-		
-		lastUpdate = new Date().getTime();
-		
-		if (reset>0)
-		  current = 0.0;
-		
-		if (paused<0.5) {
-		  
-		  outputOut.setValue(i, (current+phase)%1);
-		  CyclesOut.setValue(i, cycles);
-		  //console.log('output '+  i + " = " + current);
-		}
-		
-		current = current %1;
-		}
-		outputOut.setSliceCount(maxSize);
-		CyclesOut.setSliceCount(maxSize);
+			outputOut.setSliceCount(maxSize);
+			CyclesOut.setSliceCount(maxSize);
+			current.splice(maxSize);
+			cycles.splice(maxSize);
 	}
 
 }
