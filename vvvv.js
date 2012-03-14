@@ -19,12 +19,12 @@ function initVVVV(path_to_vvvv, mode) {
 
   if ($('script[src*=underscore]').length==0)
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/lib/underscore/underscore-min.js"></script>'));
-  if ($('script[src*=d3.js]').length==0 && (mode=='full' || mode=='vvvviewer'))
+  if ($('script[src*="d3.js"]').length==0 && (mode=='full' || mode=='vvvviewer'))
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/lib/d3-v1.14/d3.min.js"></script>'));
   if ($('script[src*=glMatrix]').length==0 && (mode=='full' || mode=='run'))
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/lib/glMatrix-0.9.5.min.js"></script>'));
 
-  if ($('script[src*=vvvv.core.js]').length==0) {
+  if ($('script[src*="vvvv.core.js"]').length==0) {
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/core/vvvv.core.js"></script>'));
     $('head').append($('<script language="JavaScript" src="'+path_to_vvvv+'/core/vvvv.core.vvvvconnector.js"></script>'));
     if (mode=='run' || mode=='full') {
