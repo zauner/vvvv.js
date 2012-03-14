@@ -655,49 +655,49 @@ VVVV.Nodes.WaveShaperValue = function(id, graph) {
   this.evaluate = function() {
     
     var maxSize = this.getMaxInputSliceCount();
-	var twoPi = 6.28318530717959;
+    var twoPi = 6.28318530717959;
     
     for (var i=0; i<maxSize; i++) {
       var input = inputIn.getValue(i);
       var shape = shapeIn.getValue(i);
 
-	  switch (shape) {
-	  case 'Linear':
-	  //Linear code here
-	  outputOut.setValue(i, input);
-	  break;
-	  
-	  case 'Inverse':
-	  //Inverse code here
-	  outputOut.setValue(i, 1 - input);
-	  break;
-	  
-	  case 'Triangle':
-	  //Triangle code here
-	  if(input < 0.5){
-	  outputOut.setValue(i, input * 2 );
-	  }else{
-	  outputOut.setValue(i, (1 - input )* 2 );
-	  }
-	  break;
-	  
-	  case 'Sine':
-	  //Sine code here
-	  //outputOut.setValue(i, input * Math.sin(input * Pi));
-	  inp = (( input + 0.25 ) % 1 ) * twoPi;
-	  outputOut.setValue(i, (Math.sin(inp) / 2) + 0.5);
-	  break;
-	  
-	  case 'Rectangle':
-	  //Rectangle code here
-	  if(input < 0.5){
-	  outputOut.setValue(i, 0);
-	  }else{
-	  outputOut.setValue(i, 1);
-	  }  
-	  break;
-	  
-	  }
+      switch (shape) {
+        case 'Linear':
+        //Linear code here
+        outputOut.setValue(i, input);
+        break;
+        
+        case 'Inverse':
+        //Inverse code here
+        outputOut.setValue(i, 1 - input);
+        break;
+        
+        case 'Triangle':
+        //Triangle code here
+        if(input < 0.5){
+          outputOut.setValue(i, input * 2 );
+        }else{
+          outputOut.setValue(i, (1 - input )* 2 );
+        }
+        break;
+      
+        case 'Sine':
+        //Sine code here
+        //outputOut.setValue(i, input * Math.sin(input * Pi));
+        inp = (( input + 0.25 ) % 1 ) * twoPi;
+        outputOut.setValue(i, (Math.sin(inp) / 2) + 0.5);
+        break;
+        
+        case 'Rectangle':
+        //Rectangle code here
+        if(input < 0.5){
+        outputOut.setValue(i, 0);
+        }else{
+        outputOut.setValue(i, 1);
+        }  
+        break;
+      
+      }
       
     }
     
