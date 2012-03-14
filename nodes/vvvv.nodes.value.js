@@ -618,3 +618,91 @@ VVVV.Nodes.AddValueSpectral = function(id, graph) {
   }
 }
 VVVV.Nodes.AddValueSpectral.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: WaveShaper (Value)
+ Author(s): 'sebl'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.WaveShaperValue = function(id, graph) {
+  this.constructor(id, "WaveShaper (Value)", graph);
+  
+  this.meta = {
+    authors: ['sebl'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var inputIn = this.addInputPin('Input', [0], this);
+  var shapeIn = this.addInputPin('Shape',["Linear"], this);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [0], this);
+
+  // initialize() will be called after node creation
+  this.initialize = function() {   
+  }
+
+  // evaluate() will be called each frame
+  // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+	var twoPi = 6.28318530717959;
+    
+    for (var i=0; i<maxSize; i++) {
+      var input = inputIn.getValue(i);
+      var shape = shapeIn.getValue(i);
+
+	  switch (shape) {
+	  case 'Linear':
+	  //Linear code here
+	  outputOut.setValue(i, input);
+	  break;
+	  
+	  case 'Inverse':
+	  //Inverse code here
+	  outputOut.setValue(i, 1 - input);
+	  break;
+	  
+	  case 'Triangle':
+	  //Triangle code here
+	  if(input < 0.5){
+	  outputOut.setValue(i, input * 2 );
+	  }else{
+	  outputOut.setValue(i, (1 - input )* 2 );
+	  }
+	  break;
+	  
+	  case 'Sine':
+	  //Sine code here
+	  //outputOut.setValue(i, input * Math.sin(input * Pi));
+	  inp = (( input + 0.25 ) % 1 ) * twoPi;
+	  outputOut.setValue(i, (Math.sin(inp) / 2) + 0.5);
+	  break;
+	  
+	  case 'Rectangle':
+	  //Rectangle code here
+	  if(input < 0.5){
+	  outputOut.setValue(i, 0);
+	  }else{
+	  outputOut.setValue(i, 1);
+	  }  
+	  break;
+	  
+	  }
+      
+    }
+    
+    outputOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.WaveShaperValue.prototype = new VVVV.Core.Node();
