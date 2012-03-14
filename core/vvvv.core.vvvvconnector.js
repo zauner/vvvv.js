@@ -6,7 +6,7 @@
 if (!WebSocket && MozWebSocket)
   var WebSocket = MozWebSocket;
 
-VVVV.Core.ClientBridge = function(patch) {
+VVVV.Core.VVVVConnector = function(patch) {
   
   this.patch = patch;
   this.host = false;

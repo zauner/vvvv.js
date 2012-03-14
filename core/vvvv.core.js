@@ -318,7 +318,7 @@ VVVV.Core = {
     this.success = success_handler;
     
     this.XMLCode = '';
-    this.clientbridge = new VVVV.Core.ClientBridge(this);
+    this.VVVVConnector = new VVVV.Core.VVVVConnector(this);
     
     var print_timing = false;
     
@@ -685,8 +685,8 @@ VVVV.Core = {
       });
     }
     else if (/^ws:\/\//.test(ressource)) {
-      this.clientbridge.host = ressource;
-      this.clientbridge.enable();
+      this.VVVVConnector.host = ressource;
+      this.VVVVConnector.enable();
     }
     else {
       this.doLoad(ressource);
