@@ -5,6 +5,12 @@ VVVV.VVVViewer = function(graph, selector) {
     
   // RENDERING
   
+  if (!selector) {
+    selector = 'vvvv-generated-vvvviewer-'+(new Date()).getTime();
+    $('body').append('<div id="'+selector+'">');
+    selector = '#'+selector;
+  }
+  
   $(selector).empty();
 
   var chart = d3.select(selector)
