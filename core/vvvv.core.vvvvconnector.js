@@ -67,20 +67,8 @@ VVVV.Core.VVVVConnector = function(patch) {
     socket.send('PUSH'+this.patch.XMLCode);
   }
   
-  function checkLocationHash() {
-    if (!socket && window.location.hash=='#sync/'+that.patch.ressource) {
-      console.log('enabling devel env');
-      that.host = 'ws://localhost';
-      that.enable();
-    }
-    else
-    if (socket && window.location.href!='#sync/'+that.patch.ressource)
-      that.disable();
+  this.isConnected = function() {
+    return socket!==false;
   }
-  checkLocationHash();
-  
-  $(window).bind('hashchange', function() {
-    checkLocationHash();
-  });
   
 }

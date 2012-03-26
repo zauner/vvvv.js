@@ -670,6 +670,7 @@ VVVV.Core = {
         print_timing = true;
     });
     
+    // actually load the patch, depending on the type of resource
     
     if (/\.v4p[^<>\s]*$/.test(ressource)) {
       var that = this;
@@ -681,6 +682,7 @@ VVVV.Core = {
           that.doLoad(r);
           if (that.success)
             that.success();
+          that.afterUpdate();
         }
       });
     }
@@ -693,6 +695,24 @@ VVVV.Core = {
       if (this.success)
         this.success();
     }
+    
+    // bind the #-shortcuts
+    
+    function checkLocationHash() {
+      if (!thisPatch.VVVVConnector.isConnected() && (window.location.hash=='#sync/'+thisPatch.ressource || window.location.hash=='#syncandview/'+thisPatch.ressource)) {
+        console.log('enabling devel env');
+        thisPatch.VVVVConnector.host = 'ws://localhost';
+        thisPatch.VVVVConnector.enable();
+      }
+      if (!thisPatch.vvvviewer && (window.location.hash=='#view/'+thisPatch.ressource || window.location.hash=='#syncandview/'+thisPatch.ressource)) {
+        thisPatch.vvvviewer = new VVVV.VVVViewer(thisPatch);
+      }
+    }
+    checkLocationHash();
+    
+    $(window).bind('hashchange', function() {
+      checkLocationHash();
+    });
     
     
   }
