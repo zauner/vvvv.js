@@ -387,8 +387,10 @@ VVVV.Core = {
             n.shaderFile = $(this).attr('filename').replace(/\\/g, '/').replace(/\.fx$/, '.vvvvjs.fx').replace('lib/nodes/', '');
             n.nodename = nodename;
           }
-          else
+          else {
             var n = new VVVV.Core.Node($(this).attr('id'), nodename, thisPatch);
+            n.not_implemented = true;
+          }
           console.log('inserted new node '+n.nodename);
         }
         else

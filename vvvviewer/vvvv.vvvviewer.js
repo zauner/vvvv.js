@@ -45,7 +45,14 @@ VVVV.VVVViewer = function(graph, selector) {
       .attr('class', 'vvvv-node-background')
       .attr('height', function(d) { return d.getHeight(); })
       .attr('width', function(d) { return d.getWidth(); })
-      .attr('fill', function(d) { return d.isComment() ? 'rgba(0,0,0,0)' : '#cdcdcd' })
+      .attr('fill', function(d) {
+        if (d.isComment())
+          return 'rgba(0,0,0,0)';
+        else if (d.not_implemented)
+          return 'rgba(255,0,0,1)';
+        else
+          return '#cdcdcd';
+      })
     
     nodes.append('svg:rect')
       .attr('class', 'vvvv-node-pinbar')
@@ -61,7 +68,7 @@ VVVV.VVVViewer = function(graph, selector) {
       .attr('width', function(d) { return d.getWidth(); })
       
     nodes.append('svg:text')
-      .text(function(d) { return (d.invisiblePins["Descriptive Name"]!=undefined) ? d.invisiblePins["Descriptive Name"].getValue(0) : null })
+      .text(function(d) { return (d.invisiblePins["Descriptive Name"]) ? d.invisiblePins["Descriptive Name"].getValue(0) : null })
       .attr('class', 'vvvv-node-descriptive-name')
       .attr('shape-rendering', 'crispEdges')
       .attr('dy', function(d) { return d.getHeight()+12 })
