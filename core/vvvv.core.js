@@ -300,7 +300,7 @@ VVVV.Core = {
     this.destroy = function() {
       this.fromPin.links.splice(this.fromPin.links.indexOf(this), 1);
       this.toPin.links.splice(this.toPin.links.indexOf(this), 1);
-      this.fromPin.node.patch.linkList.splice(this.fromPin.node.patch.linkList.indexOf(this));
+      this.fromPin.node.patch.linkList.splice(this.fromPin.node.patch.linkList.indexOf(this),1);
     }
   },
 
@@ -528,18 +528,15 @@ VVVV.Core = {
             link = thisPatch.linkList[i];
           }
         }
-        try {
-          console.log('removing '+link.fromPin.pinname+' -> '+link.toPin.pinname);
-          var fromPin = link.fromPin;
-          var toPin = link.toPin;
-          link.destroy();
-          fromPin.connectionChanged();
-          toPin.connectionChanged();
-          toPin.markPinAsChanged();
-          if (toPin.reset_on_disconnect)
-            toPin.reset();
-        }
-        catch (e) { alert("Oh, there went something wrong when deleting the link. Don't worry, your work is safe. You just might want to reload the page."); }
+        console.log('removing '+link.fromPin.pinname+' -> '+link.toPin.pinname);
+        var fromPin = link.fromPin;
+        var toPin = link.toPin;
+        link.destroy();
+        fromPin.connectionChanged();
+        toPin.connectionChanged();
+        toPin.markPinAsChanged();
+        if (toPin.reset_on_disconnect)
+          toPin.reset();
       });
       
       $(xml).find('link[deleteme!="pronto"]').each(function() {
