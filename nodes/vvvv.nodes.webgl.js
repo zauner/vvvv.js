@@ -1099,6 +1099,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   var renderStateIn = this.addInputPin("Render State", [], this, true);
   var meshIn = this.addInputPin("Mesh", [], this, true);
   var transformIn = this.addInputPin("Transform", [], this, true);
+  var techniqueIn = this.addInputPin("Technique", [''], this);
   
   var layerOut = this.addOutputPin("Layer", [], this);
   this.setAsWebGlResourcePin(layerOut);
@@ -1133,18 +1134,29 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   }
   
   this.setupShader = function() {
+    var technique = techniqueIn.getValue(0);
+    technique = technique.replace(/^\s*/, '').replace(/\s*$/, '');
+    if (technique=="") {
+      var match = /(vertex_shader|fragment_shader)\{([a-zA-Z0-9]*?)[,\}]/.exec(shaderCode);
+      if (match)
+        technique = match[2];
+    }
+    
+    var vsRegEx = new RegExp('vertex_shader(\{([a-zA-Z0-9]+,\s*)*'+technique+'(,\s*[a-zA-Z0-9]+)*\})?:((\r?\n|.)*?)(vertex_shader|fragment_shader)');
+    var psRegEx = new RegExp('fragment_shader(\{([a-zA-Z0-9]+,\s*)*'+technique+'(,\s*[a-zA-Z0-9]+)*\})?:((\r?\n|.)*?)(vertex_shader|fragment_shader)');
+    
     var match;
-    if ((match = /vertex_shader:((\r?\n|.)+)fragment_shader:/.exec(shaderCode))==undefined) {
+    if ((match = vsRegEx.exec(shaderCode+'\nfragment_shader'))==undefined) {
       console.log('ERROR: No vertex shader code found');
       return;
     }
-    var vertexShaderCode = match[1];
+    var vertexShaderCode = match[4];
     
-    if ((match = /fragment_shader:((\r?\n|.)+)$/.exec(shaderCode))==undefined) {
+    if ((match = psRegEx.exec(shaderCode+'\nfragment_shader'))==undefined) {
       console.log('ERROR: No fragment shader code found');
       return;
     }
-    var fragmentShaderCode = match[1];
+    var fragmentShaderCode = match[4];
     
     shader = new VVVV.Types.ShaderProgram();
     shader.setFragmentShader(fragmentShaderCode);
@@ -1579,7 +1591,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   this.getContexts = function() {
     if (!this.invisiblePins["Descriptive Name"])
       return;
-  
+
     var selector = this.invisiblePins["Descriptive Name"].getValue(0);
     var targetElement = $(selector).get(0);
     var canvas;
@@ -1617,7 +1629,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       bbufFramebuffer = gl.createFramebuffer();
       gl.bindFramebuffer(gl.FRAMEBUFFER, bbufFramebuffer);
       bbufFramebuffer.width = canvas.get(0).width;
-      bbufFramebuffer.height = canvas.get(0).width;
+      bbufFramebuffer.height = canvas.get(0).height;
 
       bbufTexture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, bbufTexture);
@@ -1685,8 +1697,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     gl = this.ctxt;
     
     if (this.invisiblePins["Descriptive Name"].pinIsChanged() || this.contextChanged) {
-      if (gl && $(gl.canvas).hasClass('vvvv-js-generated-renderer'))
-        $(gl.canvas).remove();
+      if (canvasCtxt && $(canvasCtxt.canvas).hasClass('vvvv-js-generated-renderer'))
+        $(canvasCtxt.canvas).remove();
       this.getContexts();
       if (this.inputPins["Layers"].isConnected())
         this.inputPins["Layers"].links[0].fromPin.connectionChanged();
