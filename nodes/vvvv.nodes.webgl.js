@@ -1787,7 +1787,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       }
     }
     
-    gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+    gl.viewport(0, 0, width, height);
       
     var currentShaderProgram = null;
 
