@@ -544,34 +544,36 @@ VVVV.Core = {
         var dstPin = thisPatch.pinMap[$(this).attr('dstnodeid')+'_'+$(this).attr('dstpinname')];
         
 				// add pins which are neither defined in the node, nor defined in the xml, but only appeare in the links (this is the case with shaders)
-        if (srcPin==undefined)
+        if (srcPin==undefined && thisPatch.nodeMap[$(this).attr('srcnodeid')])
           srcPin = thisPatch.nodeMap[$(this).attr('srcnodeid')].addOutputPin($(this).attr('srcpinname'), undefined);
-        if (dstPin==undefined)
+        if (dstPin==undefined && thisPatch.nodeMap[$(this).attr('dstnodeid')])
           dstPin = thisPatch.nodeMap[$(this).attr('dstnodeid')].addInputPin($(this).attr('dstpinname'), undefined);
           
-        var link = false;
-        for (var i=0; i<thisPatch.linkList.length; i++) {
-          if (thisPatch.linkList[i].fromPin.node.id==srcPin.node.id &&
-					    thisPatch.linkList[i].fromPin.pinname==srcPin.pinname &&
-							thisPatch.linkList[i].toPin.node.id==dstPin.node.id &&
-							thisPatch.linkList[i].toPin.pinname==dstPin.pinname) {
-            link = thisPatch.linkList[i];
-					}
-        }
-
-        if (!link) {
-          link = new VVVV.Core.Link(srcPin, dstPin);
-          srcPin.connectionChanged();
-          dstPin.connectionChanged();
-          thisPatch.linkList.push(link);
-          for (var i=0; i<srcPin.values.length; i++) {
-            dstPin.setValue(i, srcPin.getValue(i));
+        if (srcPin && dstPin) {
+          var link = false;
+          for (var i=0; i<thisPatch.linkList.length; i++) {
+            if (thisPatch.linkList[i].fromPin.node.id==srcPin.node.id &&
+  					    thisPatch.linkList[i].fromPin.pinname==srcPin.pinname &&
+  							thisPatch.linkList[i].toPin.node.id==dstPin.node.id &&
+  							thisPatch.linkList[i].toPin.pinname==dstPin.pinname) {
+              link = thisPatch.linkList[i];
+  					}
           }
-          dstPin.setSliceCount(srcPin.getSliceCount());
+  
+          if (!link) {
+            link = new VVVV.Core.Link(srcPin, dstPin);
+            srcPin.connectionChanged();
+            dstPin.connectionChanged();
+            thisPatch.linkList.push(link);
+            for (var i=0; i<srcPin.values.length; i++) {
+              dstPin.setValue(i, srcPin.getValue(i));
+            }
+            dstPin.setSliceCount(srcPin.getSliceCount());
+          }
+            
+          if (syncmode=='complete')
+            newLinks[srcPin.node.id+'_'+srcPin.pinname+'-'+dstPin.node.id+'_'+dstPin.pinname] = link;
         }
-          
-        if (syncmode=='complete')
-          newLinks[srcPin.node.id+'_'+srcPin.pinname+'-'+dstPin.node.id+'_'+dstPin.pinname] = link;
       });
       
       if (syncmode=='complete') {
