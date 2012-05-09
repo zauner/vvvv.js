@@ -1,11 +1,7 @@
+#ifdef GL_ES
+precision highp float;
+#endif
 
-vertex_shader:
-
-attribute vec3 PosO : POSITION;
-attribute vec2 TexCd : TEXCOORD0;
-attribute vec3 NormO : NORMAL;
-
-uniform mat4 Texture_Transform;
 uniform mat4 tW : WORLD;
 uniform mat4 tV : VIEW;
 uniform mat4 tP : PROJECTION;
@@ -16,9 +12,19 @@ uniform vec4 Diffuse_Color : COLOR = {0.85, 0.85, 0.85, 1.0};
 uniform vec4 Specular_Color : COLOR = {0.35, 0.35, 0.35, 1.0};
 uniform float Power = 25.0;
 
+uniform sampler2D Texture;
+uniform mat4 Texture_Transform;
+uniform float Alpha = 1.0;
+
 varying vec2 vs2psTexCd;
 varying vec4 vs2psDiffuse;
 varying vec4 vs2psSpecular;
+
+vertex_shader:
+
+attribute vec3 PosO : POSITION;
+attribute vec2 TexCd : TEXCOORD0;
+attribute vec3 NormO : NORMAL;
 
 vec4 lit(float NdotL, float NdotH, float m) {
 
@@ -53,16 +59,6 @@ void main(void) {
 
 
 fragment_shader:
-
-#ifdef GL_ES
-precision highp float;
-#endif
-
-varying vec2 vs2psTexCd;
-varying vec4 vs2psDiffuse;
-varying vec4 vs2psSpecular;
-uniform sampler2D Texture;
-uniform float Alpha = 1.0;
 
 void main(void) {
   gl_FragColor = texture2D(Texture, vs2psTexCd);

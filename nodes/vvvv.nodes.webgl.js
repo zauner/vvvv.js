@@ -147,11 +147,11 @@ VVVV.Types.ShaderProgram = function() {
   
   var thatShader = this;
   
-  function extractSemantics(code) {
+  this.extractSemantics = function(code) {
     var pattern = /(uniform|attribute) ([a-zA-Z]+)([0-9xD]*) ([a-zA-Z0-9_]+)( : ([A-Z0-9]+))?( = \{?([^;\}]+)\}?)?;/g;
     var match;
     while ((match = pattern.exec(code))) {
-      if (match[1]=='attribute') {
+      if (match[1]=='attribute' && !(thatShader.attributeSpecs[match[4]])) {
         thatShader.attributeSpecs[match[4]] = {
           varname: match[4],
           semantic: match[6],
@@ -160,7 +160,7 @@ VVVV.Types.ShaderProgram = function() {
         if (match[6]!=undefined)
           thatShader.attribSemanticMap[match[6]] = match[4];
       }
-      else {
+      else if (!thatShader.uniformSpecs[match[4]]) {
         var dimension = match[3]=='' ? 1 : match[3];
         var uniformSpec = {
           varname: match[4],
@@ -179,12 +179,12 @@ VVVV.Types.ShaderProgram = function() {
   
   this.setVertexShader = function(code) {
     vertexShaderCode = code;
-    extractSemantics(code);
+    //extractSemantics(code);
   }
   
   this.setFragmentShader =function(code) {
     fragmentShaderCode = code;
-    extractSemantics(code);
+    //extractSemantics(code);
   }
   
   this.setup = function(gl) {
@@ -1122,6 +1122,8 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       async: false,
       success: function(response) {
         shaderCode = response;
+        shader = new VVVV.Types.ShaderProgram();
+        thatNode.addUniformPins();
         thatNode.setupShader();
         transformIn.markPinAsChanged(); // just set any pin as changed, so that node evaluates
       },
@@ -1133,35 +1135,9 @@ VVVV.Nodes.GenericShader = function(id, graph) {
  
   }
   
-  this.setupShader = function() {
-    var technique = techniqueIn.getValue(0);
-    technique = technique.replace(/^\s*/, '').replace(/\s*$/, '');
-    if (technique=="") {
-      var match = /(vertex_shader|fragment_shader)\{([a-zA-Z0-9]*?)[,\}]/.exec(shaderCode);
-      if (match)
-        technique = match[2];
-    }
-    
-    var vsRegEx = new RegExp('vertex_shader(\{([a-zA-Z0-9]+,\s*)*'+technique+'(,\s*[a-zA-Z0-9]+)*\})?:((\r?\n|.)*?)(vertex_shader|fragment_shader)');
-    var psRegEx = new RegExp('fragment_shader(\{([a-zA-Z0-9]+,\s*)*'+technique+'(,\s*[a-zA-Z0-9]+)*\})?:((\r?\n|.)*?)(vertex_shader|fragment_shader)');
-    
-    var match;
-    if ((match = vsRegEx.exec(shaderCode+'\nfragment_shader'))==undefined) {
-      console.log('ERROR: No vertex shader code found');
-      return;
-    }
-    var vertexShaderCode = match[4];
-    
-    if ((match = psRegEx.exec(shaderCode+'\nfragment_shader'))==undefined) {
-      console.log('ERROR: No fragment shader code found');
-      return;
-    }
-    var fragmentShaderCode = match[4];
-    
-    shader = new VVVV.Types.ShaderProgram();
-    shader.setFragmentShader(fragmentShaderCode);
-    shader.setVertexShader(vertexShaderCode);
-    
+  this.addUniformPins = function() {
+    shader.extractSemantics(shaderCode);
+    thatNode = this;
     _(shader.uniformSpecs).each(function(u) {
       if (u.semantic=="VIEW" || u.semantic=="PROJECTION" || u.semantic=="WORLD")
         return;
@@ -1193,6 +1169,38 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       pin.dimensions = u.dimension;
       shaderPins.push(pin);
     });
+  }
+  
+  this.setupShader = function() {
+    var technique = techniqueIn.getValue(0);
+    technique = technique.replace(/^\s*/, '').replace(/\s*$/, '');
+    if (technique=="") {
+      var match = /(vertex_shader|fragment_shader)\{([a-zA-Z0-9]*?)[,\}]/.exec(shaderCode);
+      if (match)
+        technique = match[2];
+    }
+    var vsRegEx = new RegExp('vertex_shader(\{([a-zA-Z0-9]+,\s*)*'+technique+'(,\s*[a-zA-Z0-9]+)*\})?:((\r?\n|.)*?)(vertex_shader|fragment_shader)');
+    var psRegEx = new RegExp('fragment_shader(\{([a-zA-Z0-9]+,\s*)*'+technique+'(,\s*[a-zA-Z0-9]+)*\})?:((\r?\n|.)*?)(vertex_shader|fragment_shader)');
+    
+    var match;
+    
+    match = /STARTOFSTRING((\r?\n|.)*?)(vertex_shader|fragment_shader)/.exec('STARTOFSTRING'+shaderCode);
+    var varDefs = match[1];
+    
+    if ((match = vsRegEx.exec(shaderCode+'\nfragment_shader'))==undefined) {
+      console.log('ERROR: No vertex shader code for technique '+technique+' found');
+      return;
+    }
+    var vertexShaderCode = match[4];
+    
+    if ((match = psRegEx.exec(shaderCode+'\nfragment_shader'))==undefined) {
+      console.log('ERROR: No fragment shader code for technique '+technique+' found');
+      return;
+    }
+    var fragmentShaderCode = match[4];
+    
+    shader.setFragmentShader(varDefs+fragmentShaderCode);
+    shader.setVertexShader(varDefs+vertexShaderCode);
     
   }
   
@@ -1201,8 +1209,10 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     var gl = this.renderContexts[0];
     if (!gl)
       return;
-    if (!shader.isSetup || this.contextChanged)
+    if (!shader.isSetup || this.contextChanged || techniqueIn.pinIsChanged()) {
+      this.setupShader();
       shader.setup(gl);
+    }
 
     // find out input slice count with respect to the input pin dimension, defined by the shader code  
     var maxSize = 0;
@@ -1369,6 +1379,7 @@ VVVV.Nodes.Quad = function(id, graph) {
       var vertexShaderCode = "attribute vec3 PosO : POSITION; attribute vec2 TexCd : TEXCOORD0; uniform mat4 tW : WORLD; uniform mat4 tV : VIEW; uniform mat4 tP : PROJECTION; uniform mat4 tTex; varying vec2 vs2psTexCd; void main(void) { gl_Position = tP * tV * tW * vec4(PosO, 1.0); vs2psTexCd = (tTex * vec4(TexCd.xy-.5, 0.0, 1.0)).xy+.5; }";
       
       shader = new VVVV.Types.ShaderProgram();
+      shader.extractSemantics(fragmentShaderCode + vertexShaderCode);
       shader.setFragmentShader(fragmentShaderCode);
       shader.setVertexShader(vertexShaderCode);
       shader.setup(gl);

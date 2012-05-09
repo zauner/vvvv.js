@@ -1,9 +1,6 @@
-
-vertex_shader:
-
-attribute vec3 PosO : POSITION;
-attribute vec2 TexCd : TEXCOORD0;
-attribute vec3 NormO : NORMAL;
+#ifdef GL_ES
+precision highp float;
+#endif
 
 uniform mat4 Texture_Transform;
 uniform mat4 tW : WORLD;
@@ -12,10 +9,23 @@ uniform mat4 tP : PROJECTION;
 
 uniform vec3 Light_Direction_XYZ = {0.0, -5.0, 2.0};
 
+uniform vec4 Ambient_Color : COLOR = {0.15, 0.15, 0.15, 1.0};
+uniform vec4 Diffuse_Color : COLOR = {0.85, 0.85, 0.85, 1.0};
+uniform vec4 Specular_Color : COLOR = {0.35, 0.35, 0.35, 1.0};
+uniform float Power = 25.0;
+uniform sampler2D Texture;
+uniform float Alpha = 1.0;
+
 varying vec2 vs2psTexCd;
 varying vec3 LightDirV;
 varying vec3 NormV;
 varying vec3 ViewDirV;
+
+vertex_shader:
+
+attribute vec3 PosO : POSITION;
+attribute vec2 TexCd : TEXCOORD0;
+attribute vec3 NormO : NORMAL;
 
 void main(void) {
 
@@ -32,24 +42,7 @@ void main(void) {
   vs2psTexCd = (Texture_Transform * vec4(TexCd, 0, 1)).xy;
 }
 
-
 fragment_shader:
-
-#ifdef GL_ES
-precision highp float;
-#endif
-
-varying vec2 vs2psTexCd;
-varying vec3 LightDirV;
-varying vec3 NormV;
-varying vec3 ViewDirV;
-
-uniform vec4 Ambient_Color : COLOR = {0.15, 0.15, 0.15, 1.0};
-uniform vec4 Diffuse_Color : COLOR = {0.85, 0.85, 0.85, 1.0};
-uniform vec4 Specular_Color : COLOR = {0.35, 0.35, 0.35, 1.0};
-uniform float Power = 25.0;
-uniform sampler2D Texture;
-uniform float Alpha = 1.0;
 
 void main(void) {
   vec3 H = normalize(ViewDirV + LightDirV);
