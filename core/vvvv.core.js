@@ -3,7 +3,6 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
-VVVV = {}
 VVVV.Types = {}
 
 VVVV.MousePositions = {'_all': {'x': 0.0, 'y': 0.0, 'lb': 0.0, 'mb': 0.0, 'rb': 0.0}}
@@ -390,6 +389,7 @@ VVVV.Core = {
           else {
             var n = new VVVV.Core.Node($(this).attr('id'), nodename, thisPatch);
             n.not_implemented = true;
+            VVVV.onNotImplemented(nodename);
           }
           console.log('inserted new node '+n.nodename);
         }

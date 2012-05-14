@@ -4,7 +4,10 @@
 // Additional authors of sub components are mentioned at the specific code locations.
 
 
-
+VVVV = {}
+VVVV.onNotImplemented = function(nodename) {
+  console.log("Warning: "+nodename+" is not implemented.");
+}
 
 if(!window.console) {
 	window.console = {
