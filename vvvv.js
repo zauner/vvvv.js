@@ -4,16 +4,24 @@
 // Additional authors of sub components are mentioned at the specific code locations.
 
 
+// some prerequisites ...
+$.ajaxPrefilter(function( options, originalOptions, jqXHR ) {
+  if ( options.dataType == 'script' || originalOptions.dataType == 'script' ) {
+      options.cache = true;
+  }
+});
+
+if(!window.console) {
+  window.console = {
+    log : function(str) {
+    }
+  };
+}
+
+// actual VVVV.js initialization code
 VVVV = {}
 VVVV.onNotImplemented = function(nodename) {
   console.log("Warning: "+nodename+" is not implemented.");
-}
-
-if(!window.console) {
-	window.console = {
-		log : function(str) {
-		}
-	};
 }
 
 function initVVVV(path_to_vvvv, mode) {
