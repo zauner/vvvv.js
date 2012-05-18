@@ -368,6 +368,33 @@ VVVV.Core = {
         newNodes = {};
 
       $(xml).find('node').each(function() {
+        
+        // in case of renaming a node, delete the old one first
+        if ($(this).attr('createme')=='pronto' && thisPatch.nodeMap[$(this).attr('id')]!=undefined) {
+          var n = thisPatch.nodeMap[$(this).attr('id')];
+          console.log("node renamed, so deleting node "+n.nodename);
+          
+          _(n.inputPins).each(function(p) {
+            _(p.links).each(function (link) {
+              link.destroy();
+              link.fromPin.connectionChanged();
+            });
+          })
+          
+          _(n.outputPins).each(function(p) {
+            _(p.links).each(function (link) {
+              link.destroy();
+              link.toPin.connectionChanged();
+              link.toPin.markPinAsChanged();
+              if (link.toPin.reset_on_disconnect)
+                link.toPin.reset();
+            });
+          })
+          
+          thisPatch.nodeList.splice(thisPatch.nodeList.indexOf(n),1);
+          delete thisPatch.nodeMap[n.id];
+        }
+        
         if ($(this).attr('componentmode')=="InABox")
           $bounds = $(this).find('bounds[type="Box"]').first();
         else
