@@ -1129,6 +1129,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       },
       error: function() {
         console.log('ERROR: Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVV.Root));
+        VVVV.onNotImplemented('Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVV.Root));
       }
     });
     
