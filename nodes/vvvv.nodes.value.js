@@ -706,3 +706,73 @@ VVVV.Nodes.WaveShaperValue = function(id, graph) {
 
 }
 VVVV.Nodes.WaveShaperValue.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Map (Value)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.MapValue = function(id, graph) {
+  this.constructor(id, "Map (Value)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Mirror Mapping Mode not implemented']
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var inputIn = this.addInputPin('Input', [0.5], this);
+  var srcMinimumIn = this.addInputPin('Source Minimum', [0], this);
+  var srcMaximumIn = this.addInputPin('Source Maximum', [1], this);
+  var destMinimumIn = this.addInputPin('Destination Minimum', [0], this);
+  var destMaximumIn = this.addInputPin('Destination Maximum', [1], this);
+  var mappingIn = this.addInputPin('Mapping', ['Float'], this);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [0.5], this);
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      var input = parseFloat(inputIn.getValue(i));
+      var srcMin = parseFloat(srcMinimumIn.getValue(i));
+      var srcMax = parseFloat(srcMaximumIn.getValue(i));
+      var destMin = parseFloat(destMinimumIn.getValue(i));
+      var destMax = parseFloat(destMaximumIn.getValue(i));
+      var mapping = mappingIn.getValue(i);
+      
+      input = input - srcMin;
+      srcMax = srcMax - srcMin;
+      
+      switch (mapping) {
+        case "Clamp":
+          input = Math.max(0, Math.min(srcMax, input));
+        break;
+        case "Wrap":
+          input = (srcMax + input % srcMax) % srcMax;
+        break;
+        case "Mirror":
+          // to be implemented
+        break;
+      }
+      
+      var k = (destMax - destMin) / srcMax;
+      
+      outputOut.setValue(i, input * k + destMin);
+    }
+    
+    outputOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.MapValue.prototype = new VVVV.Core.Node();
