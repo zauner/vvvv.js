@@ -169,6 +169,8 @@ VVVV.Core = {
           return this.inputPins["Y Input Value"];
         case "String": 
           return this.inputPins["Input String"];
+        case "Color": 
+          return this.inputPins["Color Input"];
       }
       return undefined;
     }
@@ -179,6 +181,8 @@ VVVV.Core = {
           return this.outputPins["Y Output Value"];
         case "String": 
           return this.outputPins["Output String"];
+        case "Color": 
+          return this.inputPins["Color Output"];
       }
       return undefined;
     }

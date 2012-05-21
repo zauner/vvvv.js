@@ -49,3 +49,48 @@ VVVV.Nodes.RGBJoin = function(id, graph) {
 
 }
 VVVV.Nodes.RGBJoin.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: IOBox (Color)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.IOBoxColor = function(id, graph) {
+  this.constructor(id, "IOBox (Color)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var colorinputIn = this.addInputPin('Color Input', ['0.0, 1.0, 0.0, 1.0'], this);
+
+  // output pins
+  var coloroutputOut = this.addOutputPin('Color Output', ['0.0, 1.0, 0.0, 1.0'], this);
+
+  // invisible pins
+  var rowsIn = this.addInvisiblePin('Rows', [0.0], this);
+  
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      coloroutputOut.setValue(i, colorinputIn.getValue(i));
+    }
+    
+    // you also might want to do stuff like this:
+    coloroutputOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.IOBoxColor.prototype = new VVVV.Core.Node();
