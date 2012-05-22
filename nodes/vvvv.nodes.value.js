@@ -776,3 +776,125 @@ VVVV.Nodes.MapValue = function(id, graph) {
 
 }
 VVVV.Nodes.MapValue.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Min (Value)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.MinValue = function(id, graph) {
+  this.constructor(id, "Min (Value)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [0], this);
+
+  // invisible pins
+  var inputcountIn = this.addInvisiblePin('Input Count', [0.0], this);
+  
+  var inputPins = [];
+  
+  // initialize() will be called after node creation
+  this.initialize = function() {
+    var inputCount = Math.max(2, inputcountIn.getValue(0));
+    var currentCount = inputPins.length;
+    for (var i=currentCount; i<inputCount; i++) {
+      inputPins[i] = this.addInputPin('Input '+(i+1), [0.0], this);
+    }
+    inputPins.length = inputCount;
+  }
+
+  this.evaluate = function() {
+    if (inputcountIn.pinIsChanged())
+      this.initialize();
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      var min = undefined;
+      for (var j=0; j<inputPins.length; j++) {
+        if (min == undefined || inputPins[j].getValue(i) < min)
+          min = inputPins[j].getValue(i);
+      }
+      
+      outputOut.setValue(i, min);
+    }
+    
+    outputOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.MinValue.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Max (Value)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.MaxValue = function(id, graph) {
+  this.constructor(id, "Max (Value)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [0], this);
+
+  // invisible pins
+  var inputcountIn = this.addInvisiblePin('Input Count', [0.0], this);
+  
+  var inputPins = [];
+  
+  // initialize() will be called after node creation
+  this.initialize = function() {
+    var inputCount = Math.max(2, inputcountIn.getValue(0));
+    var currentCount = inputPins.length;
+    for (var i=currentCount; i<inputCount; i++) {
+      inputPins[i] = this.addInputPin('Input '+(i+1), [0.0], this);
+    }
+    inputPins.length = inputCount;
+  }
+
+  this.evaluate = function() {
+    if (inputcountIn.pinIsChanged())
+      this.initialize();
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      var max = undefined;
+      for (var j=0; j<inputPins.length; j++) {
+        if (max == undefined || inputPins[j].getValue(i) > max)
+          max = inputPins[j].getValue(i);
+      }
+      
+      outputOut.setValue(i, max);
+    }
+    
+    outputOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.MaxValue.prototype = new VVVV.Core.Node();
