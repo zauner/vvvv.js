@@ -1084,3 +1084,47 @@ VVVV.Nodes.RandomValue = function(id, graph) {
 
 }
 VVVV.Nodes.RandomValue.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Sign (Value)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.SignValue = function(id, graph) {
+  this.constructor(id, "Sign (Value)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var inputIn = this.addInputPin('Input', [0], this);
+
+  // output pins
+  var signpartOut = this.addOutputPin('Sign Part', [0], this);
+  var absolutepartOut = this.addOutputPin('Absolute Part', [0], this);
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      var input = inputIn.getValue(i);
+      
+      signpartOut.setValue(i, input == 0 ? 0.0 : input / Math.abs(input));
+      absolutepartOut.setValue(i, Math.abs(input));
+    }
+    
+    absolutepartOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.SignValue.prototype = new VVVV.Core.Node();
