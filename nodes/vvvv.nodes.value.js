@@ -1021,3 +1021,66 @@ VVVV.Nodes.PowerValue = function(id, graph) {
 
 }
 VVVV.Nodes.PowerValue.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Random (Value)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.RandomValue = function(id, graph) {
+  this.constructor(id, "Random (Value)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = true;
+  
+  // input pins
+  var enabledIn = this.addInputPin('Enabled', [1], this);
+  var isintegerIn = this.addInputPin('Is Integer', [0], this);
+  var scaleIn = this.addInputPin('Scale', [1], this);
+  var preventfromdoublesIn = this.addInputPin('Prevent from doubles', [1], this);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [0], this);
+  
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      var enabled = enabledIn.getValue(i);
+      var isinteger = isintegerIn.getValue(i);
+      var scale = scaleIn.getValue(i);
+      var preventfromdoubles = preventfromdoublesIn.getValue(i);
+      
+      var current = outputOut.values[i];
+      if (current==undefined)
+        outputOut.setValue(i, 0.0);
+
+      if (enabled>=0.5) {
+        var current = outputOut.values[i];
+        do {
+          var r = Math.random() * scale;
+          if (isinteger>=0.5)
+            r = Math.round(r);
+        }
+        while (preventfromdoubles>=0.5 && r==current);
+        
+        outputOut.setValue(i, r);
+      }
+    }
+
+    outputOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.RandomValue.prototype = new VVVV.Core.Node();
