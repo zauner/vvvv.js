@@ -1128,3 +1128,68 @@ VVVV.Nodes.SignValue = function(id, graph) {
 
 }
 VVVV.Nodes.SignValue.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: InputMorph (Value)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.InputMorphValue = function(id, graph) {
+  this.constructor(id, "InputMorph (Value)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  var switchIn = this.addInputPin('Switch', [0], this);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [0], this);
+
+  // invisible pins
+  var inputcountIn = this.addInvisiblePin('Input Count', [0.0], this);
+  
+  var inputPins = [];
+  
+  this.initialize = function() {
+    var inputCount = Math.max(2, inputcountIn.getValue(0));
+    var currentCount = inputPins.length;
+    for (var i=currentCount; i<inputCount; i++) {
+      inputPins[i] = this.addInputPin('Input '+(i+1), [0.0], this);
+    }
+    inputPins.length = inputCount;
+  }
+
+  this.evaluate = function() {
+    if (inputcountIn.pinIsChanged())
+      this.initialize();
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    var s;
+    var inp1;
+    var inp2;
+    var v;
+    for (var i=0; i<maxSize; i++) {
+      s = switchIn.getValue(i);
+      inp1 = ((Math.floor(s) + inputPins.length) % inputPins.length + inputPins.length) % inputPins.length;
+      inp2 = ((Math.ceil(s) + inputPins.length) % inputPins.length + inputPins.length) % inputPins.length;
+      v = s - Math.floor(s);
+      
+      outputOut.setValue(i, (1-v) * inputPins[inp1].getValue(i) + v * inputPins[inp2].getValue(i));
+    }
+    
+    outputOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.InputMorphValue.prototype = new VVVV.Core.Node();
