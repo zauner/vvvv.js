@@ -1193,3 +1193,87 @@ VVVV.Nodes.InputMorphValue = function(id, graph) {
 
 }
 VVVV.Nodes.InputMorphValue.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Sift (Value)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Sift = function(id, graph) {
+  this.constructor(id, "Sift (Value)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var inputIn = this.addInputPin('Input', [0.0], this);
+  var filterIn = this.addInputPin('Filter', [0.0], this);
+  var epsilonIn = this.addInputPin('Epsilon', [0.0], this);
+  var findModeIn = this.addInputPin('Find', ['First'], this);
+
+  // output pins
+  var hitsOut = this.addOutputPin('Hits', [0], this);
+  var inputindexOut = this.addOutputPin('Input Index', [0], this);
+  var filterindexOut = this.addOutputPin('Filter Index', [0], this);
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    var inputCount = inputIn.getSliceCount();
+    var filterCount = filterIn.getSliceCount();
+    hitsOut.setSliceCount(inputCount);
+    
+    var epsilon = epsilonIn.getValue(0);
+    var findMode = findModeIn.getValue(0);
+    
+    var alreadySearched = {};
+    
+    var hitIdx = 0;
+    
+    for (var i=0; i<inputCount; i++) {
+      
+      var inpSlice = i;
+      if (findMode=='Last')
+        inpSlice = inputCount - i - 1;
+      
+      var input = inputIn.getValue(inpSlice);
+      if (findMode != 'All') {
+        if (alreadySearched[input]) {
+          hitsOut.setValue(inpSlice, 0);
+          continue;
+        }
+        alreadySearched[input] = true;
+      }
+      
+      var hits = 0;
+      for (var j=0; j<filterCount; j++) {
+        filter = filterIn.getValue(j);
+        if (filter==input) {
+          inputindexOut.setValue(hitIdx, inpSlice);
+          filterindexOut.setValue(hitIdx, j);
+          hitIdx++;
+          hits++;
+          break;
+        }
+      }
+      hitsOut.setValue(inpSlice, hits);
+    }
+    inputindexOut.setSliceCount(hitIdx);
+    filterindexOut.setSliceCount(hitIdx);
+    
+  }
+
+}
+VVVV.Nodes.Sift.prototype = new VVVV.Core.Node();
+
