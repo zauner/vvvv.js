@@ -58,3 +58,54 @@ VVVV.Nodes.Cross2d = function(id, graph) {
 
 }
 VVVV.Nodes.Cross2d.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Polar (2d)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Polar2d = function(id, graph) {
+  this.constructor(id, "Polar (2d)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var xIn = this.addInputPin('X', [1], this);
+  var yIn = this.addInputPin('Y', [0], this);
+
+  // output pins
+  var angleOut = this.addOutputPin('Angle', [0], this);
+  var lengthOut = this.addOutputPin('Length', [1], this);
+
+  this.initialize = function() {
+    
+  }
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      var x = xIn.getValue(i);
+      var y = yIn.getValue(i);
+      
+      angleOut.setValue(i, Math.atan2(y, x)/(2*Math.PI));
+      lengthOut.setValue(i, Math.sqrt(x*x + y*y));
+    }
+    
+    lengthOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.Polar2d.prototype = new VVVV.Core.Node();
