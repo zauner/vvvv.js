@@ -175,7 +175,7 @@ VVVV.Nodes.Normalize3d.prototype = new VVVV.Core.Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Normalize (3d Vector)
- Author(s): 'Your Name'
+ Author(s): 'Matthias Zauner'
  Original Node Author(s): 'VVVV Group'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -184,7 +184,7 @@ VVVV.Nodes.Normalize3dVector = function(id, graph) {
   this.constructor(id, "Normalize (3d Vector)", graph);
   
   this.meta = {
-    authors: ['Your Name'],
+    authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
@@ -220,3 +220,96 @@ VVVV.Nodes.Normalize3dVector = function(id, graph) {
 
 }
 VVVV.Nodes.Normalize3dVector.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Multiply (3d Cross)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Multiply3dCross = function(id, graph) {
+  this.constructor(id, "Multiply (3d Cross)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var input1xyzIn = this.addInputPin('Input1 XYZ', [], this);
+  var input2xyzIn = this.addInputPin('Input2 XYZ', [], this);
+
+  // output pins
+  var outputxyzOut = this.addOutputPin('Output XYZ', [], this);
+
+  this.evaluate = function() {
+    // to implement; maybe start with something like this:
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize/3; i++) {
+      var input1xyz = input1xyzIn.getValue(i, 3);
+      var input2xyz = input2xyzIn.getValue(i, 3);
+      
+      outputxyzOut.setValue(i*3 + 0, input1xyz[1]*input2xyz[2] - input1xyz[2]*input2xyz[1]);
+      outputxyzOut.setValue(i*3 + 1, -(input1xyz[0]*input2xyz[2] - input1xyz[2]*input2xyz[0]));
+      outputxyzOut.setValue(i*3 + 2, input1xyz[0]*input2xyz[1] - input1xyz[1]*input2xyz[0]);
+    }
+    
+    // you also might want to do stuff like this:
+    outputxyzOut.setSliceCount(Math.ceil(maxSize/3) * 3);
+  }
+
+}
+VVVV.Nodes.Multiply3dCross.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Multiply (3d Dot)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Multiply3dDot = function(id, graph) {
+  this.constructor(id, "Multiply (3d Dot)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var input1xyzIn = this.addInputPin('Input1 XYZ', [], this);
+  var input2xyzIn = this.addInputPin('Input2 XYZ', [], this);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [0], this);
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize/3; i++) {
+      var input1xyz = input1xyzIn.getValue(i, 3);
+      var input2xyz = input2xyzIn.getValue(i, 3);
+      
+      outputOut.setValue(i, input1xyz[0]*input2xyz[0] + input1xyz[1]*input2xyz[1] + input1xyz[2]*input2xyz[2]);
+    }
+    
+    outputOut.setSliceCount(Math.ceil(maxSize/3));
+  }
+
+}
+VVVV.Nodes.Multiply3dDot.prototype = new VVVV.Core.Node();
