@@ -104,8 +104,57 @@ VVVV.Nodes.Polar2d = function(id, graph) {
       lengthOut.setValue(i, Math.sqrt(x*x + y*y));
     }
     
+    angleOut.setSliceCount(maxSize);
     lengthOut.setSliceCount(maxSize);
   }
 
 }
 VVVV.Nodes.Polar2d.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Cartesian (2d)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Cartesian2d = function(id, graph) {
+  this.constructor(id, "Cartesian (2d)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var angleIn = this.addInputPin('Angle', [0], this);
+  var lengthIn = this.addInputPin('Length', [1], this);
+
+  // output pins
+  var xOut = this.addOutputPin('X', [1], this);
+  var yOut = this.addOutputPin('Y', [0], this);
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      var angle = angleIn.getValue(i);
+      var length = lengthIn.getValue(i);
+      
+      xOut.setValue(i, length * Math.cos(angle * Math.PI * 2));
+      yOut.setValue(i, length * Math.sin(angle * Math.PI * 2));
+    }
+    
+    xOut.setSliceCount(maxSize);
+    yOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.Cartesian2d.prototype = new VVVV.Core.Node();
