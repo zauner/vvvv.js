@@ -158,3 +158,126 @@ VVVV.Nodes.Cartesian2d = function(id, graph) {
 
 }
 VVVV.Nodes.Cartesian2d.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Points2Vector (2d)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Points2Vector2d = function(id, graph) {
+  this.constructor(id, "Points2Vector (2d)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var x1In = this.addInputPin('X1', [0], this);
+  var y1In = this.addInputPin('Y1', [0], this);
+  var x2In = this.addInputPin('X2', [1], this);
+  var y2In = this.addInputPin('Y2', [0], this);
+
+  // output pins
+  var xOut = this.addOutputPin('X', [0], this);
+  var yOut = this.addOutputPin('Y', [0], this);
+  var lengthOut = this.addOutputPin('Length', [1], this);
+  var angleOut = this.addOutputPin('Angle', [0], this);
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      var x1 = parseFloat(x1In.getValue(i));
+      var y1 = parseFloat(y1In.getValue(i));
+      var x2 = parseFloat(x2In.getValue(i));
+      var y2 = parseFloat(y2In.getValue(i));
+      
+      var x = x2 - x1;
+      var y = y2 - y1;
+      
+      xOut.setValue(i, x1 + x/2);
+      yOut.setValue(i, y1 + y/2);
+      lengthOut.setValue(i, Math.sqrt(x*x + y*y));
+      angleOut.setValue(i, Math.atan2(y, x) / (2 * Math.PI));
+    }
+    
+    xOut.setSliceCount(maxSize);
+    yOut.setSliceCount(maxSize);
+    lengthOut.setSliceCount(maxSize);
+    angleOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.Points2Vector2d.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Vector2Points (2d)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Vector2Points2d = function(id, graph) {
+  this.constructor(id, "Vector2Points (2d)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var xIn = this.addInputPin('X', [0], this);
+  var yIn = this.addInputPin('Y', [0], this);
+  var lengthIn = this.addInputPin('Length', [1], this);
+  var angleIn = this.addInputPin('Angle', [0], this);
+
+  // output pins
+  var x1Out = this.addOutputPin('X1', [0], this);
+  var y1Out = this.addOutputPin('Y1', [0], this);
+  var x2Out = this.addOutputPin('X2', [0], this);
+  var y2Out = this.addOutputPin('Y2', [0], this);
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      var x = parseFloat(xIn.getValue(i));
+      var y = parseFloat(yIn.getValue(i));
+      var length = parseFloat(lengthIn.getValue(i));
+      var angle = parseFloat(angleIn.getValue(i) - .25) * 2 * Math.PI;
+
+      var dx = length/2 * Math.sin(angle);
+      var dy = -length/2 * Math.cos(angle);
+      
+      x1Out.setValue(i, x + dx);
+      y1Out.setValue(i, y + dy);
+      x2Out.setValue(i, x - dx);
+      y2Out.setValue(i, y - dy);
+    }
+    
+    // you also might want to do stuff like this:
+    x1Out.setSliceCount(maxSize);
+    y1Out.setSliceCount(maxSize);
+    x2Out.setSliceCount(maxSize);
+    y2Out.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.Vector2Points2d.prototype = new VVVV.Core.Node();
