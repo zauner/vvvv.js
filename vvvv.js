@@ -42,7 +42,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
   var loadCounter = 0;
 
   function loadMonitor(event) {
-    event.target.removeEventListener('load');
+    event.target.removeEventListener('load', loadMonitor);
     if (--loadCounter <= 0) {
       initialisationComplete();
     };
