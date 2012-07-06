@@ -137,7 +137,7 @@
    </PIN>
    <PIN pinname="String Type" slicecount="1" values="Filename">
    </PIN>
-   <PIN pinname="Input String" visible="1" slicecount="2" values="C:\_dev\vvvv.js\examples\10_waveshaper_test\halo.png,C:\_dev\vvvv.js\examples\10_waveshaper_test\cross.png" encoded="0">
+   <PIN pinname="Input String" visible="1" slicecount="2" values="halo.png,cross.png" encoded="0">
    </PIN>
    <PIN pinname="Output String" visible="1">
    </PIN>
