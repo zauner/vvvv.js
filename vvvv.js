@@ -51,7 +51,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
   function insertJS(url) {
     var script = document.createElement('script');
     script.async = false;
-    script.src = VVVV.Root + url;
+    script.src = VVVV.Root + '/' +url;
     script.addEventListener('load', loadMonitor);
     loadCounter++;
     head.appendChild(script);
