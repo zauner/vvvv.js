@@ -4,8 +4,6 @@
 // Additional authors of sub components are mentioned at the specific code locations.
 
 
-VVVV.Nodes = {}
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Add (Value)
