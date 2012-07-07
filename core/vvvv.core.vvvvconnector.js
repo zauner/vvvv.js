@@ -18,7 +18,7 @@ VVVV.Core.VVVVConnector = function(patch) {
     opts = opts || {}
     if (!this.host)
       return;
-    socket = new WebSocket(this.host+":4444");
+    socket = new WebSocket(this.host+":4444", "vvvvjs");
     var initialized = false;
     var opened = false;
     socket.onopen = function() {
