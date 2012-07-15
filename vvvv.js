@@ -25,6 +25,18 @@ VVVV.onNotImplemented = function(nodename) {
   console.log("Warning: "+nodename+" is not implemented.");
 };
 
+VVVV.loadCounter = 0;
+VVVV.loadScript = function(url, callback) {
+    var head = document.getElementsByTagName('head')[0];
+    var script = document.createElement('script');
+    script.async = false;
+    script.src = VVVV.Root + '/' +url;
+    if (callback)
+      script.addEventListener('load', callback);
+    VVVV.loadCounter++;
+    head.appendChild(script);
+};
+
 /**
  * Adds the neccessary JavaScripts to the head, calls the callback once everything is in place.
  * @param {String} path_to_vvvv points to the folder of your vvvv.js. This is relative to your html-file
@@ -39,58 +51,50 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
   console.log('loading vvvv.js ...');
 
   var head = document.getElementsByTagName('head')[0];
-  var loadCounter = 0;
 
   function loadMonitor(event) {
     event.target.removeEventListener('load', loadMonitor);
-    if (--loadCounter <= 0) {
+    if (--VVVV.loadCounter <= 0) {
       initialisationComplete();
     };
   }
-
-  function insertJS(url) {
-    var script = document.createElement('script');
-    script.async = false;
-    script.src = VVVV.Root + '/' +url;
-    script.addEventListener('load', loadMonitor);
-    loadCounter++;
-    head.appendChild(script);
-  }
-
+  
+  if ($('script[src*=thirdparty]').length==0)
+    VVVV.loadScript('thirdparty.js', loadMonitor);
   if ($('script[src*=underscore]').length==0)
-    insertJS('lib/underscore/underscore-min.js');
+    VVVV.loadScript('lib/underscore/underscore-min.js', loadMonitor);
   if ($('script[src*="d3.js"]').length==0 && (mode=='full' || mode=='vvvviewer'))
-    insertJS('lib/d3-v1.14/d3.min.js');
+    VVVV.loadScript('lib/d3-v1.14/d3.min.js', loadMonitor);
   if ($('script[src*=glMatrix]').length==0 && (mode=='full' || mode=='run'))
-    insertJS('lib/glMatrix-0.9.5.min.js');
+    VVVV.loadScript('lib/glMatrix-0.9.5.min.js', loadMonitor);
 
   if ($('script[src*="vvvv.core.js"]').length==0) {
-    insertJS('core/vvvv.core.js');
-    insertJS('core/vvvv.core.vvvvconnector.js');
+    VVVV.loadScript('core/vvvv.core.js', loadMonitor);
+    VVVV.loadScript('core/vvvv.core.vvvvconnector.js', loadMonitor);
     if (mode=='run' || mode=='full') {
-      insertJS('mainloop/vvvv.mainloop.js');
-      insertJS('mainloop/vvvv.dominterface.js');
+      VVVV.loadScript('mainloop/vvvv.mainloop.js', loadMonitor);
+      VVVV.loadScript('mainloop/vvvv.dominterface.js', loadMonitor);
 
-      insertJS('nodes/vvvv.nodes.value.js');
-      insertJS('nodes/vvvv.nodes.string.js');
-      insertJS('nodes/vvvv.nodes.boolean.js');
-      insertJS('nodes/vvvv.nodes.color.js');
-      insertJS('nodes/vvvv.nodes.spreads.js');
-      insertJS('nodes/vvvv.nodes.animation.js');
-      insertJS('nodes/vvvv.nodes.network.js');
-      insertJS('nodes/vvvv.nodes.system.js');
-      insertJS('nodes/vvvv.nodes.canvas.js');
-      insertJS('nodes/vvvv.nodes.html5.js');
-      insertJS('nodes/vvvv.nodes.transform.js');
-      insertJS('nodes/vvvv.nodes.vectors.js');
-      insertJS('nodes/vvvv.nodes.webgl.js');
-      insertJS('nodes/vvvv.nodes.complex.js');
-      insertJS('nodes/vvvv.nodes.enumerations.js');
-      insertJS('nodes/vvvv.nodes.2d.js');
-      insertJS('nodes/vvvv.nodes.3d.js');
+      VVVV.loadScript('nodes/vvvv.nodes.value.js', loadMonitor);
+      VVVV.loadScript('nodes/vvvv.nodes.string.js', loadMonitor);
+      VVVV.loadScript('nodes/vvvv.nodes.boolean.js', loadMonitor);
+      VVVV.loadScript('nodes/vvvv.nodes.color.js', loadMonitor);
+      VVVV.loadScript('nodes/vvvv.nodes.spreads.js', loadMonitor);
+      VVVV.loadScript('nodes/vvvv.nodes.animation.js', loadMonitor);
+      VVVV.loadScript('nodes/vvvv.nodes.network.js', loadMonitor);
+      VVVV.loadScript('nodes/vvvv.nodes.system.js', loadMonitor);
+      VVVV.loadScript('nodes/vvvv.nodes.canvas.js', loadMonitor);
+      VVVV.loadScript('nodes/vvvv.nodes.html5.js', loadMonitor);
+      VVVV.loadScript('nodes/vvvv.nodes.transform.js', loadMonitor);
+      VVVV.loadScript('nodes/vvvv.nodes.vectors.js', loadMonitor);
+      VVVV.loadScript('nodes/vvvv.nodes.webgl.js', loadMonitor);
+      VVVV.loadScript('nodes/vvvv.nodes.complex.js', loadMonitor);
+      VVVV.loadScript('nodes/vvvv.nodes.enumerations.js', loadMonitor);
+      VVVV.loadScript('nodes/vvvv.nodes.2d.js', loadMonitor);
+      VVVV.loadScript('nodes/vvvv.nodes.3d.js', loadMonitor);
     }
     if (mode=='vvvviewer' || mode=='full') {
-      insertJS('vvvviewer/vvvv.vvvviewer.js');
+      VVVV.loadScript('vvvviewer/vvvv.vvvviewer.js', loadMonitor);
     }
   }
 

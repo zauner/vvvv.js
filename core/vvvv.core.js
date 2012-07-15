@@ -409,8 +409,20 @@ VVVV.Core = {
           nodename = $(this).attr('systemname')!="" ? $(this).attr('systemname') : $(this).attr('nodename');
           if (nodename==undefined)
             return;       
-          if (VVVV.NodeLibrary[nodename.toLowerCase()]!=undefined)
+          if (VVVV.NodeLibrary[nodename.toLowerCase()]!=undefined) {
             var n = new VVVV.NodeLibrary[nodename.toLowerCase()]($(this).attr('id'), thisPatch);
+            
+            // load 3rd party libs, if required for this node
+            if (VVVV.NodeLibrary[nodename.toLowerCase()].requirements) {
+              thisPatch.pause = true; // pause patch evaluation
+              _(VVVV.NodeLibrary[nodename.toLowerCase()].requirements).each(function(libname) {
+                if (VVVV.LoadedLibs[libname]===undefined)
+                  VVVV.loadScript(VVVV.ThirdPartyLibs[libname], function() {
+                    thisPatch.pause = false; // resume patch evaluation
+                  });
+              });
+            }
+          }
           else if (/.fx$/.test($(this).attr('filename'))) {
             var n = new VVVV.Nodes.GenericShader($(this).attr('id'), thisPatch);
             n.isShader = true;
@@ -639,6 +651,8 @@ VVVV.Core = {
     }
     
     this.evaluate = function() {
+      if (this.pause) // this.pause might be true, if there is a thirdparty lib loaded currently, it will be fase again, when loading is complete
+        return;
       if (print_timing)
         var start = new Date().getTime();
       var invalidNodes = {};
