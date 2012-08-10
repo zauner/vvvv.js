@@ -20,6 +20,8 @@ if(!window.console) {
 
 // actual VVVV.js initialization code
 VVVV = {};
+VVVV.Config = {};
+VVVV.Config.auto_undo = false;
 
 VVVV.onNotImplemented = function(nodename) {
   console.log("Warning: "+nodename+" is not implemented.");

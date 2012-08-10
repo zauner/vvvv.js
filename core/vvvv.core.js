@@ -420,7 +420,9 @@ VVVV.Core = {
           else {
             var n = new VVVV.Core.Node($(this).attr('id'), nodename, thisPatch);
             n.not_implemented = true;
-            VVVV.onNotImplemented(nodename);
+            if (syncmode=='diff' && VVVV.Config.auto_undo == true)
+              thisPatch.VVVVConnector.sendUndo();
+            VVVV.onNotImplemented(nodename); 
           }
           console.log('inserted new node '+n.nodename);
         }

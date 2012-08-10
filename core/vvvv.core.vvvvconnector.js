@@ -19,6 +19,7 @@ VVVV.Core.VVVVConnector = function(patch) {
     if (!this.host)
       return;
     socket = new WebSocket(this.host+":4444", "vvvvjs");
+    SSS = socket;
     var initialized = false;
     var opened = false;
     socket.onopen = function() {
@@ -65,6 +66,13 @@ VVVV.Core.VVVVConnector = function(patch) {
   this.pushCompletePatch = function() {
     console.log('pushing patch ...');
     socket.send('PUSH'+this.patch.XMLCode);
+  }
+  
+  this.sendUndo = function() {
+    if (socket) {
+      console.log('forcing Undo ...');
+      socket.send('UNDO');
+    }
   }
   
   this.isConnected = function() {
