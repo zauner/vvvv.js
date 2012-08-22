@@ -308,7 +308,7 @@ VVVV.Core = {
   },
 
 
-  Patch: function(ressource, success_handler) {
+  Patch: function(ressource, success_handler, error_handler) {
     
     this.ressource = ressource;
     this.vvvv_version = "45_26.1";
@@ -319,6 +319,7 @@ VVVV.Core = {
     this.linkList = [];
     
     this.success = success_handler;
+    this.error = error_handler;
     
     this.XMLCode = '';
     this.VVVVConnector = new VVVV.Core.VVVVConnector(this);
@@ -721,8 +722,16 @@ VVVV.Core = {
       });
     }
     else if (/^ws:\/\//.test(ressource)) {
+      var that = this;
       this.VVVVConnector.host = ressource;
-      this.VVVVConnector.enable();
+      this.VVVVConnector.enable({
+        success: function() {
+          if (that.success) that.success();
+        },
+        error: function() {
+          if (that.error) that.error();
+        }
+      });
     }
     else {
       this.doLoad(ressource);

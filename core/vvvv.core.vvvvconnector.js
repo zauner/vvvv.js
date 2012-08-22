@@ -19,8 +19,7 @@ VVVV.Core.VVVVConnector = function(patch) {
     if (!this.host)
       return;
     socket = new WebSocket(this.host+":4444", "vvvvjs");
-    SSS = socket;
-    var initialized = false;
+
     var opened = false;
     socket.onopen = function() {
       opened = true;
@@ -39,14 +38,7 @@ VVVV.Core.VVVVConnector = function(patch) {
     }
     socket.onmessage = function(m) {
       patch.doLoad(m.data);
-      if (!initialized) {
-        initialized = true;
-        if (patch.success)
-          patch.success();
-        patch.afterUpdate();
-      }
-      else
-        patch.afterUpdate();
+      patch.afterUpdate();
     }
   }
   
