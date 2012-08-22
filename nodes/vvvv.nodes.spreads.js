@@ -447,6 +447,86 @@ VVVV.Nodes.CircularSpread = function (id, graph) {
 }
 VVVV.Nodes.CircularSpread.prototype = new VVVV.Core.Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Reverse (Spreads)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.ReverseSpreads = function(id, graph) {
+  this.constructor(id, "Reverse (Spreads)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var inputIn = this.addInputPin('Input', [0], this);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [0], this);
+
+  this.evaluate = function() {
+    var inSize = inputIn.getSliceCount();
+    for (var i=0; i<inSize; i++) {
+      var input = inputIn.getValue(i);
+      outputOut.setValue(inSize - i - 1, input);
+    }
+    outputOut.setSliceCount(inSize);
+  }
+
+}
+VVVV.Nodes.ReverseSpreads.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Integral (Spreads)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.IntegralSpreads = function(id, graph) {
+  this.constructor(id, "Integral (Spreads)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var inputIn = this.addInputPin('Input', [0], this);
+  var offsetIn = this.addInputPin('Offset', [0], this);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [0], this);
+
+  this.evaluate = function() {
+    var inSize = inputIn.getSliceCount();
+    var integral = parseFloat(offsetIn.getValue(0));
+    outputOut.setValue(0, integral);
+    for (var i=0; i<inSize; i++) {
+      var input = parseFloat(inputIn.getValue(i));
+      integral += input;
+      outputOut.setValue(i+1, integral);
+    }
+    outputOut.setSliceCount(inSize + 1);
+  }
+
+}
+VVVV.Nodes.IntegralSpreads.prototype = new VVVV.Core.Node();
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
