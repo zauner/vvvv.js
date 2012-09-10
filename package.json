@@ -2,12 +2,16 @@
   "name": "vvvv.js",
   "version": "0.0.0",
   "description": "VVVV.js - Visual Web Client Programming",
-  "main": "vvvv.js",
+  "main": "server.js",
   "directories": {
     "example": "examples"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "3.0.0rc3",
+    "jade": "*"
   },
   "repository": {
     "type": "git",
