@@ -658,6 +658,7 @@ VVVV.Nodes.Counter = function(id, graph) {
   this.evaluate = function() { 
     var maxSize = this.getMaxInputSliceCount();
     
+    var doCount = minIn.pinIsChanged() || maxIn.pinIsChanged() || defaultIn.pinIsChanged() || resetIn.pinIsChanged() || modeIn.pinIsChanged();
     for (var i=0; i<maxSize; i++) {
       if (oflowOut.getValue(i)==1 || !initialized)
         oflowOut.setValue(i, 0);
@@ -665,9 +666,10 @@ VVVV.Nodes.Counter = function(id, graph) {
         uflowOut.setValue(i, 0);
       if (!initialized)
         outputOut.setValue(i, 0);
+      doCount = doCount || upIn.getValue(i)>=.5 || downIn.getValue(i)>=.5;
     }
 
-    if(upIn.pinIsChanged() || downIn.pinIsChanged() || minIn.pinIsChanged() || maxIn.pinIsChanged() || defaultIn.pinIsChanged() || resetIn.pinIsChanged() || modeIn.pinIsChanged())
+    if(doCount)
     {
       for(var i=0; i<maxSize; i++) {
         var incr = parseFloat(incrIn.getValue(i));
