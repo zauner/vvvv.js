@@ -26,12 +26,14 @@ VVVV.Nodes.MouseGlobal = function(id, graph) {
   
   var xOut = this.addOutputPin("X", [0], this);
   var yOut = this.addOutputPin("Y", [0], this);
+  var wheelOut = this.addOutputPin("Mouse Wheel", [0], this);
   var lbOut = this.addOutputPin("Left Button", [0], this);
   var mbOut = this.addOutputPin("Middle Button", [0], this);
   var rbOut = this.addOutputPin("Right Button", [0], this);
   
   var x = 0;
   var y = 0;
+  var wheel = 0;
   var lb = 0;
   var mb = 0;
   var rb = 0;
@@ -39,6 +41,11 @@ VVVV.Nodes.MouseGlobal = function(id, graph) {
   $(document).mousemove(function(e) {
     x = e.pageX*2/parseInt($('body').css('width')) - 1;
     y = -(e.pageY*2/parseInt($('body').css('height')) - 1);
+  });
+  
+  $(document).bind('mousewheel', function(e) {
+    if (e.originalEvent.wheelDelta>0) wheel++;
+    else if (e.originalEvent.wheelDelta<0) wheel--;
   });
   
   $(document).mousedown(function(e) {
@@ -63,6 +70,8 @@ VVVV.Nodes.MouseGlobal = function(id, graph) {
       xOut.setValue(0, x);
     if (yOut.getValue(0)!=y)
       yOut.setValue(0, y);
+    if (wheelOut.getValue(0)!=wheel)
+      wheelOut.setValue(0, wheel);
     if (lbOut.getValue(0)!=lb)
       lbOut.setValue(0, lb);
     if (mbOut.getValue(0)!=mb)
@@ -97,6 +106,7 @@ VVVV.Nodes.MouseWindow = function(id, graph) {
   
   var xOut = this.addOutputPin("X", [0], this);
   var yOut = this.addOutputPin("Y", [0], this);
+  var wheelOut = this.addOutputPin("Mouse Wheel", [0], this);
   var lbOut = this.addOutputPin("Left Button", [0], this);
   var mbOut = this.addOutputPin("Middle Button", [0], this);
   var rbOut = this.addOutputPin("Right Button", [0], this);
@@ -107,6 +117,8 @@ VVVV.Nodes.MouseWindow = function(id, graph) {
       xOut.setValue(0, VVVV.MousePositions['_all'].x);
     if (yOut.getValue(0)!=VVVV.MousePositions['_all'].y)
       yOut.setValue(0, VVVV.MousePositions['_all'].y);
+    if (wheelOut.getValue(0)!=VVVV.MousePositions['_all'].wheel)
+      wheelOut.setValue(0, VVVV.MousePositions['_all'].wheel);
     if (lbOut.getValue(0)!=VVVV.MousePositions['_all'].lb)
       lbOut.setValue(0, VVVV.MousePositions['_all'].lb);
     if (mbOut.getValue(0)!=VVVV.MousePositions['_all'].mb)

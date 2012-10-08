@@ -781,7 +781,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
     $(canvas).detach('mousemove');
     $(canvas).detach('mousedown');
     $(canvas).detach('mouseup');
-    VVVV.MousePositions[canvas.id] = {'x': 0.0, 'y': 0.0, 'lb': 0.0, 'mb': 0.0, 'rb': 0.0};
+    VVVV.MousePositions[canvas.id] = {'x': 0.0, 'y': 0.0, 'wheel': 0.0, 'lb': 0.0, 'mb': 0.0, 'rb': 0.0};
     $(canvas).mousemove(function(e) {
       var x = (e.pageX - $(this).offset().left) * 2 / $(this).width() - 1;
       var y = -((e.pageY - $(this).offset().top) * 2 / $(this).height() - 1);
@@ -790,6 +790,17 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
       VVVV.MousePositions[canvas.id].x = x;
       VVVV.MousePositions[canvas.id].y = y;
     });
+    $(canvas).bind('mousewheel', function(e) {
+      var delta = e.originalEvent.wheelDelta/120;
+      VVVV.MousePositions[canvas.id].wheel += delta;
+      VVVV.MousePositions['_all'].wheel += delta;
+    });
+    $(canvas).bind('DOMMouseScroll', function(e) {
+      var delta = -e.originalEvent.detail/3;
+      VVVV.MousePositions[canvas.id].wheel += delta;
+      VVVV.MousePositions['_all'].wheel += delta;
+      console.log(VVVV.MousePositions[canvas.id].wheel);
+    })
     $(canvas).mousedown(function(e) {
       switch (e.which) {
         case 1: VVVV.MousePositions['_all'].lb = 1; VVVV.MousePositions[canvas.id].lb = 1; break;
