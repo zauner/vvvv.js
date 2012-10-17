@@ -434,8 +434,8 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
       ctx.save();
       if (this.transform)
         ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
-      ctx.scale(1/10, -1/10);
-      ctx.font = "10px "+this.font;
+      ctx.scale(1/100, -1/100);
+      ctx.font = "100px "+this.font;
       ctx.textAlign = this.align;
       ctx.textBaseline = this.baseline;
       this.renderState.apply(ctx);
