@@ -365,8 +365,8 @@ VVVV.Nodes.I = function(id, graph) {
 
   this.evaluate = function() {
     
-    var from = fromIn.getValue(0);
-    var to = toIn.getValue(0);
+    var from = Math.round(fromIn.getValue(0));
+    var to = Math.round(toIn.getValue(0));
     var idx = 0;
     for (var i=from; i < to; i++, idx++ ) {
       outputOut.setValue(idx, i);
