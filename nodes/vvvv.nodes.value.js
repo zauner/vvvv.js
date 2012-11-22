@@ -441,7 +441,7 @@ VVVV.Nodes.SwitchValueInput = function(id, graph) {
       return;
     }
     for (var i=0; i<maxSize; i++) {
-      outputOut.setValue(i, inputIn[Math.round(switchIn.getValue(i))%inputIn.length].getValue(i));
+      outputOut.setValue(i, inputIn[Math.round(Math.abs(switchIn.getValue(i)))%inputIn.length].getValue(i));
     }
     outputOut.setSliceCount(maxSize);
   }
