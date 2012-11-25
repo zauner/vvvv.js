@@ -148,7 +148,7 @@ VVVV.Nodes.OrSpectral = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['Bin Size not implemented']
+    compatibility_issues: []
   };
   
   var inputIn = this.addInputPin("Input", [0.0], this);
@@ -158,22 +158,28 @@ VVVV.Nodes.OrSpectral = function(id, graph) {
 
   this.evaluate = function() {
   
-  
-    if (inputIn.pinIsChanged()) {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+    var binNum = 0;
+    var subIndex = 0;
+    var result = false;
+    
+    for (var i=0; i<maxSpreadSize || (binSizeIn.getValue(0)>0 && (subIndex>0 || binNum%binSizeIn.values.length!=0)); i++) {
+      if (subIndex == 0)
+        var result = false;
+      result = result || (inputIn.getValue(i)>=.5);
       
-      var binNum = 0;
-      var result = false;
-      
-      for (var i=0; i<inputIn.values.length; i++) {
-        if (Math.round(inputIn.getValue(i))>=1) {
-          result = true;
+      subIndex++;
+      if (binSizeIn.getValue(0)>0) {
+        if (subIndex>=binSizeIn.getValue(binNum)) {
+          outputOut.setValue(binNum, result ? 1 : 0);
+          binNum++;
+          subIndex = 0;
         }
       }
-      outputOut.setValue(binNum, result ? 1 : 0);
-      
+      else
+        outputOut.setValue(0, result ? 1 : 0);
     }
-    
-    
+    outputOut.setSliceCount(binNum+(subIndex>0));
   }
 
 }
@@ -195,7 +201,7 @@ VVVV.Nodes.AndSpectral = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['Bin Size not implemented']
+    compatibility_issues: []
   };
   
   var inputIn = this.addInputPin("Input", [0.0], this);
@@ -204,23 +210,28 @@ VVVV.Nodes.AndSpectral = function(id, graph) {
   var outputOut = this.addOutputPin("Output", [0], this);
 
   this.evaluate = function() {
-  
-  
-    if (inputIn.pinIsChanged()) {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+    var binNum = 0;
+    var subIndex = 0;
+    var result = false;
+    
+    for (var i=0; i<maxSpreadSize || (binSizeIn.getValue(0)>0 && (subIndex>0 || binNum%binSizeIn.values.length!=0)); i++) {
+      if (subIndex == 0)
+        var result = true;
+      result = result && (inputIn.getValue(i)>=.5);
       
-      var binNum = 0;
-      var result = true;
-      
-      for (var i=0; i<inputIn.values.length; i++) {
-        if (Math.round(inputIn.getValue(i))<1) {
-          result = false;
+      subIndex++;
+      if (binSizeIn.getValue(0)>0) {
+        if (subIndex>=binSizeIn.getValue(binNum)) {
+          outputOut.setValue(binNum, result ? 1 : 0);
+          binNum++;
+          subIndex = 0;
         }
       }
-      outputOut.setValue(binNum, result ? 1 : 0);
-      
+      else
+        outputOut.setValue(0, result ? 1 : 0);
     }
-    
-    
+    outputOut.setSliceCount(binNum+(subIndex>0));    
   }
 
 }
