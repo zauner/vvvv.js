@@ -45,7 +45,12 @@ VVVV.Core.DOMInterface = function(patch) {
     var that = this;
     _(inputConnectors).each(function(ioboxConn) {
       if (ioboxConn.property_class=="event") {
-        $(ioboxConn.selector).each(function(i) {
+        var selector = ioboxConn.selector;
+        if (selector=='window')
+          selector = window;
+        if (selector=='document')
+          selector = document;
+        $(selector).each(function(i) {
           ioboxConn.values[i] = 0;
           $(this).bind(ioboxConn.property, function() {
             ioboxConn.values[i] = 1;
