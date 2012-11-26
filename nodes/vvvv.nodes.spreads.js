@@ -228,7 +228,7 @@ VVVV.Nodes.LinearSpread = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['Doesnt handle alignment enum']
+    compatibility_issues: ['phase does not work with Block alignment']
   };
   
   var inputIn = this.addInputPin("Input", [0.0], this);
@@ -245,11 +245,22 @@ VVVV.Nodes.LinearSpread = function(id, graph) {
     var width = parseFloat(widthIn.getValue(0));
     var phase = parseFloat(phaseIn.getValue(0));
     var input = parseFloat(inputIn.getValue(0));
+    var alignment = alignmentIn.getValue(0);
+    if (alignment=='')
+      alignment = 'Centered';
     var stepSize = width/count;
+    if (alignment=='Block')
+      stepSize = width/(count-1);
     var shift = stepSize/2;
+    if (alignment=='Block' || alignment=='LeftJustified')
+      shift = 0;
+    if (alignment=='RightJustified')
+      shift = stepSize;
     var result;
     for (var i=0; i<count; i++) {
-      result = (i*stepSize + shift + phase) % width;
+      result = i*stepSize + shift;
+      if (alignment!='Block')
+        result = (result + phase*width) % width;
       result = input-width/2 + result;
       outputOut.setValue(i, result.toFixed(4));
     }
