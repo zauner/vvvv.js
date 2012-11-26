@@ -130,6 +130,7 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
   var currPos = [];
   var velocity = [];
   var deltaPos = [];
+  var direction = [];
   
   function sign(n) {
     return n>=0;
@@ -160,13 +161,15 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
         
       if (pinsChanged) {
         deltaPos[i] = undefined;
+        direction[i] = sign(targetPos-currPos[i]);
         if (filterTime>0)
           velocity[i] = (targetPos-currPos[i])/(filterTime*1000);
         else
           velocity[i] = 0;
       }
       
-      currPos[i] += velocity[i]*dt;
+      if (direction[i] == sign(targetPos-currPos[i]))
+        currPos[i] += velocity[i]*dt;
       
       if (deltaPos[i]!=undefined && sign(targetPos-currPos[i]) != sign(deltaPos[i])) {
         velocity[i] = 0;
