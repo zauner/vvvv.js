@@ -3,6 +3,9 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+/** @define {string} */
+var VVVV_ENV = 'development';
+
 
 // some prerequisites ...
 $.ajaxPrefilter(function( options, originalOptions, jqXHR ) {
@@ -22,6 +25,8 @@ if(!window.console) {
 VVVV = {};
 VVVV.Config = {};
 VVVV.Config.auto_undo = false;
+VVVV.Nodes = {};
+VVVV.NodeLibrary = {};
 
 VVVV.onNotImplemented = function(nodename) {
   console.log("Warning: "+nodename+" is not implemented.");
@@ -47,56 +52,56 @@ VVVV.loadScript = function(url, callback) {
  */
 VVVV.init = function (path_to_vvvv, mode, callback) {
   VVVV.Root = path_to_vvvv || './';
-  VVVV.Nodes = {};
-  VVVV.NodeLibrary = {};
 
-  console.log('loading vvvv.js ...');
+  if (VVVV_ENV=='development') console.log('loading vvvv.js ...');
 
-  var head = document.getElementsByTagName('head')[0];
-
-  function loadMonitor(event) {
-    event.target.removeEventListener('load', loadMonitor);
-    if (--VVVV.loadCounter <= 0) {
-      initialisationComplete();
-    };
-  }
+  if (VVVV_ENV=='development') {
+    var head = document.getElementsByTagName('head')[0];
   
-  if ($('script[src*=thirdparty]').length==0)
-    VVVV.loadScript('thirdparty.js', loadMonitor);
-  if ($('script[src*=underscore]').length==0)
-    VVVV.loadScript('lib/underscore/underscore-min.js', loadMonitor);
-  if ($('script[src*="d3.js"]').length==0 && (mode=='full' || mode=='vvvviewer'))
-    VVVV.loadScript('lib/d3-v1.14/d3.min.js', loadMonitor);
-  if ($('script[src*=glMatrix]').length==0 && (mode=='full' || mode=='run'))
-    VVVV.loadScript('lib/glMatrix-0.9.5.min.js', loadMonitor);
-
-  if ($('script[src*="vvvv.core.js"]').length==0) {
-    VVVV.loadScript('core/vvvv.core.js', loadMonitor);
-    VVVV.loadScript('core/vvvv.core.vvvvconnector.js', loadMonitor);
-    if (mode=='run' || mode=='full') {
-      VVVV.loadScript('mainloop/vvvv.mainloop.js', loadMonitor);
-      VVVV.loadScript('mainloop/vvvv.dominterface.js', loadMonitor);
-
-      VVVV.loadScript('nodes/vvvv.nodes.value.js', loadMonitor);
-      VVVV.loadScript('nodes/vvvv.nodes.string.js', loadMonitor);
-      VVVV.loadScript('nodes/vvvv.nodes.boolean.js', loadMonitor);
-      VVVV.loadScript('nodes/vvvv.nodes.color.js', loadMonitor);
-      VVVV.loadScript('nodes/vvvv.nodes.spreads.js', loadMonitor);
-      VVVV.loadScript('nodes/vvvv.nodes.animation.js', loadMonitor);
-      VVVV.loadScript('nodes/vvvv.nodes.network.js', loadMonitor);
-      VVVV.loadScript('nodes/vvvv.nodes.system.js', loadMonitor);
-      VVVV.loadScript('nodes/vvvv.nodes.canvas.js', loadMonitor);
-      VVVV.loadScript('nodes/vvvv.nodes.html5.js', loadMonitor);
-      VVVV.loadScript('nodes/vvvv.nodes.transform.js', loadMonitor);
-      VVVV.loadScript('nodes/vvvv.nodes.vectors.js', loadMonitor);
-      VVVV.loadScript('nodes/vvvv.nodes.webgl.js', loadMonitor);
-      VVVV.loadScript('nodes/vvvv.nodes.complex.js', loadMonitor);
-      VVVV.loadScript('nodes/vvvv.nodes.enumerations.js', loadMonitor);
-      VVVV.loadScript('nodes/vvvv.nodes.2d.js', loadMonitor);
-      VVVV.loadScript('nodes/vvvv.nodes.3d.js', loadMonitor);
+    function loadMonitor(event) {
+      event.target.removeEventListener('load', loadMonitor);
+      if (--VVVV.loadCounter <= 0) {
+        initialisationComplete();
+      };
     }
-    if (mode=='vvvviewer' || mode=='full') {
-      VVVV.loadScript('vvvviewer/vvvv.vvvviewer.js', loadMonitor);
+    
+    if ($('script[src*=thirdparty]').length==0)
+      VVVV.loadScript('thirdparty.js', loadMonitor);
+    if ($('script[src*=underscore]').length==0)
+      VVVV.loadScript('lib/underscore/underscore-min.js', loadMonitor);
+    if ($('script[src*="d3.js"]').length==0 && (mode=='full' || mode=='vvvviewer'))
+      VVVV.loadScript('lib/d3-v1.14/d3.min.js', loadMonitor);
+    if ($('script[src*=glMatrix]').length==0 && (mode=='full' || mode=='run'))
+      VVVV.loadScript('lib/glMatrix-0.9.5.min.js', loadMonitor);
+  
+    if ($('script[src*="vvvv.core.js"]').length==0) {
+      VVVV.loadScript('core/vvvv.core.js', loadMonitor);
+      VVVV.loadScript('core/vvvv.core.vvvvconnector.js', loadMonitor);
+      if (mode=='run' || mode=='full') {
+        VVVV.loadScript('mainloop/vvvv.mainloop.js', loadMonitor);
+        VVVV.loadScript('mainloop/vvvv.dominterface.js', loadMonitor);
+  
+        VVVV.loadScript('nodes/vvvv.nodes.value.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.string.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.boolean.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.color.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.spreads.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.animation.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.network.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.system.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.canvas.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.html5.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.transform.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.vectors.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.webgl.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.complex.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.enumerations.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.2d.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.3d.js', loadMonitor);
+      }
+      if (mode=='vvvviewer' || mode=='full') {
+        VVVV.loadScript('vvvviewer/vvvv.vvvviewer.js', loadMonitor);
+      }
     }
   }
 
@@ -104,11 +109,11 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
     var p = new VVVV.Core.Patch('');
     _(VVVV.Nodes).each(function(n) {
       var x = new n(0, p);
-      console.log("Registering "+x.nodename);
+      if (VVVV_ENV=='development') console.log("Registering "+x.nodename);
       VVVV.NodeLibrary[x.nodename.toLowerCase()] = n;
     });
 
-    console.log('done ...');
+    if (VVVV_ENV=='development') console.log('done ...');
 
     VVVV.Patches = [];
     VVVV.MainLoops = [];
@@ -123,6 +128,9 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
 
     if (typeof callback === 'function') callback.call();
   }
+  
+  if (VVVV_ENV=='production')
+    initialisationComplete();
 };
 
 

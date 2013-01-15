@@ -143,7 +143,7 @@ VVVV.Types.ShaderProgram = function() {
   
   this.isSetup = false;
   
-  this.shaderProgram;
+  this.shaderProgram = undefined;
   
   var thatShader = this;
   
@@ -155,7 +155,7 @@ VVVV.Types.ShaderProgram = function() {
         thatShader.attributeSpecs[match[4]] = {
           varname: match[4],
           semantic: match[6],
-          position: 0,
+          position: 0
         };
         if (match[6]!=undefined)
           thatShader.attribSemanticMap[match[6]] = match[4];

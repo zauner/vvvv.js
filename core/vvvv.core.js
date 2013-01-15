@@ -355,7 +355,7 @@ VVVV.Core = {
       var syncmode = 'diff';
       if (/\s<PATCH/.test(xml) || thisPatch.vvvv_version<="45_26") {
         syncmode = 'complete';
-        console.log('complete');
+        if (VVVV_ENV=='development') console.log('complete');
         thisPatch.XMLCode = xml;
       }
     
@@ -377,7 +377,7 @@ VVVV.Core = {
         // in case of renaming a node, delete the old one first
         if ($(this).attr('createme')=='pronto' && thisPatch.nodeMap[$(this).attr('id')]!=undefined) {
           var n = thisPatch.nodeMap[$(this).attr('id')];
-          console.log("node renamed, so deleting node "+n.nodename);
+          if (VVVV_ENV=='development') console.log("node renamed, so deleting node "+n.nodename);
           
           _(n.inputPins).each(function(p) {
             _(p.links).each(function (link) {
@@ -437,13 +437,13 @@ VVVV.Core = {
               thisPatch.VVVVConnector.sendUndo();
             VVVV.onNotImplemented(nodename); 
           }
-          console.log('inserted new node '+n.nodename);
+          if (VVVV_ENV=='development') console.log('inserted new node '+n.nodename);
         }
         else
           n = thisPatch.nodeMap[$(this).attr('id')];
           
         if ($(this).attr('deleteme')=='pronto') {
-          console.log('removing node '+n.id);
+          if (VVVV_ENV=='development') console.log('removing node '+n.id);
           thisPatch.nodeList.splice(thisPatch.nodeList.indexOf(n),1);
           delete thisPatch.nodeMap[n.id];
         }
@@ -549,7 +549,7 @@ VVVV.Core = {
       if (syncmode=='complete') {
         _(oldNodes).each(function(n, id) {
           if (newNodes[id]==undefined) {
-            console.log('removing node '+n.id);
+            if (VVVV_ENV=='development') console.log('removing node '+n.id);
             thisPatch.nodeList.splice(thisPatch.nodeList.indexOf(n),1);
             delete thisPatch.nodeMap[n.id];
           }
@@ -574,7 +574,7 @@ VVVV.Core = {
             link = thisPatch.linkList[i];
           }
         }
-        console.log('removing '+link.fromPin.pinname+' -> '+link.toPin.pinname);
+        if (VVVV_ENV=='development') console.log('removing '+link.fromPin.pinname+' -> '+link.toPin.pinname);
         var fromPin = link.fromPin;
         var toPin = link.toPin;
         link.destroy();
@@ -625,7 +625,7 @@ VVVV.Core = {
       if (syncmode=='complete') {
         _(oldLinks).each(function(l, key) {
           if (newLinks[key]==undefined) {
-            console.log('removing '+l.fromPin.pinname+' -> '+l.toPin.pinname);
+            if (VVVV_ENV=='development') console.log('removing '+l.fromPin.pinname+' -> '+l.toPin.pinname);
             var fromPin = l.fromPin;
             var toPin = l.toPin;
             l.destroy();

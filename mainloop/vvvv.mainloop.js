@@ -1,7 +1,7 @@
 
-VVVV.Core.MainLoop = function(patch) {
+VVVV.Core.MainLoop = function(patch, frames_per_second) {
   
-  var fps = 60;
+  var fps = frames_per_second || 60;
   var framecount = 0;
   var dom = new VVVV.Core.DOMInterface(patch);
   var run = true;
