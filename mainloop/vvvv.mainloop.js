@@ -32,6 +32,7 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
   }
   
   this.start = function() {
+    if (run) return;
     run = true;
     update();
   }
