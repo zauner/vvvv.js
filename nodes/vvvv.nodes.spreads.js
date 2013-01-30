@@ -68,17 +68,17 @@ VVVV.Nodes.SetSliceSpreads = function(id, graph) {
   var outputOut = this.addOutputPin('Output', [0], this);
 
   this.evaluate = function() {
-    var size = spreadIn.getSliceCount();
+    var spreadSize = spreadIn.getSliceCount();
     
-    for (var i=0; i<size; i++) {
+    for (var i=0; i<spreadSize; i++) {
       outputOut.setValue(i, spreadIn.getValue(i));
     }
     size = Math.max(inputIn.getSliceCount(), indexIn.getSliceCount());
     for (var i=0; i<size; i++) {
-      outputOut.setValue(indexIn.getValue(i), inputIn.getValue(i));
+      outputOut.setValue(indexIn.getValue(i)%spreadSize, inputIn.getValue(i));
     }
     
-    outputOut.setSliceCount(spreadIn.getSliceCount());
+    outputOut.setSliceCount(spreadSize);
   }
 
 }
@@ -592,3 +592,62 @@ VVVV.Nodes.ConsSpreads = function(id, graph) {
 
 }
 VVVV.Nodes.ConsSpreads.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Interval (Spreads)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.IntervalSpreads = function(id, graph) {
+  this.constructor(id, "Interval (Spreads)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var inputIn = this.addInputPin('Input', [0.5], this);
+  var intervalsIn = this.addInputPin('Intervals', [0], this);
+
+  // output pins
+  var indexOut = this.addOutputPin('Index', [0], this);
+  
+  var minInterval = 0.0;
+
+  this.evaluate = function() {
+    var inSize = inputIn.getSliceCount();
+    var intervalSize = intervalsIn.getSliceCount();
+    if (intervalsIn.pinIsChanged()) {
+      minInterval=undefined;
+      for (var i=0; i<intervalSize; i++) {
+        if (intervalsIn.getValue(i)<minInterval || minInterval==undefined)
+          minInterval = intervalsIn.getValue(i);
+      }
+    }
+    for (var i=0; i<inSize; i++) {
+      var input = inputIn.getValue(i);
+      if (input<minInterval) {
+        indexOut.setValue(i, -1);
+        continue;
+      }
+      for (var j=0; j<intervalSize-1; j++) {
+        if (input>=intervalsIn.getValue(j) && input<intervalsIn.getValue(j+1)) {
+          break;
+        }
+      }
+      indexOut.setValue(i, j);
+    }
+    indexOut.setSliceCount(inSize);
+  }
+
+}
+VVVV.Nodes.IntervalSpreads.prototype = new VVVV.Core.Node();
