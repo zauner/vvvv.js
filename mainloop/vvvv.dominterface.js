@@ -8,8 +8,11 @@ VVVV.Core.DOMInterface = function(patch) {
   
   this.connect = function(node) {
     _(inputConnectors).each(function(ioboxConn, key) {
-      if (ioboxConn.node.id == node.id)
+      if (ioboxConn.node.id == node.id) {
+        if (ioboxConn.property_class == "event")
+          $(ioboxConn.selector).unbind(ioboxConn.property);
         delete inputConnectors[key];
+      }
     });
     _(outputConnectors).each(function(ioboxConn, key) {
       if (ioboxConn.node.id == node.id)
@@ -30,6 +33,25 @@ VVVV.Core.DOMInterface = function(patch) {
       inputConnectors[match[0]] = ioboxConn;
     else if (node.getDownstreamNodes().length==0)
       outputConnectors[match[0]] = ioboxConn;
+      
+    attachEvent(ioboxConn);
+  }
+  
+  function attachEvent(ioboxConn) {
+    if (ioboxConn.property_class=="event") {
+      var selector = ioboxConn.selector;
+      if (selector=='window')
+        selector = window;
+      if (selector=='document')
+        selector = document;
+      $(selector).each(function(i) {
+        ioboxConn.values[i] = 0;
+        $(this).bind(ioboxConn.property, function() {
+          ioboxConn.values[i] = 1;
+          return false;
+        });
+      });
+    }
   }
   
   var that = this;
@@ -40,26 +62,6 @@ VVVV.Core.DOMInterface = function(patch) {
       that.connect(n);
     }
   });
-
-  this.attachEvents= function() {
-    var that = this;
-    _(inputConnectors).each(function(ioboxConn) {
-      if (ioboxConn.property_class=="event") {
-        var selector = ioboxConn.selector;
-        if (selector=='window')
-          selector = window;
-        if (selector=='document')
-          selector = document;
-        $(selector).each(function(i) {
-          ioboxConn.values[i] = 0;
-          $(this).bind(ioboxConn.property, function() {
-            ioboxConn.values[i] = 1;
-            return false;
-          });
-        });
-      }
-    });
-  }
 
   this.populateInputConnectors= function() {
     var that = this;
@@ -176,7 +178,5 @@ VVVV.Core.DOMInterface = function(patch) {
     }
     
   }
-  
-  this.attachEvents();
 
 }
