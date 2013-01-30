@@ -157,9 +157,8 @@ VVVV.Nodes.ShellExecute = function(id, graph) {
   this.evaluate = function() {
     
     if (Math.round(doExecuteIn.getValue(0))>=1) {
-      console.log('executing...'+fileIn.getValue(0));
       var result = eval(fileIn.getValue(0));
-      if (!(result instanceof Array))
+      if (!(result instanceof Array) && !(result instanceof Object))
         result = [ result ];
       if (result==undefined)
         return;
