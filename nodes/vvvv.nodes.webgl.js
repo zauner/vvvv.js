@@ -117,6 +117,7 @@ VVVV.Types.Layer = function() {
   this.textures = [];
   this.shader = null;
   this.uniforms = {};
+  this.uniformNames = []; // to help iterate through this.uniforms
   this.renderState = defaultWebGlRenderState;
   
   this.toString = function() {
@@ -322,6 +323,8 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
 
     if (sourceIn.isConnected()) {
       var source = sourceIn.getValue(0);
+      if (!source)
+        return;
       if ( (source.width & (source.width-1)) != 0 || (source.height & (source.height-1)) != 0)
         console.log("Warning: Source renderer's width/height is not a power of 2. DX9Texture will most likely not work.");
       if (source instanceof WebGLTexture) {
@@ -1241,6 +1244,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       layers[j].mesh = meshIn.getValue(0);
       layers[j].shader = shader;
       _(shader.uniformSpecs).each(function(u) {
+        layers[j].uniformNames.push(u.varname);
         layers[j].uniforms[u.varname] = { uniformSpec: u, value: undefined };
       });
     }
@@ -1401,6 +1405,7 @@ VVVV.Nodes.Quad = function(id, graph) {
       layers[j].shader = shader;
       
       _(shader.uniformSpecs).each(function(u) {
+        layers[j].uniformNames.push(u.varname);
         layers[j].uniforms[u.varname] = { uniformSpec: u, value: undefined };
       });
     }
@@ -1593,7 +1598,6 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       var delta = -e.originalEvent.detail/3;
       VVVV.MousePositions[canvas.id].wheel += delta;
       VVVV.MousePositions['_all'].wheel += delta;
-      console.log(VVVV.MousePositions[canvas.id].wheel);
     })
     $(canvas).mousedown(function(e) {
       switch (e.which) {
@@ -1614,7 +1618,6 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   this.getContexts = function() {
     if (!this.invisiblePins["Descriptive Name"])
       return;
-
     var selector = this.invisiblePins["Descriptive Name"].getValue(0);
     var targetElement = $(selector).get(0);
     var canvas;
@@ -1725,7 +1728,6 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       this.getContexts();
       if (this.inputPins["Layers"].isConnected())
         this.inputPins["Layers"].links[0].fromPin.connectionChanged();
-      this.contextChanged = false;
     }
     
     if (!initialized) {
@@ -1736,7 +1738,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     
     if (gl==undefined)
       return;
-      
+    
     if (bufferWidthIn.pinIsChanged() && !(this.renderContexts && this.renderContexts[0])) {
       var w = parseInt(bufferWidthIn.getValue(0));
       if (w>0) {
@@ -1760,7 +1762,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     else {
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
-      
+    
     if (true) {//bgColIn.pinIsChanged()) {
       var col = _(bgColIn.getValue(0).split(',')).map(function(e) {
         return parseFloat(e);
@@ -1771,7 +1773,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     
     if (true) {//enableDepthBufIn.pinIsChanged()) {
       if (enableDepthBufIn.getValue(0)=='NONE')
-        gl.disable(gl.DEPTH);
+        gl.disable(gl.DEPTH_TEST);
       else
         gl.enable(gl.DEPTH_TEST);
     }
@@ -1799,39 +1801,57 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       }
     }
     
+    if (this.contextChanged) { // don't render anything, if the context changed in this frame. will only give warnings...
+      this.contextChanged = false;
+      return
+    }
+    
     gl.viewport(0, 0, width, height);
       
     var currentShaderProgram = null;
-
+    var currentRenderState = null;
+    var currentMesh = null;
+    
     if (this.inputPins["Layers"].isConnected()) {
       var layers = this.inputPins["Layers"].values;
-      _(layers).each(function(layer) {
+      for (var i=0; i<layers.length; i++) {
+        layer = layers[i];
+        
         if (currentShaderProgram!=layer.shader.shaderProgram) {
           gl.useProgram(layer.shader.shaderProgram);
-          currentShaderProgram = layer.shader.shaderProgram;
+          gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["PROJECTION"]].position, false, pMatrix);
+          gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEW"]].position, false, vMatrix);
+          
         }
         
         var renderState = layer.renderState;
         if (!renderState)
           renderState = defaultWebGlRenderState;
-        renderState.apply(gl);
+        if (renderState!=currentRenderState)
+          renderState.apply(gl);
         
-        gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
-        _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
-          if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]])
-            return;
-          gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
-          gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, 0, b.offset);
-        });
+        if (layer.mesh != currentMesh) {
+          gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
+          _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
+            if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]])
+              return;
+            gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
+            gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, 0, b.offset);
+          });
+          
+          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
+        }
         
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
-        gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["PROJECTION"]].position, false, pMatrix);
-        gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEW"]].position, false, vMatrix);
-        
+        var uniformCount = layer.uniformNames.length;
         var textureIdx = 0;
-        _(layer.uniforms).each(function(u) {
+        for (var j=0; j<uniformCount; j++) {
+          var u = layer.uniforms[layer.uniformNames[j]];
+
           if (u.value==undefined)
-            return;
+            continue;
+          if (i>0 && layer.shader.shaderProgram==currentShaderProgram && layers[i-1].uniforms[layer.uniformNames[j]] && u.value==layers[i-1].uniforms[layer.uniformNames[j]].value)
+            continue;
+          start = new Date().getTime(); 
           switch (u.uniformSpec.type) {
             case "mat": gl['uniformMatrix'+u.uniformSpec.dimension+'fv'](u.uniformSpec.position, false, u.value); break;
             case "vec": gl['uniform'+u.uniformSpec.dimension+'fv'](u.uniformSpec.position, u.value); break;
@@ -1847,10 +1867,17 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
               textureIdx++;
               break;
           }
-        });
+          loopstart = new Date().getTime();
+        }
         
         gl.drawElements(gl[renderState.polygonDrawMode], layer.mesh.numIndices, gl.UNSIGNED_SHORT, 0);
-      });
+        
+        // save current states
+        currentShaderProgram = layer.shader.shaderProgram;
+        currentRenderState = renderState;
+        currentMesh = layer.mesh;
+      }
+      
     }
     
     if (this.renderContexts && this.renderContexts[0]) {
