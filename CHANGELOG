@@ -1,3 +1,91 @@
+v0.2.0 / 2013-02-04
+===================
+
+From this version on, VVVV.js is only tested with VVVV versions >= beta27.
+
+Nodes
+-----
+
+new:
+
+* Constant (EX9.Effect)
+* GouroudDirectional (EX9.Effect)
+* PhongDirectional (EX9.Effect)
+* VertexBuffer (EX9.Geometry Join)
+* Mesh (EX9.Geometry Join)
+* Blend (EX9.RenderState)
+* Fill (EX9.RenderState)
+* ZWriteEnable (EX9.RenderState)
+* DX9Texture (EX9.Texture)
+* AsValue (String)
+* String2Enum (Enumerations)
+* Group (EX9)
+* VideoTexture (EX9.Texture VMR9)
+* Cons (Spreads)
+* Sort (String)
+* Length (String)
+* Sift (String)
+* Cross (2d)
+* SetSlice (Spreads)
+* WaveShaper (Value)
+* Map (Value)
+* IOBox (Color)
+* Min (Value)
+* Max (Value)
+* Mod (Value)
+* Power (Value)
+* Random (Value)
+* Sign (Value)
+* InputMorph (Value)
+* Sift (Value)
+* Polar (2d)
+* Polar (3d)
+* Cartesian (2d)
+* Cartesian (3d)
+* Normalize (2d)
+* Normalize (3d)
+* Multiply (3d Cross)
+* Multiply (3d Dot)
+* Points2Vector (2d)
+* Vector2Points (2d)
+* Reverse (Spreads)
+* Integral (Spreads)
+* Interval (Spreads)
+
+improved:
+
+* Mouse (Global) got Y coordinate inverted; got Button Click output pins
+* Renderer (EX9) got View and Perspective pins renamed to match VVVV >= beta26
+* Renderer (EX9) got Background Color, Clear, Depth Buffer Format input pins and Actual Backbuffer and EX9 output pins
+* Renderer (EX9) supports multiple renderer instances
+* Renderer (Canvas VVVVJs) got Canvas Out pin, View Transform Input Pin
+* LFO (Animation) is now spreadable
+* Text (Canvas VVVVjs) got a little better looking rendering
+* LinearSpread (Spreads) got alignment pin
+
+
+Core
+----
+
+* Switched to jQuery 1.8.2
+* supports loading shader codes stored in .vvvvjs.fx files
+* VVVVJs-to-VVVV-Connector for realtime patching
+* Added shortcuts: Ctrl+F to display framerate, Ctrl+T to display node execution times
+* Not implemented nodes appear red in VVVViewer
+* Added onNotImplemented callback to define what happens, if there's a non-implemented node
+* Dynamic script loading on init got reworked; Line numbers show up correctly in javascript console now
+* Added compiled script vvvv.min.js
+* 3rd party libraries can now be added to nodes as "required libraries" and will then be loaded on demand
+* window and document element can now be accessed by the DOM interface
+
+
+Node Interface Changes
+----------------------
+
+* added optional binSize parameter to VVVV.Core.Pin.getValue()
+* added findDownstreamNodes() function to VVVV.Core.Node
+* added connectionChanged() callback to VVVV.Core.Ping
+
 v0.1.2-alpha / 2011-09-16
 =========================
 
