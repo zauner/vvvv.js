@@ -44,8 +44,10 @@ VVVV.Nodes.MouseGlobal = function(id, graph) {
   });
   
   $(document).bind('mousewheel', function(e) {
-    if (e.originalEvent.wheelDelta>0) wheel++;
-    else if (e.originalEvent.wheelDelta<0) wheel--;
+    wheel += e.originalEvent.wheelDelta/120;
+  });
+  $(document).bind('DOMMouseScroll', function(e) {
+    wheel += -e.originalEvent.detail/3;
   });
   
   $(document).mousedown(function(e) {
