@@ -799,7 +799,6 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
       var delta = -e.originalEvent.detail/3;
       VVVV.MousePositions[canvas.id].wheel += delta;
       VVVV.MousePositions['_all'].wheel += delta;
-      console.log(VVVV.MousePositions[canvas.id].wheel);
     })
     $(canvas).mousedown(function(e) {
       switch (e.which) {
