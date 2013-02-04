@@ -264,6 +264,8 @@ VVVV.Nodes.FileTexture = function(id, graph) {
       var maxSize = this.getMaxInputSliceCount();
       for (var i=0; i<maxSize; i++) {
         var filename = filenamePin.getValue(i);
+        if (filename.indexOf('http://')===0 && VVVV.ImageProxyPrefix!==undefined)
+          filename = VVVV.ImageProxyPrefix+encodeURI(filename);
         textures[i] = gl.createTexture();
         textures[i].image = new Image();
         textures[i].image.onload = (function(j) {
