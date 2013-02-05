@@ -1832,7 +1832,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         if (renderState!=currentRenderState)
           renderState.apply(gl);
         
-        if (layer.mesh != currentMesh) {
+        if (layer.mesh != currentMesh || layer.shader.shaderProgram != currentShaderProgram) {
           gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
           _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
             if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]])
