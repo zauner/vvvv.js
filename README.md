@@ -19,12 +19,9 @@ Setup / Run
 **Note:** For developing VVVV patches you will need the original VVVV, so if you don't have it already, get it from the [VVVV Download Page](http://www.vvvv.org/downloads).
 **Make sure to check the [Licencing Page](http://www.vvvv.org/licensing) as well!**
 
-### Install Dummy Modules
+### Deploying VVVV.js
 
-Copy the directory "vvvv_js_modules" from the downloaded archive into the "modules" directory of your VVVV installation directory. This is neccessary,
-because there are some VVVV.js nodes, that don't exist in pure VVVV for example the whole Canvas category). To be able to create those nodes in VVVV, we use this (dummy) modules.
-
-### Setup VVVV.js scripts
+#### Setup VVVV.js scripts
 
 Unpack the files into your project directory. Unfortunatly, the directory is named 'vvvv.js', which might cause problems with most webservers, so better rename it to "vvvv_js".
 
@@ -32,7 +29,7 @@ Include the script somehow like this:
 
     <head>
     ...
-    <script language="JavaScript" src="vvvv_js/lib/jquery/jquery-1.4.2.min.js"></script>
+    <script language="JavaScript" src="vvvv_js/lib/jquery/jquery-1.8.2.min.js"></script>
     <script language="JavaScript" src="vvvv_js/vvvv.js"></script>
     ...
     </head>
@@ -45,10 +42,11 @@ Initialize VVVV.js and run a certain .v4p file at startup like this (uses jQuery
     var mainloop;
     $(document).ready(function() {
       
-      initVVVV('vvvv_js');
+      VVVV.init('vvvv_js','full', function() {
       
-      patch = new VVVV.Core.Patch("main.v4p", function() {
-        mainloop = new VVVV.Core.MainLoop(this);
+        patch = new VVVV.Core.Patch("main.v4p", function() {
+          mainloop = new VVVV.Core.MainLoop(this);
+        });
       });
 
     });
@@ -65,16 +63,21 @@ You can pause and resume the mainloop by using
     // resume mainloop
     mainloop.start();
   
-### About patching VVVV.js
+### Patching VVVV.js
 
-The great thing with VVVV is, that there's no difference between development and runtime, which means that your application is running while you're patching around.
-Unfortunatly this is not possible in VVVV.js right now. Here we're stuck with the more traditional workflow of
+#### Install the VVVV.js SDK
 
-1. patching in original VVVV
-2. saving the file, and
-3. running the patch in your browser
+Fire up VVVV and hit Alt+R to show the root patch. Add the path `path/to/vvvv_js/vvvv_js_sdk` to the list of external resources. Save the root patch.
+Open a new patch, and check, if you can add e.g. the `Renderer (Canvas VVVVjs)` node.
+
+#### Realtime Patching by connecting VVVV.js and VVVV
+
+To get VVVV's great realtime-patching experience, you can connect your classic VVVV to the browser running a VVVV.js website. Open an empty patch
+and add the VVVVJsConnector node. Your VVVV is now ready to establish a connection. In your browser, add the string `#sync/name_of_your_patch.v4p`
+in the address bar. Hit enter, and VVVV.js and VVVV should be synced, so you can alter the patch in VVVV.
 
 Note, that VVVV doesn't know anything abot VVVV.js, so just because you can create a node in VVVV doesn't mean that VVVV.js can actually run it.
+Keep an eye on the JavaScript console to know what's going on.
 
 
 ### Rendering Patches with the VVVViewer
