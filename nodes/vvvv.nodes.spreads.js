@@ -379,13 +379,19 @@ VVVV.Nodes.I = function(id, graph) {
     var from = Math.round(fromIn.getValue(0));
     var to = Math.round(toIn.getValue(0));
     var idx = 0;
-    for (var i=from; i < to; i++, idx++ ) {
-      outputOut.setValue(idx, i);
+    if (from<=to) {
+      for (var i=from; i < to; i++, idx++ ) {
+        outputOut.setValue(idx, i);
+      }
+      outputOut.setSliceCount(to-from);
     }
-    outputOut.setSliceCount(to-from);
-
+    else {
+      for (var i=from; i > to; i--, idx++ ) {
+        outputOut.setValue(idx, i);
+      }
+      outputOut.setSliceCount(from-to);
+    }
   }
-
 }
 VVVV.Nodes.I.prototype = new VVVV.Core.Node();
 
