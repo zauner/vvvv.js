@@ -511,7 +511,7 @@ VVVV.Nodes.AsString = function(id, graph) {
   };
   
   var inputIn = this.addInputPin("Input", [0.0], this);
-  var subtypeIn = this.addInputPin("SubType", [''], this);
+  var subtypeIn = this.addInputPin("SubType", ['Real'], this);
   
   var outputOut = this.addOutputPin("Output", [0.0], this);
 
@@ -519,6 +519,12 @@ VVVV.Nodes.AsString = function(id, graph) {
     var maxSize = this.getMaxInputSliceCount();
 
     for (var i=0; i<maxSize; i++) {
+      subtype = subtypeIn.getValue(i).match(/^(.+) \(/)[1];
+      var out;
+      switch (subtype) {
+        case "Real": out = parseFloat(inputIn.getValue(i)).toFixed(4); break;
+        case "Integer": out = parseInt(inputIn.getValue(i)).toFixed(0); break;
+      }
       outputOut.setValue(i, parseFloat(inputIn.getValue(i)).toFixed(4));
     }
     outputOut.setSliceCount(maxSize);
