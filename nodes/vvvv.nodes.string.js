@@ -189,8 +189,8 @@ VVVV.Nodes.AsValue = function(id, graph) {
     var maxSize = this.getMaxInputSliceCount();
     for (var i=0; i<maxSize; i++) {
       var inp = inputIn.getValue(i);
-      if (/^[0-9.e]+$/.test(inp))
-        outputOut.setValue(i, inp);
+      if (/^\s*-?[0-9.e]+\s*$/.test(inp))
+        outputOut.setValue(i, parseFloat(inp));
       else
         outputOut.setValue(i, parseFloat(defaultIn.getValue(i)));
     }
@@ -386,3 +386,267 @@ VVVV.Nodes.SiftString = function(id, graph) {
 }
 VVVV.Nodes.SiftString.prototype = new VVVV.Core.Node();
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Separate (String)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.SeparateString = function(id, graph) {
+  this.constructor(id, "Separate (String)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ["Quotes don't work"]
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var inputIn = this.addInputPin('Input', ['text'], this);
+  var intersperseIn = this.addInputPin('Intersperse', ['None'], this);
+  var interspersestringIn = this.addInputPin('Intersperse String', [''], this);
+  var ignorebetweenIn = this.addInputPin('Ignore between', ['Double'], this);
+  var keepquotesIn = this.addInputPin('Keep Quotes', [0], this);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', ['text'], this);
+  var formerindexOut = this.addOutputPin('Former Index', [0], this);
+  
+  var intersperseMap = {
+    "None": "",
+    "Space": " ",
+    "Comma": ",",
+    "CommaPlusSpace": ", ",
+    "Semicolon": ";",
+    "Colon": ":",
+    "Pipe": "|",
+    "UnixPath": "/",
+    "DosPath": "\\",
+    "Dash": "-",
+    "NewLineAutoDetection": "\n",
+    "Dot": ".",
+    "UnderScore": "_",
+    "Minus": "-"
+  }
+  
+  var ignoreBetweenMap = {
+    "Single": "'",
+    "Double": "\""
+  }
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    var outSlice = 0;
+    
+    for (var i=0; i<maxSize; i++) {
+      var input = inputIn.getValue(i);
+      var intersperse = intersperseMap[intersperseIn.getValue(i)];
+      var interspersestring = interspersestringIn.getValue(i);
+      var ignorebetween = ignoreBetweenMap[ignorebetweenIn.getValue(i)];
+      var keepquotes = keepquotesIn.getValue(i);
+
+      if (intersperse=='')
+        intersperse = interspersestring;
+      if (intersperse=='')
+        intersperse = undefined;
+      var splitSet = input.split(intersperse);
+      var len = splitSet.length;
+      var slice;
+      var regex = new RegExp('[^'+ignorebetween+']*', 'g');
+      for (var j=0; j<len; j++) {
+        if (keepquotes==1)
+          outputOut.setValue(outSlice, splitSet[j]);
+        else
+          outputOut.setValue(outSlice, splitSet[j].match(regex).join(''));
+        formerindexOut.setValue(outSlice, i);
+        outSlice++;
+      }
+    }
+    
+    outputOut.setSliceCount(outSlice);
+    formerindexOut.setSliceCount(outSlice);
+  }
+
+}
+VVVV.Nodes.SeparateString.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: EQ (String)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.EQString = function(id, graph) {
+  this.constructor(id, "EQ (String)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var input1In = this.addInputPin('Input 1', [''], this);
+  var input2In = this.addInputPin('Input 2', [''], this);
+  var casesensitiveIn = this.addInputPin('Case Sensitive', [1], this);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [0], this);
+  var inverseoutputOut = this.addOutputPin('Inverse Output', [0], this);
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      var input1 = input1In.getValue(i);
+      var input2 = input2In.getValue(i);
+      var casesensitive = casesensitiveIn.getValue(i);
+      
+      var res = (input1==input2 || (casesensitive==0 && input1.toLowerCase()==input2.toLowerCase())) ? 1 : 0;
+        
+      outputOut.setValue(i, res);
+      inverseoutputOut.setValue(i, 1-res);
+    }
+    
+    outputOut.setSliceCount(maxSize);
+    inverseoutputOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.EQString.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Select (String)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+// REDUNDANT: it's basically the sames as Select (Value), should be merged somehow
+
+VVVV.Nodes.SelectString = function(id, graph) {
+  this.constructor(id, "Select (String)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var inputIn = this.addInputPin("Input", [''], this);
+  var selectIn = this.addInputPin("Select", [1], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+  var formerSliceOut = this.addOutputPin("Former Slice", [0], this);
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    var outputIndex = 0;
+    for (var i=0; i<maxSize; i++) {
+      for (var j=0; j<selectIn.getValue(i); j++) {
+        outputOut.setValue(outputIndex, inputIn.getValue(i));
+        formerSliceOut.setValue(outputIndex, i);
+        outputIndex++;
+      }
+    }
+    outputOut.setSliceCount(outputIndex);
+    formerSliceOut.setSliceCount(outputIndex);
+  }
+
+}
+VVVV.Nodes.SelectString.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Count (String)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+// REDUNDANT: it's basically the sames as Count (Value), should be merged somehow
+
+VVVV.Nodes.CountString = function(id, graph) {
+  this.constructor(id, "Count (String)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.addInputPin("Input", [''], this);
+  
+  this.addOutputPin("Count", [1.0], this);
+  this.addOutputPin("High", [0.0], this);
+
+  this.evaluate = function() {
+    if (this.inputPins["Input"].pinIsChanged()) {
+      this.outputPins["Count"].setValue(0, this.inputPins["Input"].values.length);
+      this.outputPins["High"].setValue(0, this.inputPins["Input"].values.length-1);
+    }
+  }
+
+}
+VVVV.Nodes.CountString.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Clean (String)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.CleanString = function(id, graph) {
+  this.constructor(id, "Clean (String)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var inputIn = this.addInputPin('Input', ['text'], this);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', ['text'], this);
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      if (inputIn.getValue(i))
+        outputOut.setValue(i, inputIn.getValue(i).trim());
+      else
+        outputOut.setValue(i, undefined);
+    }
+
+    outputOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.CleanString.prototype = new VVVV.Core.Node();
