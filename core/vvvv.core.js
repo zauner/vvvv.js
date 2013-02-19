@@ -329,11 +329,30 @@ VVVV.Core = {
     function splitValues(v) {
       if (v==undefined)
         return [];
-      if (/\|/.test(v))
-        separator = "|";
-      else
-        separator = ",";
-      return v.split(separator).filter(function(d,i) { return d!=""});
+      if (this.vvvv_version<="45_26") { // legacy code
+        if (/\|/.test(v))
+          separator = "|";
+        else
+          separator = ",";
+        return v.split(separator).filter(function(d,i) { return d!=""});
+      }
+      
+      var result = [];
+      var currSlice = '';
+      var insideValue = false;
+      var len = v.length;
+      for (var i=0; i<len; i++) {
+        if (v[i]==',' && !insideValue) {
+          result.push(currSlice);
+          currSlice = '';
+        }
+        else if (v[i]=='|')
+          insideValue = !insideValue;
+        else
+          currSlice += v[i];
+      }
+      result.push(currSlice);
+      return result;
     }
     
     if (this.vvvv_version<="45_26") {
