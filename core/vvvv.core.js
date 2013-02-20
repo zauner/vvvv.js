@@ -133,12 +133,7 @@ VVVV.Core = {
       pin = new VVVV.Core.Pin(pinname,PinDirection.Input, value, this, reset_on_disconnect);
       this.inputPins[pinname] = pin;
       this.patch.pinMap[this.id+'_'+pinname] = pin;
-      if (this.defaultPinValues[pinname] != undefined) {
-        // this checks for the case when complex input pins have a value of "||" when not connected.
-        // this should not override the default value set by the node with ""
-        if (!reset_on_disconnect || this.defaultPinValues[pinname].length>1 || this.defaultPinValues[pinname][0]!="")
-          pin.values = this.defaultPinValues[pinname];
-      }
+      this.applyPinValuesFromXML(pinname);
       return pin;
     }
  
@@ -275,6 +270,24 @@ VVVV.Core = {
           ret = p.values.length;
       });
       return ret;
+    }
+    
+    this.applyPinValuesFromXML = function(pinname) {
+      if (!this.inputPins[pinname])
+        return;
+      var pin = this.inputPins[pinname];
+      var values = this.defaultPinValues[pinname];
+      if (values != undefined) {
+        // this checks for the case when complex input pins have a value of "||" when not connected.
+        // this should not override the default value set by the node with ""
+        if (!pin.reset_on_disconnect || values.length>1 || values[0]!="") {
+          for (var i=0; i<values.length; i++) {
+            if (pin.values[i]!=values[i])
+              pin.setValue(i, values[i]);
+          }
+          pin.setSliceCount(values.length);
+        }
+      }
     }
 	
     this.setup = function() 
@@ -511,12 +524,8 @@ VVVV.Core = {
             
           // the input pin already exists (because the node created it), don't add it, but set values, if present in the xml
           if (n.inputPins[pinname]!=undefined) {
-            if (values!=undefined && !n.inputPins[pinname].isConnected()) {
-              for (var i=0; i<values.length; i++) {
-                if (n.inputPins[pinname].values[i]!=values[i])
-                  n.inputPins[pinname].setValue(i, values[i]);
-              }
-              n.inputPins[pinname].setSliceCount(values.length);
+            if (!n.inputPins[pinname].isConnected()) {
+              n.applyPinValuesFromXML(pinname);
             }
             return;
           }
