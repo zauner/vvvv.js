@@ -173,6 +173,57 @@ VVVV.Nodes.Scale.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: UniformScale (Transform)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.UniformScale = function(id, graph) {
+  this.constructor(id, "UniformScale (Transform)", graph);
+  
+  this.meta = {
+    authors: ['Vadim Smakhtin, Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var ident = mat4.identity(mat4.create());
+  
+  this.trIn = this.addInputPin("Transform In", [ident], this, true);
+  this.xyzIn = this.addInputPin("XYZ", [1.0], this);
+  
+  this.trOut = this.addOutputPin("Transform Out", [], this);
+
+  this.evaluate = function() {
+    
+    var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : this.xyzIn.getSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      var xyz = parseFloat(this.inputPins["XYZ"].getValue(i));
+      
+      var t = mat4.create();
+      mat4.identity(t);
+      
+      mat4.scale(t, [xyz, xyz, xyz]);
+  
+      if (this.inputPins["Transform In"].isConnected())
+      {
+        var transformin = this.inputPins["Transform In"].getValue(i);
+        mat4.multiply(transformin, t, t);
+      }
+      
+      this.trOut.setValue(i, t);
+    }
+    this.trOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.UniformScale.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Perspective (Transform)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
