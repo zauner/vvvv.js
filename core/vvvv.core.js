@@ -134,7 +134,10 @@ VVVV.Core = {
       this.inputPins[pinname] = pin;
       this.patch.pinMap[this.id+'_'+pinname] = pin;
       if (this.defaultPinValues[pinname] != undefined) {
-        pin.values = this.defaultPinValues[pinname];
+        // this checks for the case when complex input pins have a value of "||" when not connected.
+        // this should not override the default value set by the node with ""
+        if (!reset_on_disconnect || this.defaultPinValues[pinname].length>1 || this.defaultPinValues[pinname][0]!="")
+          pin.values = this.defaultPinValues[pinname];
       }
       return pin;
     }
@@ -492,12 +495,7 @@ VVVV.Core = {
         // PINS
         $(this).find('pin').each(function() {
           var pinname = $(this).attr('pinname');
-          // this handles the case when complex input pins have a value of "||" when not connected.
-          // this should result in [] rather than in [""] as it would be correct for String input pins 
-          if (n.inputPins[pinname] && n.inputPins[pinname].reset_on_disconnect && $(this).attr('values')=="||")
-            values = undefined;
-          else
-            values = splitValues($(this).attr('values'));
+          var values = splitValues($(this).attr('values'));
 		  
           //Get all defaults from xml
           if (n.defaultPinValues[pinname] == undefined) {
