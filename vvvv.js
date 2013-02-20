@@ -78,6 +78,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
       VVVV.loadScript('core/vvvv.core.js', loadMonitor);
       VVVV.loadScript('core/vvvv.core.vvvvconnector.js', loadMonitor);
       if (mode=='run' || mode=='full') {
+        VVVV.loadScript('core/vvvv.utils.vmath.js', loadMonitor);
         VVVV.loadScript('mainloop/vvvv.mainloop.js', loadMonitor);
         VVVV.loadScript('mainloop/vvvv.dominterface.js', loadMonitor);
   
@@ -98,6 +99,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
         VVVV.loadScript('nodes/vvvv.nodes.enumerations.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.2d.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.3d.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.dshow9.js', loadMonitor);
       }
       if (mode=='vvvviewer' || mode=='full') {
         VVVV.loadScript('vvvviewer/vvvv.vvvviewer.js', loadMonitor);

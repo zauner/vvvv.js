@@ -33,12 +33,13 @@ VVVV.Nodes.FileTextureCanvas = function(id, graph) {
   var textureLoaded = false;
   
   this.evaluate = function() {
-  
+
     var maxSpreadSize = this.getMaxInputSliceCount();
-    
-    if (filenameIn.pinIsChanged()) { 
-      for (var i=0; i<maxSpreadSize; i++) {
-        if (images[i]==undefined)
+    var i;
+
+    if (filenameIn.pinIsChanged()) {
+      for (i=0; i<maxSpreadSize; i++) {
+        if (images[i] === undefined)
           images[i] = new Image();
         if (images[i].src!=filenameIn.getValue(i)) {
           images[i].loaded = false;
@@ -48,7 +49,7 @@ VVVV.Nodes.FileTextureCanvas = function(id, graph) {
             return function() {
               images[j].loaded = true;
               textureLoaded = true;
-            }
+            };
           })(i);
           images[i].src = filenameIn.getValue(i);
           runningOut.setValue(i, 0);
@@ -63,7 +64,7 @@ VVVV.Nodes.FileTextureCanvas = function(id, graph) {
     }
     
     if (textureLoaded) {
-      for (var i=0; i<maxSpreadSize; i++) {
+      for (i = 0; i < maxSpreadSize; i++) {
         textureOut.setValue(i, images[i]);
         widthOut.setValue(i, images[i].width);
         heightOut.setValue(i, images[i].height);
@@ -72,8 +73,8 @@ VVVV.Nodes.FileTextureCanvas = function(id, graph) {
       textureLoaded = false;
     }
     
-  }
-}
+  };
+};
 VVVV.Nodes.FileTextureCanvas.prototype = new VVVV.Core.Node();
 
 /*
@@ -115,98 +116,156 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
   var networkStatusOut = this.addOutputPin('Network Status', [''], this);
   var readyStatusOut = this.addOutputPin('Ready Status', [''], this);
   
-  var videos = [];
+  var streams = [];
+
+  function createVideo (i) {
+    if (streams[i] === undefined) {
+      var $video = $('<video style="display:none"><source src="" type=video/ogg></video>');
+      $('body').append($video);
+      streams[i] = $video[0];
+      streams[i].volume = 0;
+      var updateStatus = (function(j) {
+        return function() {
+
+        };
+      })(i);
+      streams[i].onprogress = updateStatus;
+      streams[i].oncanplay = updateStatus;
+      streams[i].oncanplaythrough = updateStatus;
+    }
+    if (filenameIn.getValue(i)!=streams[i].currentSrc) {
+      $(streams[i]).find('source').first().attr('src', filenameIn.getValue(i));
+      streams[i].load();
+      if (playIn.getValue(i)>0.5)
+        streams[i].play();
+      else
+        streams[i].pause();
+
+      streams[i].loaded = true;
+      videoOut.setValue(i, streams[i]);
+      audioOut.setValue(i, streams[i]);
+    }
+  }
+
+  function createAudio (i) {
+    if (streams[i] === undefined) {
+      var audio = new Audio();
+      document.body.appendChild(audio);
+      streams[i] = audio;
+      streams[i].volume = 0;
+      var updateStatus = (function(j) {
+        return function() {
+
+        };
+      })(i);
+      streams[i].onprogress = updateStatus;
+      streams[i].oncanplay = updateStatus;
+      streams[i].oncanplaythrough = updateStatus;
+    }
+    if (filenameIn.getValue(i)!=streams[i].currentSrc) {
+      streams[i].src = filenameIn.getValue(i);
+      streams[i].load();
+      if (playIn.getValue(i)>0.5)
+        streams[i].play();
+      else
+        streams[i].pause();
+
+      streams[i].loaded = true;
+      videoOut.setValue(i, streams[i]);
+      audioOut.setValue(i, streams[i]);
+    }
+  }
   
   this.evaluate = function() {
-  
     var maxSpreadSize = this.getMaxInputSliceCount();
-    
-    if (filenameIn.pinIsChanged()) { 
-      for (var i=0; i<maxSpreadSize; i++) {
-        if (videos[i]==undefined) {
-          var $video = $('<video style="display:none"><source src="" type=video/ogg></video>');
-          $('body').append($video);
-          videos[i] = $video[0];
-          videos[i].volume = 0;
-          var updateStatus = (function(j) {
-            return function() {
-              
-            }
-          })(i);
-          videos[i].onprogress = updateStatus;
-          videos[i].oncanplay = updateStatus;
-          videos[i].oncanplaythrough = updateStatus;
-        }
-        if (filenameIn.getValue(i)!=videos[i].currentSrc) {
-          $(videos[i]).find('source').first().attr('src', filenameIn.getValue(i));
-          videos[i].load();
-          if (playIn.getValue(i)>0.5)
-            videos[i].play();
-          else
-            videos[i].pause();
-          
-          videos[i].loaded = true;
-          videoOut.setValue(i, videos[i]);
-          audioOut.setValue(i, videos[i]);
+    var stream;
+    var i;
+    if (filenameIn.pinIsChanged()) {
+      for (i = 0; i<maxSpreadSize; i++) {
+        var filename = filenameIn.getValue(i);
+
+        if (filename === undefined) continue;
+
+        var strings = filename.split(".");
+        var extension = strings[strings.length-1];
+
+        switch(extension) {
+          case "avi":
+          case "mp4":
+            createVideo(i);
+            break;
+          case "mp3":
+          case "ogg":
+            createAudio(i);
+            break;
+          default:
+            console.log("Sorry, unsupported file type in "+this.nodename);
         }
       }
     }
     
     if (playIn.pinIsChanged()) {
-      for (var i=0; i<maxSpreadSize; i++) {
+      for (i = 0; i<maxSpreadSize; i++) {
+        stream = streams[i];
+        if (stream === undefined) continue;
+        
         if (playIn.getValue(i)>0.5)
-          videos[i].play();
+          stream.play();
         else
-          videos[i].pause();
+          stream.pause();
       }
     }
     
     if (doSeekIn.pinIsChanged()) {
-      for (var i=0; i<maxSpreadSize; i++) {
-        if (videos[i%videos.length].loaded && doSeekIn.getValue(i)>=.5) {
-          videos[i%videos.length].currentTime = parseFloat(seekPosIn.getValue(i));
-          if (playIn.getValue(i)>.5)
-            videos[i].play();
+      for (i = 0; i < maxSpreadSize; i++) {
+        stream = streams[i];
+        if (stream === undefined) continue;
+
+        if (streams[i%streams.length].loaded && doSeekIn.getValue(i) >= 0.5) {
+          streams[i%streams.length].currentTime = parseFloat(seekPosIn.getValue(i));
+          if (playIn.getValue(i) > 0.5)
+            stream.play();
         }
       }
     }
     
-    for (var i=0; i<maxSpreadSize; i++) {
-      if (!videos[i].paused) {
-        videoOut.setValue(i, videos[i]);
-        audioOut.setValue(i, videos[i]);
-        if (durationOut.getValue(i)!=videos[i].duration)
-          durationOut.setValue(i, videos[i].duration);
-        positionOut.setValue(i, videos[i].currentTime);
+    for (i = 0; i < maxSpreadSize; i++) {
+      stream = streams[i];
+      if (stream === undefined) continue;
+
+      if (!stream.paused) {
+        // videoOut.setValue(i, stream);
+        // audioOut.setValue(i, stream);
+        if (durationOut.getValue(i)!=stream.duration)
+          durationOut.setValue(i, stream.duration);
+        positionOut.setValue(i, stream.currentTime);
         var endTime = parseFloat(endTimeIn.getValue(i));
         var startTime = parseFloat(startTimeIn.getValue(i));
-        if (videos[i].currentTime<startTime)
-          videos[i].currentTime = startTime;
-        if (videos[i].currentTime>=videos[i].duration || (endTime>=0 && videos[i].currentTime>=endTime)) {
-          if (loopIn.getValue(i)>=.5)
-            videos[i].currentTime = startTime;
+        if (streams[i].currentTime<startTime)
+          streams[i].currentTime = startTime;
+        if (streams[i].currentTime>=streams[i].duration || (endTime>=0 && streams[i].currentTime>=endTime)) {
+          if (loopIn.getValue(i) >= 0.5)
+            streams[i].currentTime = startTime;
           else
-            videos[i].pause();
+            streams[i].pause();
         }
       }
-      if (videos[i].videoWidth!=widthOut.getValue(i) || videos[i].videoHeight!=heightOut.getValue(i)) {
-        widthOut.setValue(i, videos[i].videoWidth);
-        heightOut.setValue(i, videos[i].videoHeight);
+      if (streams[i].videoWidth!=widthOut.getValue(i) || streams[i].videoHeight!=heightOut.getValue(i)) {
+        widthOut.setValue(i, streams[i].videoWidth);
+        heightOut.setValue(i, streams[i].videoHeight);
       }
-      if (networkStatusOut.getValue(i)!=networkStates[videos[i].networkState])
-        networkStatusOut.setValue(i, networkStates[videos[i].networkState]);
-      if (readyStatusOut.getValue(i)!=readyStates[videos[i].readyState])
-        readyStatusOut.setValue(i, readyStates[videos[i].readyState]);
+      if (networkStatusOut.getValue(i)!=networkStates[streams[i].networkState])
+        networkStatusOut.setValue(i, networkStates[streams[i].networkState]);
+      if (readyStatusOut.getValue(i)!=readyStates[streams[i].readyState])
+        readyStatusOut.setValue(i, readyStates[streams[i].readyState]);
     }
     
     videoOut.setSliceCount(maxSpreadSize);
     audioOut.setSliceCount(maxSpreadSize);
     
-  }
-}
+  };
+};
 VVVV.Nodes.FileStreamCanvas.prototype = new VVVV.Core.Node();
-
-
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -229,7 +288,7 @@ VVVV.Nodes.AudioOutHTML5 = function(id, graph) {
   var volumeIn = this.addInputPin('Volume', [0.5], this);
   
   this.evaluate = function() {
-  
+
     var maxSpreadSize = this.getMaxInputSliceCount();
     
     if (volumeIn.pinIsChanged()) {
@@ -238,7 +297,6 @@ VVVV.Nodes.AudioOutHTML5 = function(id, graph) {
       }
     }
     
-  }
-}
+  };
+};
 VVVV.Nodes.AudioOutHTML5.prototype = new VVVV.Core.Node();
-
