@@ -511,11 +511,9 @@ VVVV.Core = {
           var values = splitValues($(this).attr('values'));
 		  
           //Get all defaults from xml
-          if (n.defaultPinValues[pinname] == undefined) {
-            if (values!=undefined) {
-              if (values.length > 0)
-                n.addDefault(pinname, values);
-            }
+          if (values!=undefined) {
+            if (values.length > 0)
+              n.addDefault(pinname, values);
           }
           
           // if the output pin already exists (because the node created it), skip
