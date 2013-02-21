@@ -72,3 +72,8 @@ VVVV.Core.VVVVConnector = function(patch) {
   }
   
 }
+
+VVVV.Nodes.VVVVJsConnector = function(id, graph) {
+  this.constructor(id, "VVVVJsConnector (VVVVjs)", graph);
+}
+VVVV.Nodes.VVVVJsConnector.prototype = new VVVV.Core.Node();
