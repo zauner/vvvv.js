@@ -44,6 +44,12 @@ VVVV.loadScript = function(url, callback) {
     head.appendChild(script);
 };
 
+// VVVV.CategoryMap defines how node categories are translated from classic VVVV to VVVV.js
+VVVV.CategoryMap = {
+  "EX9": "WebGL",
+  "DX9": "WebGL"
+};
+
 /**
  * Adds the neccessary JavaScripts to the head, calls the callback once everything is in place.
  * @param {String} path_to_vvvv points to the folder of your vvvv.js. This is relative to your html-file

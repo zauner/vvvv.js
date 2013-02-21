@@ -14,7 +14,7 @@ VVVV.Core.WebGlResourceNode = function(id, nodename, graph) {
     var that = this;
     pin.isWebGlResourcePin = true;
     pin.connectionChanged = function() {
-      var renderers = that.findDownstreamNodes('Renderer (EX9)');
+      var renderers = that.findDownstreamNodes('Renderer (WebGL)');
       if (!that.renderContexts)
         that.renderContexts = []; // this 'public property' should actually go to the top, right above this.setAsWebGlResourcePin. However, that doesnt work, values got overwritte by nodes of the same type.
       for (var i=0; i<renderers.length; i++) {
@@ -28,7 +28,7 @@ VVVV.Core.WebGlResourceNode = function(id, nodename, graph) {
       
       _(that.inputPins).each(function(p) {
         p.markPinAsChanged();
-        if (that.nodename!="Renderer (EX9)") {
+        if (that.nodename!="Renderer (WebGL)") {
           if (p.isConnected() && p.links[0].fromPin.isWebGlResourcePin) {
             p.links[0].fromPin.connectionChanged(); 
           }
@@ -228,14 +228,14 @@ VVVV.Types.ShaderProgram = function() {
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: FileTexture (EX9.Texture)
+ NODE: FileTexture (WebGL.Texture)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 VVVV.Nodes.FileTexture = function(id, graph) {
-  this.constructor(id, "FileTexture (EX9.Texture)", graph);
+  this.constructor(id, "FileTexture (WebGL.Texture)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -295,14 +295,14 @@ VVVV.Nodes.FileTexture.prototype = new VVVV.Core.WebGlResourceNode();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: DX9Texture (EX9.Texture)
+ NODE: DX9Texture (WebGL.Texture)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 VVVV.Nodes.DX9Texture = function(id, graph) {
-  this.constructor(id, "DX9Texture (EX9.Texture)", graph);
+  this.constructor(id, "DX9Texture (WebGL.Texture)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -358,14 +358,14 @@ VVVV.Nodes.DX9Texture.prototype = new VVVV.Core.WebGlResourceNode();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: VideoTexture (EX9.Texture VMR9)
+ NODE: VideoTexture (WebGL.Texture VMR9)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 VVVV.Nodes.VideoTexture = function(id, graph) {
-  this.constructor(id, "VideoTexture (EX9.Texture VMR9)", graph);
+  this.constructor(id, "VideoTexture (WebGL.Texture VMR9)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -416,14 +416,14 @@ VVVV.Nodes.VideoTexture.prototype = new VVVV.Core.WebGlResourceNode();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: VertexBuffer(EX9.Geometry Join)
+ NODE: VertexBuffer(WebGL.Geometry Join)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 VVVV.Nodes.VertexBufferJoin = function(id, graph) {
-  this.constructor(id, "VertexBuffer (EX9.Geometry Join)", graph);
+  this.constructor(id, "VertexBuffer (WebGL.Geometry Join)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -473,14 +473,14 @@ VVVV.Nodes.VertexBufferJoin.prototype = new VVVV.Core.WebGlResourceNode();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: Mesh (EX9.Geometry Join)
+ NODE: Mesh (WebGL.Geometry Join)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 VVVV.Nodes.MeshJoin = function(id, graph) {
-  this.constructor(id, "Mesh (EX9.Geometry Join)", graph);
+  this.constructor(id, "Mesh (WebGL.Geometry Join)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -522,14 +522,14 @@ VVVV.Nodes.MeshJoin.prototype = new VVVV.Core.WebGlResourceNode();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: Grid (EX9.Geometry)
+ NODE: Grid (WebGL.Geometry)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 VVVV.Nodes.Grid = function(id, graph) {
-  this.constructor(id, "Grid (EX9.Geometry)", graph);
+  this.constructor(id, "Grid (WebGL.Geometry)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -606,14 +606,14 @@ VVVV.Nodes.Grid.prototype = new VVVV.Core.WebGlResourceNode();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: Sphere (EX9.Geometry)
+ NODE: Sphere (WebGL.Geometry)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 VVVV.Nodes.Sphere = function(id, graph) {
-  this.constructor(id, "Sphere (EX9.Geometry)", graph);
+  this.constructor(id, "Sphere (WebGL.Geometry)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -694,14 +694,14 @@ VVVV.Nodes.Sphere.prototype = new VVVV.Core.WebGlResourceNode();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: Cylinder (EX9.Geometry)
+ NODE: Cylinder (WebGL.Geometry)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 VVVV.Nodes.Cylinder = function(id, graph) {
-  this.constructor(id, "Cylinder (EX9.Geometry)", graph);
+  this.constructor(id, "Cylinder (WebGL.Geometry)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -829,14 +829,14 @@ VVVV.Nodes.Cylinder.prototype = new VVVV.Core.WebGlResourceNode();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: Blend (EX9.RenderState Advanced)
+ NODE: Blend (WebGL.RenderState Advanced)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 VVVV.Nodes.BlendWebGLAdvanced = function(id, graph) {
-  this.constructor(id, "Blend (EX9.RenderState Advanced)", graph);
+  this.constructor(id, "Blend (WebGL.RenderState Advanced)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -896,14 +896,14 @@ VVVV.Nodes.BlendWebGLAdvanced.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: Blend (EX9.RenderState)
+ NODE: Blend (WebGL.RenderState)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 VVVV.Nodes.BlendWebGL = function(id, graph) {
-  this.constructor(id, "Blend (EX9.RenderState)", graph);
+  this.constructor(id, "Blend (WebGL.RenderState)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -962,14 +962,14 @@ VVVV.Nodes.BlendWebGL.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: Fill (EX9.RenderState)
+ NODE: Fill (WebGL.RenderState)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 VVVV.Nodes.FillWebGL = function(id, graph) {
-  this.constructor(id, "Fill (EX9.RenderState)", graph);
+  this.constructor(id, "Fill (WebGL.RenderState)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -1018,14 +1018,14 @@ VVVV.Nodes.FillWebGL.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: ZWriteEnable (EX9.RenderState)
+ NODE: ZWriteEnable (WebGL.RenderState)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 VVVV.Nodes.ZWriteEnableWebGL = function(id, graph) {
-  this.constructor(id, "ZWriteEnable (EX9.RenderState)", graph);
+  this.constructor(id, "ZWriteEnable (WebGL.RenderState)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -1083,14 +1083,14 @@ VVVV.Nodes.ZWriteEnableWebGL.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: GenericShader (EX9.Effect)
+ NODE: GenericShader (WebGL.Effect)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 VVVV.Nodes.GenericShader = function(id, graph) {
-  this.constructor(id, "GenericShader (EX9.Effect)", graph);
+  this.constructor(id, "GenericShader (WebGL.Effect)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -1317,14 +1317,14 @@ VVVV.Nodes.GenericShader.prototype = new VVVV.Core.WebGlResourceNode();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: Quad (DX9)
+ NODE: Quad (WebGL)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 VVVV.Nodes.Quad = function(id, graph) {
-  this.constructor(id, "Quad (DX9)", graph);
+  this.constructor(id, "Quad (WebGL)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -1481,14 +1481,14 @@ VVVV.Nodes.Quad.prototype = new VVVV.Core.WebGlResourceNode();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: Group (EX9)
+ NODE: Group (WebGL)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 VVVV.Nodes.Group = function(id, graph) {
-  this.constructor(id, "Group (EX9)", graph);
+  this.constructor(id, "Group (WebGL)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -1534,20 +1534,20 @@ VVVV.Nodes.Group.prototype = new VVVV.Core.WebGlResourceNode();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: Renderer (EX9)
+ NODE: Renderer (WebGL)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 VVVV.Nodes.RendererWebGL = function(id, graph) {
-  this.constructor(id, "Renderer (EX9)", graph);
+  this.constructor(id, "Renderer (WebGL)", graph);
   
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['Disabling Clear doesn\'t work in Chrome', 'Backbuffer width and height defined by canvas size', 'No Fullscreen', 'No Enable Pin', 'No Aspect Ration and Viewport transform', 'No mouse output', 'No backbuffer dimesions output', 'No WebGL (EX9) Output Pin']
+    compatibility_issues: ['Disabling Clear doesn\'t work in Chrome', 'No Fullscreen', 'No Enable Pin', 'No Aspect Ration and Viewport transform', 'No mouse output']
   };
   
   this.addInputPin("Layers", [], this);

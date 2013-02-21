@@ -444,7 +444,13 @@ VVVV.Core = {
         if (!nodeExists) {
           nodename = $(this).attr('systemname')!="" ? $(this).attr('systemname') : $(this).attr('nodename');
           if (nodename==undefined)
-            return;       
+            return;     
+          
+          // translate categories from classic VVVV to VVVV.js context    
+          var categorymatch = nodename.match(/\(([^\.]+).*\)$/);
+          if (categorymatch && VVVV.CategoryMap[categorymatch[1]])
+            nodename = nodename.replace("("+categorymatch[1], "("+VVVV.CategoryMap[categorymatch[1]]);
+            
           if (VVVV.NodeLibrary[nodename.toLowerCase()]!=undefined) {
             var n = new VVVV.NodeLibrary[nodename.toLowerCase()]($(this).attr('id'), thisPatch);
             
