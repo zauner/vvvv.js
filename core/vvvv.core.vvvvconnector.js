@@ -6,15 +6,16 @@
 if (!WebSocket && MozWebSocket)
   var WebSocket = MozWebSocket;
 
-VVVV.Core.VVVVConnector = function(patch) {
+VVVV.Core.VVVVConnector = function() {
   
-  this.patch = patch;
+  this.patches = [];
+  this.patchMap = {};
   this.host = false;
   var socket = false;
 
   var that = this;
   
-  this.enable = function(opts) {
+  this.enable = function(patch, opts) {
     opts = opts || {}
     if (!this.host)
       return;
@@ -24,10 +25,19 @@ VVVV.Core.VVVVConnector = function(patch) {
     socket.onopen = function() {
       opened = true;
       console.log("connected to VVVV ...");
-      that.pushCompletePatch();
-      window.setTimeout(function() {
-        that.pullCompletePatch();
-      }, 1000);
+      that.addPatch(patch);
+      var subpatches = patch.getSubPatches();
+      
+      function delayedAddPatch(i) {
+        if (subpatches[i]) {
+          that.addPatch(subpatches[i]);
+          window.setTimeout(function() {
+            delayedAddPatch(i+1);
+          }, 2000);
+        }
+      }
+      window.setTimeout(function() { delayedAddPatch(0); }, 2000);
+      
       if (opts.success)
         opts.success();
     }
@@ -37,12 +47,37 @@ VVVV.Core.VVVVConnector = function(patch) {
       opened = false;
     }
     socket.onmessage = function(m) {
-      patch.doLoad(m.data);
-      patch.afterUpdate();
+      var match = m.data.match(/^UPDATE\/([^/]+)\/([\s\S]*)/);
+      if (match) {
+        if (that.patchMap[match[1]+".v4p"]) {
+          _(that.patchMap[match[1]+".v4p"]).each(function(p) {
+            p.doLoad(match[2]);
+            p.afterUpdate();
+          });
+        }
+      }
     }
   }
   
+  this.addPatch = function(patch) {
+    console.log('adding patch '+patch.nodename+' to Connector');
+    this.patches.push(patch);
+    if (!this.patchMap[patch.nodename])
+      this.patchMap[patch.nodename] = [];
+    this.patchMap[patch.nodename].push(patch);
+    patch.VVVVConnector = this;
+    that.pushCompletePatch(patch);
+    window.setTimeout(function() {
+      that.pullCompletePatch(patch);
+    }, 1000);
+  }
+  
   this.disable = function() {
+    // TODO alles
+    if (!this.patch)
+      return;
+    this.patch.VVVVConnector = undefined;
+    this.patch = undefined;
     if (socket)
       socket.close();
     socket.onmessage = null;
@@ -50,14 +85,14 @@ VVVV.Core.VVVVConnector = function(patch) {
     socket = false;
   }
   
-  this.pullCompletePatch = function() {
-    console.log('pulling patch...');
-    socket.send('PULL');
+  this.pullCompletePatch = function(patch) {
+    console.log('pulling patch...'+patch.nodename);
+    socket.send('PULL/'+patch.nodename);
   }
   
-  this.pushCompletePatch = function() {
-    console.log('pushing patch ...');
-    socket.send('PUSH'+this.patch.XMLCode);
+  this.pushCompletePatch = function(patch) {
+    console.log('pushing patch ...'+patch.nodename);
+    socket.send('PUSH/'+patch.nodename+'/'+patch.XMLCode);
   }
   
   this.sendUndo = function() {
@@ -72,6 +107,9 @@ VVVV.Core.VVVVConnector = function(patch) {
   }
   
 }
+
+VVVV.Editors = {};
+VVVV.Editors["Connector"] = new VVVV.Core.VVVVConnector();
 
 VVVV.Nodes.VVVVJsConnector = function(id, graph) {
   this.constructor(id, "VVVVJsConnector (VVVVjs)", graph);

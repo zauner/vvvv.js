@@ -28,7 +28,8 @@ VVVV.Core = {
     this.changed = true;
     this.active = false;
     this.reset_on_disconnect = reset_on_disconnect || false;
-    this.twinPin = undefined;
+    this.slavePin = undefined;
+    this.masterPin = undefined;
     
     this.getValue = function(i, binSize) {
       if (!binSize || binSize==1)
@@ -49,8 +50,8 @@ VVVV.Core = {
         if (l.toPin==that) return;
         l.toPin.setValue(i, v);
       });
-      if (this.twinPin) {
-        this.twinPin.setValue(i, v);
+      if (this.slavePin) {
+        this.slavePin.setValue(i, v);
       }
       if (this.node.isIOBox && this.pinname=='Descriptive Name' && this.node.parentPatch.domInterface) {
         this.node.parentPatch.domInterface.connect(this.node);
@@ -65,8 +66,8 @@ VVVV.Core = {
         if (l.toPin==that) return;
         l.toPin.markPinAsChanged();
       });
-      if (this.twinPin) {
-        this.twinPin.markPinAsChanged();
+      if (this.slavePin) {
+        this.slavePin.markPinAsChanged();
       }
     }
     
@@ -77,7 +78,7 @@ VVVV.Core = {
     }
 	
     this.isConnected = function() {
-      return this.links.length > 0 ? true : false;
+      return (this.links.length > 0 || (this.masterPin && this.masterPin.isConnected()));
     }
     
     this.getSliceCount = function() {
@@ -348,7 +349,7 @@ VVVV.Core = {
     this.error = error_handler;
     
     this.XMLCode = '';
-    this.VVVVConnector = new VVVV.Core.VVVVConnector(this);
+    this.VVVVConnector
     
     var print_timing = false;
     
@@ -391,7 +392,7 @@ VVVV.Core = {
     var thisPatch = this;
     
     this.doLoad = function(xml) {
-      
+      this.dirty = true;
       var version_match = /^<!DOCTYPE\s+PATCH\s+SYSTEM\s+"(.+\\)*(.+)\.dtd/.exec(xml);
       if (version_match)
         thisPatch.vvvv_version = version_match[2].replace(/[a-zA-Z]+/, '_');
@@ -486,11 +487,14 @@ VVVV.Core = {
                   thisPatch.pause = false;
                   nodesLoading--;
                   updateLinks(xml);
+                  if (thisPatch.VVVVConnector)
+                    thisPatch.VVVVConnector.addPatch(n);
                 },
                 function() {
                   n.not_implemented = true;
                   VVVV.onNotImplemented(nodename);
                 });
+              n.isSubpatch = true;
               n.parentPatch = thisPatch;
               n.id = $(this).attr('id');
               thisPatch.nodeMap[n.id] = n;
@@ -604,14 +608,16 @@ VVVV.Core = {
               var pin = thisPatch.inputPins[pinname];
               if (pin==undefined)
                 var pin = thisPatch.addOutputPin(pinname, n.IOBoxOutputPin().values);
-              n.IOBoxOutputPin().twinPin = pin;
+              n.IOBoxOutputPin().slavePin = pin;
+              pin.masterPin = n.IOBoxOutputPin();
             }
             n.IOBoxOutputPin().connectionChanged = function() {
               console.log('interfacing input pin detected'+pinname);
               var pin = thisPatch.inputPins[pinname];
               if (pin==undefined)
                 var pin = thisPatch.addInputPin(pinname, n.IOBoxInputPin().values, null, false);
-              pin.twinPin = n.IOBoxInputPin();
+              pin.slavePin = n.IOBoxInputPin();
+              n.IOBoxInputPin().masterPin = pin;
             }
           }
         }
@@ -729,6 +735,17 @@ VVVV.Core = {
       
     }
     
+    this.getSubPatches = function() {
+      var ret = [];
+      for (var i=0; i<this.nodeList.length; i++) {
+        if (this.nodeList[i].isSubpatch) {
+          ret.push(this.nodeList[i]);
+          ret.concat(this.nodeList[i].getSubPatches());
+        }
+      }
+      return ret;
+    }
+    
     
     this.afterEvaluate = function() {
       
@@ -822,8 +839,8 @@ VVVV.Core = {
     }
     else if (/^ws:\/\//.test(ressource)) {
       var that = this;
-      this.VVVVConnector.host = ressource;
-      this.VVVVConnector.enable({
+      VVVV.Editors["Connector"].host = ressource;
+      VVVV.Editors["Connector"].enable(this, {
         success: function() {
           if (that.success) that.success();
         },
@@ -841,10 +858,11 @@ VVVV.Core = {
     // bind the #-shortcuts
     
     function checkLocationHash() {
-      if (!thisPatch.VVVVConnector.isConnected() && (window.location.hash=='#sync/'+thisPatch.ressource || window.location.hash=='#syncandview/'+thisPatch.ressource)) {
+      if (!VVVV.Editors["Connector"].isConnected() && (window.location.hash=='#sync/'+thisPatch.ressource || window.location.hash=='#syncandview/'+thisPatch.ressource)) {
         console.log('enabling devel env');
-        thisPatch.VVVVConnector.host = 'ws://localhost';
-        thisPatch.VVVVConnector.enable();
+        VVVV.Editors["Connector"].disable();
+        VVVV.Editors["Connector"].host = 'ws://localhost';
+        VVVV.Editors["Connector"].enable(thisPatch);
       }
       if (!thisPatch.vvvviewer && (window.location.hash=='#view/'+thisPatch.ressource || window.location.hash=='#syncandview/'+thisPatch.ressource)) {
         thisPatch.vvvviewer = new VVVV.VVVViewer(thisPatch);
