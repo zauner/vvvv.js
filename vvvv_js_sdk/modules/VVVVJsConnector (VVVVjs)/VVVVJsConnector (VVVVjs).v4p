@@ -1,6 +1,6 @@
 <!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta27.dtd" >
    <PATCH nodename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\vvvv_js_page\vvvv_js\vvvv_js_sdk\modules\VVVVJsConnector (VVVVjs)\VVVVJsConnector (VVVVjs).v4p" filename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\websocket_server.v4p" systemname="websocket_server">
-   <BOUNDS height="15480" left="495" top="210" type="Window" width="14400">
+   <BOUNDS height="6000" left="1635" top="2070" type="Window" width="9000">
    </BOUNDS>
    <NODE componentmode="Hidden" id="8" nodename="GetPatch (VVVV)" systemname="GetPatch (VVVV)">
    <BOUNDS height="100" left="10764" top="2493" type="Node" width="100">
@@ -285,7 +285,7 @@
    </BOUNDS>
    <BOUNDS height="2160" left="3366" top="8406" type="Box" width="4920">
    </BOUNDS>
-   <PIN encoded="0" pinname="Input String" slicecount="1" visible="1" values="|&lt;PATCH nodename=&quot;0.v4p ////&quot;&gt;&cr;&lf;   &lt;NODE systemname=&quot;VVVVJsConnector (VVVVjs)&quot; nodename=&quot;VVVVJsConnector (VVVVjs)&quot; componentmode=&quot;Hidden&quot; id=&quot;10001&quot;&gt;&cr;&lf;   &lt;BOUNDS type=&quot;Node&quot; left=&quot;0&quot; top=&quot;0&quot; width=&quot;100&quot; height=&quot;100&quot;&gt;&cr;&lf;   &lt;/BOUNDS&gt;&cr;&lf;   &lt;/NODE&gt;&cr;&lf;   &lt;/PATCH&gt;|">
+   <PIN encoded="0" pinname="Input String" slicecount="1" visible="1" values="|&lt;PATCH&gt;&cr;&lf;   &lt;NODE systemname=&quot;VVVVJsConnector (VVVVjs)&quot; nodename=&quot;VVVVJsConnector (VVVVjs)&quot; componentmode=&quot;Hidden&quot; id=&quot;10001&quot;&gt;&cr;&lf;   &lt;BOUNDS type=&quot;Node&quot; left=&quot;0&quot; top=&quot;0&quot; width=&quot;100&quot; height=&quot;100&quot;&gt;&cr;&lf;   &lt;/BOUNDS&gt;&cr;&lf;   &lt;/NODE&gt;&cr;&lf;   &lt;/PATCH&gt;|">
    </PIN>
    <PIN pinname="Output String" visible="1">
    </PIN>
