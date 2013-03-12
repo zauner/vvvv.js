@@ -511,7 +511,7 @@ VVVV.Nodes.AsString = function(id, graph) {
   };
   
   var inputIn = this.addInputPin("Input", [0.0], this);
-  var subtypeIn = this.addInputPin("SubType", ['Real'], this);
+  var subtypeIn = this.addInputPin("SubType", ['Real (MinFloat .. MaxFloat)'], this);
   
   var outputOut = this.addOutputPin("Output", [0.0], this);
 
