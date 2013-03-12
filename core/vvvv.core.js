@@ -352,7 +352,7 @@ VVVV.Core = {
     this.error = error_handler;
     
     this.XMLCode = '';
-    this.VVVVConnector
+    this.VVVVConnector = undefined;
     
     var print_timing = false;
     
