@@ -119,11 +119,14 @@ VVVV.Core = {
     this.isIOBox = false;
     this.isShader = false;
     
-    this.inputPins = {};
-    this.outputPins = {};
-    this.invisiblePins = {} ;
+    this.setupObject = function() { // had to put this into a method to allow Patch to "derive" from Node. Really have to understand this javascript prototype thing some day ...
+      this.inputPins = {};
+      this.outputPins = {};
+      this.invisiblePins = {} ;
 	
-	  this.defaultPinValues = {};
+	    this.defaultPinValues = {};
+	  };
+	  this.setupObject();
     
     this.auto_evaluate = false;
     this.delays_output = false;
@@ -493,7 +496,9 @@ VVVV.Core = {
                 function() {
                   n.not_implemented = true;
                   VVVV.onNotImplemented(nodename);
-                });
+                }
+              );
+              n.setupObject();
               n.isSubpatch = true;
               n.parentPatch = thisPatch;
               n.id = $(this).attr('id');
