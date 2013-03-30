@@ -46,10 +46,11 @@ VVVV.Core = {
       this.changed = true;
       this.node.dirty = true;
       var that = this;
-      _(this.links).each(function(l) {
-        if (l.toPin==that) return;
-        l.toPin.setValue(i, v);
-      });
+      var linkCount = this.links.length;
+      for (var j=0; j<linkCount; j++) {
+        if (this.links[j].toPin==that) break;
+        this.links[j].toPin.setValue(i, v);
+      }
       if (this.slavePin) {
         this.slavePin.setValue(i, v);
       }
@@ -62,10 +63,11 @@ VVVV.Core = {
       this.changed = true;
       this.node.dirty = true;
       var that = this;
-      _(this.links).each(function(l) {
-        if (l.toPin==that) return;
-        l.toPin.markPinAsChanged();
-      });
+      var linkCount = this.links.length;
+      for (var i=0; i<linkCount; i++) {
+        if (this.links[i].toPin==that) break;
+        this.links[i].toPin.markPinAsChanged();
+      }
       if (this.slavePin) {
         this.slavePin.markPinAsChanged();
       }
@@ -91,11 +93,15 @@ VVVV.Core = {
       this.values.length = len;
       this.changed = true;	  
       this.node.dirty = true; 
-	   _(this.links).each(function(l) {
-        l.toPin.values.length = len;
-        l.toPin.changed = true;
-        l.toPin.node.dirty = true;
-      });
+	    var linkCount = this.links.length;
+      for (var i=0; i<linkCount; i++) {
+        this.links[i].toPin.values.length = len;
+        this.links[i].toPin.changed = true;
+        this.links[i].toPin.node.dirty = true;
+      }
+      if (this.slavePin) {
+        this.slavePin.setSliceCount(len);
+      }
     }
     
     this.reset = function() {
@@ -396,7 +402,7 @@ VVVV.Core = {
     
     this.doLoad = function(xml) {
       this.dirty = true;
-      var version_match = /^<!DOCTYPE\s+PATCH\s+SYSTEM\s+"(.+\\)*(.+)\.dtd/.exec(xml);
+      var version_match = /^<!DOCTYPE\s+PATCH\s+SYSTEM\s+"(.+)\\(.+)\.dtd/.exec(xml);
       if (version_match)
         thisPatch.vvvv_version = version_match[2].replace(/[a-zA-Z]+/, '_');
       
@@ -492,6 +498,8 @@ VVVV.Core = {
                   updateLinks(xml);
                   if (thisPatch.VVVVConnector)
                     thisPatch.VVVVConnector.addPatch(n);
+                  if (n.auto_evaluate)
+                    this.auto_evaluate = true;
                 },
                 function() {
                   n.not_implemented = true;
@@ -516,6 +524,9 @@ VVVV.Core = {
         }
         else
           n = thisPatch.nodeMap[$(this).attr('id')];
+          
+        if (n.auto_evaluate) // as soon as the patch contains a single auto-evaluate node, it is also an auto evaluating subpatch
+          thisPatch.auto_evaluate = true;
           
         if ($(this).attr('deleteme')=='pronto') {
           if (VVVV_ENV=='development') console.log('removing node '+n.id);
@@ -606,10 +617,10 @@ VVVV.Core = {
         
         // Check if this is an interfacing IOBox
         if (n.isIOBox) {
-          if (n.invisiblePins["Descriptive Name"].getValue(0)!="") {
+          if (thisPatch.parentPatch && n.invisiblePins["Descriptive Name"].getValue(0)!="") {
             var pinname = n.invisiblePins["Descriptive Name"].getValue(0);
             n.IOBoxInputPin().connectionChanged = function() {
-              if (VVVV_ENV=='development') console.log('interfacing output pin detected'+pinname);
+              if (VVVV_ENV=='development') console.log('interfacing output pin detected: '+pinname);
               var pin = thisPatch.inputPins[pinname];
               if (pin==undefined)
                 var pin = thisPatch.addOutputPin(pinname, n.IOBoxOutputPin().values);
@@ -617,7 +628,7 @@ VVVV.Core = {
               pin.masterPin = n.IOBoxOutputPin();
             }
             n.IOBoxOutputPin().connectionChanged = function() {
-              console.log('interfacing input pin detected'+pinname);
+              if (VVVV_ENV=='development') console.log('interfacing input pin detected: '+pinname);
               var pin = thisPatch.inputPins[pinname];
               if (pin==undefined)
                 var pin = thisPatch.addInputPin(pinname, n.IOBoxInputPin().values, null, false);
