@@ -60,6 +60,9 @@ VVVV.Core.DOMInterface = function(patch) {
       if (n.invisiblePins["Descriptive Name"]==undefined)
         return;
       that.connect(n);
+      n.IOBoxInputPin().connectionChanged = function() {
+        that.connect(n);
+      }
     }
   });
 
