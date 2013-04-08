@@ -60,6 +60,10 @@ VVVV.Core.VVVVConnector = function() {
   }
   
   this.addPatch = function(patch) {
+    for (var i=0; i<this.patches.length; i++) {
+      if (this.patches[i].id==patch.id)
+        return;
+    }
     console.log('adding patch '+patch.nodename+' to Connector');
     this.patches.push(patch);
     if (!this.patchMap[patch.nodename])
