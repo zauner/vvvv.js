@@ -500,6 +500,7 @@ VVVV.Core = {
                     thisPatch.VVVVConnector.addPatch(n);
                   if (n.auto_evaluate)
                     this.auto_evaluate = true;
+                  thisPatch.afterUpdate();
                 },
                 function() {
                   n.not_implemented = true;
@@ -621,7 +622,7 @@ VVVV.Core = {
             var pinname = n.invisiblePins["Descriptive Name"].getValue(0);
             n.IOBoxInputPin().connectionChanged = function() {
               if (VVVV_ENV=='development') console.log('interfacing output pin detected: '+pinname);
-              var pin = thisPatch.inputPins[pinname];
+              var pin = thisPatch.outputPins[pinname];
               if (pin==undefined)
                 var pin = thisPatch.addOutputPin(pinname, n.IOBoxOutputPin().values);
               n.IOBoxOutputPin().slavePin = pin;
@@ -665,6 +666,7 @@ VVVV.Core = {
     
       if (nodesLoading===0)
         updateLinks(xml);
+        
       function updateLinks(xml) {
         if (syncmode=='complete')
           newLinks = {};
