@@ -54,8 +54,11 @@ VVVV.Core = {
       if (this.slavePin) {
         this.slavePin.setValue(i, v);
       }
-      if (this.node.isIOBox && this.pinname=='Descriptive Name' && this.node.parentPatch.domInterface) {
-        this.node.parentPatch.domInterface.connect(this.node);
+      if (this.node.isIOBox && this.pinname=='Descriptive Name') {
+        if (this.node.parentPatch.domInterface)
+          this.node.parentPatch.domInterface.connect(this.node);
+        else if (this.node.parentPatch.parentPatch)
+          this.node.registerInterfacePin();
       }
     }
     
@@ -309,6 +312,54 @@ VVVV.Core = {
         }
       }
     }
+    
+    this.registerInterfacePin = function() {
+      var that = this;
+      if (this.isIOBox) {
+        if (this.parentPatch.parentPatch && this.invisiblePins["Descriptive Name"].getValue(0)!="") {
+          var pinname = this.invisiblePins["Descriptive Name"].getValue(0);
+          this.IOBoxInputPin().connectionChanged = function() {
+            if (this.links.length==0) // TODO: delete subpatch pin
+              return;
+            if (true) { //}!that.IOBoxOutputPin().slavePin) {
+              if (VVVV_ENV=='development') console.log('interfacing output pin detected: '+pinname);
+              var pin = that.parentPatch.outputPins[pinname];
+              if (pin==undefined)
+                var pin = that.parentPatch.addOutputPin(pinname, that.IOBoxOutputPin().values);
+              that.IOBoxOutputPin().slavePin = pin;
+              pin.masterPin = that.IOBoxOutputPin();
+            }
+            else if (that.IOBoxOutputPin().slavePin.pinname!=pinname) { // rename subpatch pin
+              console.log('renaming '+that.IOBoxOutputPin().slavePin.pinname+" to "+pinname);
+              that.parentPatch.outputPins[pinname] = that.parentPatch.outputPins[that.IOBoxOutputPin().slavePin.pinname];
+              delete that.parentPatch.outputPins[that.IOBoxOutputPin().slavePin.pinname];
+              that.IOBoxOutputPin().slavePin.pinname = pinname;
+            }
+          }
+          this.IOBoxInputPin().connectionChanged();
+          
+          this.IOBoxOutputPin().connectionChanged = function() {
+            if (this.links.length==0) // TODO: delete subpatch pin
+              return;
+            if (VVVV_ENV=='development') console.log('interfacing input pin detected: '+pinname);
+            if (!that.IOBoxInputPin().masterPin) {
+              var pin = that.parentPatch.inputPins[pinname];
+              if (pin==undefined)
+                var pin = that.parentPatch.addInputPin(pinname, that.IOBoxInputPin().values, null, false);
+              pin.slavePin = that.IOBoxInputPin();
+              that.IOBoxInputPin().masterPin = pin;
+            }
+            else if (that.IOBoxInputPin().masterPin.pinname!=pinname) { // rename subpatch pin
+              console.log('renaming '+that.IOBoxInputPin().masterPin.pinname+" to "+pinname);
+              that.parentPatch.inputPins[pinname] = that.parentPatch.inputPins[that.IOBoxInputPin().masterPin.pinname];
+              delete that.parentPatch.inputPins[that.IOBoxInputPin().masterPin.pinname];
+              that.IOBoxInputPin().masterPin.pinname = pinname;
+            }
+          }
+          this.IOBoxOutputPin().connectionChanged();
+        }
+      }
+    }
 	
     this.setup = function() 
     {
@@ -434,7 +485,7 @@ VVVV.Core = {
         // in case of renaming a node, delete the old one first
         if ($(this).attr('createme')=='pronto' && thisPatch.nodeMap[$(this).attr('id')]!=undefined) {
           var n = thisPatch.nodeMap[$(this).attr('id')];
-          if (VVVV_ENV=='development') console.log("node renamed, so deleting node "+n.nodename);
+          if (VVVV_ENV=='development') console.log("node renamed, so deleting node "+n.id+' / '+n.nodename);
           
           _(n.inputPins).each(function(p) {
             _(p.links).each(function (link) {
@@ -495,6 +546,7 @@ VVVV.Core = {
                 function() {
                   thisPatch.pause = false;
                   nodesLoading--;
+                  console.log(n.nodename+'invoking updade links')
                   updateLinks(xml);
                   if (thisPatch.VVVVConnector)
                     thisPatch.VVVVConnector.addPatch(n);
@@ -615,29 +667,6 @@ VVVV.Core = {
           }
               
         });
-        
-        // Check if this is an interfacing IOBox
-        if (n.isIOBox) {
-          if (thisPatch.parentPatch && n.invisiblePins["Descriptive Name"].getValue(0)!="") {
-            var pinname = n.invisiblePins["Descriptive Name"].getValue(0);
-            n.IOBoxInputPin().connectionChanged = function() {
-              if (VVVV_ENV=='development') console.log('interfacing output pin detected: '+pinname);
-              var pin = thisPatch.outputPins[pinname];
-              if (pin==undefined)
-                var pin = thisPatch.addOutputPin(pinname, n.IOBoxOutputPin().values);
-              n.IOBoxOutputPin().slavePin = pin;
-              pin.masterPin = n.IOBoxOutputPin();
-            }
-            n.IOBoxOutputPin().connectionChanged = function() {
-              if (VVVV_ENV=='development') console.log('interfacing input pin detected: '+pinname);
-              var pin = thisPatch.inputPins[pinname];
-              if (pin==undefined)
-                var pin = thisPatch.addInputPin(pinname, n.IOBoxInputPin().values, null, false);
-              pin.slavePin = n.IOBoxInputPin();
-              n.IOBoxInputPin().masterPin = pin;
-            }
-          }
-        }
         
         //Initialize node
         if (!nodeExists) {
