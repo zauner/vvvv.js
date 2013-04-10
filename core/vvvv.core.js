@@ -346,13 +346,6 @@ VVVV.Core = {
               var pin = that.parentPatch.inputPins[pinname];
               if (pin==undefined)
                 var pin = that.parentPatch.addInputPin(pinname, that.IOBoxInputPin().values, null, false);
-              else {
-                slicecount = pin.getSliceCount();
-                for (var i=0; i<slicecount; i++) {
-                  that.IOBoxInputPin().setValue(i, pin.getValue(i));
-                }
-                that.IOBoxInputPin().setSliceCount(pin.getSliceCount());
-              }
               pin.slavePin = that.IOBoxInputPin();
               that.IOBoxInputPin().masterPin = pin;
             }

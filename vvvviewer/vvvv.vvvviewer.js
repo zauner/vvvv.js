@@ -22,7 +22,12 @@ VVVV.VVVViewer = function(graph, selector) {
   chart.append('svg:rect')
     .attr('class','background')
     .attr('width', graph.width)
-    .attr('height', graph.height);
+    .attr('height', graph.height)
+    .on('dblclick', function() {
+      if (graph.parentPatch)
+        var subviewer = new VVVV.VVVViewer(graph.parentPatch, selector);
+      return false;
+    })
     
   var nodes, inputPins, outputPins, links;
     
@@ -40,6 +45,11 @@ VVVV.VVVViewer = function(graph, selector) {
         .attr('class', function(d) { return d.isIOBox? 'vvvv-node vvvv-iobox' : 'vvvv-node' })
         .attr('id', function(d) { return 'vvvv-node-'+d.id})
         .attr('transform', function(d) { return 'translate('+d.x+','+d.y+')' })
+        .on('dblclick', function(n) {
+          if (n.isSubpatch)
+            var subviewer = new VVVV.VVVViewer(n, selector);
+          return false
+        })
        
     nodes.append('svg:rect')
       .attr('class', 'vvvv-node-background')
