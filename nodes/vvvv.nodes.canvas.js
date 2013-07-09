@@ -331,7 +331,7 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
   };
   
   var renderStateIn = this.addInputPin('Render State', [defaultRenderState], this, true);
-  var transformIn = this.addInputPin('Transform', [], this, true);
+  var transformIn = this.addInputPin('Transform', [], this, true, VVVV.PinTypes.Transform);
   var startAngleIn = this.addInputPin('Start Angle', [0.0], this);
   var endAngleIn = this.addInputPin('End Angle', [0.5], this);
   
@@ -411,7 +411,7 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
   };
   
   var renderStateIn = this.addInputPin('Render State', [defaultRenderState], this, true);
-  var transformIn = this.addInputPin('Transform', [], this, true);
+  var transformIn = this.addInputPin('Transform', [], this, true, VVVV.PinTypes.Transform);
   var textIn = this.addInputPin('Text', ['VVVV.js'], this);
   var fontIn = this.addInputPin('Font', ['10px sans-serif'], this);
   var alignIn = this.addInputPin('Align', ['start'], this);
@@ -495,7 +495,7 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
   };
   
   var renderStateIn = this.addInputPin('Render State', [defaultRenderState], this);
-  var transformIn = this.addInputPin('Transform', [], this);
+  var transformIn = this.addInputPin('Transform', [], this, VVVV.PinTypes.Transform);
   var xIn = this.addInputPin('X', [0.0], this);
   var yIn = this.addInputPin('Y', [0.0], this);
   var control1XIn = this.addInputPin('Control 1 X', [0.0], this);
@@ -630,7 +630,7 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var transformIn = this.addInputPin('Transform', [], this, true);
+  var transformIn = this.addInputPin('Transform', [], this, true, VVVV.PinTypes.Transform);
   var textureIn = this.addInputPin('Texture', [], this, true);
   var colorIn = this.addInputPin('Color', ['1.0, 1.0, 1.0, 1.0'], this);
   

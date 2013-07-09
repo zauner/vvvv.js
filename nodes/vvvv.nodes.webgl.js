@@ -98,7 +98,7 @@ VVVV.PinTypes.WebGlResource = {
   reset_on_disconnect: true,
   connectionChangedHandlers: {
     "webglresource": function() {
-      if (this.pindirection==PinDirection.Input)
+      if (this.direction==PinDirection.Input)
         return;
       var that = this.node
       var renderers = that.findDownstreamNodes('Renderer (EX9)');
@@ -1105,7 +1105,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   
   var renderStateIn = this.addInputPin("Render State", [], this, true);
   var meshIn = this.addInputPin("Mesh", [], this, true);
-  var transformIn = this.addInputPin("Transform", [], this, true);
+  var transformIn = this.addInputPin("Transform", [], this, true, VVVV.PinTypes.Transform);
   var techniqueIn = this.addInputPin("Technique", [''], this);
   
   var layerOut = this.addOutputPin("Layer", [], this, VVVV.PinTypes.WebGlResource);
@@ -1293,11 +1293,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     
     if (transformIn.pinIsChanged() || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
-        var transform;
-        if (this.inputPins["Transform"].isConnected())
-          transform = this.inputPins["Transform"].getValue(i);
-        else
-          transform = identity;
+        var transform = this.inputPins["Transform"].getValue(i);
         layers[i].uniforms[layers[i].shader.uniformSemanticMap['WORLD']].value = transform;
       }
     }
@@ -1337,9 +1333,9 @@ VVVV.Nodes.Quad = function(id, graph) {
   this.auto_evaluate = false;
   
   var renderStateIn = this.addInputPin("Render State", [], this);
-  this.addInputPin("Transform", [], this);
+  this.addInputPin("Transform", [], this, true, VVVV.PinTypes.Transform);
   this.addInputPin("Texture", [], this);
-  this.addInputPin("Texture Transform", [], this);
+  this.addInputPin("Texture Transform", [], this, true, VVVV.PinTypes.Transform);
   this.addInputPin("Color", ["1.0, 1.0, 1.0, 1.0"], this);
   
   var layerOut = this.addOutputPin("Layer", [], this, VVVV.PinTypes.WebGlResource);
@@ -1436,11 +1432,7 @@ VVVV.Nodes.Quad = function(id, graph) {
     
     if (transformChanged || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
-        var transform;
-        if (this.inputPins["Transform"].isConnected())
-          transform = this.inputPins["Transform"].getValue(i);
-        else
-          transform = identity;
+        var transform = this.inputPins["Transform"].getValue(i);
         layers[i].uniforms[layers[i].shader.uniformSemanticMap['WORLD']].value = transform;
       }
     }
@@ -1458,11 +1450,7 @@ VVVV.Nodes.Quad = function(id, graph) {
     
     if (textureTransformChanged || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
-        var transform;
-        if (this.inputPins["Texture Transform"].isConnected())
-          transform = this.inputPins["Texture Transform"].getValue(i);
-        else
-          transform = identity;
+        var transform = this.inputPins["Texture Transform"].getValue(i);
         layers[i].uniforms["tTex"].value = transform;
       }
     }

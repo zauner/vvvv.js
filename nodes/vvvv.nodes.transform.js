@@ -3,6 +3,12 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+VVVV.PinTypes.Transform = {
+  typeName: "Transform",
+  defaultValue: function() {
+    return mat4.identity(mat4.create());
+  }
+}
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -24,12 +30,12 @@ VVVV.Nodes.Rotate = function(id, graph) {
   
   var ident = mat4.identity(mat4.create());
   
-  this.trIn = this.addInputPin("Transform In", [ident], this, true);
+  this.trIn = this.addInputPin("Transform In", [], this, true, VVVV.PinTypes.Transform);
   this.xIn = this.addInputPin("X", [0.0], this);
   this.yIn = this.addInputPin("Y", [0.0], this);
   this.zIn = this.addInputPin("Z", [0.0], this);
   
-  this.trOut = this.addOutputPin("Transform Out", [], this);
+  this.trOut = this.addOutputPin("Transform Out", [], this, VVVV.PinTypes.Transform);
 
   this.evaluate = function() 
   { 
@@ -50,7 +56,7 @@ VVVV.Nodes.Rotate = function(id, graph) {
       mat4.rotate(t, x*Math.PI*2, [1, 0, 0]);
       mat4.rotate(t, z*Math.PI*2, [0, 0, 1]);
       
-      if (transformin!=undefined)
+      if (this.trIn.isConnected())
         mat4.multiply(transformin, t, t);
       
       this.trOut.setValue(i, t);
@@ -81,12 +87,12 @@ VVVV.Nodes.Translate = function(id, graph) {
   
   var ident = mat4.identity(mat4.create());
   
-  this.trIn = this.addInputPin("Transform In", [ident], this, true);
+  this.trIn = this.addInputPin("Transform In", [], this, true, VVVV.PinTypes.Transform);
   this.xIn = this.addInputPin("X", [0.0], this);
   this.yIn = this.addInputPin("Y", [0.0], this);
   this.zIn = this.addInputPin("Z", [0.0], this);
   
-  this.trOut = this.addOutputPin("Transform Out", [], this);
+  this.trOut = this.addOutputPin("Transform Out", [], this, VVVV.PinTypes.Transform);
   
   this.evaluate = function() {
 		
@@ -136,12 +142,12 @@ VVVV.Nodes.Scale = function(id, graph) {
   
   var ident = mat4.identity(mat4.create());
   
-  this.trIn = this.addInputPin("Transform In", [ident], this, true);
+  this.trIn = this.addInputPin("Transform In", [], this, true, VVVV.PinTypes.Transform);
   this.xIn = this.addInputPin("X", [1.0], this);
   this.yIn = this.addInputPin("Y", [1.0], this);
   this.zIn = this.addInputPin("Z", [1.0], this);
   
-  this.trOut = this.addOutputPin("Transform Out", [], this);
+  this.trOut = this.addOutputPin("Transform Out", [], this, VVVV.PinTypes.Transform);
 
   this.evaluate = function() {
 		
@@ -192,12 +198,12 @@ VVVV.Nodes.Perspective = function(id, graph) {
   var ident = mat4.identity(mat4.create());
   
 
-  this.addInputPin("Transform In", [ident], this);
+  this.addInputPin("Transform In", [], this, true, VVVV.PinTypes.Transform);
   this.addInputPin("FOV", [0.25], this);
   this.addInputPin("Near Plane", [0.05], this);
   this.addInputPin("Far Plane", [100.0], this);
   
-  this.addOutputPin("Transform Out", [], this);
+  this.addOutputPin("Transform Out", [], this, VVVV.PinTypes.Transform);
 
   this.evaluate = function() {
     
