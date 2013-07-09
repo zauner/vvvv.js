@@ -113,6 +113,7 @@ VVVV.Core = {
     }
     
     this.reset = function() {
+      console.log('resetting '+this.pinname);
       if (this.defaultValue)
         this.setValue(0, this.defaultValue());
       else
@@ -144,6 +145,9 @@ VVVV.Core = {
         this.setValue(0, this.defaultValue());
         this.setSliceCount(1);
       }
+      
+      if (newType.reset_on_disconnect!=undefined)
+        this.reset_on_disconnect = newType.reset_on_disconnect;
     }
     
     if (type==undefined)
@@ -391,7 +395,7 @@ VVVV.Core = {
           }
           this.IOBoxInputPin().connectionChanged();
           
-          this.IOBoxOutputPin().connectionChanged['subpatchpins'] = function() {
+          this.IOBoxOutputPin().connectionChangedHandlers['subpatchpins'] = function() {
             if (this.links.length>0 && this.slavePin) {
                console.log('deleting '+pinname+' output pin because node '+that.id+' has output connection...');
                for (var i=0; i<this.slavePin.links.length; i++) {
@@ -400,8 +404,8 @@ VVVV.Core = {
                delete that.parentPatch.outputPins[pinname];
                this.slavePin = undefined;
             }
-            if (VVVV_ENV=='development') console.log('interfacing input pin detected: '+pinname);
             if (!that.IOBoxInputPin().masterPin) {
+              if (VVVV_ENV=='development') console.log('interfacing input pin detected: '+pinname);
               var pin = that.parentPatch.inputPins[pinname];
               if (pin==undefined) {
                 console.log('creating new input pin at parent patch, using IOBox values');
@@ -896,7 +900,8 @@ VVVV.Core = {
       var terminalNodes = {}
       for (var i=0; i<this.nodeList.length; i++) {
         if (this.nodeList[i].getDownstreamNodes().length==0 || this.nodeList[i].auto_evaluate || this.nodeList[i].delays_output) {
-          terminalNodes[this.nodeList[i].id] = this.nodeList[i];
+          if (!this.nodeList[i].isIOBox || !this.nodeList[i].IOBoxOutputPin().slavePin)
+            terminalNodes[this.nodeList[i].id] = this.nodeList[i];
         }
         invalidNodes[this.nodeList[i].id] = this.nodeList[i];
       }
@@ -913,7 +918,7 @@ VVVV.Core = {
           }
         });
         
-        if (node.dirty || node.auto_evaluate) {
+        if (node.dirty || node.auto_evaluate || node.isSubpatch) {
           if (print_timing)
             var start = new Date().getTime();
           node.evaluate();

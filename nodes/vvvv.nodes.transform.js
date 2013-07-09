@@ -5,6 +5,7 @@
 
 VVVV.PinTypes.Transform = {
   typeName: "Transform",
+  reset_on_disconnect: true,
   defaultValue: function() {
     return mat4.identity(mat4.create());
   }
