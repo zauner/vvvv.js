@@ -140,7 +140,7 @@ VVVV.Core = {
       this.typeName = newType.typeName;
       this.defaultValue = newType.defaultValue;
       
-      if (this.pindirection == PinDirection.Input && this.getSliceCount()==0 && this.defaultValue) {
+      if (this.direction == PinDirection.Input && this.getSliceCount()==0 && this.defaultValue) {
         this.setValue(0, this.defaultValue());
         this.setSliceCount(1);
       }
