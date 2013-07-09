@@ -6,39 +6,6 @@
 
 var identity = mat4.identity(mat4.create());
 
-VVVV.Core.WebGlResourceNode = function(id, nodename, graph) {
-  this.constructor(id, nodename, graph);
-  this.contextChanged = false;
-  
-  this.setAsWebGlResourcePin = function(pin) {
-    var that = this;
-    pin.isWebGlResourcePin = true;
-    pin.connectionChanged = function() {
-      var renderers = that.findDownstreamNodes('Renderer (EX9)');
-      if (!that.renderContexts)
-        that.renderContexts = []; // this 'public property' should actually go to the top, right above this.setAsWebGlResourcePin. However, that doesnt work, values got overwritte by nodes of the same type.
-      for (var i=0; i<renderers.length; i++) {
-        that.contextChanged |= (!that.renderContexts[i] || that.renderContexts[i].canvas.id!=renderers[i].ctxt.id)
-        that.renderContexts[i] = renderers[i].ctxt;
-      }
-      if (that.renderContexts.length!=renderers.length) {
-        that.renderContexts.length = renderers.length;
-        that.contextChanged = true;
-      }
-      
-      _(that.inputPins).each(function(p) {
-        p.markPinAsChanged();
-        if (that.nodename!="Renderer (EX9)") {
-          if (p.isConnected() && p.links[0].fromPin.isWebGlResourcePin) {
-            p.links[0].fromPin.connectionChanged(); 
-          }
-        }
-      });
-    }
-  }
-}
-VVVV.Core.WebGlResourceNode.prototype = new VVVV.Core.Node();
-
 VVVV.Types.WebGlRenderState = function() {
   this.alphaBlending = true;
   this.srcBlendMode = "SRC_ALPHA";
@@ -124,6 +91,49 @@ VVVV.Types.Layer = function() {
     return "Layer";
   }
   
+}
+
+VVVV.PinTypes.WebGlResource = {
+  typeName: "WebGlResource",
+  reset_on_disconnect: true,
+  connectionChangedHandlers: {
+    "webglresource": function() {
+      if (this.pindirection==PinDirection.Input)
+        return;
+      var that = this.node
+      var renderers = that.findDownstreamNodes('Renderer (EX9)');
+      if (!that.renderContexts)
+        that.renderContexts = []; // this 'public property' should actually go to the top, right above this.setAsWebGlResourcePin. However, that doesnt work, values got overwritte by nodes of the same type.
+      if (that.contextChanged==undefined)
+        that.contextChanged = false;
+      for (var i=0; i<renderers.length; i++) {
+        that.contextChanged |= (!that.renderContexts[i] || that.renderContexts[i].canvas.id!=renderers[i].ctxt.id)
+        that.renderContexts[i] = renderers[i].ctxt;
+        that.dirty = true;
+      }
+      if (that.renderContexts.length!=renderers.length) {
+        that.renderContexts.length = renderers.length;
+        that.contextChanged = true;
+        that.dirty = true;
+      }
+      
+      _(that.inputPins).each(function(p) {
+        p.markPinAsChanged();
+        if (that.nodename!="Renderer (EX9)") {
+          if (p.isConnected()) {
+            if (p.links[0].fromPin.typeName == "WebGlResource")
+              p.links[0].fromPin.connectionChanged();
+          }
+        }
+      });
+      
+      if (this.masterPin && this.masterPin.typeName == "WebGlResource")
+        this.masterPin.connectionChanged();
+    }
+  },
+  defaultValue: function() {
+    return new VVVV.Types.Layer();
+  }
 }
 
 VVVV.DefaultTexture = "Empty Texture";
@@ -247,8 +257,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   this.auto_evaluate = false;
 
   var filenamePin = this.addInputPin("Filename", [""], this);
-  var outputPin = this.addOutputPin("Texture Out", [], this);
-  this.setAsWebGlResourcePin(outputPin);
+  var outputPin = this.addOutputPin("Texture Out", [], this, VVVV.PinTypes.WebGlResource);
   
   var textures = [];
   
@@ -290,7 +299,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   }
 
 }
-VVVV.Nodes.FileTexture.prototype = new VVVV.Core.WebGlResourceNode();
+VVVV.Nodes.FileTexture.prototype = new VVVV.Core.Node();
 
 
 /*
@@ -312,8 +321,7 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
   };
 
   var sourceIn = this.addInputPin("Source", [""], this, true);
-  var outputOut = this.addOutputPin("Texture Out", [], this);
-  this.setAsWebGlResourcePin(outputOut);
+  var outputOut = this.addOutputPin("Texture Out", [], this, VVVV.PinTypes.WebGlResource);
   
   var texture;
   
@@ -354,7 +362,7 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
   }
 
 }
-VVVV.Nodes.DX9Texture.prototype = new VVVV.Core.WebGlResourceNode();
+VVVV.Nodes.DX9Texture.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -375,8 +383,7 @@ VVVV.Nodes.VideoTexture = function(id, graph) {
   };
 
   var sourceIn = this.addInputPin("Video", [], this, true);
-  var outputOut = this.addOutputPin("Texture Out", [], this);
-  this.setAsWebGlResourcePin(outputOut);
+  var outputOut = this.addOutputPin("Texture Out", [], this, VVVV.PinTypes.WebGlResource);
   
   var texture;
   
@@ -411,7 +418,7 @@ VVVV.Nodes.VideoTexture = function(id, graph) {
   }
 
 }
-VVVV.Nodes.VideoTexture.prototype = new VVVV.Core.WebGlResourceNode();
+VVVV.Nodes.VideoTexture.prototype = new VVVV.Core.Node();
 
 
 /*
@@ -437,8 +444,7 @@ VVVV.Nodes.VertexBufferJoin = function(id, graph) {
   var texCoord0In = this.addInputPin("Texture Coordinate 0 XY", [0.0, 0.0], this);
   var applyIn = this.addInputPin("Apply", [1], this);
   
-  var vbOut = this.addOutputPin("Vertex Buffer", [], this);
-  this.setAsWebGlResourcePin(vbOut);
+  var vbOut = this.addOutputPin("Vertex Buffer", [], this, VVVV.PinTypes.WebGlResource);
   
   var vertexBuffer = null;
   
@@ -468,7 +474,7 @@ VVVV.Nodes.VertexBufferJoin = function(id, graph) {
   }
 
 }
-VVVV.Nodes.VertexBufferJoin.prototype = new VVVV.Core.WebGlResourceNode();
+VVVV.Nodes.VertexBufferJoin.prototype = new VVVV.Core.Node();
 
 
 /*
@@ -493,8 +499,7 @@ VVVV.Nodes.MeshJoin = function(id, graph) {
   var indicesIn = this.addInputPin("Indices", [0], this);
   var applyIn = this.addInputPin("Apply", [1], this);
   
-  var meshOut = this.addOutputPin("Mesh", [], this);
-  this.setAsWebGlResourcePin(meshOut);
+  var meshOut = this.addOutputPin("Mesh", [], this, VVVV.PinTypes.WebGlResource);
   
   var mesh = null;
   
@@ -518,7 +523,7 @@ VVVV.Nodes.MeshJoin = function(id, graph) {
   }
 
 }
-VVVV.Nodes.MeshJoin.prototype = new VVVV.Core.WebGlResourceNode();
+VVVV.Nodes.MeshJoin.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -541,8 +546,7 @@ VVVV.Nodes.Grid = function(id, graph) {
   var xIn = this.addInputPin("Resolution X", [2], this);
   var yIn = this.addInputPin("Resolution Y", [2], this);
   
-  var meshOut = this.addOutputPin("Mesh", [], this);
-  this.setAsWebGlResourcePin(meshOut);
+  var meshOut = this.addOutputPin("Mesh", [], this, VVVV.PinTypes.WebGlResource);
   
   var mesh = null;
   
@@ -601,7 +605,7 @@ VVVV.Nodes.Grid = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Grid.prototype = new VVVV.Core.WebGlResourceNode();
+VVVV.Nodes.Grid.prototype = new VVVV.Core.Node();
 
 
 /*
@@ -626,8 +630,7 @@ VVVV.Nodes.Sphere = function(id, graph) {
   var xIn = this.addInputPin("Resolution X", [15], this);
   var yIn = this.addInputPin("Resolution Y", [15], this);
   
-  var meshOut = this.addOutputPin("Mesh", [], this);
-  this.setAsWebGlResourcePin(meshOut);
+  var meshOut = this.addOutputPin("Mesh", [], this, VVVV.PinTypes.WebGlResource);
   
   var mesh = null;
   
@@ -689,7 +692,7 @@ VVVV.Nodes.Sphere = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Sphere.prototype = new VVVV.Core.WebGlResourceNode();
+VVVV.Nodes.Sphere.prototype = new VVVV.Core.Node();
 
 
 /*
@@ -718,8 +721,7 @@ VVVV.Nodes.Cylinder = function(id, graph) {
   var xIn = this.addInputPin("Resolution X", [15], this);
   var yIn = this.addInputPin("Resolution Y", [1], this);
   
-  var meshOut = this.addOutputPin("Mesh", [], this);
-  this.setAsWebGlResourcePin(meshOut);
+  var meshOut = this.addOutputPin("Mesh", [], this, VVVV.PinTypes.WebGlResource);
   
   var mesh = null;
   
@@ -824,7 +826,7 @@ VVVV.Nodes.Cylinder = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Cylinder.prototype = new VVVV.Core.WebGlResourceNode();
+VVVV.Nodes.Cylinder.prototype = new VVVV.Core.Node();
 
 
 /*
@@ -1106,8 +1108,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   var transformIn = this.addInputPin("Transform", [], this, true);
   var techniqueIn = this.addInputPin("Technique", [''], this);
   
-  var layerOut = this.addOutputPin("Layer", [], this);
-  this.setAsWebGlResourcePin(layerOut);
+  var layerOut = this.addOutputPin("Layer", [], this, VVVV.PinTypes.WebGlResource);
   
   var layers = [];
   var mesh = null;
@@ -1312,7 +1313,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     
 
 }
-VVVV.Nodes.GenericShader.prototype = new VVVV.Core.WebGlResourceNode();
+VVVV.Nodes.GenericShader.prototype = new VVVV.Core.Node();
 
 
 /*
@@ -1341,8 +1342,7 @@ VVVV.Nodes.Quad = function(id, graph) {
   this.addInputPin("Texture Transform", [], this);
   this.addInputPin("Color", ["1.0, 1.0, 1.0, 1.0"], this);
   
-  var layerOut = this.addOutputPin("Layer", [], this);
-  this.setAsWebGlResourcePin(layerOut);
+  var layerOut = this.addOutputPin("Layer", [], this, VVVV.PinTypes.WebGlResource);
   
   var initialized = false;
   var layers = [];
@@ -1477,7 +1477,7 @@ VVVV.Nodes.Quad = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Quad.prototype = new VVVV.Core.WebGlResourceNode();
+VVVV.Nodes.Quad.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1501,13 +1501,12 @@ VVVV.Nodes.Group = function(id, graph) {
   var enableIn = this.addInputPin("Enabled", [1], this);
   var layerCountIn = this.addInvisiblePin("Layer Template Count", [2], this);
   
-  var layerOut = this.addOutputPin("Layer", [], this);
-  this.setAsWebGlResourcePin(layerOut);
+  var layerOut = this.addOutputPin("Layer", [], this, VVVV.PinTypes.WebGlResource);
   
   this.initialize = function() {
   	var layerCount = layerCountIn.getValue(0);
     for (var i=layerIns.length; i<layerCount; i++) {
-      layerIns[i] = this.addInputPin("Layer "+(i+1), [], this, true);
+      layerIns[i] = this.addInputPin("Layer "+(i+1), [], this, true, VVVV.PinTypes.WebGlResource);
     }
     layerIns.length = layerCount;
   }
@@ -1529,7 +1528,7 @@ VVVV.Nodes.Group = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Group.prototype = new VVVV.Core.WebGlResourceNode();
+VVVV.Nodes.Group.prototype = new VVVV.Core.Node();
 
 
 /*
@@ -1550,7 +1549,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     compatibility_issues: ['Disabling Clear doesn\'t work in Chrome', 'Backbuffer width and height defined by canvas size', 'No Fullscreen', 'No Enable Pin', 'No Aspect Ration and Viewport transform', 'No mouse output', 'No backbuffer dimesions output', 'No WebGL (EX9) Output Pin']
   };
   
-  this.addInputPin("Layers", [], this);
+  this.addInputPin("Layers", [], this, true, VVVV.PinTypes.WebGlResource);
   var clearIn = this.addInputPin("Clear", [1], this);
   var bgColIn = this.addInputPin("Background Color", ['0.0, 0.0, 0.0, 1.0'], this);
   var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], this);
@@ -1562,8 +1561,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   
   var bufferWidthOut = this.addOutputPin("Actual Backbuffer Width", [0.0], this);
   var bufferHeightOut = this.addOutputPin("Actual Backbuffer Height", [0.0], this);
-  var ex9Out = this.addOutputPin("EX9 Out", [], this);
-  this.setAsWebGlResourcePin(ex9Out);
+  var ex9Out = this.addOutputPin("EX9 Out", [], this, VVVV.PinTypes.WebGlResource);
   
   var width = 0.0;
   var height = 0.0;
@@ -1819,6 +1817,9 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       for (var i=0; i<layers.length; i++) {
         layer = layers[i];
         
+        if (layer.shader==undefined) // if it's an empty layer (e.g. created by IOBox (Node))
+          continue;
+        
         if (currentShaderProgram!=layer.shader.shaderProgram) {
           gl.useProgram(layer.shader.shaderProgram);
           gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["PROJECTION"]].position, false, pMatrix);
@@ -1892,4 +1893,4 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   }
 
 }
-VVVV.Nodes.RendererWebGL.prototype = new VVVV.Core.WebGlResourceNode();
+VVVV.Nodes.RendererWebGL.prototype = new VVVV.Core.Node();

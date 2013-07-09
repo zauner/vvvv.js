@@ -26,6 +26,7 @@ VVVV = {};
 VVVV.Config = {};
 VVVV.Config.auto_undo = false;
 VVVV.Nodes = {};
+VVVV.PinTypes = {};
 VVVV.NodeLibrary = {};
 
 VVVV.onNotImplemented = function(nodename) {
@@ -98,6 +99,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
         VVVV.loadScript('nodes/vvvv.nodes.enumerations.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.2d.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.3d.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.node.js', loadMonitor);
       }
       if (mode=='vvvviewer' || mode=='full') {
         VVVV.loadScript('vvvviewer/vvvv.vvvviewer.js', loadMonitor);
