@@ -1650,9 +1650,9 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-      gl.generateMipmap(gl.TEXTURE_2D);
 
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, bbufFramebuffer.width, bbufFramebuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.generateMipmap(gl.TEXTURE_2D);
 
       var renderbuffer = gl.createRenderbuffer();
       gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
