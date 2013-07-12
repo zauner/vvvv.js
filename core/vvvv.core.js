@@ -24,17 +24,18 @@ VVVV.PinTypes.Generic = {
 
 VVVV.Core = {	
   
-  Pin: function(pinname,direction, values, node, reset_on_disconnect, type) {
+  Pin: function(pinname,direction, init_values, node, reset_on_disconnect, type) {
     this.direction = direction;
     this.pinname = pinname;
     this.links = [];
-    this.values = values.slice(0); // use slice(0) to create a copy of the array
+    this.values = [];
     this.node = node;
     this.changed = true;
     this.active = false;
     this.reset_on_disconnect = reset_on_disconnect || false;
     this.slavePin = undefined;
     this.masterPin = undefined;
+    this.connectionChangedHandlers = {};
     
     this.getValue = function(i, binSize) {
       if (!binSize || binSize==1)
@@ -112,26 +113,9 @@ VVVV.Core = {
       }
     }
     
-    this.reset = function() {
-      console.log('resetting '+this.pinname);
-      if (this.defaultValue)
-        this.setValue(0, this.defaultValue());
-      else
-        this.values = values.slice(0);
-      this.setSliceCount(1);
-      this.markPinAsChanged();
-    }
-    
-    this.connectionChangedHandlers = {};
-    this.connectionChanged = function() {
-      var that = this;
-      _(this.connectionChangedHandlers).each(function(handler) {
-        that.f = handler;
-        that.f();
-      });
-    }
-    
     this.setType = function(newType) {
+      if (newType.typeName == this.typeName)
+        return;
       var that = this;
       delete this.connectionChangedHandlers['nodepin'];
       delete this.connectionChangedHandlers['webglresource'];
@@ -141,7 +125,7 @@ VVVV.Core = {
       this.typeName = newType.typeName;
       this.defaultValue = newType.defaultValue;
       
-      if (this.direction == PinDirection.Input && this.getSliceCount()==0 && this.defaultValue) {
+      if (this.direction == PinDirection.Input && this.defaultValue) {
         this.setValue(0, this.defaultValue());
         this.setSliceCount(1);
       }
@@ -153,6 +137,28 @@ VVVV.Core = {
     if (type==undefined)
       type = VVVV.PinTypes.Generic;
     this.setType(type);
+    
+    if (init_values && init_values.length>0) // override PinType's default value with values from constructor, if it isn't []
+      this.values = init_values.slice(0); // use slice(0) to create a copy of the array
+    
+    this.reset = function() {
+      console.log('resetting '+this.pinname);
+      if (this.defaultValue) {
+        this.setValue(0, this.defaultValue());
+        this.setSliceCount(1);
+      }
+      else
+        this.values = init_values.slice(0);
+      this.markPinAsChanged();
+    }
+    
+    this.connectionChanged = function() {
+      var that = this;
+      _(this.connectionChangedHandlers).each(function(handler) {
+        that.f = handler;
+        that.f();
+      });
+    }
   },
   
   Node: function(id, nodename, parentPatch) {
@@ -900,8 +906,7 @@ VVVV.Core = {
       var terminalNodes = {}
       for (var i=0; i<this.nodeList.length; i++) {
         if (this.nodeList[i].getDownstreamNodes().length==0 || this.nodeList[i].auto_evaluate || this.nodeList[i].delays_output) {
-          if (!this.nodeList[i].isIOBox || !this.nodeList[i].IOBoxOutputPin().slavePin)
-            terminalNodes[this.nodeList[i].id] = this.nodeList[i];
+          terminalNodes[this.nodeList[i].id] = this.nodeList[i];
         }
         invalidNodes[this.nodeList[i].id] = this.nodeList[i];
       }
