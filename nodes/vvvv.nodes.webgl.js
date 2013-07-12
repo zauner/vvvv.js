@@ -117,22 +117,44 @@ VVVV.PinTypes.WebGlResource = {
         that.dirty = true;
       }
       
-      _(that.inputPins).each(function(p) {
-        p.markPinAsChanged();
-        if (that.nodename!="Renderer (EX9)") {
-          if (p.isConnected()) {
-            if (p.links[0].fromPin.typeName == "WebGlResource")
-              p.links[0].fromPin.connectionChanged();
-          }
-        }
-      });
+      function isWebGlPinType(typeName) {
+        return typeName=="WebGlResource" || typeName=="WebGlTexture";
+      }
       
-      if (this.masterPin && this.masterPin.typeName == "WebGlResource")
+      if (!that.isSubpatch) {
+        _(that.inputPins).each(function(p) {
+          var fromPin;
+          p.markPinAsChanged();
+          if (that.nodename!="Renderer (EX9)") {
+            if (p.isConnected()) {
+              if (p.links.length>0)
+                fromPin = p.links[0].fromPin
+              else if (p.masterPin.links[0].fromPin.links.length>0)
+                fromPin = p.masterPin.links[0].fromPin;
+              if (fromPin && isWebGlPinType(fromPin.typeName))
+                fromPin.connectionChanged();
+            }
+          }
+        });
+      }
+      
+      if (this.masterPin && isWebGlPinType(this.masterPin.typeName))
         this.masterPin.connectionChanged();
     }
   },
   defaultValue: function() {
     return new VVVV.Types.Layer();
+  }
+}
+
+VVVV.PinTypes.WebGlTexture = {
+  typeName: "WebGlTexture",
+  reset_on_disconnect: true,
+  connectionChangedHandlers: {
+    "webglresource": VVVV.PinTypes.WebGlResource.connectionChangedHandlers["webglresource"]
+  },
+  defaultValue: function() {
+    return VVVV.DefaultTexture;
   }
 }
 
@@ -257,7 +279,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   this.auto_evaluate = false;
 
   var filenamePin = this.addInputPin("Filename", [""], this);
-  var outputPin = this.addOutputPin("Texture Out", [], this, VVVV.PinTypes.WebGlResource);
+  var outputPin = this.addOutputPin("Texture Out", [], this, VVVV.PinTypes.WebGlTexture);
   
   var textures = [];
   
@@ -320,8 +342,8 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
     compatibility_issues: ['Using WebGL renderer as source doesnt work correctly in Chrome.']
   };
 
-  var sourceIn = this.addInputPin("Source", [""], this, true);
-  var outputOut = this.addOutputPin("Texture Out", [], this, VVVV.PinTypes.WebGlResource);
+  var sourceIn = this.addInputPin("Source", [], this, true);
+  var outputOut = this.addOutputPin("Texture Out", [], this, VVVV.PinTypes.WebGlTexture);
   
   var texture;
   
@@ -383,7 +405,7 @@ VVVV.Nodes.VideoTexture = function(id, graph) {
   };
 
   var sourceIn = this.addInputPin("Video", [], this, true);
-  var outputOut = this.addOutputPin("Texture Out", [], this, VVVV.PinTypes.WebGlResource);
+  var outputOut = this.addOutputPin("Texture Out", [], this, VVVV.PinTypes.WebGlTexture);
   
   var texture;
   
@@ -1149,13 +1171,15 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       if (u.semantic=="VIEW" || u.semantic=="PROJECTION" || u.semantic=="WORLD")
         return;
       var reset_on_disconnect = false;
+      var pinType = VVVV.PinTypes.Generic;
+      var defaultValue = [];
       switch (u.type) {
         case 'mat':
-          defaultValue = [mat4.identity(mat4.create())];
+          pinType = VVVV.PinTypes.Transform;
           reset_on_disconnect = true;
           break;
         case 'sampler':
-          defaultValue = [];
+          pinType = VVVV.PinTypes.WebGlTexture;
           reset_on_disconnect = true;
           break;
         default:
@@ -1172,7 +1196,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
           
       }
         
-      var pin = thatNode.addInputPin(u.varname.replace(/_/g,' '), defaultValue, thatNode, reset_on_disconnect);
+      var pin = thatNode.addInputPin(u.varname.replace(/_/g,' '), defaultValue, thatNode, reset_on_disconnect, pinType);
       pin.dimensions = u.dimension;
       shaderPins.push(pin);
     });
@@ -1273,9 +1297,6 @@ VVVV.Nodes.GenericShader = function(id, graph) {
           }
           else {
             var v = shaderPins[i].getValue(j);
-            if (layers[j].uniforms[pinname].uniformSpec.type=='sampler' && v==undefined) {
-              v = VVVV.DefaultTexture;
-            }
             layers[j].uniforms[pinname].value = v;
           }
         }
@@ -1334,7 +1355,7 @@ VVVV.Nodes.Quad = function(id, graph) {
   
   var renderStateIn = this.addInputPin("Render State", [], this);
   this.addInputPin("Transform", [], this, true, VVVV.PinTypes.Transform);
-  this.addInputPin("Texture", [], this);
+  this.addInputPin("Texture", [], this, true, VVVV.PinTypes.WebGlTexture);
   this.addInputPin("Texture Transform", [], this, true, VVVV.PinTypes.Transform);
   this.addInputPin("Color", ["1.0, 1.0, 1.0, 1.0"], this);
   
@@ -1439,12 +1460,7 @@ VVVV.Nodes.Quad = function(id, graph) {
     
     if (textureChanged || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
-        var tex;
-        if (this.inputPins["Texture"].isConnected())
-          tex = this.inputPins["Texture"].getValue(i);
-        else
-          tex = VVVV.DefaultTexture;
-        layers[i].uniforms["Samp0"].value = tex;
+        layers[i].uniforms["Samp0"].value = this.inputPins["Texture"].getValue(i);
       }
     }
     
@@ -1542,8 +1558,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var bgColIn = this.addInputPin("Background Color", ['0.0, 0.0, 0.0, 1.0'], this);
   var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], this);
   var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], this);
-  var viewIn = this.addInputPin("View", [], this);
-  var projIn = this.addInputPin("Projection", [], this);
+  var viewIn = this.addInputPin("View", [], this, true, VVVV.PinTypes.Transform);
+  var projIn = this.addInputPin("Projection", [], VVVV.PinTypes.Transform);
   
   var enableDepthBufIn = this.addInvisiblePin("Windowed Depthbuffer Format", ['NONE'], this);
   
@@ -1781,12 +1797,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         mat4.scale(pMatrix, [1, -1, 1]);
     }
     if (viewIn.pinIsChanged()) {
-      if (viewIn.isConnected())
-        vMatrix = viewIn.getValue(0);
-      else {
-        vMatrix = mat4.create();
-        mat4.identity(vMatrix);
-      }
+      vMatrix = viewIn.getValue(0);
     }
     
     if (this.contextChanged) { // don't render anything, if the context changed in this frame. will only give warnings...
