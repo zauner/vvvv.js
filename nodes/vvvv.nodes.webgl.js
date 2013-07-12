@@ -40,8 +40,6 @@ VVVV.Types.WebGlRenderState = function() {
   }
 }
 
-var defaultWebGlRenderState = new VVVV.Types.WebGlRenderState();
-
 VVVV.Types.VertexBuffer = function(gl, p) {
   
   this.vbo = undefined;
@@ -155,6 +153,15 @@ VVVV.PinTypes.WebGlTexture = {
   },
   defaultValue: function() {
     return VVVV.DefaultTexture;
+  }
+}
+
+var defaultWebGlRenderState = new VVVV.Types.WebGlRenderState();
+VVVV.PinTypes.WebGlRenderState = {
+  typeName: "WebGlRenderState",
+  reset_on_disconnect: true,
+  defaultValue: function() {
+    return defaultWebGlRenderState;
   }
 }
 
@@ -869,12 +876,12 @@ VVVV.Nodes.BlendWebGLAdvanced = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this);
+  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.WebGlRenderState);
   var alphaBlendingIn = this.addInputPin("Alpha Blending", [1], this);
   var srcModeIn = this.addInputPin("Source Blend Mode", ['SrcAlpha'], this); 
   var destModeIn = this.addInputPin("Destination Blend Mode", ['SrcAlpha'], this); 
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this);
+  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.WebGlRenderState);
   
   var renderStates = [];
   
@@ -901,10 +908,7 @@ VVVV.Nodes.BlendWebGLAdvanced = function(id, graph) {
       if (renderStates[i]==undefined) {
         renderStates[i] = new VVVV.Types.WebGlRenderState();
       }
-      if (renderStateIn.isConnected())
-        renderStates[i].copy_attributes(renderStateIn.getValue(i));
-      else
-        renderStates[i].copy_attributes(defaultWebGlRenderState);
+      renderStates[i].copy_attributes(renderStateIn.getValue(i));
       renderStates[i].alphaBlending = parseFloat(alphaBlendingIn.getValue(i))>.5;
       renderStates[i].srcBlendMode = convertToWebGLBlendFactor(srcModeIn.getValue(i));
       renderStates[i].destBlendMode = convertToWebGLBlendFactor(destModeIn.getValue(i));
@@ -936,10 +940,10 @@ VVVV.Nodes.BlendWebGL = function(id, graph) {
     compatibility_issues: ['results differ from VVVV', 'Multiply mode not supported']
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this);
+  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.WebGlRenderState);
   var drawModeIn = this.addInputPin("Draw Mode", ["Blend"], this);
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this);
+  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.WebGlRenderState);
   
   var renderStates = [];
   
@@ -950,10 +954,7 @@ VVVV.Nodes.BlendWebGL = function(id, graph) {
       if (renderStates[i]==undefined) {
         renderStates[i] = new VVVV.Types.WebGlRenderState();
       }
-      if (renderStateIn.isConnected())
-        renderStates[i].copy_attributes(renderStateIn.getValue(i));
-      else
-        renderStates[i].copy_attributes(defaultWebGlRenderState);
+      renderStates[i].copy_attributes(renderStateIn.getValue(i));
       switch (drawModeIn.getValue(i)) {
         case "Add":
           renderStates[i].srcBlendMode = "SRC_ALPHA";
@@ -1002,10 +1003,10 @@ VVVV.Nodes.FillWebGL = function(id, graph) {
     compatibility_issues: ['does not actually draw wireframe, because this is not supported in WebGL, but makes renderer use gl.LINE instead of gl.TRIANGLES when drawing']
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this);
+  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.WebGlRenderState);
   var fillModeIn = this.addInputPin("Fill Mode", ["Blend"], this);
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this);
+  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.WebGlRenderState);
   
   var renderStates = [];
   
@@ -1016,10 +1017,7 @@ VVVV.Nodes.FillWebGL = function(id, graph) {
       if (renderStates[i]==undefined) {
         renderStates[i] = new VVVV.Types.WebGlRenderState();
       }
-      if (renderStateIn.isConnected())
-        renderStates[i].copy_attributes(renderStateIn.getValue(i));
-      else
-        renderStates[i].copy_attributes(defaultWebGlRenderState);
+      renderStates[i].copy_attributes(renderStateIn.getValue(i));
       switch (fillModeIn.getValue(i)) {
         case 'Point':
           renderStates[i].polygonDrawMode = "POINTS";
@@ -1058,12 +1056,12 @@ VVVV.Nodes.ZWriteEnableWebGL = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this);
+  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.WebGlRenderState);
   var enableZWriteIn = this.addInputPin("ZWrite Enable", [1], this);
   var depthFuncIn = this.addInputPin("Compare Function", ['Always'], this); 
   var biasIn = this.addInputPin("Depth Bias", [0.0], this); 
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this);
+  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.WebGlRenderState);
   
   var renderStates = [];
   
@@ -1088,10 +1086,7 @@ VVVV.Nodes.ZWriteEnableWebGL = function(id, graph) {
       if (renderStates[i]==undefined) {
         renderStates[i] = new VVVV.Types.WebGlRenderState();
       }
-      if (renderStateIn.isConnected())
-        renderStates[i].copy_attributes(renderStateIn.getValue(i));
-      else
-        renderStates[i].copy_attributes(defaultWebGlRenderState);
+      renderStates[i].copy_attributes(renderStateIn.getValue(i));
       renderStates[i].enableZWrite = parseFloat(enableZWriteIn.getValue(i))>.5;
       renderStates[i].depthFunc = convertToWebGLDepthFunc(depthFuncIn.getValue(i));
       renderStates[i].depthOffset = parseFloat(biasIn.getValue(0));
@@ -1125,7 +1120,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   
   this.shaderFile = '';
   
-  var renderStateIn = this.addInputPin("Render State", [], this, true);
+  var renderStateIn = this.addInputPin("Render State", [], this, true, VVVV.PinTypes.WebGlRenderState);
   var meshIn = this.addInputPin("Mesh", [], this, true);
   var transformIn = this.addInputPin("Transform", [], this, true, VVVV.PinTypes.Transform);
   var techniqueIn = this.addInputPin("Technique", [''], this);
@@ -1348,12 +1343,12 @@ VVVV.Nodes.Quad = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['No Sampler States and Render States', 'No texture transform', 'No texture coord mapping', 'No enable pin']
+    compatibility_issues: ['No Sampler States', 'No texture transform', 'No texture coord mapping', 'No enable pin']
   };
   
   this.auto_evaluate = false;
   
-  var renderStateIn = this.addInputPin("Render State", [], this);
+  var renderStateIn = this.addInputPin("Render State", [], this, true, VVVV.PinTypes.WebGlRenderState);
   this.addInputPin("Transform", [], this, true, VVVV.PinTypes.Transform);
   this.addInputPin("Texture", [], this, true, VVVV.PinTypes.WebGlTexture);
   this.addInputPin("Texture Transform", [], this, true, VVVV.PinTypes.Transform);
