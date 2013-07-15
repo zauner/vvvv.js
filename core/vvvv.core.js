@@ -52,10 +52,11 @@ VVVV.Core = {
       this.changed = true;
       this.node.dirty = true;
       var that = this;
-      var linkCount = this.links.length;
-      for (var j=0; j<linkCount; j++) {
-        if (this.links[j].toPin==that) break;
-        this.links[j].toPin.setValue(i, v);
+      if (this.direction==PinDirection.Output) {
+        var linkCount = this.links.length;
+        for (var j=0; j<linkCount; j++) {
+          this.links[j].toPin.setValue(i, v);
+        }
       }
       if (this.slavePin) {
         this.slavePin.setValue(i, v);
@@ -72,10 +73,11 @@ VVVV.Core = {
       this.changed = true;
       this.node.dirty = true;
       var that = this;
-      var linkCount = this.links.length;
-      for (var i=0; i<linkCount; i++) {
-        if (this.links[i].toPin==that) break;
-        this.links[i].toPin.markPinAsChanged();
+      if (this.direction==PinDirection.Output) {
+        var linkCount = this.links.length;
+        for (var i=0; i<linkCount; i++) {
+          this.links[i].toPin.markPinAsChanged();
+        }
       }
       if (this.slavePin) {
         this.slavePin.markPinAsChanged();
@@ -101,12 +103,12 @@ VVVV.Core = {
         return;
       this.values.length = len;
       this.changed = true;	  
-      this.node.dirty = true; 
-	    var linkCount = this.links.length;
-      for (var i=0; i<linkCount; i++) {
-        this.links[i].toPin.values.length = len;
-        this.links[i].toPin.changed = true;
-        this.links[i].toPin.node.dirty = true;
+      this.node.dirty = true;
+      if (this.direction==PinDirection.Output) {
+  	    var linkCount = this.links.length;
+        for (var i=0; i<linkCount; i++) {
+          this.links[i].toPin.setSliceCount(len);
+        }
       }
       if (this.slavePin) {
         this.slavePin.setSliceCount(len);
