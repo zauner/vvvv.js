@@ -60,6 +60,13 @@ VVVV.Types.CanvasRenderState = function() {
 }
 
 var defaultRenderState = new VVVV.Types.CanvasRenderState();
+VVVV.PinTypes.CanvasRenderState = {
+  typeName: "CanvasRenderState",
+  reset_on_disconnect: true,
+  defaultValue: function() {
+    return defaultRenderState;
+  }
+}
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -78,10 +85,10 @@ VVVV.Nodes.FillCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this, true);
+  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.CanvasRenderState);
   var colorIn = this.addInputPin("Color", ['1.0, 1.0, 1.0, 1.0'], this);
   
-  var renderStateOut = this.addOutputPin("Render State Out", [defaultRenderState], this);
+  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.CanvasRenderState);
   
   var renderStates = [];
   
@@ -92,10 +99,7 @@ VVVV.Nodes.FillCanvas = function(id, graph) {
       if (renderStates[i]==undefined) {
         renderStates[i] = new VVVV.Types.CanvasRenderState();
       }
-      if (renderStateIn.isConnected())
-        renderStates[i].copy_attributes(renderStateIn.getValue(i));
-      else
-        renderStates[i].copy_attributes(defaultRenderState);
+      renderStates[i].copy_attributes(renderStateIn.getValue(i));
       renderStates[i].fillColor = colorIn.getValue(i).split(',');
       renderStateOut.setValue(i, renderStates[i]);
     }
@@ -122,13 +126,13 @@ VVVV.Nodes.StrokeCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this, true);
+  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.CanvasRenderState);
   var colorIn = this.addInputPin("Color", ['1.0, 1.0, 1.0, 1.0'], this);
   var lineWidthIn = this.addInputPin("Width", [1.0], this);
   var capStyleIn = this.addInputPin("Cap Style", ['butt'], this);
   var joinStyleIn = this.addInputPin("Join Style", ['miter'], this);
   
-  var renderStateOut = this.addOutputPin("Render State Out", [defaultRenderState], this);
+  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.CanvasRenderState);
   
   var renderStates = [];
   
@@ -139,10 +143,7 @@ VVVV.Nodes.StrokeCanvas = function(id, graph) {
       if (renderStates[i]==undefined) {
         renderStates[i] = new VVVV.Types.CanvasRenderState();
       }
-      if (renderStateIn.isConnected())
-        renderStates[i].copy_attributes(renderStateIn.getValue(i));
-      else
-        renderStates[i].copy_attributes(defaultRenderState);
+      renderStates[i].copy_attributes(renderStateIn.getValue(i));
 
       renderStates[i].strokeColor = colorIn.getValue(i).split(',');
       renderStates[i].lineWidth = lineWidthIn.getValue(i);
@@ -173,13 +174,13 @@ VVVV.Nodes.ShadowCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this, true);
+  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.CanvasRenderState);
   var colorIn = this.addInputPin("Color", ['0.0, 0.0, 0.0, 1.0'], this);
   var xOffsetIn = this.addInputPin("Offset X", [0.0], this);
   var yOffsetIn = this.addInputPin("Offset Y", [0.0], this);
   var blurIn = this.addInputPin("Blur", [0.0], this);
   
-  var renderStateOut = this.addOutputPin("Render State Out", [defaultRenderState], this);
+  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.CanvasRenderState);
   
   var renderStates = [];
   
@@ -190,10 +191,7 @@ VVVV.Nodes.ShadowCanvas = function(id, graph) {
       if (renderStates[i]==undefined) {
         renderStates[i] = new VVVV.Types.CanvasRenderState();
       }
-      if (renderStateIn.isConnected())
-        renderStates[i].copy_attributes(renderStateIn.getValue(i));
-      else
-        renderStates[i].copy_attributes(defaultRenderState);
+      renderStates[i].copy_attributes(renderStateIn.getValue(i));
       renderStates[i].shadowOffsetX = xOffsetIn.getValue(i);
       renderStates[i].shadowOffsetY = yOffsetIn.getValue(i);
       renderStates[i].shadowBlur = blurIn.getValue(i);
@@ -223,10 +221,10 @@ VVVV.Nodes.BlendCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this, true);
+  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.CanvasRenderState);
   var modeIn = this.addInputPin("Mode", ['source-over'], this);
   
-  var renderStateOut = this.addOutputPin("Render State Out", [defaultRenderState], this);
+  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.CanvasRenderState);
   
   var renderStates = [];
   
@@ -237,10 +235,7 @@ VVVV.Nodes.BlendCanvas = function(id, graph) {
       if (renderStates[i]==undefined) {
         renderStates[i] = new VVVV.Types.CanvasRenderState();
       }
-      if (renderStateIn.isConnected())
-        renderStates[i].copy_attributes(renderStateIn.getValue(i));
-      else
-        renderStates[i].copy_attributes(defaultRenderState);
+      renderStates[i].copy_attributes(renderStateIn.getValue(i));
       renderStates[i].blendMode = modeIn.getValue(i);
       renderStateOut.setValue(i, renderStates[i]);
     }
@@ -267,7 +262,7 @@ VVVV.Nodes.LinearGradientCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [defaultRenderState], this, true);
+  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.CanvasRenderState);
   var startXIn = this.addInputPin("Start X", [0.0], this);
   var startYIn = this.addInputPin("Start Y", [0.0], this);
   var endXIn = this.addInputPin("End X", [0.0], this);
@@ -275,7 +270,7 @@ VVVV.Nodes.LinearGradientCanvas = function(id, graph) {
   var colorsIn = this.addInputPin("Colors", ['1.0, 1.0, 1.0, 1.0', '0.0, 0.0, 0.0, 1.0'], this);
   var colorPositionsIn = this.addInputPin("Color Positions", [0.0, 1.0], this);
   
-  var renderStateOut = this.addOutputPin("Render State Out", [defaultRenderState], this);
+  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.CanvasRenderState);
   
   var renderStates = [];
   
@@ -289,10 +284,7 @@ VVVV.Nodes.LinearGradientCanvas = function(id, graph) {
       if (renderStates[i]==undefined) {
         renderStates[i] = new VVVV.Types.CanvasRenderState();
       }
-      if (renderStateIn.isConnected())
-        renderStates[i].copy_attributes(renderStateIn.getValue(i));
-      else
-        renderStates[i].copy_attributes(defaultRenderState);
+      renderStates[i].copy_attributes(renderStateIn.getValue(i));
       renderStates[i].gradient = {type: 'linear'};
       renderStates[i].gradient.startX = startXIn.getValue(i);
       renderStates[i].gradient.startY = startYIn.getValue(i);
@@ -330,7 +322,7 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin('Render State', [defaultRenderState], this, true);
+  var renderStateIn = this.addInputPin('Render State', [], this, true, VVVV.PinTypes.CanvasRenderState);
   var transformIn = this.addInputPin('Transform', [], this, true, VVVV.PinTypes.Transform);
   var startAngleIn = this.addInputPin('Start Angle', [0.0], this);
   var endAngleIn = this.addInputPin('End Angle', [0.5], this);
@@ -374,12 +366,7 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
         layers[i].transform = transformIn.getValue(i);
         layers[i].startAngle = parseFloat(startAngleIn.getValue(i))*Math.PI*2;
         layers[i].endAngle = parseFloat(endAngleIn.getValue(i))*Math.PI*2;
-        if (renderStateIn.isConnected()) {
-          layers[i].renderState = renderStateIn.getValue(i);
-        }
-        else {
-          layers[i].renderState = defaultRenderState;
-        }
+        layers[i].renderState = renderStateIn.getValue(i);
       }
       
       for (var i=0; i<layers.length; i++) {
@@ -410,7 +397,7 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin('Render State', [defaultRenderState], this, true);
+  var renderStateIn = this.addInputPin('Render State', [], this, true, VVVV.PinTypes.CanvasRenderState);
   var transformIn = this.addInputPin('Transform', [], this, true, VVVV.PinTypes.Transform);
   var textIn = this.addInputPin('Text', ['VVVV.js'], this);
   var fontIn = this.addInputPin('Font', ['10px sans-serif'], this);
@@ -459,12 +446,7 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
       layers[i].font = fontIn.getValue(i);
       layers[i].align = alignIn.getValue(i);
       layers[i].baseline = baselineIn.getValue(i);
-      if (renderStateIn.isConnected()) {
-        layers[i].renderState = renderStateIn.getValue(i);
-      }
-      else {
-        layers[i].renderState = defaultRenderState;
-      }
+      layers[i].renderState = renderStateIn.getValue(i);
     }
     
     for (var i=0; i<layers.length; i++) {
@@ -494,7 +476,7 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin('Render State', [defaultRenderState], this);
+  var renderStateIn = this.addInputPin('Render State', [], this, true, VVVV.PinTypes.CanvasRenderState);
   var transformIn = this.addInputPin('Transform', [], this, VVVV.PinTypes.Transform);
   var xIn = this.addInputPin('X', [0.0], this);
   var yIn = this.addInputPin('Y', [0.0], this);
@@ -573,10 +555,7 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
           
           
         if (subIndex == 0) {
-          if (renderStateIn.isConnected())
-            layers[binNum].renderState = renderStateIn.getValue(binNum);
-          else
-            layers[binNum].renderState = defaultRenderState;
+          layers[binNum].renderState = renderStateIn.getValue(binNum);
           layers[binNum].transform = transformIn.getValue(binNum);
         }
         layers[binNum].x[subIndex] = parseFloat(xIn.getValue(j));
@@ -765,7 +744,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   var bgColorIn = this.addInputPin("Background Color", ["0.0, 0.0, 0.0, 1.0"], this);
   var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], this);
   var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], this);
-  var viewIn = this.addInputPin("View", [], this);
+  var viewIn = this.addInputPin("View", [], this, true, VVVV.PinTypes.Transform);
   
   var canvasOut = this.addOutputPin("Canvas Out", [], this);
   
