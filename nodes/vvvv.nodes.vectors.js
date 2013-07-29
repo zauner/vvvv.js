@@ -158,6 +158,9 @@ VVVV.Nodes.Split2dVector = function(id, graph) {
 		yOut.setValue(id,xyIn.getValue(i+1));	
 		id ++;
       }
+      
+      xOut.setSliceCount(id);
+      yOut.setSliceCount(id);
   }
 
 }
@@ -199,6 +202,10 @@ VVVV.Nodes.Split3dVector = function(id, graph) {
 		zOut.setValue(id,xyzIn.getValue(i+2));	
 		id ++;
       }
+      
+      xOut.setSliceCount(id);
+      yOut.setSliceCount(id);
+      zOut.setSliceCount(id);
   }
 
 }
@@ -243,6 +250,11 @@ VVVV.Nodes.Split4dVector = function(id, graph) {
 		wOut.setValue(id,xyzwIn.getValue(i+3));	
 		id ++;
       }
+      
+      xOut.setSliceCount(id);
+      yOut.setSliceCount(id);
+      zOut.setSliceCount(id);
+      wOut.setSliceCount(id);
   }
 
 }
