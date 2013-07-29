@@ -12,6 +12,8 @@ VVVV.Core.VVVVConnector = function() {
   this.patchMap = {};
   this.host = false;
   var socket = false;
+  var messageQueue = [];
+  var messageQueueJob = undefined;
 
   var that = this;
   
@@ -20,6 +22,13 @@ VVVV.Core.VVVVConnector = function() {
     if (!this.host)
       return;
     socket = new WebSocket(this.host+":4444", "vvvvjs");
+    
+    messageQueueJob = window.setInterval(function() {
+      message = messageQueue.shift();
+      if (message) {
+        socket.send(message);
+      }
+    }, 300);
 
     var opened = false;
     socket.onopen = function() {
@@ -91,18 +100,18 @@ VVVV.Core.VVVVConnector = function() {
   
   this.pullCompletePatch = function(patch) {
     console.log('pulling patch...'+patch.nodename);
-    socket.send('PULL/'+patch.nodename);
+    messageQueue.push('PULL/'+patch.nodename);
   }
   
   this.pushCompletePatch = function(patch) {
     console.log('pushing patch ...'+patch.nodename);
-    socket.send('PUSH/'+patch.nodename+'/'+patch.XMLCode);
+    messageQueue.push('PUSH/'+patch.nodename+'/'+patch.XMLCode);
   }
   
   this.sendUndo = function() {
     if (socket) {
       console.log('forcing Undo ...');
-      socket.send('UNDO');
+      messageQueue.push('UNDO');
     }
   }
   

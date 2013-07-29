@@ -548,7 +548,7 @@ VVVV.Core = {
       var syncmode = 'diff';
       if (/\s<PATCH/.test(xml) || thisPatch.vvvv_version<="45_26") {
         syncmode = 'complete';
-        if (VVVV_ENV=='development') console.log('complete');
+        if (VVVV_ENV=='development') console.log('complete: '+this.nodename);
         thisPatch.XMLCode = xml;
       }
     
