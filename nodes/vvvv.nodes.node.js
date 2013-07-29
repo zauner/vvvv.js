@@ -91,3 +91,45 @@ VVVV.Nodes.IOBoxNode = function(id, graph) {
 
 }
 VVVV.Nodes.IOBoxNode.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Switch (Node Input)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.SwitchNodeInput = function(id, graph) {
+  this.constructor(id, "Switch (Node Input)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['No dynamic pin count yet']
+  };
+  
+  var switchIn = this.addInputPin("Switch", [0], this);
+  var inputIn = []
+  inputIn[0] = this.addInputPin("Input 1", [0.0], this);
+  inputIn[1] = this.addInputPin("Input 2", [0.0], this);
+  
+  var outputOut = this.addOutputPin("Output", [0.0], this);
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    if (switchIn.getValue(0)==undefined) {
+      outputOut.setValue(0, undefined);
+      return;
+    }
+    for (var i=0; i<maxSize; i++) {
+      outputOut.setValue(i, inputIn[Math.round(Math.abs(switchIn.getValue(i)))%inputIn.length].getValue(i));
+    }
+    outputOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.SwitchNodeInput.prototype = new VVVV.Core.Node();
