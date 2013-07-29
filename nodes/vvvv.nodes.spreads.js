@@ -657,3 +657,77 @@ VVVV.Nodes.IntervalSpreads = function(id, graph) {
 
 }
 VVVV.Nodes.IntervalSpreads.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Queue (Spreads)
+ Author(s): 'Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.QueueSpreads = function(id, graph) {
+  this.constructor(id, "Queue (Spreads)", graph);
+  
+  this.meta = {
+    authors: ['Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  var inputIn = this.addInputPin('Input', [0], this);
+  var insertIn = this.addInputPin('Insert', [0], this);
+  var framecountIn = this.addInputPin('Frame Count', [1], this);
+  var resetIn = this.addInputPin('Reset', [0], this);
+
+  var outputOut = this.addOutputPin('Output', [], this);
+  var outputbinsizeOut = this.addOutputPin('Output Bin Size', [], this);
+
+  this.evaluate = function() {
+    var insert = insertIn.getValue(0);
+    var framecount = framecountIn.getValue(0);
+    var reset = resetIn.getValue(0);
+
+    var changed = false;
+    if (insert>=0.5 && reset<0.5) {
+      var newSize = inputIn.getSliceCount();
+      for (var i=newSize-1; i>=0; i--) {
+        outputOut.values.unshift(inputIn.getValue(i));
+      }
+      outputbinsizeOut.values.unshift(newSize);
+      
+      changed = true;
+    }
+    
+    if (framecountIn.pinIsChanged() || changed) {
+      currFrameCount = outputbinsizeOut.values.length;
+      for (var i=currFrameCount; i>framecount; i--) {
+        outputOut.values.splice(-outputbinsizeOut.values[i-1])
+      }
+      outputbinsizeOut.values.splice(framecount);
+      
+      changed = true;
+    }
+    
+    if (changed) {
+      for (var i=0; i<outputOut.values.length; i++) {
+        outputOut.setValue(i, outputOut.values[i]);
+      }
+      for (var i=0; i<outputbinsizeOut.values.length; i++) {
+        outputbinsizeOut.setValue(i, outputbinsizeOut.values[i]);
+      } 
+    }
+    
+    if (reset>=0.5) {
+      outputOut.setSliceCount(0);
+      outputbinsizeOut.setSliceCount(0);
+    }
+
+  }
+
+}
+VVVV.Nodes.QueueSpreads.prototype = new VVVV.Core.Node();
