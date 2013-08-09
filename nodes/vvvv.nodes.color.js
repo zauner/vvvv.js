@@ -94,3 +94,48 @@ VVVV.Nodes.IOBoxColor = function(id, graph) {
 
 }
 VVVV.Nodes.IOBoxColor.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: SetAlpha (Color)
+ Author(s): 'Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.SetAlphaColor = function(id, graph) {
+  this.constructor(id, "SetAlpha (Color)", graph);
+  
+  this.meta = {
+    authors: ['Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var inputIn = this.addInputPin('Input', ['0.0, 0.0, 0.0, 0.0'], this);
+  var alphaIn = this.addInputPin('Alpha', [1.0], this);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', ['0.0, 0.0, 0.0, 1.0'], this);
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      var input = inputIn.getValue(i);
+      var alpha = alphaIn.getValue(i);
+      
+      outputOut.setValue(i, input.replace(/[^, ]+$/, alpha));
+    }
+    
+    outputOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.SetAlphaColor.prototype = new VVVV.Core.Node();
