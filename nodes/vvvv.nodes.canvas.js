@@ -821,6 +821,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
     attachMouseEvents(canvas);
     
     ctx = canvas.getContext('2d');
+    canvas.ctx = ctx;
     
   }
 
@@ -857,7 +858,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
       bgColor[2] = parseInt(bgColor[2]*255);
     }
       
-    if (true) {//layersIn.pinIsChanged() || bgColorIn.pinIsChanged() || clearIn.pinIsChanged()) {
+    if (layersIn.pinIsChanged() || bgColorIn.pinIsChanged() || clearIn.pinIsChanged()) {
     
       defaultRenderState.apply(ctx);
       
@@ -889,10 +890,11 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
       }
       
+      canvasOut.setValue(0, canvas);
+      
     }
     
     canvas.loaded = true;
-    canvasOut.setValue(0, canvas);
 
 
   }
