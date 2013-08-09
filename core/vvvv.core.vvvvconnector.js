@@ -66,6 +66,11 @@ VVVV.Core.VVVVConnector = function() {
         }
       }
     }
+    
+    $(window).unload(function() {
+      console.log('closing socket ...');
+      socket.close();
+    })
   }
   
   this.addPatch = function(patch) {
