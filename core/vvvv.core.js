@@ -274,6 +274,10 @@ VVVV.Core = {
         return this.IOBoxInputPin().getValue(0);
       }
       
+      if (this.isSubpatch) {
+        return this.nodename.match(/(.+)\.v4p$/)[1];
+      }
+      
       label = this.nodename.replace(/\s\(.+\)/, '');
       switch (label) {
         case "Add": return "+"; 
@@ -297,7 +301,7 @@ VVVV.Core = {
     }
     
     this.getHeight = function() {
-      if (this.height==100)
+      if (this.height==100 || this.isSubpatch)
         return 18;
       else
         return Math.max(18, this.height/15);
