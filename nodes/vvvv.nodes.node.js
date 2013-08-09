@@ -112,23 +112,37 @@ VVVV.Nodes.SwitchNodeInput = function(id, graph) {
   };
   
   var switchIn = this.addInputPin("Switch", [0], this);
+  var inputcountIn = this.addInvisiblePin("Input Count", [2], this);
   var inputIn = []
-  inputIn[0] = this.addInputPin("Input 1", [0.0], this);
-  inputIn[1] = this.addInputPin("Input 2", [0.0], this);
   
   var outputOut = this.addOutputPin("Output", [0.0], this);
+  
+  this.initialize = function() {
+    var inputCount = inputcountIn.getValue(0);
+    for (var i=inputIn.length; i<inputCount; i++) {
+      inputIn[i] = this.addInputPin("Input "+(i+1), [], this, true, VVVV.PinTypes.Node);
+    }
+    inputIn.length = inputCount;
+  }
 
   this.evaluate = function() {
-    var maxSize = this.getMaxInputSliceCount();
+    
+    if (inputcountIn.pinIsChanged()) {
+      this.initialize();
+    }
     
     if (switchIn.getValue(0)==undefined) {
       outputOut.setValue(0, undefined);
       return;
     }
-    for (var i=0; i<maxSize; i++) {
-      outputOut.setValue(i, inputIn[Math.round(Math.abs(switchIn.getValue(i)))%inputIn.length].getValue(i));
+    
+    var pin = inputIn[Math.round(Math.abs(switchIn.getValue(0)))%inputIn.length]
+    var slices = pin.getSliceCount();
+    
+    for (var i=0; i<slices; i++) {
+      outputOut.setValue(i, pin.getValue(i));
     }
-    outputOut.setSliceCount(maxSize);
+    outputOut.setSliceCount(slices);
   }
 
 }
