@@ -60,6 +60,13 @@ VVVV.VVVViewer = function(graph, selector) {
           return 'rgba(0,0,0,0)';
         else if (d.not_implemented)
           return 'rgba(255,0,0,1)';
+        else if (d.isIOBox && d.IOBoxType()=="Color") {
+          var col = d.IOBoxInputPin().getValue(0).split(',');
+          for (var i=0; i<col.length; i++) {
+            col[i] = parseInt(col[i]*256);
+          }
+          return 'rgba('+col.join(',')+')';
+        }
         else
           return '#cdcdcd';
       })
@@ -116,7 +123,12 @@ VVVV.VVVViewer = function(graph, selector) {
     // INPUT PINS
       
     inputPins = nodes.selectAll('g.vvvv-input-pin')
-      .data(function(d) { return _(d.inputPins).map(function(p,k) { return p }); })
+      .data(function(d) { 
+        if (d.isSubpatch)
+          return _(d.inputPins).sortBy(function(p) { return p.slavePin ? p.slavePin.node.x : 1 }).map(function(p,k) { return p });
+        else
+          return _(d.inputPins).map(function(p,k) { return p });
+      })
       .enter().append('svg:g')
         .attr('class', 'vvvv-input-pin')
         .attr('transform', function(d, i) {
