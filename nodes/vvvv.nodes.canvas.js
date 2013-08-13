@@ -858,7 +858,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
       bgColor[2] = parseInt(bgColor[2]*255);
     }
       
-    if (layersIn.pinIsChanged() || bgColorIn.pinIsChanged() || clearIn.pinIsChanged()) {
+    if (layersIn.pinIsChanged() || bgColorIn.pinIsChanged() || clearIn.pinIsChanged() || viewIn.pinIsChanged()) {
     
       defaultRenderState.apply(ctx);
       
