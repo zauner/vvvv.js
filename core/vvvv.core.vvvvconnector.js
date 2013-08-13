@@ -56,13 +56,21 @@ VVVV.Core.VVVVConnector = function() {
       opened = false;
     }
     socket.onmessage = function(m) {
-      var match = m.data.match(/^UPDATE\/([^/]+)\/([\s\S]*)/);
-      if (match) {
-        if (that.patchMap[match[1]+".v4p"]) {
-          _(that.patchMap[match[1]+".v4p"]).each(function(p) {
+      var messages = m.data.split('UPDATE');
+      for (var i=0; i<messages.length; i++) {
+        var match = ("UPDATE"+messages[i]).match(/^UPDATE\/([^/]+)\/([\s\S]*)/);
+        if (match) {
+          if (that.patchMap[match[1]+".v4p"]) {
+            _(that.patchMap[match[1]+".v4p"]).each(function(p) {
+              p.doLoad(match[2]);
+              p.afterUpdate();
+            });
+          }
+          if (match[1]=="*") {
+            var p = that.patchMap[Object.keys(that.patchMap)[0]][0];
             p.doLoad(match[2]);
             p.afterUpdate();
-          });
+          }
         }
       }
     }
