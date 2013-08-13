@@ -5,6 +5,12 @@ VVVV.VVVViewer = function(graph, selector) {
     
   // RENDERING
   
+  function openSubPatch(n) {
+    if (n.isSubpatch)
+      var subviewer = new VVVV.VVVViewer(n, selector);
+    return false
+  }
+  
   if (!selector) {
     selector = 'vvvv-generated-vvvviewer-'+(new Date()).getTime();
     $('body').append('<div id="'+selector+'">');
@@ -45,11 +51,7 @@ VVVV.VVVViewer = function(graph, selector) {
         .attr('class', function(d) { return d.isIOBox? 'vvvv-node vvvv-iobox' : 'vvvv-node' })
         .attr('id', function(d) { return 'vvvv-node-'+d.id})
         .attr('transform', function(d) { return 'translate('+d.x+','+d.y+')' })
-        .on('dblclick', function(n) {
-          if (n.isSubpatch)
-            var subviewer = new VVVV.VVVViewer(n, selector);
-          return false
-        })
+        .on('dblclick', openSubPatch)
        
     nodes.append('svg:rect')
       .attr('class', 'vvvv-node-background')
@@ -70,12 +72,14 @@ VVVV.VVVViewer = function(graph, selector) {
         else
           return '#cdcdcd';
       })
+      .on('dblclick', openSubPatch)
     
     nodes.append('svg:rect')
       .attr('class', 'vvvv-node-pinbar')
       .attr('height', function (d) { return d.isIOBox? 2 : 4 })
       .attr('fill', function(d) { return d.isIOBox? "#dddddd" : "#9a9a9a"; })
       .attr('width', function(d) { return d.getWidth(); })
+      .on('dblclick', openSubPatch)
       
     nodes.append('svg:rect')
       .attr('class', 'vvvv-node-pinbar')
@@ -83,6 +87,7 @@ VVVV.VVVViewer = function(graph, selector) {
       .attr('height', function (d) { return d.isIOBox? 2 : 4 })
       .attr('fill', function(d) { return d.isIOBox? "#dddddd" : "#9a9a9a"; })
       .attr('width', function(d) { return d.getWidth(); })
+      .on('dblclick', openSubPatch)
       
     nodes.append('svg:text')
       .text(function(d) { return (d.invisiblePins["Descriptive Name"]) ? d.invisiblePins["Descriptive Name"].getValue(0) : null })
@@ -118,7 +123,8 @@ VVVV.VVVViewer = function(graph, selector) {
         })
         .attr('dx', 4)
         .attr('font-size', 10)
-        .attr('font-family', 'Lucida Sans Unicode');
+        .attr('font-family', 'Lucida Sans Unicode')
+      .on('dblclick', openSubPatch)
       
     // INPUT PINS
       
