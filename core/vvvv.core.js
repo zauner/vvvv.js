@@ -275,7 +275,7 @@ VVVV.Core = {
       }
       
       if (this.isSubpatch) {
-        return this.nodename.match(/(.+)\.v4p$/)[1];
+        return "||"+this.nodename.match(/(.+)\.v4p$/)[1];
       }
       
       label = this.nodename.replace(/\s\(.+\)/, '');
