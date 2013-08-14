@@ -383,7 +383,7 @@ VVVV.Core = {
           var pinname = this.invisiblePins["Descriptive Name"].getValue(0);
           this.IOBoxInputPin().connectionChangedHandlers['subpatchpins'] = function() {
             if (this.links.length>0 && this.masterPin) {
-               console.log('deleting '+pinname+' input pin because node has input connection...');
+               if (VVVV_ENV=='development') console.log('deleting '+pinname+' input pin because node has input connection...');
                for (var i=0; i<this.masterPin.links.length; i++) {
                  this.masterPin.links[i].destroy();
                }
@@ -399,7 +399,7 @@ VVVV.Core = {
               pin.masterPin = that.IOBoxOutputPin();
             }
             else if (that.IOBoxOutputPin().slavePin.pinname!=pinname) { // rename subpatch pin
-              console.log('renaming '+that.IOBoxOutputPin().slavePin.pinname+" to "+pinname);
+              if (VVVV_ENV=='development') console.log('renaming '+that.IOBoxOutputPin().slavePin.pinname+" to "+pinname);
               that.parentPatch.outputPins[pinname] = that.parentPatch.outputPins[that.IOBoxOutputPin().slavePin.pinname];
               delete that.parentPatch.outputPins[that.IOBoxOutputPin().slavePin.pinname];
               that.IOBoxOutputPin().slavePin.pinname = pinname;
@@ -409,7 +409,7 @@ VVVV.Core = {
           
           this.IOBoxOutputPin().connectionChangedHandlers['subpatchpins'] = function() {
             if (this.links.length>0 && this.slavePin) {
-               console.log('deleting '+pinname+' output pin because node '+that.id+' has output connection...');
+               if (VVVV_ENV=='development') console.log('deleting '+pinname+' output pin because node '+that.id+' has output connection...');
                for (var i=0; i<this.slavePin.links.length; i++) {
                  this.slavePin.links[i].destroy();
                }
@@ -420,11 +420,10 @@ VVVV.Core = {
               if (VVVV_ENV=='development') console.log('interfacing input pin detected: '+pinname);
               var pin = that.parentPatch.inputPins[pinname];
               if (pin==undefined) {
-                console.log('creating new input pin at parent patch, using IOBox values');
+                if (VVVV_ENV=='development') console.log('creating new input pin at parent patch, using IOBox values');
                 var pin = that.parentPatch.addInputPin(pinname, that.IOBoxInputPin().values, null, false);
               }
               else {
-                console.log('taking values from parent patch');
                 slicecount = pin.getSliceCount();
                 for (var i=0; i<slicecount; i++) {
                   that.IOBoxInputPin().setValue(i, pin.getValue(i));
@@ -637,7 +636,7 @@ VVVV.Core = {
                 function() {
                   thisPatch.pause = false;
                   nodesLoading--;
-                  console.log(n.nodename+'invoking update links')
+                  if (VVVV_ENV=='development') console.log(n.nodename+'invoking update links')
                   updateLinks(xml);
                   if (thisPatch.VVVVConnector)
                     thisPatch.VVVVConnector.addPatch(n);
