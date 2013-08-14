@@ -1,3 +1,52 @@
+v0.3.0 / 2013-08-13
+===================
+
+Recommended VVVV version for this VVVV.js release is 45beta28
+
+Nodes
+-----
+
+new:
+
+Separate (String)
+Count (String)
+= (String)
+Select (String)
+Clean (String)
+IOBox (Node)
+Switch (Node)
+Queue (Spreads)
+CurrentTime (Astronomy)
+Gregorian (Astronomy Split)
+XPath (XML)
+SetAlpha (Color)
+
+improved:
+
+* I (Spreads) works now with From > To values
+* AsValue (String) works with negative values
+* Renderer (HTML5 Canvas) only renders when input pins change
+* DX9Texture (EX9) enables linear filtering for Canvas Texture
+
+Core
+----
+
+* Interpretation of spreads in XML fixed
+* Supports loading of subpatches
+* VVVVJsConnector can deal with subpatches
+* Replaced some underscore.js loops with native loops
+* VVVViewer now opens subpatch when a subpatch node is double-clicked. Returns to parent patch when background is double-clicked
+* Introduced VVVV.PinTypes
+* New PinTypes: WebGlResource, WebGlTexture, Node, Transform, CanvasRenderState
+* VVVViewer displays actual colors in IOBox (Color)
+* adds VVVV.Editors and makes VVVVJsConnector an 'Editor' in VVVV.Editors["Connector"]
+
+
+Node Interface Changes
+----------------------
+
+* VVVV.Core.Pin.connectionChanged() handler has been replaced by the hash VVVV.Core.Pin.connectionChangedHandlers, to allow multiple named callbacks
+
 v0.2.0 / 2013-02-04
 ===================
 
