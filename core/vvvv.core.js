@@ -173,6 +173,7 @@ VVVV.Core = {
     this.height = 0;
     this.isIOBox = false;
     this.isShader = false;
+    this.resourcesPending = 0;
     
     this.setupObject = function() { // had to put this into a method to allow Patch to "derive" from Node. Really have to understand this javascript prototype thing some day ...
       this.inputPins = {};
@@ -613,11 +614,11 @@ VVVV.Core = {
             
             // load 3rd party libs, if required for this node
             if (VVVV.NodeLibrary[nodename.toLowerCase()].requirements) {
-              thisPatch.pause = true; // pause patch evaluation
+              thisPatch.resourcesPending++; // pause patch evaluation
               _(VVVV.NodeLibrary[nodename.toLowerCase()].requirements).each(function(libname) {
                 if (VVVV.LoadedLibs[libname]===undefined)
                   VVVV.loadScript(VVVV.ThirdPartyLibs[libname], function() {
-                    thisPatch.pause = false; // resume patch evaluation
+                    thisPatch.resourcesPending--; // resume patch evaluation
                   });
               });
             }
@@ -630,11 +631,11 @@ VVVV.Core = {
           }
           else {
             if (/.v4p$/.test($(this).attr('filename'))) {
-              thisPatch.pause = true;
+              thisPatch.resourcesPending++;
               nodesLoading++;
               var n = new VVVV.Core.Patch($(this).attr('filename'),
                 function() {
-                  thisPatch.pause = false;
+                  thisPatch.resourcesPending--;
                   nodesLoading--;
                   if (VVVV_ENV=='development') console.log(n.nodename+'invoking update links')
                   updateLinks(xml);
@@ -668,7 +669,7 @@ VVVV.Core = {
               VVVV.onNotImplemented(nodename);
             }
           }
-          if (VVVV_ENV=='development') console.log('inserted new node '+n.nodename);
+          if (VVVV_ENV=='development') console.log(thisPatch.nodename+': inserted new node '+n.nodename);
         }
         else
           n = thisPatch.nodeMap[$(this).attr('id')];
@@ -903,7 +904,7 @@ VVVV.Core = {
     }
     
     this.evaluate = function() {
-      if (this.pause) // this.pause might be true, if there is a thirdparty lib loaded currently, it will be fase again, when loading is complete
+      if (this.resourcesPending>0) // this.resourcesPending is >0 when thirdbarty libs or subpatches are loading at the moment
         return;
       if (print_timing)
         var start = new Date().getTime();
