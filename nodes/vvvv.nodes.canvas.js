@@ -68,6 +68,15 @@ VVVV.PinTypes.CanvasRenderState = {
   }
 }
 
+var defaultCanvasLayer = function() {
+  this.draw = function() {};
+}
+VVVV.PinTypes.CanvasLayer = {
+  typeName: "CanvasLayer",
+  reset_on_disconnect: true,
+  defaultValue: defaultCanvasLayer
+}
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Fill (Canvas VVVVjs RenderState)
@@ -327,7 +336,7 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
   var startAngleIn = this.addInputPin('Start Angle', [0.0], this);
   var endAngleIn = this.addInputPin('End Angle', [0.5], this);
   
-  var layersOut = this.addOutputPin('Layer', [], this);
+  var layersOut = this.addOutputPin('Layer', [], this, VVVV.PinTypes.CanvasLayer);
   
   var layers = [];
   
@@ -404,7 +413,7 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
   var alignIn = this.addInputPin('Align', ['start'], this);
   var baselineIn = this.addInputPin('Baseline', ['alphabetic'], this);
   
-  var layersOut = this.addOutputPin('Layer', [], this);
+  var layersOut = this.addOutputPin('Layer', [], this, VVVV.PinTypes.CanvasLayer);
   
   var layers = [];
   
@@ -477,7 +486,7 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
   };
   
   var renderStateIn = this.addInputPin('Render State', [], this, true, VVVV.PinTypes.CanvasRenderState);
-  var transformIn = this.addInputPin('Transform', [], this, VVVV.PinTypes.Transform);
+  var transformIn = this.addInputPin('Transform', [], this, true, VVVV.PinTypes.Transform);
   var xIn = this.addInputPin('X', [0.0], this);
   var yIn = this.addInputPin('Y', [0.0], this);
   var control1XIn = this.addInputPin('Control 1 X', [0.0], this);
@@ -486,7 +495,7 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
   var control2YIn = this.addInputPin('Control 2 Y', [0.0], this);
   var binSizeIn = this.addInputPin('BinSize', [-1], this);
   
-  var layersOut = this.addOutputPin('Layer', [], this);
+  var layersOut = this.addOutputPin('Layer', [], this, VVVV.PinTypes.CanvasLayer);
   
   var layers = [];
   
@@ -610,17 +619,17 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
   };
   
   var transformIn = this.addInputPin('Transform', [], this, true, VVVV.PinTypes.Transform);
-  var textureIn = this.addInputPin('Texture', [], this, true);
+  var textureIn = this.addInputPin('Texture', [], this, true, VVVV.PinTypes.HTML5Texture);
   var colorIn = this.addInputPin('Color', ['1.0, 1.0, 1.0, 1.0'], this);
   
-  var layersOut = this.addOutputPin('Layer', [], this);
+  var layersOut = this.addOutputPin('Layer', [], this, VVVV.PinTypes.CanvasLayer);
   
   var layers = [];
   
   var Quad = function() {
     this.transform = mat4.create();
     mat4.identity(this.transform);
-    this.texture = undefined;
+    this.texture = VVVV.PinTypes.HTML5Texture.defaultValue();
     this.color = [1.0, 1.0, 1.0, 1.0];
   
     this.draw = function(ctx) {
@@ -628,7 +637,7 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
       if (this.transform)
         ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
         
-      if (this.texture) {
+      if (this.texture!="Empty Texture") {
         if (this.texture.loaded) {
           ctx.globalAlpha = this.color[3];
           ctx.save();
@@ -695,11 +704,11 @@ VVVV.Nodes.GroupCanvas = function(id, graph) {
   
   var layerIns = [];
   
-  var layerOut = this.addOutputPin("Layer", [], this);
+  var layerOut = this.addOutputPin("Layer", [], this, VVVV.PinTypes.CanvasLayer);
   
   this.initialize = function() {
     for (var i=0; i<2; i++) {
-      layerIns[i] = this.addInputPin("Layer "+(i+1), [], this, true);
+      layerIns[i] = this.addInputPin("Layer "+(i+1), [], this, true, VVVV.PinTypes.CanvasLayer);
     }
   }
   
@@ -739,7 +748,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var layersIn = this.addInputPin("Layers", [], this);
+  var layersIn = this.addInputPin("Layers", [], this, true, VVVV.PinTypes.CanvasLayer);
   var clearIn = this.addInputPin("Clear", [1], this);
   var bgColorIn = this.addInputPin("Background Color", ["0.0, 0.0, 0.0, 1.0"], this);
   var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], this);

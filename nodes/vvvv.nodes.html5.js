@@ -3,6 +3,14 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+VVVV.PinTypes.HTML5Texture = {
+  typeName: "HTML5Texture",
+  reset_on_disconnect: true,
+  defaultValue: function() {
+    return "Empty Texture";
+  }
+}
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: FileTexture (Canvas VVVVjs)
@@ -24,7 +32,7 @@ VVVV.Nodes.FileTextureCanvas = function(id, graph) {
   
   var filenameIn = this.addInputPin('Filename', [], this);
   
-  var textureOut = this.addOutputPin('Texture Out', [], this);
+  var textureOut = this.addOutputPin('Texture Out', [], this, VVVV.PinTypes.HTML5Texture);
   var widthOut = this.addOutputPin('Width', [0], this);
   var heightOut = this.addOutputPin('Height', [0], this);
   var runningOut = this.addOutputPin('Up and Running', [0], this);
@@ -38,7 +46,7 @@ VVVV.Nodes.FileTextureCanvas = function(id, graph) {
     
     if (filenameIn.pinIsChanged()) { 
       for (var i=0; i<maxSpreadSize; i++) {
-        if (images[i]==undefined)
+        //if (images[i]==undefined)
           images[i] = new Image();
         if (images[i].src!=filenameIn.getValue(i)) {
           images[i].loaded = false;
