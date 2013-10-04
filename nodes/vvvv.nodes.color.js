@@ -139,3 +139,52 @@ VVVV.Nodes.SetAlphaColor = function(id, graph) {
 
 }
 VVVV.Nodes.SetAlphaColor.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Switch (Color Input)
+ Author(s): 'Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.SwitchColorInput = function(id, graph) {
+  this.constructor(id, "Switch (Color Input)", graph);
+  
+  this.meta = {
+    authors: ['Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var switchIn = this.addInputPin('Switch', [0], this);
+  var inputIn = [];
+  inputIn[0] = this.addInputPin('Input 1', ['1.0, 1.0, 1.0, 1.0'], this);
+  inputIn[1] = this.addInputPin('Input 2', ['1.0, 1.0, 1.0, 1.0'], this);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', ['1.0, 1.0, 1.0, 1.0'], this);
+
+  // invisible pins
+  var inputcountIn = this.addInvisiblePin('Input Count', [2], this);
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    if (this.hasNilInputs()) {
+      outputOut.setSliceCount(0);
+      return;
+    }
+    for (var i=0; i<maxSize; i++) {
+      outputOut.setValue(i, inputIn[Math.round(Math.abs(switchIn.getValue(i)))%inputIn.length].getValue(i));
+    }
+    outputOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.SwitchColorInput.prototype = new VVVV.Core.Node();
