@@ -174,6 +174,7 @@ VVVV.Core = {
     this.isIOBox = false;
     this.isShader = false;
     this.resourcesPending = 0;
+    this.auto_nil = true;
     
     this.setupObject = function() { // had to put this into a method to allow Patch to "derive" from Node. Really have to understand this javascript prototype thing some day ...
       this.inputPins = {};
@@ -348,6 +349,15 @@ VVVV.Core = {
     	  }
     	});
     	return ret;
+    }
+    
+    this.hasNilInputs = function() {
+      var result = false
+      _(this.inputPins).each(function(p) {
+        if (p.getSliceCount()==0)
+          result = true;
+      });
+      return result;
     }
     
     this.getMaxInputSliceCount = function() {
@@ -932,14 +942,21 @@ VVVV.Core = {
         if (node.dirty || node.auto_evaluate || node.isSubpatch) {
           if (print_timing)
             var start = new Date().getTime();
-          node.evaluate();
-          if (print_timing)
-            console.log(node.nodename+' / '+node.id+': '+(new Date().getTime() - start)+'ms')
-          node.dirty = false;
-          
-          _(node.inputPins).each(function(inPin) {
-            inPin.changed = false;
-          });
+          if (node.auto_nil && !node.isSubpatch && node.hasNilInputs()) {
+            _(node.outputPins).each(function(outPin) {
+              outPin.setSliceCount(0);
+            });
+          }
+          else {
+            node.evaluate();
+            if (print_timing)
+              console.log(node.nodename+' / '+node.id+': '+(new Date().getTime() - start)+'ms')
+            node.dirty = false;
+            
+            _(node.inputPins).each(function(inPin) {
+              inPin.changed = false;
+            });
+          }
         }
         delete invalidNodes[node.id];
         

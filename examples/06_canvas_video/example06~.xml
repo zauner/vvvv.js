@@ -596,22 +596,6 @@
    </NODE>
    <LINK srcnodeid="97" srcpinname="Y Output Value" dstnodeid="98" dstpinname="Input">
    </LINK>
-   <NODE systemname="Mouse (System Global)" nodename="Mouse (System Global)" componentmode="Hidden" id="-2">
-   <BOUNDS type="Node" left="7005" top="5070" width="100" height="100">
-   </BOUNDS>
-   <PIN pinname="X" visible="1">
-   </PIN>
-   </NODE>
-   <NODE systemname="Abs (Complex)" nodename="Abs (Complex)" componentmode="Hidden" id="99">
-   <BOUNDS type="Node" left="6840" top="5625" width="100" height="100">
-   </BOUNDS>
-   <PIN pinname="Input Real" visible="1">
-   </PIN>
-   <PIN pinname="Output" visible="1">
-   </PIN>
-   </NODE>
-   <LINK srcnodeid="-2" srcpinname="X" dstnodeid="99" dstpinname="Input Real">
-   </LINK>
-   <LINK srcnodeid="99" srcpinname="Output" dstnodeid="96" dstpinname="Volume">
+   <LINK srcnodeid="98" srcpinname="Output" dstnodeid="96" dstpinname="Volume">
    </LINK>
    </PATCH>

@@ -1,5 +1,5 @@
-<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta26.dtd" >
-   <PATCH nodename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\vvvv_js_page\vvvv_js\examples\06_canvas_video\example06.v4p" filename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\vvvv_js_page\vvvv_js\examples\05_canvas_image\example05.v4p" locked="0" systemname="example05">
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta28.1.dtd" >
+   <PATCH nodename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\vvvv_js\examples\06_canvas_video\example06.v4p" filename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\vvvv_js_page\vvvv_js\examples\05_canvas_image\example05.v4p" locked="0" systemname="example05">
    <BOUNDS height="13935" left="10005" top="915" type="Window" width="10275">
    </BOUNDS>
    <NODE componentmode="InAWindow" filename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\Renderer (Canvas VVVVjs).v4p" id="26" nodename="Renderer (Canvas VVVVjs)" systemname="Renderer (Canvas VVVVjs)">
@@ -249,7 +249,7 @@
    <LINK dstnodeid="65" dstpinname="Select" srcnodeid="44" srcpinname="Y Output Value">
    </LINK>
    <NODE componentmode="Hidden" id="66" nodename="S+H (Animation)" systemname="S+H (Animation)">
-   <BOUNDS height="100" left="3285" top="1485" type="Node" width="100">
+   <BOUNDS height="100" left="3300" top="2025" type="Node" width="100">
    </BOUNDS>
    <PIN pinname="Input" visible="1">
    </PIN>
@@ -259,7 +259,7 @@
    </PIN>
    </NODE>
    <NODE componentmode="Hidden" id="68" nodename="OR (Boolean Spectral)" systemname="OR (Boolean Spectral)">
-   <BOUNDS height="100" left="3870" top="1005" type="Node" width="100">
+   <BOUNDS height="100" left="3885" top="1440" type="Node" width="100">
    </BOUNDS>
    <PIN pinname="Input" visible="1">
    </PIN>
@@ -271,29 +271,23 @@
    <LINK dstnodeid="66" dstpinname="Set" srcnodeid="68" srcpinname="Output">
    </LINK>
    <NODE componentmode="InABox" id="69" nodename="IOBox (Value Advanced)" systemname="IOBox (Value Advanced)">
-   <BOUNDS height="100" left="3300" top="2370" type="Node" width="100">
+   <BOUNDS height="100" left="3330" top="2775" type="Node" width="100">
    </BOUNDS>
-   <BOUNDS height="240" left="3300" top="2370" type="Box" width="795">
+   <BOUNDS height="240" left="3330" top="2775" type="Box" width="795">
    </BOUNDS>
    <PIN pinname="Y Input Value" visible="1">
    </PIN>
    <PIN pinname="Y Output Value" visible="1">
    </PIN>
    </NODE>
-   <LINK dstnodeid="66" dstpinname="Input" srcnodeid="65" srcpinname="Former Slice">
-   </LINK>
    <NODE componentmode="Hidden" filename="%VVVV%\modules\vvvv group\Spreads\AvoidNIL (Spreads).v4p" id="70" nodename="AvoidNIL (Spreads)" systemname="AvoidNIL (Spreads)">
-   <BOUNDS height="100" left="3300" top="1950" type="Node" width="100">
+   <BOUNDS height="100" left="2715" top="1485" type="Node" width="100">
    </BOUNDS>
    <PIN pinname="Input" visible="1">
    </PIN>
    <PIN pinname="Output" visible="1">
    </PIN>
    </NODE>
-   <LINK dstnodeid="70" dstpinname="Input" srcnodeid="66" srcpinname="Output">
-   </LINK>
-   <LINK dstnodeid="69" dstpinname="Y Input Value" srcnodeid="70" srcpinname="Output">
-   </LINK>
    <NODE componentmode="InABox" id="72" nodename="IOBox (Value Advanced)" systemname="IOBox (Value Advanced)">
    <BOUNDS height="100" left="210" top="2370" type="Node" width="100">
    </BOUNDS>
@@ -581,7 +575,7 @@
    </BOUNDS>
    <BOUNDS type="Box" left="405" top="5385" width="795" height="240">
    </BOUNDS>
-   <PIN pinname="Descriptive Name" slicecount="1" values="#mute" encoded="0">
+   <PIN pinname="Descriptive Name" slicecount="1" encoded="0" values="#mute">
    </PIN>
    <PIN pinname="Y Output Value" visible="1">
    </PIN>
@@ -597,5 +591,11 @@
    <LINK srcnodeid="97" srcpinname="Y Output Value" dstnodeid="98" dstpinname="Input">
    </LINK>
    <LINK srcnodeid="98" srcpinname="Output" dstnodeid="96" dstpinname="Volume">
+   </LINK>
+   <LINK srcnodeid="65" srcpinname="Former Slice" dstnodeid="70" dstpinname="Input">
+   </LINK>
+   <LINK srcnodeid="70" srcpinname="Output" dstnodeid="66" dstpinname="Input">
+   </LINK>
+   <LINK srcnodeid="66" srcpinname="Output" dstnodeid="69" dstpinname="Y Input Value">
    </LINK>
    </PATCH>
