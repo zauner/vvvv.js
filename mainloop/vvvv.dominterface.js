@@ -162,7 +162,8 @@ VVVV.Core.DOMInterface = function(patch) {
       var j = i%elemCount;
       var k = i%values.length;
       var $elem = $(ioboxConn.selector).eq(j);
-      
+      if ($elem.length==0)
+        continue;
       if (ioboxConn.property_class==undefined) {
         switch ($elem[0].nodeName) {
           case "INPUT": $elem.val($(ioboxConn.selector).eq(j).val()+values[k]);
