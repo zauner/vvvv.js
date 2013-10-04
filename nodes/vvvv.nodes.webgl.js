@@ -276,6 +276,8 @@ VVVV.Types.ShaderProgram = function() {
 VVVV.Nodes.FileTexture = function(id, graph) {
   this.constructor(id, "FileTexture (EX9.Texture)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -342,6 +344,8 @@ VVVV.Nodes.FileTexture.prototype = new VVVV.Core.Node();
 VVVV.Nodes.DX9Texture = function(id, graph) {
   this.constructor(id, "DX9Texture (EX9.Texture)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -404,6 +408,8 @@ VVVV.Nodes.DX9Texture.prototype = new VVVV.Core.Node();
 VVVV.Nodes.VideoTexture = function(id, graph) {
   this.constructor(id, "VideoTexture (EX9.Texture VMR9)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -461,6 +467,8 @@ VVVV.Nodes.VideoTexture.prototype = new VVVV.Core.Node();
 VVVV.Nodes.VertexBufferJoin = function(id, graph) {
   this.constructor(id, "VertexBuffer (EX9.Geometry Join)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -517,6 +525,8 @@ VVVV.Nodes.VertexBufferJoin.prototype = new VVVV.Core.Node();
 VVVV.Nodes.MeshJoin = function(id, graph) {
   this.constructor(id, "Mesh (EX9.Geometry Join)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -564,6 +574,8 @@ VVVV.Nodes.MeshJoin.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.Grid = function(id, graph) {
   this.constructor(id, "Grid (EX9.Geometry)", graph);
+  
+  this.auto_nil = false;
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -647,6 +659,8 @@ VVVV.Nodes.Grid.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.Sphere = function(id, graph) {
   this.constructor(id, "Sphere (EX9.Geometry)", graph);
+  
+  this.auto_nil = false;
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -734,6 +748,8 @@ VVVV.Nodes.Sphere.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.Cylinder = function(id, graph) {
   this.constructor(id, "Cylinder (EX9.Geometry)", graph);
+  
+  this.auto_nil = false;
   
   this.meta = {
     authors: ['Matthias Zauner'],
@@ -1111,6 +1127,8 @@ VVVV.Nodes.ZWriteEnableWebGL.prototype = new VVVV.Core.Node();
 VVVV.Nodes.GenericShader = function(id, graph) {
   this.constructor(id, "GenericShader (EX9.Effect)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -1339,6 +1357,8 @@ VVVV.Nodes.GenericShader.prototype = new VVVV.Core.Node();
 VVVV.Nodes.Quad = function(id, graph) {
   this.constructor(id, "Quad (DX9)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -1489,6 +1509,8 @@ VVVV.Nodes.Quad.prototype = new VVVV.Core.Node();
 VVVV.Nodes.Group = function(id, graph) {
   this.constructor(id, "Group (EX9)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -1540,6 +1562,8 @@ VVVV.Nodes.Group.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.RendererWebGL = function(id, graph) {
   this.constructor(id, "Renderer (EX9)", graph);
+  
+  this.auto_nil = false;
   
   this.meta = {
     authors: ['Matthias Zauner'],
