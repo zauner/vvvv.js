@@ -320,6 +320,10 @@ VVVV.Nodes.DivideValue = function(id, graph) {
     var maxSize = this.getMaxInputSliceCount();
 
     for (var i=0; i<maxSize; i++) {
+      if (input2In.getValue(i)==0) {
+        outputOut.setValue(i, 1.0);
+        continue;
+      }
       outputOut.setValue(i, input1In.getValue(i)/input2In.getValue(i));
     }
     outputOut.setSliceCount(maxSize);
@@ -386,6 +390,8 @@ VVVV.Nodes.IOBoxValueAdvanced.prototype = new VVVV.Core.Node();
 VVVV.Nodes.CountValue = function(id, graph) {
   this.constructor(id, "Count (Value)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -436,10 +442,6 @@ VVVV.Nodes.SwitchValueInput = function(id, graph) {
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
     
-    if (switchIn.getValue(0)==undefined) {
-      outputOut.setValue(0, undefined);
-      return;
-    }
     for (var i=0; i<maxSize; i++) {
       outputOut.setValue(i, inputIn[Math.round(Math.abs(switchIn.getValue(i)))%inputIn.length].getValue(i));
     }
@@ -525,7 +527,7 @@ VVVV.Nodes.AsString = function(id, graph) {
         case "Real": out = parseFloat(inputIn.getValue(i)).toFixed(4); break;
         case "Integer": out = parseInt(inputIn.getValue(i)).toFixed(0); break;
       }
-      outputOut.setValue(i, parseFloat(inputIn.getValue(i)).toFixed(4));
+      outputOut.setValue(i, out);
     }
     outputOut.setSliceCount(maxSize);
 
@@ -754,6 +756,11 @@ VVVV.Nodes.MapValue = function(id, graph) {
       var destMin = parseFloat(destMinimumIn.getValue(i));
       var destMax = parseFloat(destMaximumIn.getValue(i));
       var mapping = mappingIn.getValue(i);
+      
+      if (srcMax == srcMin) {
+        outputOut.setValue(i, destMin);
+        continue;
+      }
       
       input = input - srcMin;
       srcMax = srcMax - srcMin;
