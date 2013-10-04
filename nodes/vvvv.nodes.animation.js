@@ -55,7 +55,7 @@ VVVV.Nodes.LFO = function(id, graph) {
       if (current[i]==undefined) current[i] = 0.0;
       if (cycles[i]==undefined) cycles[i] = 0.0;
 
-      if (paused<=0 && period!=0 && isFinite(period)) {
+      if (paused<0.5 && period!=0 && isFinite(period)) {
 
         dv = (1/(period*1000)*dt);
 
@@ -77,11 +77,12 @@ VVVV.Nodes.LFO = function(id, graph) {
 
       lastUpdate = new Date().getTime();
 
-      if (reset>0){
+      if (reset>=0.5){
         current[i] = 0.0;
+        cycles[i] = 0;
       }
 
-      if (paused<0.5) { 
+      if (paused<0.5 || reset>=0.5) { 
         outputOut.setValue(i, (current[i]+phase)%1);
         CyclesOut.setValue(i, cycles[i]);
       }
