@@ -586,6 +586,8 @@ VVVV.Nodes.SelectString.prototype = new VVVV.Core.Node();
 VVVV.Nodes.CountString = function(id, graph) {
   this.constructor(id, "Count (String)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -650,3 +652,47 @@ VVVV.Nodes.CleanString = function(id, graph) {
 
 }
 VVVV.Nodes.CleanString.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: AvoidNil (String)
+ Author(s): Matthias Zauner
+ Original Node Author(s): Kalle
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.AvoidNilString = function(id, graph) {
+  this.constructor(id, "AvoidNIL (String)", graph);
+  
+  this.auto_nil = false;
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['Kalle'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var inputIn = this.addInputPin("Input", ['text'], this);
+  var defaultIn = this.addInputPin("Default", ['text'], this);
+  
+  var outputOut = this.addOutputPin("Output", ['text'], this);
+
+  this.evaluate = function() {
+    if (inputIn.pinIsChanged() || defaultIn.pinIsChanged()) {
+      var source = inputIn;
+      if (inputIn.values[0]==undefined) {
+        source = defaultIn;
+      }
+      for (var i=0; i<source.values.length; i++) {
+        outputOut.setValue(i, source.getValue(i));
+      }
+      outputOut.setSliceCount(source.getSliceCount());
+    }
+    
+
+  }
+
+}
+VVVV.Nodes.AvoidNilString.prototype = new VVVV.Core.Node();
