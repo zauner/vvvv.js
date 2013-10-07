@@ -547,7 +547,7 @@ VVVV.Core = {
     
     var thisPatch = this;
     
-    this.doLoad = function(xml) {
+    this.doLoad = function(xml, ready_callback) {
       var p = this;
       do {
         p.dirty = true;
@@ -659,6 +659,8 @@ VVVV.Core = {
                     while (p = p.parentPatch);
                   }
                   thisPatch.afterUpdate();
+                  if (thisPatch.resourcesPending<=0 && ready_callback)
+                    ready_callback();
                 },
                 function() {
                   n.not_implemented = true;
@@ -891,6 +893,9 @@ VVVV.Core = {
         }
       }
       
+      if (this.resourcesPending<=0 && ready_callback)
+        ready_callback();
+      
     }
     
     this.getSubPatches = function() {
@@ -995,10 +1000,11 @@ VVVV.Core = {
         type: 'get',
         dataType: 'text',
         success: function(r) {
-          that.doLoad(r);
+          that.doLoad(r, function() {
           if (that.success)
             that.success();
           that.afterUpdate();
+          });
         }
       });
     }
@@ -1015,9 +1021,10 @@ VVVV.Core = {
       });
     }
     else {
-      this.doLoad(ressource);
-      if (this.success)
-        this.success();
+      this.doLoad(ressource, function() {
+        if (this.success) this.success();
+      });
+      
     }
     
     // bind the #-shortcuts
