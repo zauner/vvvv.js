@@ -28,6 +28,7 @@ VVVV.Config.auto_undo = false;
 VVVV.Nodes = {};
 VVVV.PinTypes = {};
 VVVV.NodeLibrary = {};
+VVVV.NodeNames = [];
 
 VVVV.onNotImplemented = function(nodename) {
   console.log("Warning: "+nodename+" is not implemented.");
@@ -71,13 +72,14 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
     if ($('script[src*=underscore]').length==0)
       VVVV.loadScript('lib/underscore/underscore-min.js', loadMonitor);
     if ($('script[src*="d3.js"]').length==0 && (mode=='full' || mode=='vvvviewer'))
-      VVVV.loadScript('lib/d3-v1.14/d3.min.js', loadMonitor);
+      VVVV.loadScript('lib/d3-v3/d3.v3.min.js', loadMonitor);
     if ($('script[src*=glMatrix]').length==0 && (mode=='full' || mode=='run'))
       VVVV.loadScript('lib/glMatrix-0.9.5.min.js', loadMonitor);
   
     if ($('script[src*="vvvv.core.js"]').length==0) {
       VVVV.loadScript('core/vvvv.core.js', loadMonitor);
       VVVV.loadScript('core/vvvv.core.vvvvconnector.js', loadMonitor);
+      VVVV.loadScript('editors/vvvv.editors.browser_editor.js', loadMonitor);
       if (mode=='run' || mode=='full') {
         VVVV.loadScript('mainloop/vvvv.mainloop.js', loadMonitor);
         VVVV.loadScript('mainloop/vvvv.dominterface.js', loadMonitor);
@@ -115,6 +117,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
       var x = new n(0, p);
       if (VVVV_ENV=='development') console.log("Registering "+x.nodename);
       VVVV.NodeLibrary[x.nodename.toLowerCase()] = n;
+      VVVV.NodeNames.push(x.nodename);
     });
 
     if (VVVV_ENV=='development') console.log('done ...');

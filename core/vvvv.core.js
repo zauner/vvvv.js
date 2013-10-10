@@ -681,7 +681,7 @@ VVVV.Core = {
               VVVV.onNotImplemented(nodename);
             }
           }
-          if (VVVV_ENV=='development') console.log(thisPatch.nodename+': inserted new node '+n.nodename);
+          if (VVVV_ENV=='development' && syncmode!='complete') console.log(thisPatch.nodename+': inserted new node '+n.nodename);
         }
         else
           n = thisPatch.nodeMap[$(this).attr('id')];
@@ -1038,6 +1038,10 @@ VVVV.Core = {
       }
       if (!thisPatch.vvvviewer && (window.location.hash=='#view/'+thisPatch.ressource || window.location.hash=='#syncandview/'+thisPatch.ressource)) {
         thisPatch.vvvviewer = new VVVV.VVVViewer(thisPatch);
+      }
+      if (window.location.hash=="#edit/"+thisPatch.ressource) {
+        console.log('launching editor ...');
+        VVVV.Editors["edit"].enable(thisPatch);
       }
     }
     checkLocationHash();
