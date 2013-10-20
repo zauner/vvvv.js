@@ -19,7 +19,22 @@ var PinDirection = { Input : 0,Output : 1,Configuration : 2 };
 
 VVVV.PinTypes.Generic = {
   typeName: "Generic",
-  defaultValue: undefined
+  defaultValue: function() { return '0' }
+}
+
+VVVV.PinTypes.Enum = {
+  typeName: "Enum",
+  reset_on_disconnect: false,
+  defaultValue: function() { return '' }
+}
+
+VVVV.translateOperators = function(l) {
+  l = l.replace("Add", "+");
+  l = l.replace("Subtract", "-");
+  l = l.replace("Multiply", "*");
+  l = l.replace("Divide", "/");
+  l = l.replace("EQ", "=");
+  return l;
 }
 
 VVVV.Core = {	
@@ -36,6 +51,7 @@ VVVV.Core = {
     this.slavePin = undefined;
     this.masterPin = undefined;
     this.connectionChangedHandlers = {};
+    this.enumOptions = [];
     
     this.getValue = function(i, binSize) {
       if (!binSize || binSize==1)
@@ -215,8 +231,31 @@ VVVV.Core = {
       return pin;
     }
     
-    this.addInvisiblePin = function(pinname, value) {
-      pin = new VVVV.Core.Pin(pinname,PinDirection.Configuration, value, this);
+    this.removeInputPin = function(pinname) {
+      if (!this.inputPins[pinname]) return;
+      var l = this.inputPins[pinname].links[0];
+      if (l) {
+        l.fromPin.connectionChanged();
+        l.destroy();
+      }
+      delete this.inputPins[pinname];
+      this.dirty = true;
+    }
+    
+    this.removeOutputPin = function(pinname) {
+      if (!this.outputPins[pinname]) return;
+      var n = this.outputPins[pinname].links.length;
+      for (var i=0; i<n; i++) {
+        var l = this.outputPins[pinname].links[i];
+        l.toPin.connectionChanged();
+        l.destroy();
+      }
+      delete this.outputPins[pinname];
+      this.dirty = true;
+    }
+    
+    this.addInvisiblePin = function(pinname, value, _reserved, type) {
+      pin = new VVVV.Core.Pin(pinname,PinDirection.Configuration, value, this, false, type);
       this.invisiblePins[pinname] = pin;
       this.parentPatch.pinMap[this.id+'_inv_'+pinname] = pin;
       if (this.defaultPinValues[pinname] != undefined) {
@@ -273,7 +312,9 @@ VVVV.Core = {
     
     this.label = function() {
       if (this.isIOBox) {
-        return this.IOBoxInputPin().getValue(0);
+        if (this.IOBoxInputPin().getValue(0))
+          return this.IOBoxInputPin().getValue(0).toString();
+        return '';
       }
       
       if (this.isSubpatch) {
@@ -281,21 +322,18 @@ VVVV.Core = {
       }
       
       label = this.nodename.replace(/\s\(.+\)/, '');
-      switch (label) {
-        case "Add": return "+"; 
-        case "Subtract": return "-";
-        case "Multiply": return "*"; 
-        case "Divide": return "/";
-        case "EQ": return "=";
-        default: return label;
-      }
-      
+      label = VVVV.translateOperators(label);
+      return label;
     }
     
     this.getWidth = function() {
       var ret;
-      if (this.width==100 || this.width==0)
-        ret = Math.max(18, (this.label().length+2)*6);
+      if (this.width==100 || this.width==0) {
+        if (this.isIOBox)
+          ret = 60;
+        else
+          ret = Math.max(18, (this.label().length+2)*6);
+      }
       else
         ret = this.width/15;
       ret = Math.max(ret, (_(this.inputPins).size()-1)*12+4);
@@ -303,6 +341,8 @@ VVVV.Core = {
     }
     
     this.getHeight = function() {
+      if (this.isIOBox && this.height==100)
+        return 18 * this.IOBoxRows();
       if (this.height==100 || this.isSubpatch)
         return 18;
       else
@@ -398,7 +438,7 @@ VVVV.Core = {
                for (var i=0; i<this.masterPin.links.length; i++) {
                  this.masterPin.links[i].destroy();
                }
-               delete that.parentPatch.inputPins[pinname];
+               that.parentPatch.removeInputPin(pinname);
                this.masterPin = undefined;
             }
             if (!that.IOBoxOutputPin().slavePin) {
@@ -412,7 +452,7 @@ VVVV.Core = {
             else if (that.IOBoxOutputPin().slavePin.pinname!=pinname) { // rename subpatch pin
               if (VVVV_ENV=='development') console.log('renaming '+that.IOBoxOutputPin().slavePin.pinname+" to "+pinname);
               that.parentPatch.outputPins[pinname] = that.parentPatch.outputPins[that.IOBoxOutputPin().slavePin.pinname];
-              delete that.parentPatch.outputPins[that.IOBoxOutputPin().slavePin.pinname];
+              that.parentPatch.removeOutputPin(that.IOBoxOutputPin().slavePin.pinname);
               that.IOBoxOutputPin().slavePin.pinname = pinname;
             }
           }
@@ -424,7 +464,7 @@ VVVV.Core = {
                for (var i=0; i<this.slavePin.links.length; i++) {
                  this.slavePin.links[i].destroy();
                }
-               delete that.parentPatch.outputPins[pinname];
+               that.parentPatch.removeOutputPin(pinname);
                this.slavePin = undefined;
             }
             if (!that.IOBoxInputPin().masterPin) {
@@ -448,7 +488,7 @@ VVVV.Core = {
             else if (that.IOBoxInputPin().masterPin.pinname!=pinname) { // rename subpatch pin
               console.log('renaming '+that.IOBoxInputPin().masterPin.pinname+" to "+pinname);
               that.parentPatch.inputPins[pinname] = that.parentPatch.inputPins[that.IOBoxInputPin().masterPin.pinname];
-              delete that.parentPatch.inputPins[that.IOBoxInputPin().masterPin.pinname];
+              that.parentPatch.removeInputPin(that.IOBoxInputPin().masterPin.pinname);
               that.IOBoxInputPin().masterPin.pinname = pinname;
             }
           }
@@ -495,6 +535,9 @@ VVVV.Core = {
     
     this.ressource = ressource;
     this.vvvv_version = "45_26.1";
+    this.boundingBox = {width: 0, height: 0};
+    this.width = 500;
+    this.height = 500;
     
     this.pinMap = {};
     this.nodeMap = {};
@@ -570,10 +613,6 @@ VVVV.Core = {
       if ($windowBounds.length>0) {
         thisPatch.width = $windowBounds.attr('width')/15;
         thisPatch.height = $windowBounds.attr('height')/15;
-      }
-      else {
-        thisPatch.width = 500;
-        thisPatch.height = 500;
       }
       
       if (syncmode=='complete')
@@ -704,8 +743,8 @@ VVVV.Core = {
           if ($bounds.attr('left')) {
             n.x = $bounds.attr('left')/15;
             n.y = $bounds.attr('top')/15;
-            thisPatch.width = Math.max(thisPatch.width, n.x+100);
-            thisPatch.height = Math.max(thisPatch.height, n.y+25);
+            thisPatch.boundingBox.width = Math.max(thisPatch.boundingBox.width, n.x+100);
+            thisPatch.boundingBox.height = Math.max(thisPatch.boundingBox.height, n.y+100);
           }
           if ($bounds.attr('width')) {
             n.width = $bounds.attr('width');
@@ -918,6 +957,92 @@ VVVV.Core = {
       
     }
     
+    this.toXML = function() {
+      var $patch = $("<PATCH>");
+      $bounds = $("<BOUNDS>");
+      $bounds.attr("type", "Window");
+      $bounds.attr("width", parseInt(this.width * 15));
+      $bounds.attr("height", parseInt(this.height * 15));
+      $patch.append($bounds);
+      
+      var boundTypes = ["Node", "Box"];
+      for (var i=0; i<this.nodeList.length; i++) {
+        var n = this.nodeList[i];
+        var $node = $("<NODE>");
+        $node.attr("id", n.id);
+        $node.attr("nodename", n.nodename);
+        $node.attr("systemname", n.nodename);
+        if (n.shaderFile) {
+          $node.attr("filename", n.shaderFile.replace(".vvvvjs.fx", ".fx"));
+        }
+        if (n.isSubpatch) {
+          $node.attr("filename", n.nodename);
+          $node.attr("systemname", n.nodename.match("(.*)\.v4p$")[1])
+        }
+        if (n.isIOBox)
+          $node.attr("componentmode", "InABox");
+        else
+          $node.attr("componentmode", "Hidden");
+        
+        var $bounds = $("<BOUNDS>");
+        if (n.isIOBox)
+          $bounds.attr("type", "Box");
+        else
+          $bounds.attr("type", "Node");
+        $bounds.attr("left", parseInt(n.x * 15));
+        $bounds.attr("top", parseInt(n.y * 15));
+        $bounds.attr("width", parseInt(n.width));
+        $bounds.attr("height", parseInt(n.height));
+        $node.append($bounds);
+        
+        _(n.inputPins).each(function(p) {
+          var $pin = $("<PIN>");
+          $pin.attr("pinname", p.pinname);
+          $pin.attr("visible", "1");
+          if (!p.isConnected() && ["Color", "Generic", "Enum"].indexOf(p.typeName)>=0) {
+            $pin.attr("values", _(p.values).map(function(v) { return "|"+v+"|"; }).join(","));
+          }
+          $node.append($pin);
+        })
+        
+        _(n.invisiblePins).each(function(p) {
+          var $pin = $("<PIN>");
+          $pin.attr("pinname", p.pinname);
+          $pin.attr("visible", "0");
+          if (["Color", "Generic", "Enum"].indexOf(p.typeName)>=0) {
+            $pin.attr("values", _(p.values).map(function(v) { return "|"+v+"|"; }).join(","));
+          }
+          $node.append($pin);
+        })
+        
+        $patch.append($node);
+      }
+      for (var i=0; i<this.linkList.length; i++) {
+        var l = this.linkList[i];
+        // calling it LONK instead of LINK here, because jquery does not make a closing tag for LINK elements
+        // renaming it to LINK later ...
+        $link = $("<LONK>");
+        $link.attr("srcnodeid", l.fromPin.node.id);
+        $link.attr("srcpinname", l.fromPin.pinname);
+        $link.attr("dstnodeid", l.toPin.node.id);
+        $link.attr("dstpinname", l.toPin.pinname);
+        $patch.append($link);
+      }
+      
+      var xml = '<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta28.1.dtd" >\r\n  '+$patch.wrapAll('<d></d>').parent().html();
+      xml = xml.replace(/<patch/g, "<PATCH");
+      xml = xml.replace(/<\/patch>/g, "\n  </PATCH>");
+      xml = xml.replace(/<node/g, "\n  <NODE");
+      xml = xml.replace(/<\/node>/g, "\n  </NODE>");
+      xml = xml.replace(/<bounds/g, "\n  <BOUNDS");
+      xml = xml.replace(/<\/bounds>/g, "\n  </BOUNDS>");
+      xml = xml.replace(/<pin/g, "\n  <PIN");
+      xml = xml.replace(/<\/pin>/g, "\n  </PIN>");
+      xml = xml.replace(/<lonk/g, "\n  <LINK");
+      xml = xml.replace(/<\/lonk>/g, "\n  </LINK>");
+      return xml;
+    }
+    
     this.evaluate = function() {
       if (this.resourcesPending>0) // this.resourcesPending is >0 when thirdbarty libs or subpatches are loading at the moment
         return;
@@ -953,7 +1078,12 @@ VVVV.Core = {
             });
           }
           else {
-            node.evaluate();
+            try {
+              node.evaluate();
+            }
+            catch (e) {
+              console.log('VVVV.Js / Error evaluating '+node.nodename+': '+e.message);
+            }
             if (print_timing)
               console.log(node.nodename+' / '+node.id+': '+(new Date().getTime() - start)+'ms')
             node.dirty = false;
