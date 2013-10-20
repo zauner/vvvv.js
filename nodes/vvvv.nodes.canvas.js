@@ -95,7 +95,7 @@ VVVV.Nodes.FillCanvas = function(id, graph) {
   };
   
   var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.CanvasRenderState);
-  var colorIn = this.addInputPin("Color", ['1.0, 1.0, 1.0, 1.0'], this);
+  var colorIn = this.addInputPin("Color", ['1.0, 1.0, 1.0, 1.0'], this, true, VVVV.PinTypes.Color);
   
   var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.CanvasRenderState);
   
@@ -136,7 +136,7 @@ VVVV.Nodes.StrokeCanvas = function(id, graph) {
   };
   
   var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.CanvasRenderState);
-  var colorIn = this.addInputPin("Color", ['1.0, 1.0, 1.0, 1.0'], this);
+  var colorIn = this.addInputPin("Color", ['1.0, 1.0, 1.0, 1.0'], this, true, VVVV.PinTypes.Color);
   var lineWidthIn = this.addInputPin("Width", [1.0], this);
   var capStyleIn = this.addInputPin("Cap Style", ['butt'], this);
   var joinStyleIn = this.addInputPin("Join Style", ['miter'], this);
@@ -184,7 +184,7 @@ VVVV.Nodes.ShadowCanvas = function(id, graph) {
   };
   
   var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.CanvasRenderState);
-  var colorIn = this.addInputPin("Color", ['0.0, 0.0, 0.0, 1.0'], this);
+  var colorIn = this.addInputPin("Color", ['0.0, 0.0, 0.0, 1.0'], this, true, VVVV.PinTypes.Color);
   var xOffsetIn = this.addInputPin("Offset X", [0.0], this);
   var yOffsetIn = this.addInputPin("Offset Y", [0.0], this);
   var blurIn = this.addInputPin("Blur", [0.0], this);
@@ -750,7 +750,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   
   var layersIn = this.addInputPin("Layers", [], this, true, VVVV.PinTypes.CanvasLayer);
   var clearIn = this.addInputPin("Clear", [1], this);
-  var bgColorIn = this.addInputPin("Background Color", ["0.0, 0.0, 0.0, 1.0"], this);
+  var bgColorIn = this.addInputPin("Background Color", ["0.0, 0.0, 0.0, 1.0"], this, true, VVVV.PinTypes.Color);
   var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], this);
   var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], this);
   var viewIn = this.addInputPin("View", [], this, true, VVVV.PinTypes.Transform);
@@ -867,7 +867,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
       bgColor[2] = parseInt(bgColor[2]*255);
     }
       
-    if (layersIn.pinIsChanged() || bgColorIn.pinIsChanged() || clearIn.pinIsChanged() || viewIn.pinIsChanged()) {
+    if (true) { //layersIn.pinIsChanged() || bgColorIn.pinIsChanged() || clearIn.pinIsChanged() || viewIn.pinIsChanged()) {
     
       defaultRenderState.apply(ctx);
       
