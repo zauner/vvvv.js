@@ -350,12 +350,12 @@ VVVV.Nodes.IOBoxValueAdvanced = function(id, graph) {
     compatibility_issues: []
   };
   
-  this.addInputPin("SliceOffset", [0], this);
-  this.addInputPin("X Input Value", [0.0], this);
+  //this.addInputPin("SliceOffset", [0], this);
+  //this.addInputPin("X Input Value", [0.0], this);
   this.addInputPin("Y Input Value", [0.0], this);
   this.addInvisiblePin("Rows",[1.0],this);
   
-  this.addOutputPin("X Output Value", [0.0], this);
+  //this.addOutputPin("X Output Value", [0.0], this);
   this.addOutputPin("Y Output Value", [0.0], this);
 
   this.evaluate = function() {
@@ -364,13 +364,6 @@ VVVV.Nodes.IOBoxValueAdvanced = function(id, graph) {
         this.outputPins["Y Output Value"].setValue(i, parseFloat(this.inputPins["Y Input Value"].values[i]));
       }
       this.outputPins["Y Output Value"].setSliceCount(this.inputPins["Y Input Value"].getSliceCount());
-    }
-    
-    if (this.inputPins["X Input Value"].pinIsChanged()) {
-      for (var i=0; i<this.inputPins["X Input Value"].values.length; i++) {
-        this.outputPins["X Output Value"].setValue(i, parseFloat(this.inputPins["X Input Value"].values[i]));
-      }
-      this.outputPins["X Output Value"].setSliceCount(this.inputPins["X Input Value"].getSliceCount());
     }
   }
 
