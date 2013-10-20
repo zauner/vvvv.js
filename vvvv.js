@@ -79,7 +79,6 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
     if ($('script[src*="vvvv.core.js"]').length==0) {
       VVVV.loadScript('core/vvvv.core.js', loadMonitor);
       VVVV.loadScript('core/vvvv.core.vvvvconnector.js', loadMonitor);
-      VVVV.loadScript('editors/vvvv.editors.browser_editor.js', loadMonitor);
       if (mode=='run' || mode=='full') {
         VVVV.loadScript('mainloop/vvvv.mainloop.js', loadMonitor);
         VVVV.loadScript('mainloop/vvvv.dominterface.js', loadMonitor);
@@ -108,6 +107,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
       if (mode=='vvvviewer' || mode=='full') {
         VVVV.loadScript('vvvviewer/vvvv.vvvviewer.js', loadMonitor);
       }
+      VVVV.loadScript('editors/vvvv.editors.browser_editor.js', loadMonitor);
     }
   }
 

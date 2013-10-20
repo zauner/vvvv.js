@@ -6,9 +6,8 @@ h1{
   fill: #e6e6e6; 
 }
 
-.vvvv-link{
-  stroke: #000;
-  stroke-width: 1;
+.vvvv-node.selected .vvvv-node-background{
+  fill: #9a9a9a;
 }
 
 
