@@ -670,7 +670,9 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
         d3.event.preventDefault();
         return false;
       })
-      
+    
+    var primitiveTypes = ["Generic", "Color", "Enum"];
+    
     chart.selectAll('g.vvvv-input-pin, g.vvvv-output-pin')
     .on('click', function(d, i) {
       if (thatWin.state!=UIState.Connecting) {
@@ -693,7 +695,13 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
           var targetDir = 'output';
         var upnodes = linkStart.node.getUpstreamNodes();
         chart.selectAll('g.vvvv-'+targetDir+'-pin')
-          .filter(function(d) { return d.typeName==linkStart.typeName && upnodes.indexOf(d.node)<0 && d.node!=linkStart.nodeF })
+          .filter(function(d) {
+            if (d.typeName!=linkStart.typeName && (linkStart.typeName!="Node" || primitiveTypes.indexOf(d.typeName)>=0) && (d.typeName!="Node" || primitiveTypes.indexOf(linkStart.typeName)>=0))
+              return false;
+            if (upnodes.indexOf(d.node)>=0 || d.node==linkStart.node)
+              return false;
+            return true;
+          })
           .append('svg:rect')
             .attr('class', 'vvvv-connection-highlight')
             .attr('width', 4)
@@ -712,7 +720,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
           var dstPin = d;
         }
         
-        if (srcPin.typeName == dstPin.typeName) {
+        if ((srcPin.typeName == dstPin.typeName) || (srcPin.typeName=="Node" && primitiveTypes.indexOf(dstPin.typeName)<0) || (dstPin.typeName=="Node" && primitiveTypes.indexOf(srcPin.typeName)<0)) {
           var cmd = "<PATCH>";
           _(dstPin.links).each(function(l) {
             cmd += "<LINK deleteme='pronto' srcnodeid='"+l.fromPin.node.id+"' srcpinname='"+l.fromPin.pinname+"' dstnodeid='"+l.toPin.node.id+"' dstpinname='"+l.toPin.pinname+"'/>";
