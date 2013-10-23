@@ -233,7 +233,8 @@ VVVV.Nodes.LinearSpread = function(id, graph) {
   
   var inputIn = this.addInputPin("Input", [0.0], this);
   var widthIn = this.addInputPin("Width", [1.0], this);
-  var alignmentIn = this.addInputPin("Alignment", [''], this);
+  var alignmentIn = this.addInputPin("Alignment", ['Centered'], this, true, VVVV.PinTypes.Enum);
+  alignmentIn.enumOptions = ["Centered", "Block", "LeftJustified", "RightJustified"]
   var phaseIn = this.addInputPin("Phase", [0.0], this);
   var countIn = this.addInputPin("Spread Count", [1], this);
   
