@@ -389,6 +389,99 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
 }
 VVVV.Nodes.ArcCanvas.prototype = new VVVV.Core.Node();
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Rectangle (Canvas VVVVjs)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.RectangleCanvas = function(id, graph) {
+  this.constructor(id, "Rectangle (Canvas VVVVjs)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var renderStateIn = this.addInputPin('Render State', [], this, true, VVVV.PinTypes.CanvasRenderState);
+  var widthIn = this.addInputPin('Width', [1.0], this);
+  var heightIn = this.addInputPin('Height', [1.0], this);
+  var cornerRadiusIn = this.addInputPin('Corner Radius', [0.0], this);
+  var transformIn = this.addInputPin('Transform', [], this, true, VVVV.PinTypes.Transform);
+  
+  var layersOut = this.addOutputPin('Layer', [], this, VVVV.PinTypes.CanvasLayer);
+  
+  var layers = [];
+  
+  var Rectangle = function() {
+    this.transform = mat4.create();
+    mat4.identity(this.transform);
+    this.renderState = defaultRenderState;
+  
+    this.draw = function(ctx) {
+      ctx.save();
+      if (this.transform)
+        ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
+      ctx.beginPath();
+      this.renderState.apply(ctx);
+      var outer_right = this.width / 2;
+      var inner_right = outer_right - this.cornerRadius;
+      var outer_top = this.height / 2;
+      var inner_top = outer_top - this.cornerRadius;
+      var outer_left = -outer_right;
+      var inner_left = -inner_right;
+      var outer_bottom = -outer_top;
+      var inner_bottom = -inner_top;
+      ctx.moveTo(inner_left, outer_bottom);
+      ctx.lineTo(inner_right, outer_bottom);
+      ctx.arc(inner_right, inner_bottom, this.cornerRadius, 1.5 * Math.PI, 0, false);
+      ctx.lineTo(outer_right, inner_top);
+      ctx.arc(inner_right, inner_top, this.cornerRadius, 0, 0.5 * Math.PI, false);
+      ctx.lineTo(inner_left, outer_top);
+      ctx.arc(inner_left, inner_top, this.cornerRadius, 0.5 * Math.PI, Math.PI, false);
+      ctx.lineTo(outer_left, inner_bottom);
+      ctx.arc(inner_left, inner_bottom, this.cornerRadius, Math.PI, 1.5 * Math.PI, false);
+      ctx.closePath();
+      if (this.renderState.fillColor[3]>0)
+        ctx.fill();
+      if (this.renderState.strokeColor[3]>0)
+        ctx.stroke();
+      ctx.restore();
+      
+    }
+  }
+  
+  this.evaluate = function() {
+  
+    //if (xIn.pinIsChanged() || yIn.pinIsChanged() || rIn.pinIsChanged() || strokeColorIn.pinIsChanged() || startAngleIn.pinIsChanged() || endAngleIn.pinIsChanged() || lineWidthIn.pinIsChanged() || fillColorIn.pinIsChanged()) {
+      var maxSpreadSize = this.getMaxInputSliceCount();
+      
+      for (var i=0; i<maxSpreadSize; i++) {
+        if (layers[i]==undefined)
+          layers[i] = new Rectangle();
+        layers[i].transform = transformIn.getValue(i);
+        layers[i].width = widthIn.getValue(i);
+        layers[i].height = heightIn.getValue(i);
+        layers[i].cornerRadius = cornerRadiusIn.getValue(i);
+        layers[i].renderState = renderStateIn.getValue(i);
+      }
+      
+      for (var i=0; i<layers.length; i++) {
+        layersOut.setValue(i, layers[i]);
+      }
+      
+      layersOut.setSliceCount(maxSpreadSize);
+    //}
+    
+  }
+}
+VVVV.Nodes.RectangleCanvas.prototype = new VVVV.Core.Node();
+
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Text (Canvas VVVVjs)
