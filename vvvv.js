@@ -88,6 +88,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
         VVVV.loadScript('nodes/vvvv.nodes.boolean.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.color.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.spreads.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.spectral.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.animation.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.network.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.system.js', loadMonitor);
