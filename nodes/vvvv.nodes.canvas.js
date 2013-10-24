@@ -336,6 +336,7 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
   var renderStateIn = this.addInputPin('Render State', [], this, true, VVVV.PinTypes.CanvasRenderState);
   var transformIn = this.addInputPin('Transform', [], this, true, VVVV.PinTypes.Transform);
   var clippingLayerIn = this.addInputPin('Clipping Layer', [], this, true, VVVV.PinTypes.CanvasLayer);
+  var radiusIn = this.addInputPin('Radius', [1.0], this);
   var startAngleIn = this.addInputPin('Start Angle', [0.0], this);
   var endAngleIn = this.addInputPin('End Angle', [0.5], this);
   var segmentIn = this.addInputPin('Draw Segment', [0], this);
@@ -371,11 +372,13 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
         invisibleRenderState.apply(ctx);
       if (this.drawSegment) {
         ctx.moveTo(0, 0);
-        ctx.lineTo(Math.cos(this.startAngle), Math.sin(this.startAngle));
+        ctx.lineTo(Math.cos(this.startAngle) * this.radius, Math.sin(this.startAngle) * this.radius);
       }
-      ctx.arc(0, 0, 1, this.startAngle, this.endAngle, false);
-      if (this.drawSegement)
+      ctx.arc(0, 0, this.radius, this.startAngle, this.endAngle, false);
+      if (this.drawSegment) {
+        ctx.moveTo(Math.cos(this.endAngle) * this.radius, Math.sin(this.endAngle) * this.radius);
         ctx.lineTo(0, 0);
+      }
       if (this.renderState.fillColor[3]>0)
         ctx.fill();
       if (this.renderState.strokeColor[3]>0)
@@ -394,6 +397,7 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
         if (layers[i]==undefined)
           layers[i] = new Arc();
         layers[i].transform = transformIn.getValue(i);
+        layers[i].radius = parseFloat(radiusIn.getValue(i));
         layers[i].startAngle = parseFloat(startAngleIn.getValue(i))*Math.PI*2;
         layers[i].endAngle = parseFloat(endAngleIn.getValue(i))*Math.PI*2;
         layers[i].renderState = renderStateIn.getValue(i);
