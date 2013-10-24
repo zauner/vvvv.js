@@ -46,9 +46,8 @@ VVVV.Nodes.FileTextureCanvas = function(id, graph) {
     
     if (filenameIn.pinIsChanged()) { 
       for (var i=0; i<maxSpreadSize; i++) {
-        //if (images[i]==undefined)
+        if (images[i]==undefined || images[i].src!=filenameIn.getValue(i)) {
           images[i] = new Image();
-        if (images[i].src!=filenameIn.getValue(i)) {
           images[i].loaded = false;
           var that = this;
           var img = images[i];
