@@ -313,3 +313,49 @@ VVVV.Nodes.Multiply3dDot = function(id, graph) {
 
 }
 VVVV.Nodes.Multiply3dDot.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Multiply (3d Vector)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Multiply3dVector = function(id, graph) {
+  this.constructor(id, "Multiply (3d Vector)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var transformIn = this.addInputPin('Transform', [], this, true, VVVV.PinTypes.Transform);
+  var xyzIn = this.addInputPin('XYZ UnTransformed', [0.0, 0.0, 0.0], this);
+
+  // output pins
+  var outputOut = this.addOutputPin('XYZ Transformed', [0.0, 0.0, 0.0], this);
+
+  this.evaluate = function() {
+    var maxSize = Math.max(transformIn.getSliceCount(), xyzIn.getSliceCount()/3);
+    
+    for (var i=0; i<maxSize; i++) {
+      var xyz = xyzIn.getValue(i*3, 3);
+      var t = transformIn.getValue(i);
+      mat4.multiplyVec3(t, xyz);
+      outputOut.setValue(i*3 + 0, xyz[0]);
+      outputOut.setValue(i*3 + 1, xyz[1]);
+      outputOut.setValue(i*3 + 2, xyz[2]);
+    }
+    
+    outputOut.setSliceCount(Math.ceil(maxSize*3));
+  }
+
+}
+VVVV.Nodes.Multiply3dVector.prototype = new VVVV.Core.Node();
