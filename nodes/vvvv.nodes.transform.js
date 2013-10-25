@@ -227,3 +227,42 @@ VVVV.Nodes.Perspective = function(id, graph) {
 
 }
 VVVV.Nodes.Perspective.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Inverse (Transform)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.InverseTransform = function(id, graph) {
+  this.constructor(id, "Inverse (Transform)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var trIn = this.addInputPin("Transform In", [], this, true, VVVV.PinTypes.Transform);
+  var sourceIn = this.addInputPin("Source", [], this, true, VVVV.PinTypes.Transform);
+  
+  var trOut = this.addOutputPin("Transform Out", [], this, VVVV.PinTypes.Transform);
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      var s = mat4.create();
+      mat4.set(sourceIn.getValue(i), s);
+      mat4.multiply(trIn.getValue(i), mat4.inverse(s, s), s);
+      trOut.setValue(i, s);
+    }
+    trOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.InverseTransform.prototype = new VVVV.Core.Node();
