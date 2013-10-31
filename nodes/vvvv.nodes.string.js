@@ -696,3 +696,69 @@ VVVV.Nodes.AvoidNilString = function(id, graph) {
 
 }
 VVVV.Nodes.AvoidNilString.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: FormatValue (String)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.FormatValueString = function(id, graph) {
+  this.constructor(id, "FormatValue (String)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: ['pad function: http://stackoverflow.com/a/10073788',
+              'thousands separator regex: http://stackoverflow.com/a/2901298'],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  var inputIn = this.addInputPin('Input', [0.0], this);
+  var charactersbeforecommaIn = this.addInputPin('Characters before Comma', [1], this);
+  var charactersaftercommaIn = this.addInputPin('Characters after Comma', [0], this);
+  var thousandssymbolIn = this.addInputPin('Thousands Symbol', ['None'], this, true, VVVV.PinTypes.Enum);
+  thousandssymbolIn.enumOptions = ["None", "Dot", "Comma", "Space"];
+  var commasymbolIn = this.addInputPin('Comma Symbol', ['Dot'], this, true, VVVV.PinTypes.Enum);
+  commasymbolIn.enumOptions = ["Dot", "Comma"];
+  var leadingzeroesIn = this.addInputPin('Leading Zeroes', [0], this);
+
+  var outputOut = this.addOutputPin('Output', ['0'], this);
+  
+  function pad(n, width, z) {
+    z = z || '0';
+    n = n + '';
+    return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+  }
+  
+  var separators = {"Dot": '.', "Comma": ',', "None": '', "Space": ' '};
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      var input = inputIn.getValue(i);
+      var charactersbeforecomma = parseInt(charactersbeforecommaIn.getValue(i));
+      var charactersaftercomma = parseInt(charactersaftercommaIn.getValue(i));
+      var thousandssymbol = thousandssymbolIn.getValue(i);
+      var commasymbol = commasymbolIn.getValue(i);
+      var leadingzeroes = leadingzeroesIn.getValue(i);
+
+      var ccount = charactersbeforecomma+charactersaftercomma+(charactersaftercomma>0);
+      input = parseFloat(input).toFixed(charactersaftercomma);
+      input = pad(input, ccount, leadingzeroes>=0.5 ? '0' : ' ');
+      input = input.replace('.', separators[commasymbol]).replace(/\B(?=(\d{3})+(?!\d))/g, separators[thousandssymbol]);    
+      outputOut.setValue(i, input);
+    }
+    
+    outputOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.FormatValueString.prototype = new VVVV.Core.Node();
