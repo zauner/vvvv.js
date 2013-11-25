@@ -566,7 +566,6 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
     this.draw = function(ctx, invisible) {
       ctx.save();
       if (this.clippingLayer) {
-        console.log('clipping it');
         this.clippingLayer.draw(ctx, true);
         ctx.clip();
       }
