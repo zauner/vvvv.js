@@ -548,7 +548,7 @@ VVVV.Core = {
     this.error = error_handler;
     
     this.XMLCode = '';
-    this.VVVVConnector = undefined;
+    this.editor = undefined;
     
     var print_timing = false;
     
@@ -688,8 +688,8 @@ VVVV.Core = {
                   nodesLoading--;
                   if (VVVV_ENV=='development') console.log(n.nodename+'invoking update links')
                   updateLinks(xml);
-                  if (thisPatch.VVVVConnector)
-                    thisPatch.VVVVConnector.addPatch(n);
+                  if (thisPatch.editor)
+                    thisPatch.editor.addPatch(n);
                   if (n.auto_evaluate) {
                     var p = thisPatch;
                     do {
@@ -716,7 +716,7 @@ VVVV.Core = {
               var n = new VVVV.Core.Node($(this).attr('id'), nodename, thisPatch);
               n.not_implemented = true;
               if (syncmode=='diff' && VVVV.Config.auto_undo == true)
-                thisPatch.VVVVConnector.sendUndo();
+                thisPatch.editor.sendUndo();
               VVVV.onNotImplemented(nodename);
             }
           }
@@ -863,6 +863,8 @@ VVVV.Core = {
               link = thisPatch.linkList[i];
             }
           }
+          if (!link)
+            return;
           if (VVVV_ENV=='development') console.log('removing '+link.fromPin.pinname+' -> '+link.toPin.pinname);
           var fromPin = link.fromPin;
           var toPin = link.toPin;

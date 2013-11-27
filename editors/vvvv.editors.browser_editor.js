@@ -37,9 +37,9 @@ VVVV.PinTypes.Generic.openInputBox = function(win, $element, pin, sliceIdx) {
   $inputbox.get(0).select();
   
   $inputbox.change(function() {
-    //pin.node.parentPatch.doLoad("<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+$(this).val()+"'/></NODE>");
     pin.setValue(sliceIdx, $(this).val());
-    pin.node.parentPatch.afterUpdate();
+    pin.node.parentPatch.editor.update(pin.node.parentPatch.nodename, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+_(pin.values).map(function(v) { return '|'+v+'|'}).join(',')+"'/></NODE>");
+    //pin.node.parentPatch.afterUpdate();
   });
   $inputbox.keydown(function(e) {
     if (e.which==13) {
@@ -50,7 +50,7 @@ VVVV.PinTypes.Generic.openInputBox = function(win, $element, pin, sliceIdx) {
   $inputbox.bind('mousewheel', function(e) {
     var delta = e.originalEvent.wheelDelta/120;
     var mod = $(this).val()%1;
-    if (mod!=NaN) {
+    if (!isNaN(mod)) {
       var incr, offset;
       offset = 1;
       incr = delta > 0 ? 1.0 : -1.0;
@@ -66,7 +66,7 @@ VVVV.PinTypes.Generic.openInputBox = function(win, $element, pin, sliceIdx) {
   $inputbox.bind('DOMMouseScroll', function(e) {
     var delta = -e.originalEvent.detail/3;
     var mod = $(this).val()%1;
-    if (mod!=NaN) {
+    if (!isNaN(mod)) {
       var incr;
       incr = delta > 0 ? 1.0 : -1.0;
       if (mod!==0)
@@ -97,7 +97,8 @@ VVVV.PinTypes.Enum.openInputBox = function(win, $element, pin, sliceIdx) {
   $inputbox.change(function() {
     //pin.node.parentPatch.doLoad("<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+$(this).val()+"'/></NODE>");
     pin.setValue(sliceIdx, $(this).val());
-    pin.node.parentPatch.afterUpdate();
+    pin.node.parentPatch.editor.update(pin.node.parentPatch.nodename, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+_(pin.values).map(function(v) { return '|'+v+'|'}).join(',')+"'/></NODE>");
+    //pin.node.parentPatch.afterUpdate();
   });
 }
 
@@ -171,7 +172,8 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
     var cmd = "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='|"+col.join(',')+"|'/></NODE></PATCH>";
     //pin.node.parentPatch.doLoad(cmd);
     pin.setValue(sliceIdx, col.join(','));
-    pin.node.parentPatch.afterUpdate();
+    pin.node.parentPatch.editor.update(pin.node.parentPatch.nodename, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+_(pin.values).map(function(v) { return '|'+v+'|'}).join(',')+"'/></NODE>");
+    //pin.node.parentPatch.afterUpdate();
     
     e.preventDefault();
     return false;
@@ -253,8 +255,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
             cmd += "<NODE componentmode='Node' id='"+n.id+"'><BOUNDS type='Node' left='"+(dx+n.x)*15+"' top='"+(dy+n.y)*15+"' width='"+n.width+"' height='"+n.height+"'/></NODE>";
           }
           cmd += "</PATCH>";
-          patch.doLoad(cmd);
-          patch.afterUpdate();
+          editor.update(patch.nodename, cmd);
         }
       })
       .on('dblclick', function() {
@@ -318,8 +319,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
             cmd += "<BOUNDS type='Node' left='"+x*15+"' top='"+y*15+"' width='100' height='100'/>";
             cmd += "</NODE>";
             cmd += "</NODE>";
-            patch.doLoad(cmd);
-            patch.afterUpdate();
+            editor.update(patch.nodename, cmd);
             
             $nodeselection.remove();
           }
@@ -360,8 +360,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
         }
         cmd += "</PATCH>";
         
-        patch.doLoad(cmd);
-        patch.afterUpdate();
+        editor.update(patch.nodename, cmd);
         selectedNodes = [];
       }
       else if ((e.which==115 || e.which==83) && e.ctrlKey) {
@@ -728,7 +727,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
           cmd += "<LINK createme='pronto' srcnodeid='"+srcPin.node.id+"' srcpinname='"+srcPin.pinname+"' dstnodeid='"+dstPin.node.id+"' dstpinname='"+dstPin.pinname+"'/>";
           cmd += "</PATCH>";
           
-          patch.doLoad(cmd)
+          editor.update(patch.nodename, cmd);
           
           chart.select('.vvvv-link.current-link').remove();
           chart.select('.vvvv-connection-highlight').remove();
@@ -744,8 +743,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
     
     chart.selectAll('g.vvvv-link')
       .on("contextmenu", function(d) {
-        patch.doLoad("<PATCH><LINK deleteme='pronto' srcnodeid='"+d.fromPin.node.id+"' srcpinname='"+d.fromPin.pinname+"' dstnodeid='"+d.toPin.node.id+"' dstpinname='"+d.toPin.pinname+"'/></PATCH>")
-        patch.afterUpdate();
+        editor.update(patch.nodename, "<PATCH><LINK deleteme='pronto' srcnodeid='"+d.fromPin.node.id+"' srcpinname='"+d.fromPin.pinname+"' dstnodeid='"+d.toPin.node.id+"' dstpinname='"+d.toPin.pinname+"'/></PATCH>")
         
         d3.event.preventDefault();
       })
@@ -911,9 +909,11 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
 VVVV.Editors.BrowserEditor.Interface = function() {
   
   var patchWindows = [];
+  var patches = {};
   this.inspector = undefined;
   
   this.enable = function(p, opts) {
+    this.addPatch(p);
     this.openPatch(p);
     
     var that = this;
@@ -939,8 +939,37 @@ VVVV.Editors.BrowserEditor.Interface = function() {
     })
   }
   
+  var patch_signatures = [];
+  this.addPatch = function(p) {
+    var patch_signature = p.id;
+    var pp = p;
+    while ((pp = pp.parentPatch)!=undefined) {
+      patch_signature += '-'+pp.id;
+    }
+    if (patch_signatures.indexOf(patch_signature)>=0)
+      return;
+    patch_signatures.push(patch_signature);
+    p.editor = this;
+    if (patches[p.nodename]==undefined)
+      patches[p.nodename] = [];
+    patches[p.nodename].push(p);
+    var subpatches = p.getSubPatches();
+    for (var i=0; i<subpatches.length; i++) {
+      this.addPatch(subpatches[i]);
+    }
+  }
+  
   this.openPatch = function(p) {
     patchWindows.push(new VVVV.Editors.BrowserEditor.PatchWindow(p, this));
+  }
+  
+  this.update = function(nodename, cmd) {
+    var n = patches[nodename].length;
+    for (var i=0; i<n; i++) {
+      console.log('updating patch '+nodename+' / '+patches[nodename][i].id)
+      patches[nodename][i].doLoad(cmd);
+      patches[nodename][i].afterUpdate();
+    }
   }
   
   this.disable = function() {
@@ -958,6 +987,10 @@ VVVV.Editors.BrowserEditor.Interface = function() {
     $dl.attr('download', nodename);
     $dl[0].click();
     $dl.remove();
+  }
+  
+  this.sendUndo = function() {
+    
   }
   
   
