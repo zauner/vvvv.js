@@ -1143,6 +1143,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     $.ajax({
       url: thatNode.shaderFile.replace('%VVVV%', VVVV.Root),
       async: false,
+      dataType: 'text',
       success: function(response) {
         shaderCode = response;
         shader = new VVVV.Types.ShaderProgram();
