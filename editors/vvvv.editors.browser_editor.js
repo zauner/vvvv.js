@@ -4,7 +4,8 @@ var UIState = {
   'Connecting': 1,
   'Moving': 2,
   'Creating': 3,
-  'Changing': 4
+  'Changing': 4,
+  'AreaSelecting': 5
 }
 
 VVVV.PinTypes.Generic.makeLabel = function(element, node) {
@@ -193,10 +194,18 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
   var patch = p;
   var maxNodeId = 0;
   var pageURL = VVVV.Root+'/patch.html';
+  var modKeyPressed = {CTRL: false, SHIFT: false, ALT: false};
+  var selectionBB = {x1: 0, y1: 0, x2: 0, y2: 0};
   if (p.isSubpatch)
     pageURL = "patch.html";
   
   this.window = window.open(pageURL, p.nodename, "location=no, width="+p.width+", height="+p.height+", toolbar=no" );
+  
+  function resetSelection() {
+    chart.selectAll('.vvvv-node.selected')
+      .attr('class', function(d) { return d.isIOBox? 'vvvv-node vvvv-iobox' : 'vvvv-node' })
+    selectedNodes = [];
+  }
   
   var thatWin = this;
   window.setTimeout(function() {
@@ -236,6 +245,35 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
               .attr('y2', function(d) { return d.toPin.y + d.toPin.node.y + dy })
           }
         }
+        else if (thatWin.state==UIState.AreaSelecting) {
+          selectionBB.x2 = d3.event.x;
+          selectionBB.y2 = d3.event.y;
+            
+          chart.select('.selection-area')
+            .attr('transform', 'translate('+Math.min(selectionBB.x1, selectionBB.x2)+', '+Math.min(selectionBB.y1, selectionBB.y2)+')')
+            .attr('width', Math.abs(selectionBB.x2 - selectionBB.x1))
+            .attr('height', Math.abs(selectionBB.y2 - selectionBB.y1))
+          
+          resetSelection();
+          chart.selectAll('.vvvv-node').each(function(d) {
+            var bounds = {x: [d.x, d.x + d.getWidth()], y: [d.y, d.y + d.getHeight()]};
+            var inArea= false;
+            for (var i=0; i<2; i++) {
+              for (var j=0; j<2; j++) {
+                if (bounds.x[i] >= Math.min(selectionBB.x1, selectionBB.x2)
+                && bounds.x[i] <= Math.max(selectionBB.x1, selectionBB.x2)
+                && bounds.y[j] >= Math.min(selectionBB.y1, selectionBB.y2)
+                && bounds.y[j] <= Math.max(selectionBB.y1, selectionBB.y2)) {
+                  inArea = true;
+                }
+              }
+            }
+            if (inArea) {
+              d3.select(this).attr('class', 'vvvv-node selected');
+              selectedNodes.push(d);
+            }
+          })
+        }
       })
       .on('contextmenu', function() {
         if (thatWin.state==UIState.Connecting) {
@@ -256,6 +294,10 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
           }
           cmd += "</PATCH>";
           editor.update(patch.nodename, cmd);
+        }
+        if (thatWin.state==UIState.AreaSelecting) {
+          chart.select('.selection-area').remove();
+          thatWin.state = UIState.Idle;
         }
       })
       .on('dblclick', function() {
@@ -326,6 +368,23 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
         }
         $nodeselection.find('#new_node').click(tryAddNode);
       })
+      .on('mousedown', function() {
+        thatWin.state = UIState.AreaSelecting;
+        selectionBB.x1 = selectionBB.x2 = d3.event.x;
+        selectionBB.y1 = selectionBB.y2 = d3.event.y;
+        
+        chart.append('svg:rect')
+          .attr('class', 'selection-area')
+          .attr('stroke', '#000')
+          .attr('stroke-dasharray', '2,2')
+          .attr('stroke-width', 1)
+          .attr('fill', 'rgba(0,0,0,0)')
+          .attr('transform', 'translate('+selectionBB.x1+', '+selectionBB.y1+')')
+          .attr('width', 0)
+          .attr('height', 0)
+          
+        resetSelection();
+      })
       
     chart.append('svg:rect')
     .attr('class','background')
@@ -335,11 +394,18 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
       thatWin.state = UIState.Idle;
       $('.resettable', thatWin.window.document).remove();
       $('#node_selection', thatWin.window.document).remove();
-      chart.selectAll('.vvvv-node.selected')
-        .attr('class', function(d) { return d.isIOBox? 'vvvv-node vvvv-iobox' : 'vvvv-node' })
-      selectedNodes = [];
+      resetSelection();
       linkStart = undefined;
     })
+    
+    // set modifier keys
+    function setModifierKeys(e) {
+      modKeyPressed.CTRL = e.ctrlKey;
+      modKeyPressed.ALT = e.altKey;
+      modKeyPressed.SHIFT = e.shiftKey;
+    }
+    $(thatWin.window.document).keydown(setModifierKeys);
+    $(thatWin.window.document).keyup(setModifierKeys);
     
     $(thatWin.window.document).keydown(function(e) {
       if (e.which==46 && selectedNodes.length>0) {
@@ -435,8 +501,9 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
           var c = 'vvvv-node';
           if (d.isIOBox)
             c += ' vvvv-iobox';
-          if (selectedNodes.indexOf(d)>=0)
+          if (selectedNodes.indexOf(d)>=0) {
             c += ' selected';
+          }
           return c;
         })
         .attr('id', function(d) { return 'vvvv-node-'+d.id})
@@ -676,7 +743,6 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
     .on('click', function(d, i) {
       if (thatWin.state!=UIState.Connecting) {
         linkStart = d;
-        console.log('starting connect');
         thatWin.state = UIState.Connecting;
         var that = this;
         chart.append('svg:line')
@@ -751,15 +817,20 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
     nodes
       .on('mousedown', function(d) {
         thatWin.state = UIState.Moving;
-        chart.selectAll('.vvvv-node.selected')
-          .attr('class', function(d) { return d.isIOBox? 'vvvv-node vvvv-iobox' : 'vvvv-node' })
-        selectedNodes = [];
-        d3.select(this).attr('class', 'vvvv-node selected');
-        selectedNodes.push(d);
+        if (selectedNodes.indexOf(d)<0) {
+          if (!modKeyPressed.SHIFT) {
+            resetSelection();
+          }
+          d3.select(this).attr('class', 'vvvv-node selected');
+          selectedNodes.push(d);
+        }
         dragStart.x = d3.event.pageX;
         dragStart.y = d3.event.pageY;
         if (editor.inspector)
           editor.inspector.setNode(d);
+        d3.event.preventDefault();
+        d3.event.stopPropagation();
+        return false;
       })
       .on('contextmenu', function(d) {
         if (d.isSubpatch) {
