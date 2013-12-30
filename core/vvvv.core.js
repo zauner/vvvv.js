@@ -513,6 +513,57 @@ VVVV.Core = {
         p.setValue(0, "not calculated");
       });
     }
+    
+    this.serialize = function() {
+      var $node = $("<NODE>");
+      $node.attr("id", this.id);
+      $node.attr("nodename", this.nodename);
+      $node.attr("systemname", this.nodename);
+      if (this.shaderFile) {
+        $node.attr("filename", this.shaderFile.replace(".vvvvjs.fx", ".fx"));
+      }
+      if (this.isSubpatch) {
+        $node.attr("filename", this.nodename);
+        $node.attr("systemname", this.nodename.match("(.*)\.v4p$")[1])
+      }
+      if (this.isIOBox)
+        $node.attr("componentmode", "InABox");
+      else
+        $node.attr("componentmode", "Hidden");
+      
+      var $bounds = $("<BOUNDS>");
+      if (this.isIOBox)
+        $bounds.attr("type", "Box");
+      else
+        $bounds.attr("type", "Node");
+      $bounds.attr("left", parseInt(this.x * 15));
+      $bounds.attr("top", parseInt(this.y * 15));
+      $bounds.attr("width", parseInt(this.width));
+      $bounds.attr("height", parseInt(this.height));
+      $node.append($bounds);
+      
+      _(this.inputPins).each(function(p) {
+        var $pin = $("<PIN>");
+        $pin.attr("pinname", p.pinname);
+        $pin.attr("visible", "1");
+        if (!p.isConnected() && ["Color", "Generic", "Enum"].indexOf(p.typeName)>=0) {
+          $pin.attr("values", _(p.values).map(function(v) { return "|"+v+"|"; }).join(","));
+        }
+        $node.append($pin);
+      })
+      
+      _(this.invisiblePins).each(function(p) {
+        var $pin = $("<PIN>");
+        $pin.attr("pinname", p.pinname);
+        $pin.attr("visible", "0");
+        if (["Color", "Generic", "Enum"].indexOf(p.typeName)>=0) {
+          $pin.attr("values", _(p.values).map(function(v) { return "|"+v+"|"; }).join(","));
+        }
+        $node.append($pin);
+      })
+      
+      return $node;
+    }
 
   },
   
@@ -527,6 +578,17 @@ VVVV.Core = {
       this.fromPin.links.splice(this.fromPin.links.indexOf(this), 1);
       this.toPin.links.splice(this.toPin.links.indexOf(this), 1);
       this.fromPin.node.parentPatch.linkList.splice(this.fromPin.node.parentPatch.linkList.indexOf(this),1);
+    }
+    
+    this.serialize = function() {
+      // calling it LONK instead of LINK here, because jquery does not make a closing tag for LINK elements
+      // renaming it to LINK later ...
+      $link = $("<LONK>");
+      $link.attr("srcnodeid", this.fromPin.node.id);
+      $link.attr("srcpinname", this.fromPin.pinname);
+      $link.attr("dstnodeid", this.toPin.node.id);
+      $link.attr("dstpinname", this.toPin.pinname);
+      return $link;
     }
   },
 
@@ -970,65 +1032,11 @@ VVVV.Core = {
       var boundTypes = ["Node", "Box"];
       for (var i=0; i<this.nodeList.length; i++) {
         var n = this.nodeList[i];
-        var $node = $("<NODE>");
-        $node.attr("id", n.id);
-        $node.attr("nodename", n.nodename);
-        $node.attr("systemname", n.nodename);
-        if (n.shaderFile) {
-          $node.attr("filename", n.shaderFile.replace(".vvvvjs.fx", ".fx"));
-        }
-        if (n.isSubpatch) {
-          $node.attr("filename", n.nodename);
-          $node.attr("systemname", n.nodename.match("(.*)\.v4p$")[1])
-        }
-        if (n.isIOBox)
-          $node.attr("componentmode", "InABox");
-        else
-          $node.attr("componentmode", "Hidden");
-        
-        var $bounds = $("<BOUNDS>");
-        if (n.isIOBox)
-          $bounds.attr("type", "Box");
-        else
-          $bounds.attr("type", "Node");
-        $bounds.attr("left", parseInt(n.x * 15));
-        $bounds.attr("top", parseInt(n.y * 15));
-        $bounds.attr("width", parseInt(n.width));
-        $bounds.attr("height", parseInt(n.height));
-        $node.append($bounds);
-        
-        _(n.inputPins).each(function(p) {
-          var $pin = $("<PIN>");
-          $pin.attr("pinname", p.pinname);
-          $pin.attr("visible", "1");
-          if (!p.isConnected() && ["Color", "Generic", "Enum"].indexOf(p.typeName)>=0) {
-            $pin.attr("values", _(p.values).map(function(v) { return "|"+v+"|"; }).join(","));
-          }
-          $node.append($pin);
-        })
-        
-        _(n.invisiblePins).each(function(p) {
-          var $pin = $("<PIN>");
-          $pin.attr("pinname", p.pinname);
-          $pin.attr("visible", "0");
-          if (["Color", "Generic", "Enum"].indexOf(p.typeName)>=0) {
-            $pin.attr("values", _(p.values).map(function(v) { return "|"+v+"|"; }).join(","));
-          }
-          $node.append($pin);
-        })
-        
-        $patch.append($node);
+        $patch.append(n.serialize());
       }
       for (var i=0; i<this.linkList.length; i++) {
         var l = this.linkList[i];
-        // calling it LONK instead of LINK here, because jquery does not make a closing tag for LINK elements
-        // renaming it to LINK later ...
-        $link = $("<LONK>");
-        $link.attr("srcnodeid", l.fromPin.node.id);
-        $link.attr("srcpinname", l.fromPin.pinname);
-        $link.attr("dstnodeid", l.toPin.node.id);
-        $link.attr("dstpinname", l.toPin.pinname);
-        $patch.append($link);
+        $patch.append(l.serialize());
       }
       
       var xml = '<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta28.1.dtd" >\r\n  '+$patch.wrapAll('<d></d>').parent().html();

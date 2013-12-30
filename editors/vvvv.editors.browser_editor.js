@@ -216,6 +216,92 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
     thatWin.window.document.title = p.nodename;
     root = d3.select(thatWin.window.document.body);
     
+    $('body', thatWin.window.document).on('copy', function(e) {
+      var $patch = $('<PATCH>');
+      var links = [];
+      var selectedNodeIDs = _(selectedNodes).map(function(n) { return n.id });
+      for (var i=0; i<selectedNodes.length; i++) {
+        $patch.append(selectedNodes[i].serialize());
+        _(selectedNodes[i].inputPins).each(function(pin) {
+          for (var j=0; j<pin.links.length; j++) {
+            if (selectedNodeIDs.indexOf(pin.links[j].fromPin.node.id)>=0)
+              links.push(pin.links[j]);
+          }
+        });
+      }
+      for (var i=0; i<links.length; i++) {
+        $patch.append(links[i].serialize());
+      }
+      var xml = '<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta28.1.dtd" >\r\n'+$patch.wrapAll('<d></d>').parent().html();
+      xml = xml.replace(/<patch/g, "<PATCH");
+      xml = xml.replace(/<\/patch>/g, "\n  </PATCH>");
+      xml = xml.replace(/<node/g, "\n  <NODE");
+      xml = xml.replace(/<\/node>/g, "\n  </NODE>");
+      xml = xml.replace(/<bounds/g, "\n  <BOUNDS");
+      xml = xml.replace(/<\/bounds>/g, "\n  </BOUNDS>");
+      xml = xml.replace(/<pin/g, "\n  <PIN");
+      xml = xml.replace(/<\/pin>/g, "\n  </PIN>");
+      xml = xml.replace(/<lonk/g, "\n  <LINK");
+      xml = xml.replace(/<\/lonk>/g, "\n  </LINK>");
+      
+      e.originalEvent.clipboardData.setData("text/plain", xml);
+      e.preventDefault();
+      return false;
+    });
+    
+    var mouseX = 0;
+    var mouseY = 0;
+    $('body', thatWin.window.document).mousemove(function(e) {
+      mouseX = e.pageX;
+      mouseY = e.pageY;
+    });
+    $('body', thatWin.window.document).on('paste', function(e) {
+      var xml = e.originalEvent.clipboardData.getData("text/plain");
+      $patch = $(xml);
+      
+      var boundsLeft = undefined;
+      var boundsTop = undefined;
+      $patch.find('node bounds').each(function() {
+        var left = parseInt($(this).attr("left"));
+        var top = parseInt($(this).attr("top"));
+        if (!boundsLeft || left<boundsLeft)
+          boundsLeft = left;
+        if (!boundsTop || top<boundsTop)
+          boundsTop = top;
+      });
+      
+      var oldNewNodeIdMap = {};
+      $patch.find('node').each(function() {
+        maxNodeId++;
+        oldNewNodeIdMap[$(this).attr("id")] = maxNodeId;
+        $(this).attr("createme", "pronto");
+        $(this).attr("id", maxNodeId);
+        var left = parseInt($(this).find('bounds').attr("left")) - boundsLeft + mouseX*15;
+        var top = parseInt($(this).find('bounds').attr("top")) - boundsTop + mouseY*15;
+        $(this).find('bounds').attr("left", left);
+        $(this).find('bounds').attr("top", top);
+      });
+      $patch.find('link').each(function() {
+        $(this).attr("createme", "pronto");
+        var fromNodeId = $(this).attr("srcnodeid");
+        var toNodeId = $(this).attr("dstnodeid");
+        $(this).attr("srcnodeid", oldNewNodeIdMap[fromNodeId]);
+        $(this).attr("dstnodeid", oldNewNodeIdMap[toNodeId]);
+      });
+      
+      var xml = $patch.wrapAll('<d></d>').parent().html();
+      editor.update(patch.nodename, xml);
+      
+      resetSelection();
+      var newNodeIDs = _(oldNewNodeIdMap).map(function(node_id) { return node_id});
+      chart.selectAll('.vvvv-node').each(function(node) {
+        if (newNodeIDs.indexOf(parseInt(node.id))>=0) {
+          selectedNodes.push(node);
+          d3.select(this).attr("class", "vvvv-node selected");
+        }
+      })
+    });
+    
     chart = root
     .append('svg:svg')
       .attr('class','chart')
@@ -370,8 +456,8 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
       })
       .on('mousedown', function() {
         thatWin.state = UIState.AreaSelecting;
-        selectionBB.x1 = selectionBB.x2 = d3.event.x;
-        selectionBB.y1 = selectionBB.y2 = d3.event.y;
+        selectionBB.x1 = selectionBB.x2 = d3.event.x+1;
+        selectionBB.y1 = selectionBB.y2 = d3.event.y+1;
         
         chart.append('svg:rect')
           .attr('class', 'selection-area')
@@ -408,6 +494,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
     $(thatWin.window.document).keyup(setModifierKeys);
     
     $(thatWin.window.document).keydown(function(e) {
+      // DELETE key
       if (e.which==46 && selectedNodes.length>0) {
         var cmd = "<PATCH>";
         for (var i=0; i<selectedNodes.length; i++) {
@@ -429,17 +516,29 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
         editor.update(patch.nodename, cmd);
         selectedNodes = [];
       }
+      // CTRL + S / Save
       else if ((e.which==115 || e.which==83) && e.ctrlKey) {
         editor.save(patch.nodename, patch.toXML());
         e.preventDefault();
         return false;
       }
+      // CTRL + I / Open Inspector
       else if ((e.which==73) && e.ctrlKey) {
         if (editor.inspector)
           editor.inspector.win.focus();
         else {
           editor.openInspector(".");
         }
+        e.preventDefault();
+        return false;
+      }
+      // CTRL + A / Select All
+      else if ((e.which==65) && e.ctrlKey) {
+        resetSelection();
+        chart.selectAll('.vvvv-node').each(function(d) {
+          selectedNodes.push(d);
+          d3.select(this).attr("class", "vvvv-node selected");
+        });
         e.preventDefault();
         return false;
       }
