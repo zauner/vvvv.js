@@ -215,7 +215,7 @@ VVVV.Core = {
     }
     
     this.addInputPin = function(pinname, value, _reserved, reset_on_disconnect, type) {
-      pin = new VVVV.Core.Pin(pinname,PinDirection.Input, value, this, reset_on_disconnect, type);
+      var pin = new VVVV.Core.Pin(pinname,PinDirection.Input, value, this, reset_on_disconnect, type);
       this.inputPins[pinname] = pin;
       if (this.parentPatch)
         this.parentPatch.pinMap[this.id+'_in_'+pinname] = pin;
@@ -224,7 +224,7 @@ VVVV.Core = {
     }
  
     this.addOutputPin = function(pinname, value, _reserved, type) {
-      pin = new VVVV.Core.Pin(pinname,PinDirection.Output, value, this, false, type);
+      var pin = new VVVV.Core.Pin(pinname,PinDirection.Output, value, this, false, type);
       this.outputPins[pinname] = pin;
       if (this.parentPatch)
         this.parentPatch.pinMap[this.id+'_out_'+pinname] = pin;
@@ -255,7 +255,7 @@ VVVV.Core = {
     }
     
     this.addInvisiblePin = function(pinname, value, _reserved, type) {
-      pin = new VVVV.Core.Pin(pinname,PinDirection.Configuration, value, this, false, type);
+      var pin = new VVVV.Core.Pin(pinname,PinDirection.Configuration, value, this, false, type);
       this.invisiblePins[pinname] = pin;
       this.parentPatch.pinMap[this.id+'_inv_'+pinname] = pin;
       if (this.defaultPinValues[pinname] != undefined) {
@@ -265,7 +265,7 @@ VVVV.Core = {
     }
 	    
     this.IOBoxType = function() {
-      match = /^IOBox \((.*)\)/.exec(this.nodename);
+      var match = /^IOBox \((.*)\)/.exec(this.nodename);
       if (match && match.length>1)
         return match[1];
       return "";
@@ -321,8 +321,8 @@ VVVV.Core = {
         return "||"+this.nodename.match(/(.+)\.v4p$/)[1];
       }
       
-      label = this.nodename.replace(/\s\(.+\)/, '');
-      label = VVVV.translateOperators(label);
+      var label = this.nodename.replace(/\s\(.+\)/, '');
+      var label = VVVV.translateOperators(label);
       return label;
     }
     
@@ -744,8 +744,11 @@ VVVV.Core = {
             if (/.v4p$/.test($(this).attr('filename'))) {
               thisPatch.resourcesPending++;
               nodesLoading++;
+              var that = this;
               var n = new VVVV.Core.Patch($(this).attr('filename'),
                 function() {
+                  n.id = $(that).attr('id');
+                  n.parentPatch = thisPatch;
                   thisPatch.resourcesPending--;
                   nodesLoading--;
                   if (VVVV_ENV=='development') console.log(n.nodename+'invoking update links')
@@ -1088,12 +1091,12 @@ VVVV.Core = {
             });
           }
           else {
-            try {
+            //try {
               node.evaluate();
-            }
-            catch (e) {
-              console.log('VVVV.Js / Error evaluating '+node.nodename+': '+e.message);
-            }
+            //}
+            //catch (e) {
+              //console.log('VVVV.Js / Error evaluating '+node.nodename+': '+e.message);
+            //}
             if (print_timing)
               console.log(node.nodename+' / '+node.id+': '+(new Date().getTime() - start)+'ms')
             node.dirty = false;

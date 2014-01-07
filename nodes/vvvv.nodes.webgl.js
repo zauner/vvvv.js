@@ -3,6 +3,26 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+VVVV.ShaderCodeResources = {};
+VVVV.Types.ShaderCodeResource = function() {
+  var sourceCode = '';
+  this.relatedNodes = [];
+  this.definingNode = undefined;
+  
+  this.setSourceCode = function(src) {
+    sourceCode = src;
+    for (var i=0; i<this.relatedNodes.length; i++) {
+      this.relatedNodes[i].shaderSourceUpdated(sourceCode);
+    }
+  }
+  
+  this.addRelatedNode = function(node) {
+    this.relatedNodes.push(node);
+    if (sourceCode!='')
+      node.shaderSourceUpdated(sourceCode);
+  }
+}
+
 
 var identity = mat4.identity(mat4.create());
 
@@ -184,10 +204,15 @@ VVVV.Types.ShaderProgram = function() {
   this.isSetup = false;
   
   this.shaderProgram = undefined;
+  this.log = '';
   
   var thatShader = this;
   
   this.extractSemantics = function(code) {
+    thatShader.attributeSpecs = {};
+    thatShader.attribSemanticMap = {};
+    thatShader.uniformSpecs = {};
+    thatShader.uniformSemanticMap = {};
     var pattern = /(uniform|attribute) ([a-zA-Z]+)([0-9xD]*) ([a-zA-Z0-9_]+)( : ([A-Z0-9]+))?( = \{?([^;\}]+)\}?)?;/g;
     var match;
     while ((match = pattern.exec(code))) {
@@ -200,7 +225,7 @@ VVVV.Types.ShaderProgram = function() {
         if (match[6]!=undefined)
           thatShader.attribSemanticMap[match[6]] = match[4];
       }
-      else if (!thatShader.uniformSpecs[match[4]]) {
+      else if (match[1]=='uniform' && !thatShader.uniformSpecs[match[4]]) {
         var dimension = match[3]=='' ? 1 : match[3];
         var uniformSpec = {
           varname: match[4],
@@ -228,18 +253,21 @@ VVVV.Types.ShaderProgram = function() {
   }
   
   this.setup = function(gl) {
+    this.log = '';
     vertexShader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertexShader, vertexShaderCode.replace(/((uniform|attribute) [a-zA-Z0-9]+ [a-zA-Z0-9_]+)[^;]*/g, '$1'));
     gl.compileShader(vertexShader);
     if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-      alert(gl.getShaderInfoLog(vertexShader));
+      this.log = gl.getShaderInfoLog(vertexShader);
+      console.log(this.log);
     }
     
     fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fragmentShader, fragmentShaderCode.replace(/((uniform|attribute) [a-zA-Z0-9]+ [a-zA-Z0-9_]+)[^;]*/g, '$1'));
     gl.compileShader(fragmentShader);
     if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-      alert(gl.getShaderInfoLog(fragmentShader));
+      this.log = gl.getShaderInfoLog(fragmentShader);
+      console.log(this.log);
     }
     
     this.shaderProgram = gl.createProgram();
@@ -248,7 +276,7 @@ VVVV.Types.ShaderProgram = function() {
     gl.linkProgram(this.shaderProgram);
 
     if (!gl.getProgramParameter(this.shaderProgram, gl.LINK_STATUS)) {
-      alert("Could not initialise shaders");
+      console.log("Could not initialise shaders");
     }
     
     _(this.attributeSpecs).each(function(aSpec) {
@@ -261,6 +289,7 @@ VVVV.Types.ShaderProgram = function() {
     
     this.isSetup = true;
     
+    return this.log=='';
   }
 
 }
@@ -1144,7 +1173,8 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   var renderStateIn = this.addInputPin("Render State", [], this, true, VVVV.PinTypes.WebGlRenderState);
   var meshIn = this.addInputPin("Mesh", [], this, true, VVVV.PinTypes.WebGlResource);
   var transformIn = this.addInputPin("Transform", [], this, true, VVVV.PinTypes.Transform);
-  var techniqueIn = this.addInputPin("Technique", [''], this);
+  var techniqueIn = this.addInputPin("Technique", [''], this, true, VVVV.PinTypes.Enum);
+  techniqueIn.enumOptions = [''];
   
   var layerOut = this.addOutputPin("Layer", [], this, VVVV.PinTypes.WebGlResource);
   
@@ -1152,6 +1182,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   var mesh = null;
   var shader = null;
   var shaderCode;
+  var shaderCodeChanged = false;
   
   var shaderPins = [];
   
@@ -1161,29 +1192,67 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   
   this.initialize = function() {
     
-    $.ajax({
-      url: thatNode.shaderFile.replace('%VVVV%', VVVV.Root),
-      async: false,
-      dataType: 'text',
-      success: function(response) {
-        shaderCode = response;
-        shader = new VVVV.Types.ShaderProgram();
-        thatNode.addUniformPins();
-        thatNode.setupShader();
-        transformIn.markPinAsChanged(); // just set any pin as changed, so that node evaluates
-      },
-      error: function() {
-        console.log('ERROR: Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVV.Root));
-        VVVV.onNotImplemented('Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVV.Root));
+    // add the pins which have already been added (by the patch XML) to the shaderPins array
+    var defaultPins = ["Render State", "Mesh", "Transform", "Technique"];
+    _(thatNode.inputPins).each(function(p) {
+      if (defaultPins.indexOf(p.pinname)<0) {
+        p.unvalidated = true;
+        shaderPins.push(p);
       }
-    });
+    })
+    
+    if (VVVV.ShaderCodeResources[thatNode.shaderFile]==undefined) {
+      VVVV.ShaderCodeResources[thatNode.shaderFile] = new VVVV.Types.ShaderCodeResource();
+      VVVV.ShaderCodeResources[thatNode.shaderFile].addRelatedNode(thatNode);
+      $.ajax({
+        url: thatNode.shaderFile.replace('%VVVV%', VVVV.Root),
+        async: false,
+        dataType: 'text',
+        success: function(response) {
+          VVVV.ShaderCodeResources[thatNode.shaderFile].setSourceCode(response);
+        },
+        error: function() {
+          console.log('ERROR: Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVV.Root));
+          VVVV.onNotImplemented('Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVV.Root));
+        }
+      });
+    }
+    else {
+      VVVV.ShaderCodeResources[thatNode.shaderFile].addRelatedNode(thatNode);
+    }
     
  
   }
   
+  this.shaderSourceUpdated = function(sc) {
+    shaderCode = sc;
+    if (!shader)
+      shader = new VVVV.Types.ShaderProgram();
+    thatNode.addUniformPins();
+    thatNode.setupShader();
+    _(thatNode.inputPins).each(function(p) {
+      p.markPinAsChanged();
+    })
+    shaderCodeChanged = true;
+    this.parentPatch.afterUpdate();
+  }
+  
   this.addUniformPins = function() {
     shader.extractSemantics(shaderCode);
-    thatNode = this;
+    
+    // delete pins which have been removed from shader code or where the type changed
+    var deletables = [];
+    for (var i=0; i<shaderPins.length; i++) {
+      if (!shader.uniformSpecs[shaderPins[i].pinname.replace(/ /g, '_')]) {
+        thatNode.removeInputPin(shaderPins[i].pinname);
+        deletables.push(i);
+      }
+    }
+    for (var i=0; i<deletables.length; i++) {
+      shaderPins.splice(deletables[i], 1);
+    }
+    
+    // add pins
     _(shader.uniformSpecs).each(function(u) {
       if (u.semantic=="VIEW" || u.semantic=="PROJECTION" || u.semantic=="WORLD")
         return;
@@ -1214,6 +1283,23 @@ VVVV.Nodes.GenericShader = function(id, graph) {
           }
           
       }
+      for (var i=0; i<shaderPins.length; i++) {
+        if (shaderPins[i].pinname==u.varname.replace(/_/g,' ')) {
+          shaderPins[i].dimensions = u.dimension;
+          if (shaderPins[i].typeName!=pinType.typeName) {
+            var values = shaderPins[i].values.slice();
+            shaderPins[i].setType(pinType);
+            if (shaderPins[i].unvalidated && u.type!='mat' && u.type!='sampler')
+              shaderPins[i].values = values;
+            else if (shaderPins[i].links.length>0) {
+              shaderPins[i].connectionChanged();
+              shaderPins[i].links[0].destroy();
+            }
+            shaderPins[i].unvalidated = false;
+          }
+          return;
+        }
+      }
         
       var pin = thatNode.addInputPin(u.varname.replace(/_/g,' '), defaultValue, thatNode, reset_on_disconnect, pinType);
       pin.dimensions = u.dimension;
@@ -1224,13 +1310,21 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   this.setupShader = function() {
     var technique = techniqueIn.getValue(0);
     technique = technique.replace(/^\s*/, '').replace(/\s*$/, '');
-    if (technique=="") {
-      var match = /(vertex_shader|fragment_shader)\{([a-zA-Z0-9]*?)[,\}]/.exec(shaderCode);
-      if (match)
-        technique = match[2];
+    var rx = new RegExp(/(vertex_shader|fragment_shader)\{([^\}]+)\}/g);
+    techniqueIn.enumOptions = [];
+    var match;
+    while ((match = rx.exec(shaderCode))!=null) {
+      techniqueIn.enumOptions = techniqueIn.enumOptions.concat(match[2].replace(/\s/g, '').split(','));
     }
-    var vsRegEx = new RegExp('vertex_shader(\{([a-zA-Z0-9]+,\s*)*'+technique+'(,\s*[a-zA-Z0-9]+)*\})?:((\r?\n|.)*?)(vertex_shader|fragment_shader)');
-    var psRegEx = new RegExp('fragment_shader(\{([a-zA-Z0-9]+,\s*)*'+technique+'(,\s*[a-zA-Z0-9]+)*\})?:((\r?\n|.)*?)(vertex_shader|fragment_shader)');
+    techniqueIn.enumOptions = techniqueIn.enumOptions.filter(function(e, index, self) { return self.indexOf(e)===index })
+    if (techniqueIn.enumOptions.length==0)
+      techniqueIn.enumOptions.push('');
+    if (technique=="" || techniqueIn.enumOptions.indexOf(technique)<0) {
+      technique = techniqueIn.enumOptions[0];
+      techniqueIn.setValue(0, technique);
+    }
+    var vsRegEx = new RegExp('vertex_shader(\\{([a-zA-Z0-9]+,\\s*)*'+technique+'(,\\s*[a-zA-Z0-9]+)*\\})?:([\\s\\S]*?)(vertex_shader|fragment_shader)');
+    var psRegEx = new RegExp('fragment_shader(\\{([a-zA-Z0-9]+,\\s*)*'+technique+'(,\\s*[a-zA-Z0-9]+)*\\})?:([\\s\\S]*?)(vertex_shader|fragment_shader)');
     
     var match;
     
@@ -1257,11 +1351,18 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   this.evaluate = function() {
     if (!this.renderContexts) return;
     var gl = this.renderContexts[0];
-    if (!gl)
+    if (!gl || !shader)
       return;
     if (!shader.isSetup || this.contextChanged || techniqueIn.pinIsChanged()) {
       this.setupShader();
-      shader.setup(gl);
+      if (shader.setup(gl)) {
+        if (VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode)
+          VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode.showStatus('success', "Successfully compiled");
+      }
+      else {
+        if (VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode)
+          VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode.showStatus('error', shader.log);
+      }
     }
 
     // find out input slice count with respect to the input pin dimension, defined by the shader code  
@@ -1279,7 +1380,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       maxSize = 0;
     
     var currentLayerCount = layers.length;
-    if (this.contextChanged)
+    if (this.contextChanged || shaderCodeChanged)
       currentLayerCount = 0;
     // shorten layers array, if input slice count decreases
     if (maxSize<currentLayerCount) {
@@ -1298,6 +1399,9 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       for (var j=0; j<maxSize; j++) {
       	layers[j].mesh = meshIn.getValue(0);
       }
+    }
+    for (var j=0; j<maxSize; j++) {
+      layers[j].shader = shader;
     }
     
     for (var i=0; i<shaderPins.length; i++) {
@@ -1344,7 +1448,13 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     }
     
     this.contextChanged = false;
+    shaderCodeChanged = false;
         
+  }
+  
+  this.openUIWindow = function() {
+    if (VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode)
+      VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode.openUIWindow();
   }
     
 
@@ -1923,3 +2033,92 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
 
 }
 VVVV.Nodes.RendererWebGL.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: DefineEffect (DX9)
+ Author(s): Matthias Zauner
+ Original Node Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.DefineEffect = function(id, graph) {
+  this.constructor(id, "DefineEffect (DX9)", graph);
+  
+  this.auto_nil = false;
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['Matthias Zauner'],
+    credits: [],
+    compatibility_issues: ['Not available in classic VVVV']
+  };
+  
+  this.auto_evaluate = false;
+  
+  var nameIn = this.addInputPin("Effect Descriptor", [''], this);
+  var sourceCodeIn = this.addInvisiblePin("Source Code", ['#ifdef GL_ES\nprecision highp float;\n#endif\n\nuniform mat4 tW : WORLD;\nuniform mat4 tV : VIEW;\nuniform mat4 tP : PROJECTION;\n\nuniform vec4 Color : COLOR = {1.0, 1.0, 1.0, 1.0};\nuniform sampler2D Texture;\nuniform mat4 Texture_Transform;\nuniform float Alpha = 1.0;\n\nvarying vec2 vs2psTexCd;\n\nvertex_shader:\n\nattribute vec3 PosO : POSITION;\nattribute vec2 TexCd : TEXCOORD0;\n\nvoid main(void) {\n  gl_Position = tP * tV * tW * vec4(PosO, 1.0);\n  vs2psTexCd = (Texture_Transform * vec4(TexCd, 0, 1)).xy;\n}\n\n\nfragment_shader:\n\nvoid main(void) {\n  gl_FragColor = Color * texture2D(Texture, vs2psTexCd) * vec4(1.0, 1.0, 1.0, Alpha);\n}'], this);
+  
+  var currentName = '';
+  var w; // the UI window
+  
+  this.evaluate = function() {
+    if (nameIn.getValue(0)!='') {
+      if (nameIn.pinIsChanged()) {
+        var descriptor = nameIn.getValue(0);
+        if (descriptor=='')
+          return;
+        if (currentName=='') { // if is set for the first time
+          if (VVVV.ShaderCodeResources[descriptor+'.vvvvjs.fx']==undefined)
+            VVVV.ShaderCodeResources[descriptor+'.vvvvjs.fx'] = new VVVV.Types.ShaderCodeResource();
+        }
+        else
+          VVVV.ShaderCodeResources[descriptor+'.vvvvjs.fx'] = VVVV.ShaderCodeResources[currentName];
+        currentName = descriptor+'.vvvvjs.fx';
+        VVVV.ShaderCodeResources[currentName].definingNode = this;
+        VVVV.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(i));
+        if (w)
+          $('#path', w.document).text((this.parentPatch.nodename || 'root')+' / '+(currentName!='' ? currentName : 'Untitled'));
+      }
+      
+      if (sourceCodeIn.pinIsChanged()) {
+        if (VVVV.ShaderCodeResources[currentName])
+          VVVV.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(i));
+      }
+    }
+  }
+  
+  this.openUIWindow = function() {
+    w = window.open("code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
+    var thatNode = this;
+    window.setTimeout(function() {
+      w.document.title = currentName+" / VVVV.js Effect Editor";
+      var definingNodeName = thatNode.parentPatch.nodename || 'root';
+      var shaderName = currentName!='' ? currentName : 'Untitled';
+      $('#path', w.document).text(definingNodeName+' / '+shaderName);
+      $('textarea', w.document).text(sourceCodeIn.getValue(0));
+      $('#compile_button', w.document).click(function() {
+        if (currentName=='') {
+          thatNode.showStatus('error', 'Please provide a name for this shader first');
+          return;
+        }
+        sourceCodeIn.setValue(0, $('textarea', w.document).val());
+        if (VVVV.ShaderCodeResources[currentName].relatedNodes.length>0)
+          thatNode.showStatus('notice', 'Compiling ...');
+        else
+          thatNode.showStatus('notice', 'No instance of this shader found. Create a node (./'+currentName+') and connect it to a Renderer (EX9) to compile.');
+      });
+      w.focus();
+    }, 500);
+  }
+  
+  this.showStatus = function(type, message) {
+    if (w) {
+      $('#status', w.document).text(message);
+      $('#status', w.document).attr('class', type);
+    }
+  }
+
+}
+VVVV.Nodes.DefineEffect.prototype = new VVVV.Core.Node();
