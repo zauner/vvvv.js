@@ -430,7 +430,11 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
           if (!nodename) {
             var f = $nodeselection.find('#node_filter').val();
             var match;
-            if (match = f.match("([^\.]+)(\.vvvvjs)?\.fx$")) {
+            if (match = f.match("^\.\/([^\.]+)(\.vvvvjs)?\.fx$")) {
+              nodename = match[1];
+              filename = match[1]+".fx";
+            }
+            else if (match = f.match("([^\.]+)(\.vvvvjs)?\.fx$")) {
               nodename = match[1];
               filename = "%VVVV%/effects/"+match[1]+".fx";
             }
@@ -816,7 +820,6 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
     
     chart.selectAll('g.vvvv-input-pin')
       .on('contextmenu', function(d, i) {
-        console.log(d.typeName);
         if (VVVV.PinTypes[d.typeName].openInputBox) {
           if (d.getValue(0)!=undefined) {
             $('.resettable', thatWin.window.document).remove();
@@ -934,6 +937,9 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
       .on('contextmenu', function(d) {
         if (d.isSubpatch) {
           editor.openPatch(d);
+        }
+        else if (d.openUIWindow) {
+          d.openUIWindow();
         }
         d3.event.preventDefault();
         d3.event.stopPropagation();
