@@ -78,6 +78,13 @@ VVVV.PinTypes.Generic.openInputBox = function(win, $element, pin, sliceIdx) {
     e.preventDefault();
     return false;
   })
+  
+  $inputbox.bind('paste', function(e) {
+    e.stopPropagation();
+  })
+  $inputbox.bind('copy', function(e) {
+    e.stopPropagation();
+  })
 }
 
 VVVV.PinTypes.Enum.openInputBox = function(win, $element, pin, sliceIdx) {
@@ -367,6 +374,8 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
           thatWin.state = UIState.Idle;
         }
         d3.event.stopPropagation();
+        d3.event.preventDefault();
+        return false;
       })
       .on('mouseup', function() {
         if (thatWin.state==UIState.Moving) {
@@ -401,7 +410,8 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
         function filterNodes(e) {
           $nodeselectionlist.empty();
           var filter = $nodeselection.find('#node_filter').val().toLowerCase();
-          var matchingNodes = _(_(VVVV.NodeNames).filter(function(n) { return VVVV.translateOperators(n).toLowerCase().indexOf(filter)>=0 })).sortBy(function(n) { return n.toLowerCase().indexOf(filter);  });
+          var available_nodes = VVVV.NodeNames.concat(_(VVVV.ShaderCodeResources).map(function(s,k) { return "./"+k; }));
+          var matchingNodes = _(_(available_nodes).filter(function(n) { return VVVV.translateOperators(n).toLowerCase().indexOf(filter)>=0 })).sortBy(function(n) { return n.toLowerCase().indexOf(filter);  });
           for (var i=0; i<matchingNodes.length; i++) {
             $nodeselectionlist.append($('<option>'+matchingNodes[i]+'</option>'));
           }
@@ -430,7 +440,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
           if (!nodename) {
             var f = $nodeselection.find('#node_filter').val();
             var match;
-            if (match = f.match("^\.\/([^\.]+)(\.vvvvjs)?\.fx$")) {
+            if (match = f.match(/^\.\/([^\.]+)(\.vvvvjs)?\.fx$/)) {
               nodename = match[1];
               filename = match[1]+".fx";
             }
@@ -445,6 +455,12 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
           }
           
           if (nodename) {
+            var match;
+            if (match = nodename.match(/^\.\/([^\.]+)(\.vvvvjs)?\.fx$/)) {
+              nodename = match[1];
+              filename = match[1]+".fx";
+            }
+            
             maxNodeId++;
             var cmd = "<PATCH>";
             cmd += "<NODE componentmode='Hidden' id='"+maxNodeId+"' nodename='"+nodename+"' systemname='"+nodename+"' "+(filename!=""?"filename='"+filename+"'":"")+">";
@@ -459,6 +475,8 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
         $nodeselection.find('#new_node').click(tryAddNode);
       })
       .on('mousedown', function() {
+        if (thatWin.state!=UIState.Idle)
+          return;
         thatWin.state = UIState.AreaSelecting;
         selectionBB.x1 = selectionBB.x2 = d3.event.x+1;
         selectionBB.y1 = selectionBB.y2 = d3.event.y+1;
@@ -918,6 +936,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
       
     nodes
       .on('mousedown', function(d) {
+        $('.resettable', thatWin.window.document).remove();
         thatWin.state = UIState.Moving;
         if (selectedNodes.indexOf(d)<0) {
           if (!modKeyPressed.SHIFT) {
