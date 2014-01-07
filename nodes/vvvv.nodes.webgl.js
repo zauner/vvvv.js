@@ -1289,9 +1289,9 @@ VVVV.Nodes.GenericShader = function(id, graph) {
           if (shaderPins[i].typeName!=pinType.typeName) {
             var values = shaderPins[i].values.slice();
             shaderPins[i].setType(pinType);
-            if (shaderPins[i].unvalidated && u.type!='mat' && u.type!='sampler')
+            if (shaderPins[i].unvalidated && ((u.type!='mat' && u.type!='sampler') || shaderPins[i].isConnected()))
               shaderPins[i].values = values;
-            else if (shaderPins[i].links.length>0) {
+            if (shaderPins[i].isConnected() && !shaderPins[i].unvalidated) {
               shaderPins[i].connectionChanged();
               shaderPins[i].links[0].destroy();
             }
@@ -2077,14 +2077,14 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
           VVVV.ShaderCodeResources[descriptor+'.vvvvjs.fx'] = VVVV.ShaderCodeResources[currentName];
         currentName = descriptor+'.vvvvjs.fx';
         VVVV.ShaderCodeResources[currentName].definingNode = this;
-        VVVV.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(i));
+        VVVV.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(0));
         if (w)
           $('#path', w.document).text((this.parentPatch.nodename || 'root')+' / '+(currentName!='' ? currentName : 'Untitled'));
       }
       
       if (sourceCodeIn.pinIsChanged()) {
         if (VVVV.ShaderCodeResources[currentName])
-          VVVV.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(i));
+          VVVV.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(0));
       }
     }
   }
