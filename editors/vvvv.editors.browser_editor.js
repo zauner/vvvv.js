@@ -1121,6 +1121,15 @@ VVVV.Editors.BrowserEditor.Interface = function() {
     })
     
     this.openInspector(VVVV.Root);
+    
+    if (patchWindows[0].window) {
+      if (opts && opts.success)
+        opts.success();
+    }
+    else {
+      if (opts && opts.error)
+        opts.error();
+    }
   }
   
   this.openInspector = function(VVVVRoot, node) {
