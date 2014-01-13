@@ -832,7 +832,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
       .attr('y1', function(d) { return d.fromPin.y + d.fromPin.node.y + 4 + .5 })
       .attr('x2', function(d) { return d.toPin.x + d.toPin.node.x + 2 + .5 })
       .attr('y2', function(d) { return d.toPin.y + d.toPin.node.y + .5 });
-    //$('line.vvvv-link').insertAfter($('.chart>rect')); // move links to the top, to get the right drawing order
+    $('.vvvv-link', this.window.document).insertAfter($('.chart>rect', this.window.document)); // move links to the top, to get the right drawing order
     
     // Editing Functionality starts here ...
     
