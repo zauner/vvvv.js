@@ -382,7 +382,7 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
     compatibility_issues: ['Using WebGL renderer as source doesnt work correctly in Chrome.']
   };
 
-  var sourceIn = this.addInputPin("Source", [], this, true);
+  var sourceIn = this.addInputPin("Source", [], this, true, VVVV.PinTypes.WebGlResource);
   var outputOut = this.addOutputPin("Texture Out", [], this, VVVV.PinTypes.WebGlTexture);
   
   var texture;
