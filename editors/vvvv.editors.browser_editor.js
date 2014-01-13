@@ -1107,14 +1107,16 @@ VVVV.Editors.BrowserEditor.Interface = function() {
   var patches = {};
   this.inspector = undefined;
   
+  function confirmLeave() {
+    return "Are you sure you want to leave? Unsaved changes in your patches will be lost.";
+  }
+  
   this.enable = function(p, opts) {
     this.addPatch(p);
     this.openPatch(p);
     
     var that = this;
-    $(window).bind('beforeunload', function() {
-      return "Are you sure you want to leave? Unsaved changes in your patches will be lost.";
-    });
+    $(window).bind('beforeunload', confirmLeave);
     
     $(window).unload(function() {
       that.disable();
@@ -1182,6 +1184,7 @@ VVVV.Editors.BrowserEditor.Interface = function() {
     }
     if (this.inspector)
       this.inspector.close();
+    $(window).unbind('beforeunload', confirmLeave);
   }
   
   this.save = function(nodename, xml) {
