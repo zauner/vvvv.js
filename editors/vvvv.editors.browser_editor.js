@@ -264,6 +264,8 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
     });
     $('body', thatWin.window.document).on('paste', function(e) {
       var xml = e.originalEvent.clipboardData.getData("text/plain");
+      if (!xml.match(/^<!DOCTYPE PATCH/))
+        return false;
       $patch = $(xml);
       
       var boundsLeft = undefined;
@@ -406,6 +408,9 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
         $nodeselection.css('top', y);
         
         $('body', thatWin.window.document).append($nodeselection)
+        $nodeselection.find('input').bind('paste', function(e) {
+          e.stopPropagation();
+        });
         $nodeselection.find('#node_filter').get(0).focus();
         function filterNodes(e) {
           $nodeselectionlist.empty();
