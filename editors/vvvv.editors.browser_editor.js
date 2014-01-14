@@ -612,6 +612,9 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
     chart.selectAll('.background')
       .attr('width', Math.max(patch.width, patch.boundingBox.width))
       .attr('height', Math.max(patch.height, patch.boundingBox.height))
+      
+    var link_group = chart.append('svg:g')
+      .attr('class', 'link-group');
     
     // NODES
       
@@ -812,7 +815,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
       })
       
       
-    links = chart.selectAll('g.vvvv-link')
+    links = link_group.selectAll('g.vvvv-link')
       .data(patch.linkList)
       .enter().append('svg:g')
         .attr('class', 'vvvv-link')
@@ -832,7 +835,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
       .attr('y1', function(d) { return d.fromPin.y + d.fromPin.node.y + 4 + .5 })
       .attr('x2', function(d) { return d.toPin.x + d.toPin.node.x + 2 + .5 })
       .attr('y2', function(d) { return d.toPin.y + d.toPin.node.y + .5 });
-    $('.vvvv-link', this.window.document).insertAfter($('.chart>rect', this.window.document)); // move links to the top, to get the right drawing order
+    //$('.vvvv-link', this.window.document).insertAfter($('.chart>rect', this.window.document)); // move links to the top, to get the right drawing order
     
     // Editing Functionality starts here ...
     
