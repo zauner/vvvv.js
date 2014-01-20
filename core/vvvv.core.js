@@ -307,7 +307,7 @@ VVVV.Core = {
     }
     
     this.isComment = function() {
-      return this.isIOBox && _(this.outputPins).size()==0 && this.invisiblePins.length==1
+      return this.isIOBox && _(this.outputPins).size()==0
     }
     
     this.label = function() {
@@ -520,7 +520,7 @@ VVVV.Core = {
       $node.attr("nodename", this.nodename);
       $node.attr("systemname", this.nodename);
       if (this.shaderFile) {
-        $node.attr("filename", this.shaderFile.replace(".vvvvjs.fx", ".fx"));
+        $node.attr("filename", this.shaderFile.replace(".vvvvjs.fx", ".fx").replace("%VVVV%/effects", "%VVVV%/lib/nodes/effects"));
       }
       if (this.isSubpatch) {
         $node.attr("filename", this.nodename);

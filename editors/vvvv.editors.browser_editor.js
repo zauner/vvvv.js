@@ -415,7 +415,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
         function filterNodes(e) {
           $nodeselectionlist.empty();
           var filter = $nodeselection.find('#node_filter').val().toLowerCase();
-          var available_nodes = VVVV.NodeNames.concat(_(VVVV.ShaderCodeResources).map(function(s,k) { return "./"+k; }));
+          var available_nodes = VVVV.NodeNames.concat(_(VVVV.ShaderCodeResources).map(function(s,k) { return k.replace("%VVVV%/effects/", ""); }));
           var matchingNodes = _(_(available_nodes).filter(function(n) { return VVVV.translateOperators(n).toLowerCase().indexOf(filter)>=0 })).sortBy(function(n) { return n.toLowerCase().indexOf(filter);  });
           for (var i=0; i<matchingNodes.length; i++) {
             $nodeselectionlist.append($('<option>'+matchingNodes[i]+'</option>'));
@@ -440,30 +440,28 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
         });
         
         function tryAddNode() {
+          var filtertext = $nodeselection.find('#node_filter').val();
           var nodename = $nodeselection.find('#new_node option:selected').val();
           var filename = "";
-          if (!nodename) {
-            var f = $nodeselection.find('#node_filter').val();
-            var match;
-            if (match = f.match(/^\.\/([^\.]+)(\.vvvvjs)?\.fx$/)) {
-              nodename = match[1];
-              filename = match[1]+".fx";
-            }
-            else if (match = f.match("([^\.]+)(\.vvvvjs)?\.fx$")) {
-              nodename = match[1];
-              filename = "%VVVV%/effects/"+match[1]+".fx";
-            }
-            else if (match = f.match("[^\/]\.v4p$")) {
-              nodename = f;
-              filename = f;
-            }
-          }
+          
+          if (!nodename && (filtertext.match(/\.fx$/) || filtertext.match(/\.v4p$/)) )  // if no option from the dropdown matches
+            nodename = filtertext;
           
           if (nodename) {
             var match;
-            if (match = nodename.match(/^\.\/([^\.]+)(\.vvvvjs)?\.fx$/)) {
-              nodename = match[1];
+            // ./some/path/to/SomeShader.fx with path
+            if (match = nodename.match(/^(.*\/([^\.]+))(\.vvvvjs)?\.fx$/)) {
+              nodename = match[2]+" (EX9.Effect)";
               filename = match[1]+".fx";
+            }
+            // Some
+            else if (match = nodename.match("([^\.]+)(\.vvvvjs)?\.fx$")) {
+              nodename = match[1]+" (EX9.Effect)";
+              filename = "%VVVV%/effects/"+match[1]+".fx";
+            }
+            else if (match = nodename.match("[^\/]\.v4p$")) {
+              nodename = f;
+              filename = f;
             }
             
             maxNodeId++;
@@ -471,6 +469,16 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
             cmd += "<NODE componentmode='Hidden' id='"+maxNodeId+"' nodename='"+nodename+"' systemname='"+nodename+"' "+(filename!=""?"filename='"+filename+"'":"")+">";
             cmd += "<BOUNDS type='Node' left='"+x*15+"' top='"+y*15+"' width='100' height='100'/>";
             cmd += "</NODE>";
+            editor.update(patch.nodename, cmd);
+            
+            $nodeselection.remove();
+          }
+          else {
+            maxNodeId++;
+            var cmd = "<PATCH>";
+            cmd += "<NODE componentmode='Hidden' id='"+maxNodeId+"' nodename='IOBox (String)' systemname='IOBox (String)'>";
+            cmd += "<BOUNDS type='Node' left='"+x*15+"' top='"+y*15+"' width='100' height='100'/>";
+            cmd += "<PIN pinname='Input String' values='|"+filtertext+"|'/>";
             cmd += "</NODE>";
             editor.update(patch.nodename, cmd);
             

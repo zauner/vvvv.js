@@ -2070,12 +2070,12 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
         if (descriptor=='')
           return;
         if (currentName=='') { // if is set for the first time
-          if (VVVV.ShaderCodeResources[descriptor+'.vvvvjs.fx']==undefined)
-            VVVV.ShaderCodeResources[descriptor+'.vvvvjs.fx'] = new VVVV.Types.ShaderCodeResource();
+          if (VVVV.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx']==undefined)
+            VVVV.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx'] = new VVVV.Types.ShaderCodeResource();
         }
         else
-          VVVV.ShaderCodeResources[descriptor+'.vvvvjs.fx'] = VVVV.ShaderCodeResources[currentName];
-        currentName = descriptor+'.vvvvjs.fx';
+          VVVV.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx'] = VVVV.ShaderCodeResources[currentName];
+        currentName = "./"+descriptor+'.vvvvjs.fx';
         VVVV.ShaderCodeResources[currentName].definingNode = this;
         VVVV.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(0));
         if (w)
