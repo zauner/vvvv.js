@@ -29,6 +29,8 @@ VVVV.Core.DOMInterface = function(patch) {
       'values': [],
       'node': node
     }
+    if ($(ioboxConn.selector).length == 0)
+      return;
     if (node.getUpstreamNodes().length==0)
       inputConnectors[match[0]] = ioboxConn;
     else if (node.getDownstreamNodes().length==0)

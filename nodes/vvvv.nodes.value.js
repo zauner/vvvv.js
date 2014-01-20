@@ -359,12 +359,15 @@ VVVV.Nodes.IOBoxValueAdvanced = function(id, graph) {
   this.addOutputPin("Y Output Value", [0.0], this);
 
   this.evaluate = function() {
-    if (this.inputPins["Y Input Value"].pinIsChanged()) {
-      for (var i=0; i<this.inputPins["Y Input Value"].values.length; i++) {
-        this.outputPins["Y Output Value"].setValue(i, parseFloat(this.inputPins["Y Input Value"].values[i]));
-      }
-      this.outputPins["Y Output Value"].setSliceCount(this.inputPins["Y Input Value"].getSliceCount());
+    var sliceCount = this.inputPins["Y Input Value"].getSliceCount();
+    var v;
+    for (var i=0; i<sliceCount; i++) {
+      v = parseFloat(this.inputPins["Y Input Value"].getValue(0));
+      if (!isFinite(v))
+        v = 0.0;
+      this.outputPins["Y Output Value"].setValue(i, v);
     }
+    this.outputPins["Y Output Value"].setSliceCount(this.inputPins["Y Input Value"].getSliceCount());
   }
 
 }

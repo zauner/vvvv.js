@@ -493,7 +493,6 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
         thatWin.state = UIState.AreaSelecting;
         selectionBB.x1 = selectionBB.x2 = d3.event.pageX+1;
         selectionBB.y1 = selectionBB.y2 = d3.event.pageY+1;
-        console.log(d3.event.pageY);
         
         chart.append('svg:rect')
           .attr('class', 'selection-area')
@@ -673,13 +672,29 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
       .attr('fill', function(d) { return d.isIOBox? "#dddddd" : "#9a9a9a"; })
       .attr('width', function(d) { return d.getWidth(); })
       
+    nodes.append('svg:g')
+      .attr('class', 'descriptive-name-bg')
+      
     nodes.append('svg:text')
       .text(function(d) { return (d.invisiblePins["Descriptive Name"]) ? d.invisiblePins["Descriptive Name"].getValue(0) : null })
       .attr('class', 'vvvv-node-descriptive-name')
       .attr('shape-rendering', 'crispEdges')
       .attr('dy', function(d) { return d.getHeight()+12 })
+      .attr('dx', 2)
       .attr('font-size', 10)
       .attr('font-family', 'Lucida Sans Unicode')
+      .attr('fill', 'white')
+      
+    nodes.selectAll('g.descriptive-name-bg')
+      .append('svg:rect')
+        .attr('fill', function(d) {
+          if (d.invisiblePins["Descriptive Name"]==undefined || d.invisiblePins["Descriptive Name"].getValue(0)=="")
+            return 'rgba(0,0,0,0)';
+          return 'rgba(0,0,0,1)'; 
+        })
+        .attr('y', function(d) { return d.getHeight() })
+        .attr('width', 5)
+        .attr('height', 14)
       
     nodes.each(function(d) {
       if (d.isIOBox && VVVV.PinTypes[d.IOBoxInputPin().typeName].makeLabel) {
@@ -849,7 +864,11 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
       .attr('y1', function(d) { return d.fromPin.y + d.fromPin.node.y + 4 + .5 })
       .attr('x2', function(d) { return d.toPin.x + d.toPin.node.x + 2 + .5 })
       .attr('y2', function(d) { return d.toPin.y + d.toPin.node.y + .5 });
-    //$('.vvvv-link', this.window.document).insertAfter($('.chart>rect', this.window.document)); // move links to the top, to get the right drawing order
+    
+    // set descriptive name widths after rendering
+    $('.descriptive-name-bg rect', thatWin.window.document).each(function() {
+      $(this, thatWin.window.document).attr('width', $(this, thatWin.window.document).parent().next().get(0).getBBox().width+4);
+    })
     
     // Editing Functionality starts here ...
     
