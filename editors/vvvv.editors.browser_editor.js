@@ -341,8 +341,8 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
           }
         }
         else if (thatWin.state==UIState.AreaSelecting) {
-          selectionBB.x2 = d3.event.x;
-          selectionBB.y2 = d3.event.y;
+          selectionBB.x2 = d3.event.pageX;
+          selectionBB.y2 = d3.event.pageY;
             
           chart.select('.selection-area')
             .attr('transform', 'translate('+Math.min(selectionBB.x1, selectionBB.x2)+', '+Math.min(selectionBB.y1, selectionBB.y2)+')')
@@ -454,7 +454,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
               nodename = match[2]+" (EX9.Effect)";
               filename = match[1]+".fx";
             }
-            // Some
+            // SomeShader.fx -> system shader in VVVV.js' effects directory
             else if (match = nodename.match("([^\.]+)(\.vvvvjs)?\.fx$")) {
               nodename = match[1]+" (EX9.Effect)";
               filename = "%VVVV%/effects/"+match[1]+".fx";
@@ -491,8 +491,9 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
         if (thatWin.state!=UIState.Idle)
           return;
         thatWin.state = UIState.AreaSelecting;
-        selectionBB.x1 = selectionBB.x2 = d3.event.x+1;
-        selectionBB.y1 = selectionBB.y2 = d3.event.y+1;
+        selectionBB.x1 = selectionBB.x2 = d3.event.pageX+1;
+        selectionBB.y1 = selectionBB.y2 = d3.event.pageY+1;
+        console.log(d3.event.pageY);
         
         chart.append('svg:rect')
           .attr('class', 'selection-area')
