@@ -46,10 +46,11 @@ VVVV.Nodes.FileTextureCanvas = function(id, graph) {
     
     if (filenameIn.pinIsChanged()) { 
       for (var i=0; i<maxSpreadSize; i++) {
-        if (images[i]==undefined || images[i].origSrc!=filenameIn.getValue(i)) {
+        var filename = VVVV.Helpers.prepareFilePath(filenameIn.getValue(i), this.parentPatch);
+        if (images[i]==undefined || images[i].origSrc!=filename) {
           images[i] = new Image();
           images[i].loaded = false;
-          images[i].origSrc = filenameIn.getValue(i);
+          images[i].origSrc = filename;
           var that = this;
           var img = images[i];
           images[i].onload = (function(j) {
@@ -58,7 +59,7 @@ VVVV.Nodes.FileTextureCanvas = function(id, graph) {
               textureLoaded = true;
             }
           })(i);
-          images[i].src = filenameIn.getValue(i);
+          images[i].src = filename;
           runningOut.setValue(i, 0);
           textureOut.setValue(i, images[i]);
         }
@@ -131,6 +132,7 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
     
     if (filenameIn.pinIsChanged()) { 
       for (var i=0; i<maxSpreadSize; i++) {
+        filename = VVVV.Helpers.prepareFilePath(filenameIn.getValue(i), this.parentPatch);
         if (videos[i]==undefined) {
           var $video = $('<video style="display:none"><source src="" type=video/ogg></video>');
           $('body').append($video);
@@ -145,8 +147,8 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
           videos[i].oncanplay = updateStatus;
           videos[i].oncanplaythrough = updateStatus;
         }
-        if (filenameIn.getValue(i)!=videos[i].currentSrc) {
-          $(videos[i]).find('source').first().attr('src', filenameIn.getValue(i));
+        if (filename!=videos[i].currentSrc) {
+          $(videos[i]).find('source').first().attr('src', filename);
           videos[i].load();
           if (playIn.getValue(i)>0.5)
             videos[i].play();

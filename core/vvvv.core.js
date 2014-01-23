@@ -28,13 +28,30 @@ VVVV.PinTypes.Enum = {
   defaultValue: function() { return '' }
 }
 
-VVVV.translateOperators = function(l) {
-  l = l.replace("Add", "+");
-  l = l.replace("Subtract", "-");
-  l = l.replace("Multiply", "*");
-  l = l.replace("Divide", "/");
-  l = l.replace("EQ", "=");
-  return l;
+VVVV.Helpers = {
+  
+  translateOperators: function(l) {
+    l = l.replace("Add", "+");
+    l = l.replace("Subtract", "-");
+    l = l.replace("Multiply", "*");
+    l = l.replace("Divide", "/");
+    l = l.replace("EQ", "=");
+    return l;
+  },
+  
+  prepareFilePath: function(path, patch) {
+    path = path.replace(/\\/g, '/');
+    if (path.match(/^%VVVV%/)) // VVVV.js system path
+      return path.replace('%VVVV%', VVVV.Root);
+      
+    if (path.match(/^%PAGE%/)) // hosting HTML page path
+      return path.replace('%PAGE%', location.pathname);
+      
+    if (path.match(/^(\/|.+:\/\/)/)) // path starting with / or an URL protocol (http://, ftp://, ..)
+      return path;
+      
+    return patch.getPath()+path;
+  }
 }
 
 VVVV.Core = {	
@@ -318,11 +335,11 @@ VVVV.Core = {
       }
       
       if (this.isSubpatch) {
-        return "||"+this.nodename.match(/(.+)\.v4p$/)[1];
+        return "||"+this.nodename.match(/([^\/]+)\.v4p$/)[1];
       }
       
       var label = this.nodename.replace(/\s\(.+\)/, '');
-      var label = VVVV.translateOperators(label);
+      var label = VVVV.Helpers.translateOperators(label);
       return label;
     }
     
@@ -614,6 +631,14 @@ VVVV.Core = {
     
     var print_timing = false;
     
+    this.getPath = function() {
+      var match = this.nodename.match(/(.*\/)?[^/]+\.v4p$/);
+      var path = match[1] || '';
+      if (this.parentPatch)
+        path = this.parentPatch.getPath()+path;
+      return path;
+    }
+    
     function splitValues(v) {
       if (v==undefined)
         return [];
@@ -745,8 +770,9 @@ VVVV.Core = {
               thisPatch.resourcesPending++;
               nodesLoading++;
               var that = this;
-              var n = new VVVV.Core.Patch($(this).attr('filename'),
+              var n = new VVVV.Core.Patch(VVVV.Helpers.prepareFilePath($(this).attr('filename'), thisPatch),
                 function() {
+                  n.nodename = $(that).attr('filename'); // re-set it to the relative filename, because it has been initialized with the absolute path above
                   n.id = $(that).attr('id');
                   n.parentPatch = thisPatch;
                   thisPatch.resourcesPending--;

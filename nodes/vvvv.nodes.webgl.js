@@ -332,7 +332,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
     if (filenamePin.pinIsChanged() || this.contextChanged) {
       var maxSize = this.getMaxInputSliceCount();
       for (var i=0; i<maxSize; i++) {
-        var filename = filenamePin.getValue(i);
+        var filename = VVVV.Helpers.prepareFilePath(filenamePin.getValue(i), this.parentPatch);
         if (filename.indexOf('http://')===0 && VVVV.ImageProxyPrefix!==undefined)
           filename = VVVV.ImageProxyPrefix+encodeURI(filename);
         textures[i] = gl.createTexture();
@@ -1205,7 +1205,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       VVVV.ShaderCodeResources[thatNode.shaderFile] = new VVVV.Types.ShaderCodeResource();
       VVVV.ShaderCodeResources[thatNode.shaderFile].addRelatedNode(thatNode);
       $.ajax({
-        url: thatNode.shaderFile.replace('%VVVV%', VVVV.Root),
+        url: VVVV.Helpers.prepareFilePath(thatNode.shaderFile, thatNode.parentPatch),
         async: false,
         dataType: 'text',
         success: function(response) {
