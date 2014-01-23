@@ -362,7 +362,7 @@ VVVV.Nodes.IOBoxValueAdvanced = function(id, graph) {
     var sliceCount = this.inputPins["Y Input Value"].getSliceCount();
     var v;
     for (var i=0; i<sliceCount; i++) {
-      v = parseFloat(this.inputPins["Y Input Value"].getValue(0));
+      v = parseFloat(this.inputPins["Y Input Value"].getValue(i));
       if (!isFinite(v))
         v = 0.0;
       this.outputPins["Y Output Value"].setValue(i, v);

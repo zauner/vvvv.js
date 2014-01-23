@@ -1117,12 +1117,12 @@ VVVV.Core = {
             });
           }
           else {
-            //try {
+            try {
               node.evaluate();
-            //}
-            //catch (e) {
-              //console.log('VVVV.Js / Error evaluating '+node.nodename+': '+e.message);
-            //}
+            }
+            catch (e) {
+              console.log('VVVV.Js / Error evaluating '+node.nodename+': '+e.message);
+            }
             if (print_timing)
               console.log(node.nodename+' / '+node.id+': '+(new Date().getTime() - start)+'ms')
             node.dirty = false;
