@@ -19,13 +19,15 @@ var PinDirection = { Input : 0,Output : 1,Configuration : 2 };
 
 VVVV.PinTypes.Generic = {
   typeName: "Generic",
-  defaultValue: function() { return '0' }
+  defaultValue: function() { return '0' },
+  primitive: true
 }
 
 VVVV.PinTypes.Enum = {
   typeName: "Enum",
   reset_on_disconnect: false,
-  defaultValue: function() { return '' }
+  defaultValue: function() { return '' },
+  primitive: true
 }
 
 VVVV.Helpers = {
@@ -173,8 +175,10 @@ VVVV.Core = {
         this.reset_on_disconnect = newType.reset_on_disconnect;
     }
     
-    if (type==undefined)
+    if (type==undefined) {
       type = VVVV.PinTypes.Generic;
+      this.unvalidated = true;
+    }
     this.setType(type);
     
     if (init_values && init_values.length>0) // override PinType's default value with values from constructor, if it isn't []
@@ -467,6 +471,9 @@ VVVV.Core = {
               var pin = that.parentPatch.outputPins[pinname];
               if (pin==undefined)
                 var pin = that.parentPatch.addOutputPin(pinname, that.IOBoxOutputPin().values);
+                
+              pin.setType(VVVV.PinTypes[that.IOBoxOutputPin().typeName]);
+                
               that.IOBoxOutputPin().slavePin = pin;
               pin.masterPin = that.IOBoxOutputPin();
             }
@@ -503,6 +510,14 @@ VVVV.Core = {
                 if (slicecount>0)
                   that.IOBoxInputPin().setSliceCount(pin.getSliceCount());
               }
+              
+              var savedValues = pin.values.slice();
+              pin.setType(VVVV.PinTypes[that.IOBoxInputPin().typeName]);
+              if ((pin.unvalidated && VVVV.PinTypes[pin.typeName].primitive) || pin.isConnected()) {
+                pin.values = savedValues;
+                pin.unvalidated = false;
+              }
+              
               pin.slavePin = that.IOBoxInputPin();
               that.IOBoxInputPin().masterPin = pin;
             }

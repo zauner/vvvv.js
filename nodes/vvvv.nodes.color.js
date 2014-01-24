@@ -9,6 +9,7 @@ VVVV.PinTypes.Color = {
   defaultValue: function() {
     return "1.0, 1.0, 1.0, 1.0";
   },
+  primitive: true,
   hsvToRgb: function(h, s, v) {
     h = h*360;
     var hi = Math.floor(h/60.0);
