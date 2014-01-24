@@ -47,6 +47,8 @@ VVVV.Nodes.FileTextureCanvas = function(id, graph) {
     if (filenameIn.pinIsChanged()) { 
       for (var i=0; i<maxSpreadSize; i++) {
         var filename = VVVV.Helpers.prepareFilePath(filenameIn.getValue(i), this.parentPatch);
+        if (filename.indexOf('http://')===0 && VVVV.ImageProxyPrefix!==undefined)
+          filename = VVVV.ImageProxyPrefix+encodeURI(filename);
         if (images[i]==undefined || images[i].origSrc!=filename) {
           images[i] = new Image();
           images[i].loaded = false;
