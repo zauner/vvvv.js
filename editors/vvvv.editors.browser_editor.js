@@ -460,8 +460,8 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
               filename = "%VVVV%/effects/"+match[1]+".fx";
             }
             else if (match = nodename.match("[^\/]\.v4p$")) {
-              nodename = f;
-              filename = f;
+              nodename = filtertext;
+              filename = filtertext;
             }
             
             maxNodeId++;
