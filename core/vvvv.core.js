@@ -80,7 +80,8 @@ VVVV.Core = {
       return ret;
     }
     
-    this.setValue = function(i, v) {
+    this.setValue = function(i, v, stopPropagation) {
+      stopPropagation = stopPropagation || false
       this.values[i] = v;
       this.changed = true;
       this.node.dirty = true;
@@ -91,9 +92,12 @@ VVVV.Core = {
           this.links[j].toPin.setValue(i, v);
         }
       }
-      if (this.slavePin) {
+      if (this.slavePin && !stopPropagation) {
         this.slavePin.setValue(i, v);
       }
+      if (this.direction==PinDirection.Input && this.masterPin && !this.isConnected())
+        this.masterPin.setValue(i, v, true);
+        
       if (this.node.isIOBox && this.pinname=='Descriptive Name') {
         if (this.node.parentPatch.domInterface)
           this.node.parentPatch.domInterface.connect(this.node);
