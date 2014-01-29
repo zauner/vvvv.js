@@ -29,6 +29,7 @@ VVVV.Nodes = {};
 VVVV.PinTypes = {};
 VVVV.NodeLibrary = {};
 VVVV.NodeNames = [];
+VVVV.Patches = {};
 
 VVVV.onNotImplemented = function(nodename) {
   console.log("Warning: "+nodename+" is not implemented.");
@@ -123,7 +124,6 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
 
     if (VVVV_ENV=='development') console.log('done ...');
 
-    VVVV.Patches = [];
     VVVV.MainLoops = [];
 
     $("script[language='VVVV']").each(function() {
@@ -131,7 +131,6 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
         var m = new VVVV.Core.MainLoop(this);
         VVVV.MainLoops.push(m);
       });
-      VVVV.Patches.push(p);
     });
 
     if (typeof callback === 'function') callback.call();

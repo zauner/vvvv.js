@@ -51,8 +51,11 @@ VVVV.Helpers = {
       
     if (path.match(/^(\/|.+:\/\/)/)) // path starting with / or an URL protocol (http://, ftp://, ..)
       return path;
-      
-    return patch.getPath()+path;
+    
+    if (patch)  
+      return patch.getAbsolutePath()+path;
+    else
+      return path;
   }
 }
 
@@ -578,12 +581,15 @@ VVVV.Core = {
       $bounds.attr("height", parseInt(this.height));
       $node.append($bounds);
       
+      var that = this;
+      
       _(this.inputPins).each(function(p) {
         var $pin = $("<PIN>");
         $pin.attr("pinname", p.pinname);
         $pin.attr("visible", "1");
-        if (!p.isConnected() && ["Color", "Generic", "Enum"].indexOf(p.typeName)>=0) {
-          $pin.attr("values", _(p.values).map(function(v) { return "|"+v+"|"; }).join(","));
+        if ((!p.isConnected() || p.masterPin) && ["Color", "Generic", "Enum"].indexOf(p.typeName)>=0) {
+          var values = that.defaultPinValues[p.pinname] || p.values;
+          $pin.attr("values", _(values).map(function(v) { return "|"+v+"|"; }).join(","));
         }
         $node.append($pin);
       })
@@ -619,7 +625,7 @@ VVVV.Core = {
     this.serialize = function() {
       // calling it LONK instead of LINK here, because jquery does not make a closing tag for LINK elements
       // renaming it to LINK later ...
-      $link = $("<LONK>");
+      var $link = $("<LONK>");
       $link.attr("srcnodeid", this.fromPin.node.id);
       $link.attr("srcpinname", this.fromPin.pinname);
       $link.attr("dstnodeid", this.toPin.node.id);
@@ -629,13 +635,13 @@ VVVV.Core = {
   },
 
 
-  Patch: function(ressource, success_handler, error_handler) {
+  Patch: function(ressource, success_handler, error_handler, parentPatch, id) {
     
     this.ressource = ressource;
     this.vvvv_version = "45_26.1";
     this.boundingBox = {width: 0, height: 0};
-    this.width = 500;
-    this.height = 500;
+    this.windowWidth = 500;
+    this.windowHeight = 500;
     
     this.pinMap = {};
     this.nodeMap = {};
@@ -648,14 +654,25 @@ VVVV.Core = {
     this.XMLCode = '';
     this.editor = undefined;
     
+    this.setupObject();
+    
+    if (parentPatch)
+      this.parentPatch = parentPatch;
+    if (id)
+      this.id = id;
+    
     var print_timing = false;
     
-    this.getPath = function() {
-      var match = this.nodename.match(/(.*\/)?[^/]+\.v4p$/);
-      var path = match[1] || '';
+    this.getAbsolutePath = function() {
+      var path = this.getRelativePath();
       if (this.parentPatch)
-        path = this.parentPatch.getPath()+path;
+        path = this.parentPatch.getRelativePath()+path;
       return path;
+    }
+    
+    this.getRelativePath = function() {
+      var match = this.nodename.match(/(.*\/)?[^/]+\.v4p$/);
+      return match[1] || '';
     }
     
     function splitValues(v) {
@@ -715,10 +732,10 @@ VVVV.Core = {
         thisPatch.XMLCode = xml;
       }
     
-      $windowBounds = $(xml).find('bounds[type="Window"]').first();
+      var $windowBounds = $(xml).find('bounds[type="Window"]').first();
       if ($windowBounds.length>0) {
-        thisPatch.width = $windowBounds.attr('width')/15;
-        thisPatch.height = $windowBounds.attr('height')/15;
+        thisPatch.windowWidth = $windowBounds.attr('width')/15;
+        thisPatch.windowHeight = $windowBounds.attr('height')/15;
       }
       
       if (syncmode=='complete')
@@ -754,6 +771,7 @@ VVVV.Core = {
           delete thisPatch.nodeMap[n.id];
         }
         
+        var $bounds;
         if ($(this).attr('componentmode')=="InABox")
           $bounds = $(this).find('bounds[type="Box"]').first();
         else
@@ -789,18 +807,15 @@ VVVV.Core = {
               thisPatch.resourcesPending++;
               nodesLoading++;
               var that = this;
-              var n = new VVVV.Core.Patch(VVVV.Helpers.prepareFilePath($(this).attr('filename'), thisPatch),
+              var n = new VVVV.Core.Patch($(this).attr('filename'),
                 function() {
-                  n.nodename = $(that).attr('filename'); // re-set it to the relative filename, because it has been initialized with the absolute path above
-                  n.id = $(that).attr('id');
-                  n.parentPatch = thisPatch;
                   thisPatch.resourcesPending--;
                   nodesLoading--;
-                  if (VVVV_ENV=='development') console.log(n.nodename+'invoking update links')
+                  if (VVVV_ENV=='development') console.log(this.nodename+'invoking update links')
                   updateLinks(xml);
                   if (thisPatch.editor)
-                    thisPatch.editor.addPatch(n);
-                  if (n.auto_evaluate) {
+                    thisPatch.editor.addPatch(this);
+                  if (this.auto_evaluate) {
                     var p = thisPatch;
                     do {
                       p.auto_evaluate = true;
@@ -808,18 +823,20 @@ VVVV.Core = {
                     while (p = p.parentPatch);
                   }
                   thisPatch.afterUpdate();
-                  if (thisPatch.resourcesPending<=0 && ready_callback)
+                  if (thisPatch.resourcesPending<=0 && ready_callback) {
                     ready_callback();
+                    ready_callback = undefined;
+                  }
                 },
                 function() {
-                  n.not_implemented = true;
+                  this.not_implemented = true;
                   VVVV.onNotImplemented(nodename);
-                }
+                },
+                thisPatch, $(that).attr('id')
               );
-              n.setupObject();
               n.isSubpatch = true;
-              n.parentPatch = thisPatch;
-              n.id = $(this).attr('id');
+              if (thisPatch.editor && !n.editor)
+                thisPatch.editor.addPatch(n);
               thisPatch.nodeMap[n.id] = n;
             }
             else {
@@ -845,6 +862,18 @@ VVVV.Core = {
           
         if ($(this).attr('deleteme')=='pronto') {
           if (VVVV_ENV=='development') console.log('removing node '+n.id);
+          if (n.isSubpatch) {
+            if (n.editor) n.editor.removePatch(n);
+            var subpatches = n.getSubPatches();
+            subpatches.push(n);
+            var path;
+            for (var i=0; i<subpatches.length; i++) {
+              path = VVVV.Helpers.prepareFilePath(subpatches[i].nodename, subpatches[i].parentPatch);
+              VVVV.Patches[path].splice(VVVV.Patches[path].indexOf(n), 1);
+              if (VVVV.Patches[path].length == 0)
+                delete VVVV.Patches[path];
+            }
+          }
           thisPatch.nodeList.splice(thisPatch.nodeList.indexOf(n),1);
           delete thisPatch.nodeMap[n.id];
         }
@@ -1044,8 +1073,10 @@ VVVV.Core = {
         }
       }
       
-      if (this.resourcesPending<=0 && ready_callback)
+      if (this.resourcesPending<=0 && ready_callback) {
         ready_callback();
+        ready_callback = undefined;
+      }
       
     }
     
@@ -1071,10 +1102,10 @@ VVVV.Core = {
     
     this.toXML = function() {
       var $patch = $("<PATCH>");
-      $bounds = $("<BOUNDS>");
+      var $bounds = $("<BOUNDS>");
       $bounds.attr("type", "Window");
-      $bounds.attr("width", parseInt(this.width * 15));
-      $bounds.attr("height", parseInt(this.height * 15));
+      $bounds.attr("width", parseInt(this.windowWidth * 15));
+      $bounds.attr("height", parseInt(this.windowHeight * 15));
       $patch.append($bounds);
       
       var boundTypes = ["Node", "Box"];
@@ -1120,7 +1151,7 @@ VVVV.Core = {
       
       function evaluateSubGraph(node) {
         //console.log("starting with "+node.nodename+" ("+node.id+")");
-        upstreamNodes = node.getUpstreamNodes();
+        var upstreamNodes = node.getUpstreamNodes();
         _(upstreamNodes).each(function(upnode) {
           if (invalidNodes[upnode.id]!=undefined && !upnode.delays_output) {
             evaluateSubGraph(upnode);
@@ -1183,18 +1214,33 @@ VVVV.Core = {
     if (/\.v4p[^<>\s]*$/.test(ressource)) {
       this.nodename = ressource;
       var that = this;
-      $.ajax({
-        url: ressource,
-        type: 'get',
-        dataType: 'text',
-        success: function(r) {
-          that.doLoad(r, function() {
+      var path = ressource;
+      if (this.parentPatch)
+        path = VVVV.Helpers.prepareFilePath(ressource, this.parentPatch)
+      if (!VVVV.Patches[path]) {
+        $.ajax({
+          url: path,
+          type: 'get',
+          dataType: 'text',
+          success: function(r) {
+            that.doLoad(r, function() {
+              VVVV.Patches[path] = VVVV.Patches[path] || [];
+              VVVV.Patches[path].push(that);
+              if (that.success)
+                that.success();
+              that.afterUpdate();
+            });
+          }
+        });
+      }
+      else {
+        that.doLoad(VVVV.Patches[path][0].toXML(), function() {
+          VVVV.Patches[path].push(that);
           if (that.success)
             that.success();
           that.afterUpdate();
-          });
-        }
-      });
+        });
+      }
     }
     else if (/^ws:\/\//.test(ressource)) {
       var that = this;
