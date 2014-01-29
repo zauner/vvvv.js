@@ -1,0 +1,20 @@
+<html>
+  <head>
+    <title>VVVV.js Code Editor</title>
+    <link rel="stylesheet" href="./vvvviewer/vvvv.css"/>
+    <style>
+      body{margin:0px;background:#333;color:white;font-family:monospace}
+      textarea{border:0;border-top:1px solid white;background:#555;color:white;width:100%; height:90%;white-space: pre;overflow:scroll;word-wrap:normal}
+      #status{color:white}
+      #status.error{background:red}
+      #status.notice{background:white;color:black}
+      #status.success{background:green}
+    </style>
+  </head>
+  <body>
+  <div id="path"></div>
+  <textarea></textarea>
+  <input id="compile_button" type="button" value="Compile"/>
+  <div id="status"></div>
+  </body>
+</html>
