@@ -48,33 +48,27 @@ VVVV.PinTypes.Generic.openInputBox = function(win, $element, pin, sliceIdx) {
       $(this).remove();
     }
   });
-  $inputbox.bind('mousewheel', function(e) {
-    var delta = e.originalEvent.wheelDelta/120;
-    var mod = $(this).val()%1;
+  function scroll(el, delta, e) {
+    var mod = $(el).val()%1;
     if (!isNaN(mod)) {
-      var incr, offset;
+      var offset;
       offset = 1;
-      incr = delta > 0 ? 1.0 : -1.0;
       if (e.altKey || mod!==0)
         offset = 1.0/100.0;
-      incr = incr * offset;
-      $(this).val(parseFloat($(this).val())+incr);
-      $(this).change();
+      delta *= offset;
+      $(el).val(parseFloat($(el).val())+delta);
+      $(el).change();
     }
+  }
+  $inputbox.bind('mousewheel', function(e) {
+    var delta = e.originalEvent.wheelDelta/120;
+    scroll(this, delta, e);
     e.preventDefault();
     return false;
   });
   $inputbox.bind('DOMMouseScroll', function(e) {
     var delta = -e.originalEvent.detail/3;
-    var mod = $(this).val()%1;
-    if (!isNaN(mod)) {
-      var incr;
-      incr = delta > 0 ? 1.0 : -1.0;
-      if (mod!==0)
-        incr = incr/100.0;
-      $(this).val(parseFloat($(this).val())+incr);
-      $(this).change();
-    }
+    scroll(this, delta, e);
     e.preventDefault();
     return false;
   })
@@ -162,14 +156,11 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
   $inputbox.css('background-color', 'rgba('+col.join(',')+')');
   $element.replaceWith($inputbox);
   
-  $inputbox.on('mousewheel', function(e) {
-    var delta = e.originalEvent.wheelDelta/120;
+  function scroll(delta) {
     var col = pin.getValue(sliceIdx).split(',');
     var hsv = VVVV.PinTypes.Color.rgbToHsv(col[0], col[1], col[2]);
     hsv[3] = parseFloat(col[3]);
-    var incr = 0.01;
-    if (delta<0)
-      incr = -0.01;
+    var incr = delta * 0.01;
     hsv[modulatedComp] += incr;
     if (modulatedComp!=0)
     hsv[modulatedComp] = Math.min(1.0, Math.max(0.0, hsv[modulatedComp]));
@@ -178,11 +169,19 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
     $inputbox.css('background-color', 'rgba('+_(col).map(function(c) { return parseInt(c*255) }).join(',')+')');
     ibx = $inputbox;
     var cmd = "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='|"+col.join(',')+"|'/></NODE></PATCH>";
-    //pin.node.parentPatch.doLoad(cmd);
     pin.setValue(sliceIdx, col.join(','));
     pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+_(pin.values).map(function(v) { return '|'+v+'|'}).join(',')+"'/></NODE>");
-    //pin.node.parentPatch.afterUpdate();
-    
+  }
+  
+  $inputbox.on('mousewheel', function(e) {
+    var delta = e.originalEvent.wheelDelta/120;
+    scroll(delta);
+    e.preventDefault();
+    return false;
+  })
+  $inputbox.bind('DOMMouseScroll', function(e) {
+    var delta = -e.originalEvent.detail/3;
+    scroll(delta);
     e.preventDefault();
     return false;
   })
