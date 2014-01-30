@@ -587,9 +587,8 @@ VVVV.Core = {
         var $pin = $("<PIN>");
         $pin.attr("pinname", p.pinname);
         $pin.attr("visible", "1");
-        if ((!p.isConnected() || p.masterPin) && ["Color", "Generic", "Enum"].indexOf(p.typeName)>=0) {
-          var values = that.defaultPinValues[p.pinname] || p.values;
-          $pin.attr("values", _(values).map(function(v) { return "|"+v+"|"; }).join(","));
+        if ((!p.isConnected() || p.masterPin) && ["Color", "Generic", "Enum"].indexOf(p.typeName)>=0 && that.defaultPinValues[p.pinname]) {
+          $pin.attr("values", _(that.defaultPinValues[p.pinname]).map(function(v) { return "|"+v+"|"; }).join(","));
         }
         $node.append($pin);
       })
@@ -671,7 +670,7 @@ VVVV.Core = {
     }
     
     this.getRelativePath = function() {
-      var match = this.nodename.match(/(.*\/)?[^/]+\.v4p$/);
+      var match = this.nodename.match(/(.*\/)?[^/]+\.v4p/);
       return match[1] || '';
     }
     
