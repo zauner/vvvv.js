@@ -19,7 +19,21 @@ var PinDirection = { Input : 0,Output : 1,Configuration : 2 };
 
 VVVV.PinTypes.Generic = {
   typeName: "Generic",
-  defaultValue: function() { return '0' },
+  reset_on_disconnect: true,
+  defaultValue: function() { return '0' }
+}
+
+VVVV.PinTypes.Value = {
+  typeName: "Value",
+  reset_on_disconnect: false,
+  defaultValue: function() { return 0 },
+  primitive: true
+}
+
+VVVV.PinTypes.String = {
+  typeName: "String",
+  reset_on_disconnect: false,
+  defaultValue: function() { return '' },
   primitive: true
 }
 
@@ -61,7 +75,7 @@ VVVV.Helpers = {
 
 VVVV.Core = {	
   
-  Pin: function(pinname,direction, init_values, node, reset_on_disconnect, type) {
+  Pin: function(pinname,direction, init_values, node, type) {
     this.direction = direction;
     this.pinname = pinname;
     this.links = [];
@@ -69,11 +83,14 @@ VVVV.Core = {
     this.node = node;
     this.changed = true;
     this.active = false;
-    this.reset_on_disconnect = reset_on_disconnect || false;
+    this.reset_on_disconnect = false;
     this.slavePin = undefined;
     this.masterPin = undefined;
     this.connectionChangedHandlers = {};
     this.enumOptions = [];
+    
+    if (type==undefined && VVVV_ENV=='development')
+      console.warn(node.nodename+" / "+pinname+" -> Generic");
     
     this.getValue = function(i, binSize) {
       if (!binSize || binSize==1)
@@ -242,8 +259,8 @@ VVVV.Core = {
       this.defaultPinValues[pinname] = value;
     }
     
-    this.addInputPin = function(pinname, value, _reserved, reset_on_disconnect, type) {
-      var pin = new VVVV.Core.Pin(pinname,PinDirection.Input, value, this, reset_on_disconnect, type);
+    this.addInputPin = function(pinname, value, type) {
+      var pin = new VVVV.Core.Pin(pinname,PinDirection.Input, value, this, type);
       this.inputPins[pinname] = pin;
       if (this.parentPatch)
         this.parentPatch.pinMap[this.id+'_in_'+pinname] = pin;
@@ -251,8 +268,8 @@ VVVV.Core = {
       return pin;
     }
  
-    this.addOutputPin = function(pinname, value, _reserved, type) {
-      var pin = new VVVV.Core.Pin(pinname,PinDirection.Output, value, this, false, type);
+    this.addOutputPin = function(pinname, value, type) {
+      var pin = new VVVV.Core.Pin(pinname,PinDirection.Output, value, this, type);
       this.outputPins[pinname] = pin;
       if (this.parentPatch)
         this.parentPatch.pinMap[this.id+'_out_'+pinname] = pin;
@@ -282,8 +299,8 @@ VVVV.Core = {
       this.dirty = true;
     }
     
-    this.addInvisiblePin = function(pinname, value, _reserved, type) {
-      var pin = new VVVV.Core.Pin(pinname,PinDirection.Configuration, value, this, false, type);
+    this.addInvisiblePin = function(pinname, value, type) {
+      var pin = new VVVV.Core.Pin(pinname,PinDirection.Configuration, value, this, type);
       this.invisiblePins[pinname] = pin;
       this.parentPatch.pinMap[this.id+'_inv_'+pinname] = pin;
       if (this.defaultPinValues[pinname] != undefined) {
@@ -503,7 +520,7 @@ VVVV.Core = {
               var pin = that.parentPatch.inputPins[pinname];
               if (pin==undefined) {
                 if (VVVV_ENV=='development') console.log('creating new input pin at parent patch, using IOBox values');
-                var pin = that.parentPatch.addInputPin(pinname, that.IOBoxInputPin().values, null, false);
+                var pin = that.parentPatch.addInputPin(pinname, that.IOBoxInputPin().values);
               }
               else {
                 slicecount = pin.getSliceCount();
@@ -539,7 +556,7 @@ VVVV.Core = {
     this.setup = function() 
     {
       //Add descriptive name for all nodes
-      this.addInvisiblePin("Descriptive Name",[""]);
+      this.addInvisiblePin("Descriptive Name",[""], VVVV.PinTypes.String);
     }
 	   
     this.initialize = function() {
@@ -587,7 +604,7 @@ VVVV.Core = {
         var $pin = $("<PIN>");
         $pin.attr("pinname", p.pinname);
         $pin.attr("visible", "1");
-        if ((!p.isConnected() || p.masterPin) && ["Color", "Generic", "Enum"].indexOf(p.typeName)>=0 && that.defaultPinValues[p.pinname]) {
+        if ((!p.isConnected() || p.masterPin) && VVVV.PinTypes[p.typeName].primitive && that.defaultPinValues[p.pinname]) {
           $pin.attr("values", _(that.defaultPinValues[p.pinname]).map(function(v) { return "|"+v+"|"; }).join(","));
         }
         $node.append($pin);
@@ -597,7 +614,7 @@ VVVV.Core = {
         var $pin = $("<PIN>");
         $pin.attr("pinname", p.pinname);
         $pin.attr("visible", "0");
-        if (["Color", "Generic", "Enum"].indexOf(p.typeName)>=0) {
+        if (VVVV.PinTypes[p.typeName].primitive) {
           $pin.attr("values", _(p.values).map(function(v) { return "|"+v+"|"; }).join(","));
         }
         $node.append($pin);
@@ -1025,6 +1042,8 @@ VVVV.Core = {
             dstPin = thisPatch.nodeMap[$(this).attr('dstnodeid')].addInputPin($(this).attr('dstpinname'), undefined);
             
           if (srcPin && dstPin) {
+            if (srcPin.typeName!=dstPin.typeName && srcPin.typeName!='Node' && dstPin.typeName!='Node')
+              if (VVVV_ENV=='development') console.warn("Type Mismatch: "+srcPin.node.nodename+"/"+srcPin.pinname+" <-> "+dstPin.node.nodename+"/"+dstPin.pinname);
             var link = false;
             for (var i=0; i<thisPatch.linkList.length; i++) {
               if (thisPatch.linkList[i].fromPin.node.id==srcPin.node.id &&

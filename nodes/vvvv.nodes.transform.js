@@ -31,12 +31,12 @@ VVVV.Nodes.Rotate = function(id, graph) {
   
   var ident = mat4.identity(mat4.create());
   
-  this.trIn = this.addInputPin("Transform In", [], this, true, VVVV.PinTypes.Transform);
-  this.xIn = this.addInputPin("X", [0.0], this);
-  this.yIn = this.addInputPin("Y", [0.0], this);
-  this.zIn = this.addInputPin("Z", [0.0], this);
+  this.trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
+  this.xIn = this.addInputPin("X", [0.0], VVVV.PinTypes.Value);
+  this.yIn = this.addInputPin("Y", [0.0], VVVV.PinTypes.Value);
+  this.zIn = this.addInputPin("Z", [0.0], VVVV.PinTypes.Value);
   
-  this.trOut = this.addOutputPin("Transform Out", [], this, VVVV.PinTypes.Transform);
+  this.trOut = this.addOutputPin("Transform Out", [], VVVV.PinTypes.Transform);
 
   this.evaluate = function() 
   { 
@@ -88,12 +88,12 @@ VVVV.Nodes.Translate = function(id, graph) {
   
   var ident = mat4.identity(mat4.create());
   
-  this.trIn = this.addInputPin("Transform In", [], this, true, VVVV.PinTypes.Transform);
-  this.xIn = this.addInputPin("X", [0.0], this);
-  this.yIn = this.addInputPin("Y", [0.0], this);
-  this.zIn = this.addInputPin("Z", [0.0], this);
+  this.trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
+  this.xIn = this.addInputPin("X", [0.0], VVVV.PinTypes.Value);
+  this.yIn = this.addInputPin("Y", [0.0], VVVV.PinTypes.Value);
+  this.zIn = this.addInputPin("Z", [0.0], VVVV.PinTypes.Value);
   
-  this.trOut = this.addOutputPin("Transform Out", [], this, VVVV.PinTypes.Transform);
+  this.trOut = this.addOutputPin("Transform Out", [], VVVV.PinTypes.Transform);
   
   this.evaluate = function() {
 		
@@ -143,12 +143,12 @@ VVVV.Nodes.Scale = function(id, graph) {
   
   var ident = mat4.identity(mat4.create());
   
-  this.trIn = this.addInputPin("Transform In", [], this, true, VVVV.PinTypes.Transform);
-  this.xIn = this.addInputPin("X", [1.0], this);
-  this.yIn = this.addInputPin("Y", [1.0], this);
-  this.zIn = this.addInputPin("Z", [1.0], this);
+  this.trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
+  this.xIn = this.addInputPin("X", [1.0], VVVV.PinTypes.Value);
+  this.yIn = this.addInputPin("Y", [1.0], VVVV.PinTypes.Value);
+  this.zIn = this.addInputPin("Z", [1.0], VVVV.PinTypes.Value);
   
-  this.trOut = this.addOutputPin("Transform Out", [], this, VVVV.PinTypes.Transform);
+  this.trOut = this.addOutputPin("Transform Out", [], VVVV.PinTypes.Transform);
 
   this.evaluate = function() {
 		
@@ -199,12 +199,12 @@ VVVV.Nodes.Perspective = function(id, graph) {
   var ident = mat4.identity(mat4.create());
   
 
-  this.addInputPin("Transform In", [], this, true, VVVV.PinTypes.Transform);
-  this.addInputPin("FOV", [0.25], this);
-  this.addInputPin("Near Plane", [0.05], this);
-  this.addInputPin("Far Plane", [100.0], this);
+  this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
+  this.addInputPin("FOV", [0.25], VVVV.PinTypes.Value);
+  this.addInputPin("Near Plane", [0.05], VVVV.PinTypes.Value);
+  this.addInputPin("Far Plane", [100.0], VVVV.PinTypes.Value);
   
-  this.addOutputPin("Transform Out", [], this, VVVV.PinTypes.Transform);
+  this.addOutputPin("Transform Out", [], VVVV.PinTypes.Transform);
 
   this.evaluate = function() {
     
@@ -247,10 +247,10 @@ VVVV.Nodes.InverseTransform = function(id, graph) {
     compatibility_issues: []
   };
   
-  var trIn = this.addInputPin("Transform In", [], this, true, VVVV.PinTypes.Transform);
-  var sourceIn = this.addInputPin("Source", [], this, true, VVVV.PinTypes.Transform);
+  var trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
+  var sourceIn = this.addInputPin("Source", [], VVVV.PinTypes.Transform);
   
-  var trOut = this.addOutputPin("Transform Out", [], this, VVVV.PinTypes.Transform);
+  var trOut = this.addOutputPin("Transform Out", [], VVVV.PinTypes.Transform);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();

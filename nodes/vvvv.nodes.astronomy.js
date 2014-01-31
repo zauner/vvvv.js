@@ -32,11 +32,11 @@ VVVV.Nodes.CurrentTimeAstronomy = function(id, graph) {
   var now = new Date();
   
   // output pins
-  var gmtOut = this.addOutputPin('GMT', [], this);
-  var timezoneOut = this.addOutputPin('Time Zone', [0], this);
-  var timezonenameOut = this.addOutputPin('Time Zone Name', [''], this);
-  var daylightsavingtimeOut = this.addOutputPin('Daylight Saving Time', [now.getTimezoneOffset()<stdTimeZoneOffset(now)?1:0], this);
-  var currenttimeOut = this.addOutputPin('Current Time', [], this);
+  var gmtOut = this.addOutputPin('GMT', [], VVVV.PinTypes.Value);
+  var timezoneOut = this.addOutputPin('Time Zone', [0], VVVV.PinTypes.Value);
+  var timezonenameOut = this.addOutputPin('Time Zone Name', [''], VVVV.PinTypes.String);
+  var daylightsavingtimeOut = this.addOutputPin('Daylight Saving Time', [now.getTimezoneOffset()<stdTimeZoneOffset(now)?1:0], VVVV.PinTypes.Value);
+  var currenttimeOut = this.addOutputPin('Current Time', [], VVVV.PinTypes.Value);
   
   var jsVVVVOffset = 25569;
 
@@ -81,17 +81,17 @@ VVVV.Nodes.GregorianAstronomySplit = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var timeIn = this.addInputPin('Time', [41491.4301], this);
+  var timeIn = this.addInputPin('Time', [41491.4301], VVVV.PinTypes.Value);
 
   // output pins
-  var millisecondOut = this.addOutputPin('Millisecond', [0], this);
-  var secondOut = this.addOutputPin('Second', [0], this);
-  var minuteOut = this.addOutputPin('Minute', [0], this);
-  var hourOut = this.addOutputPin('Hour', [0], this);
-  var dayofweekOut = this.addOutputPin('DayOfWeek', [0], this);
-  var dayOut = this.addOutputPin('Day', [1], this);
-  var monthOut = this.addOutputPin('Month', [1], this);
-  var yearOut = this.addOutputPin('Year', [2000], this);
+  var millisecondOut = this.addOutputPin('Millisecond', [0], VVVV.PinTypes.Value);
+  var secondOut = this.addOutputPin('Second', [0], VVVV.PinTypes.Value);
+  var minuteOut = this.addOutputPin('Minute', [0], VVVV.PinTypes.Value);
+  var hourOut = this.addOutputPin('Hour', [0], VVVV.PinTypes.Value);
+  var dayofweekOut = this.addOutputPin('DayOfWeek', [0], VVVV.PinTypes.Value);
+  var dayOut = this.addOutputPin('Day', [1], VVVV.PinTypes.Value);
+  var monthOut = this.addOutputPin('Month', [1], VVVV.PinTypes.Value);
+  var yearOut = this.addOutputPin('Year', [2000], VVVV.PinTypes.Value);
   
   var jsVVVVOffset = 25569;
 

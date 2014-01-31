@@ -24,15 +24,15 @@ VVVV.Nodes.HTTPGet = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var urlIn = this.addInputPin("URL", ["http://localhost"], this);
-  var nameIn = this.addInputPin("Name", [""], this);
-  var valueIn = this.addInputPin("Value", [""], this);
-  var refreshIn = this.addInputPin("Refresh", [0], this);
+  var urlIn = this.addInputPin("URL", ["http://localhost"], VVVV.PinTypes.String);
+  var nameIn = this.addInputPin("Name", [""], VVVV.PinTypes.String);
+  var valueIn = this.addInputPin("Value", [""], VVVV.PinTypes.String);
+  var refreshIn = this.addInputPin("Refresh", [0], VVVV.PinTypes.Value);
   
-  var statusOut = this.addOutputPin("Status", [""], this);
-  var bodyOut = this.addOutputPin("Body", [""], this);
-  var failOut = this.addOutputPin("Fail", [0], this);
-  var successOut = this.addOutputPin("Success", [0], this);
+  var statusOut = this.addOutputPin("Status", [""], VVVV.PinTypes.String);
+  var bodyOut = this.addOutputPin("Body", [""], VVVV.PinTypes.String);
+  var failOut = this.addOutputPin("Fail", [0], VVVV.PinTypes.Value);
+  var successOut = this.addOutputPin("Success", [0], VVVV.PinTypes.Value);
   
   var body;
   var status;

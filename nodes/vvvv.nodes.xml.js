@@ -25,14 +25,14 @@ VVVV.Nodes.XPathXML = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var xmlinputIn = this.addInputPin('XML Input', ['text'], this);
-  var xpathqueryIn = this.addInputPin('XPath Query', ['text'], this);
-  var baseelementIn = this.addInputPin('Base Element', ['text'], this);
+  var xmlinputIn = this.addInputPin('XML Input', ['text'], VVVV.PinTypes.String);
+  var xpathqueryIn = this.addInputPin('XPath Query', ['text'], VVVV.PinTypes.String);
+  var baseelementIn = this.addInputPin('Base Element', ['text'], VVVV.PinTypes.String);
 
   // output pins
-  var outputOut = this.addOutputPin('Output', ['text'], this);
-  var xmlindexOut = this.addOutputPin('XML Index', [0], this);
-  var queryindexOut = this.addOutputPin('Query Index', [0], this);
+  var outputOut = this.addOutputPin('Output', ['text'], VVVV.PinTypes.String);
+  var xmlindexOut = this.addOutputPin('XML Index', [0], VVVV.PinTypes.Value);
+  var queryindexOut = this.addOutputPin('Query Index', [0], VVVV.PinTypes.Value);
   
   var doc;
 

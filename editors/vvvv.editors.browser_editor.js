@@ -8,7 +8,7 @@ var UIState = {
   'AreaSelecting': 5
 }
 
-VVVV.PinTypes.Generic.makeLabel = function(element, node) {
+VVVV.PinTypes.Value.makeLabel = VVVV.PinTypes.String.makeLabel = function(element, node) {
   var rowCount = node.IOBoxRows();
   var sliceCount = node.IOBoxInputPin().getSliceCount();
   d3.select(element).selectAll('.vvvv-node-label').remove();
@@ -27,7 +27,7 @@ VVVV.PinTypes.Generic.makeLabel = function(element, node) {
   }
 }
 
-VVVV.PinTypes.Generic.openInputBox = function(win, $element, pin, sliceIdx) {
+VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(win, $element, pin, sliceIdx) {
   $inputbox = $("<input type='text' value='"+pin.getValue(sliceIdx)+"' class='pininputbox value resettable'/>");
   $inputbox.css('position', $element.css('position'));
   $inputbox.css('width', $element.css('width'));
@@ -48,30 +48,33 @@ VVVV.PinTypes.Generic.openInputBox = function(win, $element, pin, sliceIdx) {
       $(this).remove();
     }
   });
-  function scroll(el, delta, e) {
-    var mod = $(el).val()%1;
-    if (!isNaN(mod)) {
-      var offset;
-      offset = 1;
-      if (e.altKey || mod!==0)
-        offset = 1.0/100.0;
-      delta *= offset;
-      $(el).val(parseFloat($(el).val())+delta);
-      $(el).change();
+  
+  if (this.typeName=='Value') {
+    function scroll(el, delta, e) {
+      var mod = $(el).val()%1;
+      if (!isNaN(mod)) {
+        var offset;
+        offset = 1;
+        if (e.altKey || mod!==0)
+          offset = 1.0/100.0;
+        delta *= offset;
+        $(el).val(parseFloat($(el).val())+delta);
+        $(el).change();
+      }
     }
+    $inputbox.bind('mousewheel', function(e) {
+      var delta = e.originalEvent.wheelDelta/120;
+      scroll(this, delta, e);
+      e.preventDefault();
+      return false;
+    });
+    $inputbox.bind('DOMMouseScroll', function(e) {
+      var delta = -e.originalEvent.detail/3;
+      scroll(this, delta, e);
+      e.preventDefault();
+      return false;
+    })
   }
-  $inputbox.bind('mousewheel', function(e) {
-    var delta = e.originalEvent.wheelDelta/120;
-    scroll(this, delta, e);
-    e.preventDefault();
-    return false;
-  });
-  $inputbox.bind('DOMMouseScroll', function(e) {
-    var delta = -e.originalEvent.detail/3;
-    scroll(this, delta, e);
-    e.preventDefault();
-    return false;
-  })
   
   $inputbox.bind('paste', function(e) {
     e.stopPropagation();
@@ -892,8 +895,6 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
         return false;
       })
     
-    var primitiveTypes = ["Generic", "Color", "Enum"];
-    
     chart.selectAll('g.vvvv-input-pin, g.vvvv-output-pin')
     .on('click', function(d, i) {
       if (thatWin.state!=UIState.Connecting) {
@@ -916,7 +917,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
         var upnodes = linkStart.node.getUpstreamNodes();
         chart.selectAll('g.vvvv-'+targetDir+'-pin')
           .filter(function(d) {
-            if (d.typeName!=linkStart.typeName && (linkStart.typeName!="Node" || primitiveTypes.indexOf(d.typeName)>=0) && (d.typeName!="Node" || primitiveTypes.indexOf(linkStart.typeName)>=0))
+            if (d.typeName!=linkStart.typeName && (linkStart.typeName!="Node" || VVVV.PinTypes[d.typeName].primitive && (d.typeName!="Node" || VVVV.PinTypes[linkStart.typeName].primitive)))
               return false;
             if (upnodes.indexOf(d.node)>=0 || d.node==linkStart.node)
               return false;
@@ -940,7 +941,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
           var dstPin = d;
         }
         
-        if ((srcPin.typeName == dstPin.typeName) || (srcPin.typeName=="Node" && primitiveTypes.indexOf(dstPin.typeName)<0) || (dstPin.typeName=="Node" && primitiveTypes.indexOf(srcPin.typeName)<0)) {
+        if ((srcPin.typeName == dstPin.typeName) || (srcPin.typeName=="Node" && !VVVV.PinTypes[dstPin.typeName].primitive) || (dstPin.typeName=="Node" && !VVVV.PinTypes[srcPin.typeName].primitive)) {
           var cmd = "<PATCH>";
           _(dstPin.links).each(function(l) {
             cmd += "<LINK deleteme='pronto' srcnodeid='"+l.fromPin.node.id+"' srcpinname='"+l.fromPin.pinname+"' dstnodeid='"+l.toPin.node.id+"' dstpinname='"+l.toPin.pinname+"'/>";

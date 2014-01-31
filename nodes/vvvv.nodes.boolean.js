@@ -22,10 +22,10 @@ VVVV.Nodes.And = function(id, graph) {
     compatibility_issues: ['No dynamic pin count yet']
   };
   
-  var input1In = this.addInputPin("Input 1", [1], this);
-  var input2In = this.addInputPin("Input 2", [1], this);
+  var input1In = this.addInputPin("Input 1", [1], VVVV.PinTypes.Value);
+  var input2In = this.addInputPin("Input 2", [1], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [1], this);
+  var outputOut = this.addOutputPin("Output", [1], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
   
@@ -65,10 +65,10 @@ VVVV.Nodes.Or = function(id, graph) {
     compatibility_issues: ['No dynamic pin count yet']
   };
   
-  var input1In = this.addInputPin("Input 1", [1], this);
-  var input2In = this.addInputPin("Input 2", [1], this);
+  var input1In = this.addInputPin("Input 1", [1], VVVV.PinTypes.Value);
+  var input2In = this.addInputPin("Input 2", [1], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [1], this);
+  var outputOut = this.addOutputPin("Output", [1], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
   
@@ -109,9 +109,9 @@ VVVV.Nodes.Not = function(id, graph) {
     compatibility_issues: []
   };
   
-  var inputIn = this.addInputPin("Input", [1], this);
+  var inputIn = this.addInputPin("Input", [1], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [1], this);
+  var outputOut = this.addOutputPin("Output", [1], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
   
@@ -151,10 +151,10 @@ VVVV.Nodes.OrSpectral = function(id, graph) {
     compatibility_issues: []
   };
   
-  var inputIn = this.addInputPin("Input", [0.0], this);
-  var binSizeIn = this.addInputPin("Bin Size", [-1], this);
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
+  var binSizeIn = this.addInputPin("Bin Size", [-1], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0], this);
+  var outputOut = this.addOutputPin("Output", [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
   
@@ -204,10 +204,10 @@ VVVV.Nodes.AndSpectral = function(id, graph) {
     compatibility_issues: []
   };
   
-  var inputIn = this.addInputPin("Input", [0.0], this);
-  var binSizeIn = this.addInputPin("Bin Size", [-1], this);
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
+  var binSizeIn = this.addInputPin("Bin Size", [-1], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0], this);
+  var outputOut = this.addOutputPin("Output", [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     var maxSpreadSize = this.getMaxInputSliceCount();

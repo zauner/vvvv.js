@@ -316,8 +316,8 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   
   this.auto_evaluate = false;
 
-  var filenamePin = this.addInputPin("Filename", [""], this);
-  var outputPin = this.addOutputPin("Texture Out", [], this, VVVV.PinTypes.WebGlTexture);
+  var filenamePin = this.addInputPin("Filename", [""], VVVV.PinTypes.String);
+  var outputPin = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
   
   var textures = [];
   
@@ -382,8 +382,8 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
     compatibility_issues: ['Using WebGL renderer as source doesnt work correctly in Chrome.']
   };
 
-  var sourceIn = this.addInputPin("Source", [], this, true, VVVV.PinTypes.WebGlResource);
-  var outputOut = this.addOutputPin("Texture Out", [], this, VVVV.PinTypes.WebGlTexture);
+  var sourceIn = this.addInputPin("Source", [], VVVV.PinTypes.WebGlResource);
+  var outputOut = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
   
   var texture;
   
@@ -446,8 +446,8 @@ VVVV.Nodes.VideoTexture = function(id, graph) {
     compatibility_issues: ['Only supports power-of-2 sized videos', 'Has no output pins for meta data']
   };
 
-  var sourceIn = this.addInputPin("Video", [], this, true);
-  var outputOut = this.addOutputPin("Texture Out", [], this, VVVV.PinTypes.WebGlTexture);
+  var sourceIn = this.addInputPin("Video", [], this);
+  var outputOut = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
   
   var texture;
   
@@ -505,12 +505,12 @@ VVVV.Nodes.VertexBufferJoin = function(id, graph) {
     compatibility_issues: []
   };
   
-  var posIn = this.addInputPin("Position XYZ", [0.0, 0.0, 0.0], this);
-  var normalIn = this.addInputPin("Normal XYZ", [0.0, 0.0, 0.0], this);
-  var texCoord0In = this.addInputPin("Texture Coordinate 0 XY", [0.0, 0.0], this);
-  var applyIn = this.addInputPin("Apply", [1], this);
+  var posIn = this.addInputPin("Position XYZ", [0.0, 0.0, 0.0], VVVV.PinTypes.Value);
+  var normalIn = this.addInputPin("Normal XYZ", [0.0, 0.0, 0.0], VVVV.PinTypes.Value);
+  var texCoord0In = this.addInputPin("Texture Coordinate 0 XY", [0.0, 0.0], VVVV.PinTypes.Value);
+  var applyIn = this.addInputPin("Apply", [1], VVVV.PinTypes.Value);
   
-  var vbOut = this.addOutputPin("Vertex Buffer", [], this, VVVV.PinTypes.WebGlResource);
+  var vbOut = this.addOutputPin("Vertex Buffer", [], VVVV.PinTypes.WebGlResource);
   
   var vertexBuffer = null;
   
@@ -564,10 +564,10 @@ VVVV.Nodes.MeshJoin = function(id, graph) {
   };
   
   var vbIn = this.addInputPin("Vertex Buffer", [], this);
-  var indicesIn = this.addInputPin("Indices", [0], this);
-  var applyIn = this.addInputPin("Apply", [1], this);
+  var indicesIn = this.addInputPin("Indices", [0], VVVV.PinTypes.Value);
+  var applyIn = this.addInputPin("Apply", [1], VVVV.PinTypes.Value);
   
-  var meshOut = this.addOutputPin("Mesh", [], this, VVVV.PinTypes.WebGlResource);
+  var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
   
   var mesh = null;
   
@@ -613,10 +613,10 @@ VVVV.Nodes.Grid = function(id, graph) {
     compatibility_issues: []
   };
   
-  var xIn = this.addInputPin("Resolution X", [2], this);
-  var yIn = this.addInputPin("Resolution Y", [2], this);
+  var xIn = this.addInputPin("Resolution X", [2], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin("Resolution Y", [2], VVVV.PinTypes.Value);
   
-  var meshOut = this.addOutputPin("Mesh", [], this, VVVV.PinTypes.WebGlResource);
+  var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
   
   var mesh = null;
   
@@ -698,11 +698,11 @@ VVVV.Nodes.Sphere = function(id, graph) {
     compatibility_issues: []
   };
   
-  var rIn = this.addInputPin("Radius", [0.5], this);
-  var xIn = this.addInputPin("Resolution X", [15], this);
-  var yIn = this.addInputPin("Resolution Y", [15], this);
+  var rIn = this.addInputPin("Radius", [0.5], VVVV.PinTypes.Value);
+  var xIn = this.addInputPin("Resolution X", [15], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin("Resolution Y", [15], VVVV.PinTypes.Value);
   
-  var meshOut = this.addOutputPin("Mesh", [], this, VVVV.PinTypes.WebGlResource);
+  var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
   
   var mesh = null;
   
@@ -787,15 +787,15 @@ VVVV.Nodes.Cylinder = function(id, graph) {
     compatibility_issues: []
   };
   
-  var r1In = this.addInputPin("Radius 1", [0.5], this);
-  var r2In = this.addInputPin("Radius 2", [0.5], this);
-  var lIn = this.addInputPin("Length", [1.0], this);
-  var cyclesIn = this.addInputPin("Cycles", [1.0], this);
-  var capsIn = this.addInputPin("Caps", [1], this);
-  var xIn = this.addInputPin("Resolution X", [15], this);
-  var yIn = this.addInputPin("Resolution Y", [1], this);
+  var r1In = this.addInputPin("Radius 1", [0.5], VVVV.PinTypes.Value);
+  var r2In = this.addInputPin("Radius 2", [0.5], VVVV.PinTypes.Value);
+  var lIn = this.addInputPin("Length", [1.0], VVVV.PinTypes.Value);
+  var cyclesIn = this.addInputPin("Cycles", [1.0], VVVV.PinTypes.Value);
+  var capsIn = this.addInputPin("Caps", [1], VVVV.PinTypes.Value);
+  var xIn = this.addInputPin("Resolution X", [15], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin("Resolution Y", [1], VVVV.PinTypes.Value);
   
-  var meshOut = this.addOutputPin("Mesh", [], this, VVVV.PinTypes.WebGlResource);
+  var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
   
   var mesh = null;
   
@@ -921,13 +921,13 @@ VVVV.Nodes.BlendWebGLAdvanced = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.WebGlRenderState);
-  var alphaBlendingIn = this.addInputPin("Alpha Blending", [1], this);
-  var srcModeIn = this.addInputPin("Source Blend Mode", ['SrcAlpha'], this, true, VVVV.PinTypes.Enum); 
-  var destModeIn = this.addInputPin("Destination Blend Mode", ['SrcAlpha'], this, true, VVVV.PinTypes.Enum);
+  var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
+  var alphaBlendingIn = this.addInputPin("Alpha Blending", [1], VVVV.PinTypes.Value);
+  var srcModeIn = this.addInputPin("Source Blend Mode", ['SrcAlpha'], VVVV.PinTypes.Enum); 
+  var destModeIn = this.addInputPin("Destination Blend Mode", ['SrcAlpha'], VVVV.PinTypes.Enum);
   srcModeIn.enumOptions = destModeIn.enumOptions = ['One', 'Zero', 'SrcAlpha', 'InvSrcAlpha', 'DestAlpha', 'InvDestAlpha', 'SrcColor', 'InvSrcColor', 'DestColor', 'InvDestColor'];
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.WebGlRenderState);
+  var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.WebGlRenderState);
   
   var renderStates = [];
   
@@ -986,11 +986,11 @@ VVVV.Nodes.BlendWebGL = function(id, graph) {
     compatibility_issues: ['results differ from VVVV', 'Multiply mode not supported']
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.WebGlRenderState);
-  var drawModeIn = this.addInputPin("Draw Mode", ["Blend"], this, true, VVVV.PinTypes.Enum);
+  var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
+  var drawModeIn = this.addInputPin("Draw Mode", ["Blend"], VVVV.PinTypes.Enum);
   drawModeIn.enumOptions = ['Add', 'Multiply', 'Blend', 'ColorAsAlphaAdd', 'ColorAsAlphaBlend'];
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.WebGlRenderState);
+  var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.WebGlRenderState);
   
   var renderStates = [];
   
@@ -1050,11 +1050,11 @@ VVVV.Nodes.FillWebGL = function(id, graph) {
     compatibility_issues: ['does not actually draw wireframe, because this is not supported in WebGL, but makes renderer use gl.LINE instead of gl.TRIANGLES when drawing']
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.WebGlRenderState);
-  var fillModeIn = this.addInputPin("Fill Mode", ["Solid"], this, true, VVVV.PinTypes.Enum);
+  var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
+  var fillModeIn = this.addInputPin("Fill Mode", ["Solid"], VVVV.PinTypes.Enum);
   fillModeIn.enumOptions = ['Point', 'Solid', 'WireFrame'];
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.WebGlRenderState);
+  var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.WebGlRenderState);
   
   var renderStates = [];
   
@@ -1104,12 +1104,13 @@ VVVV.Nodes.ZWriteEnableWebGL = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.WebGlRenderState);
-  var enableZWriteIn = this.addInputPin("ZWrite Enable", [1], this);
-  var depthFuncIn = this.addInputPin("Compare Function", ['Always'], this); 
-  var biasIn = this.addInputPin("Depth Bias", [0.0], this); 
+  var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
+  var enableZWriteIn = this.addInputPin("ZWrite Enable", [1], VVVV.PinTypes.Value);
+  var depthFuncIn = this.addInputPin("Compare Function", ['Always'], VVVV.PinTypes.Enum); 
+  depthFuncIn.enumOptions = ['Never', 'Less', 'LessEqual', 'Equal', 'NotEqual', 'Greater', 'GreaterEqual', 'Always'];
+  var biasIn = this.addInputPin("Depth Bias", [0.0], VVVV.PinTypes.Value); 
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.WebGlRenderState);
+  var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.WebGlRenderState);
   
   var renderStates = [];
   
@@ -1170,13 +1171,13 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   
   this.shaderFile = '';
   
-  var renderStateIn = this.addInputPin("Render State", [], this, true, VVVV.PinTypes.WebGlRenderState);
-  var meshIn = this.addInputPin("Mesh", [], this, true, VVVV.PinTypes.WebGlResource);
-  var transformIn = this.addInputPin("Transform", [], this, true, VVVV.PinTypes.Transform);
-  var techniqueIn = this.addInputPin("Technique", [''], this, true, VVVV.PinTypes.Enum);
+  var renderStateIn = this.addInputPin("Render State", [], VVVV.PinTypes.WebGlRenderState);
+  var meshIn = this.addInputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
+  var transformIn = this.addInputPin("Transform", [], VVVV.PinTypes.Transform);
+  var techniqueIn = this.addInputPin("Technique", [''], VVVV.PinTypes.Enum);
   techniqueIn.enumOptions = [''];
   
-  var layerOut = this.addOutputPin("Layer", [], this, VVVV.PinTypes.WebGlResource);
+  var layerOut = this.addOutputPin("Layer", [], VVVV.PinTypes.WebGlResource);
   
   var layers = [];
   var mesh = null;
@@ -1256,17 +1257,14 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     _(shader.uniformSpecs).each(function(u) {
       if (u.semantic=="VIEW" || u.semantic=="PROJECTION" || u.semantic=="WORLD")
         return;
-      var reset_on_disconnect = false;
-      var pinType = VVVV.PinTypes.Generic;
+      var pinType = VVVV.PinTypes.Value;
       var defaultValue = [];
       switch (u.type) {
         case 'mat':
           pinType = VVVV.PinTypes.Transform;
-          reset_on_disconnect = true;
           break;
         case 'sampler':
           pinType = VVVV.PinTypes.WebGlTexture;
-          reset_on_disconnect = true;
           break;
         default:
           if (u.semantic == 'COLOR') {
@@ -1301,7 +1299,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
         }
       }
         
-      var pin = thatNode.addInputPin(u.varname.replace(/_/g,' '), defaultValue, thatNode, reset_on_disconnect, pinType);
+      var pin = thatNode.addInputPin(u.varname.replace(/_/g,' '), defaultValue, thatNode, pinType);
       pin.dimensions = u.dimension;
       shaderPins.push(pin);
     });
@@ -1484,13 +1482,13 @@ VVVV.Nodes.Quad = function(id, graph) {
   
   this.auto_evaluate = false;
   
-  var renderStateIn = this.addInputPin("Render State", [], this, true, VVVV.PinTypes.WebGlRenderState);
-  this.addInputPin("Transform", [], this, true, VVVV.PinTypes.Transform);
-  this.addInputPin("Texture", [], this, true, VVVV.PinTypes.WebGlTexture);
-  this.addInputPin("Texture Transform", [], this, true, VVVV.PinTypes.Transform);
-  this.addInputPin("Color", ["1.0, 1.0, 1.0, 1.0"], this, true, VVVV.PinTypes.Color);
+  var renderStateIn = this.addInputPin("Render State", [], VVVV.PinTypes.WebGlRenderState);
+  this.addInputPin("Transform", [], VVVV.PinTypes.Transform);
+  this.addInputPin("Texture", [], VVVV.PinTypes.WebGlTexture);
+  this.addInputPin("Texture Transform", [], VVVV.PinTypes.Transform);
+  this.addInputPin("Color", ["1.0, 1.0, 1.0, 1.0"], VVVV.PinTypes.Color);
   
-  var layerOut = this.addOutputPin("Layer", [], this, VVVV.PinTypes.WebGlResource);
+  var layerOut = this.addOutputPin("Layer", [], VVVV.PinTypes.WebGlResource);
   
   var initialized = false;
   var layers = [];
@@ -1635,15 +1633,15 @@ VVVV.Nodes.Group = function(id, graph) {
   };
   
   var layerIns = [];
-  var enableIn = this.addInputPin("Enabled", [1], this);
-  var layerCountIn = this.addInvisiblePin("Layer Template Count", [2], this);
+  var enableIn = this.addInputPin("Enabled", [1], VVVV.PinTypes.Value);
+  var layerCountIn = this.addInvisiblePin("Layer Template Count", [2], VVVV.PinTypes.Value);
   
-  var layerOut = this.addOutputPin("Layer", [], this, VVVV.PinTypes.WebGlResource);
+  var layerOut = this.addOutputPin("Layer", [], VVVV.PinTypes.WebGlResource);
   
   this.initialize = function() {
   	var layerCount = layerCountIn.getValue(0);
     for (var i=layerIns.length; i<layerCount; i++) {
-      layerIns[i] = this.addInputPin("Layer "+(i+1), [], this, true, VVVV.PinTypes.WebGlResource);
+      layerIns[i] = this.addInputPin("Layer "+(i+1), [], VVVV.PinTypes.WebGlResource);
     }
     for (var i=layerCount; i<layerIns.length; i++) {
       this.removeInputPin(layerIns[i].pinname);
@@ -1689,23 +1687,23 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['Disabling Clear doesn\'t work in Chrome', 'Backbuffer width and height defined by canvas size', 'No Fullscreen', 'No Enable Pin', 'No Aspect Ration and Viewport transform', 'No mouse output', 'No backbuffer dimesions output', 'No WebGL (EX9) Output Pin']
+    compatibility_issues: ['Disabling Clear doesn\'t work in Chrome', 'No Fullscreen', 'No Enable Pin', 'No Aspect Ration and Viewport transform', 'No mouse output']
   };
   
-  this.addInputPin("Layers", [], this, true, VVVV.PinTypes.WebGlResource);
-  var clearIn = this.addInputPin("Clear", [1], this);
-  var bgColIn = this.addInputPin("Background Color", ['0.0, 0.0, 0.0, 1.0'], this, true, VVVV.PinTypes.Color);
-  var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], this);
-  var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], this);
-  var viewIn = this.addInputPin("View", [], this, true, VVVV.PinTypes.Transform);
-  var projIn = this.addInputPin("Projection", [], this, true, VVVV.PinTypes.Transform);
+  this.addInputPin("Layers", [], VVVV.PinTypes.WebGlResource);
+  var clearIn = this.addInputPin("Clear", [1], VVVV.PinTypes.Value);
+  var bgColIn = this.addInputPin("Background Color", ['0.0, 0.0, 0.0, 1.0'], VVVV.PinTypes.Color);
+  var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], VVVV.PinTypes.Value);
+  var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], VVVV.PinTypes.Value);
+  var viewIn = this.addInputPin("View", [], VVVV.PinTypes.Transform);
+  var projIn = this.addInputPin("Projection", [], VVVV.PinTypes.Transform);
   
-  var enableDepthBufIn = this.addInvisiblePin("Windowed Depthbuffer Format", ['NONE'], this, VVVV.PinTypes.Enum);
+  var enableDepthBufIn = this.addInvisiblePin("Windowed Depthbuffer Format", ['NONE'], VVVV.PinTypes.Enum);
   enableDepthBufIn.enumOptions = ['NONE', 'DX16'];
   
-  var bufferWidthOut = this.addOutputPin("Actual Backbuffer Width", [0.0], this);
-  var bufferHeightOut = this.addOutputPin("Actual Backbuffer Height", [0.0], this);
-  var ex9Out = this.addOutputPin("EX9 Out", [], this, VVVV.PinTypes.WebGlResource);
+  var bufferWidthOut = this.addOutputPin("Actual Backbuffer Width", [0.0], VVVV.PinTypes.Value);
+  var bufferHeightOut = this.addOutputPin("Actual Backbuffer Height", [0.0], VVVV.PinTypes.Value);
+  var ex9Out = this.addOutputPin("EX9 Out", [], VVVV.PinTypes.WebGlResource);
   
   var width = 0.0;
   var height = 0.0;
@@ -2057,8 +2055,8 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
   
   this.auto_evaluate = false;
   
-  var nameIn = this.addInputPin("Effect Descriptor", [''], this);
-  var sourceCodeIn = this.addInvisiblePin("Source Code", ['#ifdef GL_ES\nprecision highp float;\n#endif\n\nuniform mat4 tW : WORLD;\nuniform mat4 tV : VIEW;\nuniform mat4 tP : PROJECTION;\n\nuniform vec4 Color : COLOR = {1.0, 1.0, 1.0, 1.0};\nuniform sampler2D Texture;\nuniform mat4 Texture_Transform;\nuniform float Alpha = 1.0;\n\nvarying vec2 vs2psTexCd;\n\nvertex_shader:\n\nattribute vec3 PosO : POSITION;\nattribute vec2 TexCd : TEXCOORD0;\n\nvoid main(void) {\n  gl_Position = tP * tV * tW * vec4(PosO, 1.0);\n  vs2psTexCd = (Texture_Transform * vec4(TexCd, 0, 1)).xy;\n}\n\n\nfragment_shader:\n\nvoid main(void) {\n  gl_FragColor = Color * texture2D(Texture, vs2psTexCd) * vec4(1.0, 1.0, 1.0, Alpha);\n}'], this);
+  var nameIn = this.addInputPin("Effect Descriptor", [''], VVVV.PinTypes.String);
+  var sourceCodeIn = this.addInvisiblePin("Source Code", ['#ifdef GL_ES\nprecision highp float;\n#endif\n\nuniform mat4 tW : WORLD;\nuniform mat4 tV : VIEW;\nuniform mat4 tP : PROJECTION;\n\nuniform vec4 Color : COLOR = {1.0, 1.0, 1.0, 1.0};\nuniform sampler2D Texture;\nuniform mat4 Texture_Transform;\nuniform float Alpha = 1.0;\n\nvarying vec2 vs2psTexCd;\n\nvertex_shader:\n\nattribute vec3 PosO : POSITION;\nattribute vec2 TexCd : TEXCOORD0;\n\nvoid main(void) {\n  gl_Position = tP * tV * tW * vec4(PosO, 1.0);\n  vs2psTexCd = (Texture_Transform * vec4(TexCd, 0, 1)).xy;\n}\n\n\nfragment_shader:\n\nvoid main(void) {\n  gl_FragColor = Color * texture2D(Texture, vs2psTexCd) * vec4(1.0, 1.0, 1.0, Alpha);\n}'], VVVV.PinTypes.String);
   
   var currentName = '';
   var w; // the UI window

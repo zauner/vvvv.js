@@ -30,12 +30,12 @@ VVVV.Nodes.FileTextureCanvas = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var filenameIn = this.addInputPin('Filename', [], this);
+  var filenameIn = this.addInputPin('Filename', [], VVVV.PinTypes.String);
   
-  var textureOut = this.addOutputPin('Texture Out', [], this, VVVV.PinTypes.HTML5Texture);
-  var widthOut = this.addOutputPin('Width', [0], this);
-  var heightOut = this.addOutputPin('Height', [0], this);
-  var runningOut = this.addOutputPin('Up and Running', [0], this);
+  var textureOut = this.addOutputPin('Texture Out', [], VVVV.PinTypes.HTML5Texture);
+  var widthOut = this.addOutputPin('Width', [0], VVVV.PinTypes.Value);
+  var heightOut = this.addOutputPin('Height', [0], VVVV.PinTypes.Value);
+  var runningOut = this.addOutputPin('Up and Running', [0], VVVV.PinTypes.Value);
   
   var images = [];
   var textureLoaded = false;
@@ -109,22 +109,22 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
   var networkStates = [ 'NETWORK_EMPTY', 'NETWORK_IDLE', 'NETWORK_LOADING', 'NETWORK_NO_SOURCE' ];
   var readyStates = [ 'HAVE_NOTHING', 'HAVE_METADATA', 'HAVE_FUTURE_DATA', 'HAVE_ENOUGH_DATA', 'HAVE_CURRENT_DATA' ];
   
-  var playIn = this.addInputPin('Play', [1], this);
-  var loopIn = this.addInputPin('Loop', [0], this);
-  var startTimeIn = this.addInputPin('Start Time', [0.0], this);
-  var endTimeIn = this.addInputPin('End Time', [-1.0], this);
-  var doSeekIn = this.addInputPin('Do Seek', [0], this);
-  var seekPosIn = this.addInputPin('Seek Position', [0.0], this);
-  var filenameIn = this.addInputPin('Filename', ['http://html5doctor.com/demos/video-canvas-magic/video.ogg'], this);
+  var playIn = this.addInputPin('Play', [1], VVVV.PinTypes.Value);
+  var loopIn = this.addInputPin('Loop', [0], VVVV.PinTypes.Value);
+  var startTimeIn = this.addInputPin('Start Time', [0.0], VVVV.PinTypes.Value);
+  var endTimeIn = this.addInputPin('End Time', [-1.0], VVVV.PinTypes.Value);
+  var doSeekIn = this.addInputPin('Do Seek', [0], VVVV.PinTypes.Value);
+  var seekPosIn = this.addInputPin('Seek Position', [0.0], VVVV.PinTypes.Value);
+  var filenameIn = this.addInputPin('Filename', ['http://html5doctor.com/demos/video-canvas-magic/video.ogg'], VVVV.PinTypes.String);
   
   var videoOut = this.addOutputPin('Video', [], this);
   var audioOut = this.addOutputPin('Audio', [], this);               // this might be just the same output as the video out for now, since there's no audio tag support yet.
-  var durationOut = this.addOutputPin('Duration', [0.0], this);
-  var positionOut = this.addOutputPin('Position', [0.0], this);
-  var widthOut = this.addOutputPin('Video Width', [0.0], this);
-  var heightOut = this.addOutputPin('Video Height', [0.0], this);
-  var networkStatusOut = this.addOutputPin('Network Status', [''], this);
-  var readyStatusOut = this.addOutputPin('Ready Status', [''], this);
+  var durationOut = this.addOutputPin('Duration', [0.0], VVVV.PinTypes.Value);
+  var positionOut = this.addOutputPin('Position', [0.0], VVVV.PinTypes.Value);
+  var widthOut = this.addOutputPin('Video Width', [0.0], VVVV.PinTypes.Value);
+  var heightOut = this.addOutputPin('Video Height', [0.0], VVVV.PinTypes.Value);
+  var networkStatusOut = this.addOutputPin('Network Status', [''], VVVV.PinTypes.String);
+  var readyStatusOut = this.addOutputPin('Ready Status', [''], VVVV.PinTypes.String);
   
   var videos = [];
   
@@ -238,7 +238,7 @@ VVVV.Nodes.AudioOutHTML5 = function(id, graph) {
   };
   
   var audioIn = this.addInputPin('Audio', [], this);
-  var volumeIn = this.addInputPin('Volume', [0.5], this);
+  var volumeIn = this.addInputPin('Volume', [0.5], VVVV.PinTypes.Value);
   
   this.evaluate = function() {
   

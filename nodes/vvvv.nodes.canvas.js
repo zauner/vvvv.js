@@ -96,10 +96,10 @@ VVVV.Nodes.FillCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.CanvasRenderState);
-  var colorIn = this.addInputPin("Color", ['1.0, 1.0, 1.0, 1.0'], this, true, VVVV.PinTypes.Color);
+  var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
+  var colorIn = this.addInputPin("Color", ['1.0, 1.0, 1.0, 1.0'], VVVV.PinTypes.Color);
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.CanvasRenderState);
+  var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.CanvasRenderState);
   
   var renderStates = [];
   
@@ -137,13 +137,15 @@ VVVV.Nodes.StrokeCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.CanvasRenderState);
-  var colorIn = this.addInputPin("Color", ['1.0, 1.0, 1.0, 1.0'], this, true, VVVV.PinTypes.Color);
-  var lineWidthIn = this.addInputPin("Width", [1.0], this);
-  var capStyleIn = this.addInputPin("Cap Style", ['butt'], this);
-  var joinStyleIn = this.addInputPin("Join Style", ['miter'], this);
+  var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
+  var colorIn = this.addInputPin("Color", ['1.0, 1.0, 1.0, 1.0'], VVVV.PinTypes.Color);
+  var lineWidthIn = this.addInputPin("Width", [1.0], VVVV.PinTypes.Value);
+  var capStyleIn = this.addInputPin("Cap Style", ['butt'], VVVV.PinTypes.Enum);
+  capStyleIn.enumOptions = ['butt', 'round', 'square'];
+  var joinStyleIn = this.addInputPin("Join Style", ['miter'], VVVV.PinTypes.Enum);
+  joinStyleIn.enumOptions = ['miter', 'round', 'bevel'];
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.CanvasRenderState);
+  var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.CanvasRenderState);
   
   var renderStates = [];
   
@@ -185,13 +187,13 @@ VVVV.Nodes.ShadowCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.CanvasRenderState);
-  var colorIn = this.addInputPin("Color", ['0.0, 0.0, 0.0, 1.0'], this, true, VVVV.PinTypes.Color);
-  var xOffsetIn = this.addInputPin("Offset X", [0.0], this);
-  var yOffsetIn = this.addInputPin("Offset Y", [0.0], this);
-  var blurIn = this.addInputPin("Blur", [0.0], this);
+  var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
+  var colorIn = this.addInputPin("Color", ['0.0, 0.0, 0.0, 1.0'], VVVV.PinTypes.Color);
+  var xOffsetIn = this.addInputPin("Offset X", [0.0], VVVV.PinTypes.Value);
+  var yOffsetIn = this.addInputPin("Offset Y", [0.0], VVVV.PinTypes.Value);
+  var blurIn = this.addInputPin("Blur", [0.0], VVVV.PinTypes.Value);
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.CanvasRenderState);
+  var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.CanvasRenderState);
   
   var renderStates = [];
   
@@ -232,10 +234,11 @@ VVVV.Nodes.BlendCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.CanvasRenderState);
-  var modeIn = this.addInputPin("Mode", ['source-over'], this);
+  var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
+  var modeIn = this.addInputPin("Mode", ['source-over'], VVVV.PinTypes.Enum);
+  modeIn.enumOptions = ['source-over', 'source-out', 'source-in', 'source-atop', 'destination-over', 'destination-out', 'destination-in', 'destination-atop', 'copy', 'lighter', 'xor'];
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.CanvasRenderState);
+  var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.CanvasRenderState);
   
   var renderStates = [];
   
@@ -273,15 +276,15 @@ VVVV.Nodes.LinearGradientCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.CanvasRenderState);
-  var startXIn = this.addInputPin("Start X", [0.0], this);
-  var startYIn = this.addInputPin("Start Y", [0.0], this);
-  var endXIn = this.addInputPin("End X", [0.0], this);
-  var endYIn = this.addInputPin("End Y", [0.0], this);
-  var colorsIn = this.addInputPin("Colors", ['1.0, 1.0, 1.0, 1.0', '0.0, 0.0, 0.0, 1.0'], this);
-  var colorPositionsIn = this.addInputPin("Color Positions", [0.0, 1.0], this);
+  var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
+  var startXIn = this.addInputPin("Start X", [0.0], VVVV.PinTypes.Value);
+  var startYIn = this.addInputPin("Start Y", [0.0], VVVV.PinTypes.Value);
+  var endXIn = this.addInputPin("End X", [0.0], VVVV.PinTypes.Value);
+  var endYIn = this.addInputPin("End Y", [0.0], VVVV.PinTypes.Value);
+  var colorsIn = this.addInputPin("Colors", ['1.0, 1.0, 1.0, 1.0', '0.0, 0.0, 0.0, 1.0'], VVVV.PinTypes.Color);
+  var colorPositionsIn = this.addInputPin("Color Positions", [0.0, 1.0], VVVV.PinTypes.Value);
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.CanvasRenderState);
+  var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.CanvasRenderState);
   
   var renderStates = [];
   
@@ -333,15 +336,15 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin('Render State', [], this, true, VVVV.PinTypes.CanvasRenderState);
-  var transformIn = this.addInputPin('Transform', [], this, true, VVVV.PinTypes.Transform);
-  var clippingLayerIn = this.addInputPin('Clipping Layer', [], this, true, VVVV.PinTypes.CanvasLayer);
-  var radiusIn = this.addInputPin('Radius', [1.0], this);
-  var startAngleIn = this.addInputPin('Start Angle', [0.0], this);
-  var endAngleIn = this.addInputPin('End Angle', [0.5], this);
-  var segmentIn = this.addInputPin('Draw Segment', [0], this);
+  var renderStateIn = this.addInputPin('Render State', [], VVVV.PinTypes.CanvasRenderState);
+  var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
+  var clippingLayerIn = this.addInputPin('Clipping Layer', [], VVVV.PinTypes.CanvasLayer);
+  var radiusIn = this.addInputPin('Radius', [1.0], VVVV.PinTypes.Value);
+  var startAngleIn = this.addInputPin('Start Angle', [0.0], VVVV.PinTypes.Value);
+  var endAngleIn = this.addInputPin('End Angle', [0.5], VVVV.PinTypes.Value);
+  var segmentIn = this.addInputPin('Draw Segment', [0], VVVV.PinTypes.Value);
   
-  var layersOut = this.addOutputPin('Layer', [], this, VVVV.PinTypes.CanvasLayer);
+  var layersOut = this.addOutputPin('Layer', [], VVVV.PinTypes.CanvasLayer);
   
   var layers = [];
   
@@ -435,14 +438,14 @@ VVVV.Nodes.RectangleCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin('Render State', [], this, true, VVVV.PinTypes.CanvasRenderState);
-  var transformIn = this.addInputPin('Transform', [], this, true, VVVV.PinTypes.Transform);
-  var clippingLayerIn = this.addInputPin('Clipping Layer', [], this, true, VVVV.PinTypes.CanvasLayer);
-  var widthIn = this.addInputPin('Width', [1.0], this);
-  var heightIn = this.addInputPin('Height', [1.0], this);
-  var cornerRadiusIn = this.addInputPin('Corner Radius', [0.0], this);
+  var renderStateIn = this.addInputPin('Render State', [], VVVV.PinTypes.CanvasRenderState);
+  var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
+  var clippingLayerIn = this.addInputPin('Clipping Layer', [], VVVV.PinTypes.CanvasLayer);
+  var widthIn = this.addInputPin('Width', [1.0], VVVV.PinTypes.Value);
+  var heightIn = this.addInputPin('Height', [1.0], VVVV.PinTypes.Value);
+  var cornerRadiusIn = this.addInputPin('Corner Radius', [0.0], VVVV.PinTypes.Value);
   
-  var layersOut = this.addOutputPin('Layer', [], this, VVVV.PinTypes.CanvasLayer);
+  var layersOut = this.addOutputPin('Layer', [], VVVV.PinTypes.CanvasLayer);
   
   var layers = [];
   
@@ -541,15 +544,17 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin('Render State', [], this, true, VVVV.PinTypes.CanvasRenderState);
-  var transformIn = this.addInputPin('Transform', [], this, true, VVVV.PinTypes.Transform);
-  var clippingLayerIn = this.addInputPin('Clipping Layer', [], this, true, VVVV.PinTypes.CanvasLayer);
-  var textIn = this.addInputPin('Text', ['VVVV.js'], this);
-  var fontIn = this.addInputPin('Font', ['10px sans-serif'], this);
-  var alignIn = this.addInputPin('Align', ['start'], this);
-  var baselineIn = this.addInputPin('Baseline', ['alphabetic'], this);
+  var renderStateIn = this.addInputPin('Render State', [], VVVV.PinTypes.CanvasRenderState);
+  var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
+  var clippingLayerIn = this.addInputPin('Clipping Layer', [], VVVV.PinTypes.CanvasLayer);
+  var textIn = this.addInputPin('Text', ['VVVV.js'], VVVV.PinTypes.String);
+  var fontIn = this.addInputPin('Font', ['10px sans-serif'], VVVV.PinTypes.String);
+  var alignIn = this.addInputPin('Align', ['start'], VVVV.PinTypes.Enum);
+  alignIn.enumOptions = ['start', 'left', 'end', 'right', 'center'];
+  var baselineIn = this.addInputPin('Baseline', ['alphabetic'], VVVV.PinTypes.Enum);
+  baselineIn.enumOptions = ['top', 'hanging', 'middle', 'alphabetic', 'ideographic', 'bottom'];
   
-  var layersOut = this.addOutputPin('Layer', [], this, VVVV.PinTypes.CanvasLayer);
+  var layersOut = this.addOutputPin('Layer', [], VVVV.PinTypes.CanvasLayer);
   
   var layers = [];
   
@@ -633,18 +638,18 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin('Render State', [], this, true, VVVV.PinTypes.CanvasRenderState);
-  var transformIn = this.addInputPin('Transform', [], this, true, VVVV.PinTypes.Transform);
-  var clippingLayerIn = this.addInputPin('Clipping Layer', [], this, true, VVVV.PinTypes.CanvasLayer);
-  var xIn = this.addInputPin('X', [0.0], this);
-  var yIn = this.addInputPin('Y', [0.0], this);
-  var control1XIn = this.addInputPin('Control 1 X', [0.0], this);
-  var control1YIn = this.addInputPin('Control 1 Y', [0.0], this);
-  var control2XIn = this.addInputPin('Control 2 X', [0.0], this);
-  var control2YIn = this.addInputPin('Control 2 Y', [0.0], this);
-  var binSizeIn = this.addInputPin('BinSize', [-1], this);
+  var renderStateIn = this.addInputPin('Render State', [], VVVV.PinTypes.CanvasRenderState);
+  var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
+  var clippingLayerIn = this.addInputPin('Clipping Layer', [], VVVV.PinTypes.CanvasLayer);
+  var xIn = this.addInputPin('X', [0.0], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin('Y', [0.0], VVVV.PinTypes.Value);
+  var control1XIn = this.addInputPin('Control 1 X', [0.0], VVVV.PinTypes.Value);
+  var control1YIn = this.addInputPin('Control 1 Y', [0.0], VVVV.PinTypes.Value);
+  var control2XIn = this.addInputPin('Control 2 X', [0.0], VVVV.PinTypes.Value);
+  var control2YIn = this.addInputPin('Control 2 Y', [0.0], VVVV.PinTypes.Value);
+  var binSizeIn = this.addInputPin('BinSize', [-1], VVVV.PinTypes.Value);
   
-  var layersOut = this.addOutputPin('Layer', [], this, VVVV.PinTypes.CanvasLayer);
+  var layersOut = this.addOutputPin('Layer', [], VVVV.PinTypes.CanvasLayer);
   
   var layers = [];
   
@@ -781,12 +786,12 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var transformIn = this.addInputPin('Transform', [], this, true, VVVV.PinTypes.Transform);
-  var clippingLayerIn = this.addInputPin('Clipping Layer', [], this, true, VVVV.PinTypes.CanvasLayer);
-  var textureIn = this.addInputPin('Texture', [], this, true, VVVV.PinTypes.HTML5Texture);
-  var colorIn = this.addInputPin('Color', ['1.0, 1.0, 1.0, 1.0'], this, true, VVVV.PinTypes.Color);
+  var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
+  var clippingLayerIn = this.addInputPin('Clipping Layer', [], VVVV.PinTypes.CanvasLayer);
+  var textureIn = this.addInputPin('Texture', [], VVVV.PinTypes.HTML5Texture);
+  var colorIn = this.addInputPin('Color', ['1.0, 1.0, 1.0, 1.0'], VVVV.PinTypes.Color);
   
-  var layersOut = this.addOutputPin('Layer', [], this, VVVV.PinTypes.CanvasLayer);
+  var layersOut = this.addOutputPin('Layer', [], VVVV.PinTypes.CanvasLayer);
   
   var layers = [];
   
@@ -878,11 +883,11 @@ VVVV.Nodes.GroupCanvas = function(id, graph) {
   
   var layerIns = [];
   
-  var layerOut = this.addOutputPin("Layer", [], this, VVVV.PinTypes.CanvasLayer);
+  var layerOut = this.addOutputPin("Layer", [], VVVV.PinTypes.CanvasLayer);
   
   this.initialize = function() {
     for (var i=0; i<2; i++) {
-      layerIns[i] = this.addInputPin("Layer "+(i+1), [], this, true, VVVV.PinTypes.CanvasLayer);
+      layerIns[i] = this.addInputPin("Layer "+(i+1), [], VVVV.PinTypes.CanvasLayer);
     }
   }
   
@@ -922,12 +927,12 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
-  var layersIn = this.addInputPin("Layers", [], this, true, VVVV.PinTypes.CanvasLayer);
-  var clearIn = this.addInputPin("Clear", [1], this);
-  var bgColorIn = this.addInputPin("Background Color", ["0.0, 0.0, 0.0, 1.0"], this, true, VVVV.PinTypes.Color);
-  var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], this);
-  var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], this);
-  var viewIn = this.addInputPin("View", [], this, true, VVVV.PinTypes.Transform);
+  var layersIn = this.addInputPin("Layers", [], VVVV.PinTypes.CanvasLayer);
+  var clearIn = this.addInputPin("Clear", [1], VVVV.PinTypes.Value);
+  var bgColorIn = this.addInputPin("Background Color", ["0.0, 0.0, 0.0, 1.0"], VVVV.PinTypes.Color);
+  var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], VVVV.PinTypes.Value);
+  var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], VVVV.PinTypes.Value);
+  var viewIn = this.addInputPin("View", [], VVVV.PinTypes.Transform);
   
   var canvasOut = this.addOutputPin("Canvas Out", [], this);
   

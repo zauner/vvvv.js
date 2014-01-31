@@ -26,14 +26,14 @@ VVVV.Nodes.BoundsSpectral = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var inputIn = this.addInputPin('Input', [0], this);
-  var binSizeIn = this.addInputPin('Bin Size', [-1], this);
+  var inputIn = this.addInputPin('Input', [0], VVVV.PinTypes.Value);
+  var binSizeIn = this.addInputPin('Bin Size', [-1], VVVV.PinTypes.Value);
 
   // output pins
-  var centerOut = this.addOutputPin('Center', [0], this);
-  var widthOut = this.addOutputPin('Width', [0], this);
-  var minimumOut = this.addOutputPin('Minimum', [0], this);
-  var maximumOut = this.addOutputPin('Maximum', [0], this);
+  var centerOut = this.addOutputPin('Center', [0], VVVV.PinTypes.Value);
+  var widthOut = this.addOutputPin('Width', [0], VVVV.PinTypes.Value);
+  var minimumOut = this.addOutputPin('Minimum', [0], VVVV.PinTypes.Value);
+  var maximumOut = this.addOutputPin('Maximum', [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     

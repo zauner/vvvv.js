@@ -22,9 +22,9 @@ VVVV.Nodes.String2Enum = function(id, graph) {
     compatibility_issues: ['Validation check does not work']
   };
   
-  var inputIn = this.addInputPin("String Value", [], this);
+  var inputIn = this.addInputPin("String Value", [], VVVV.PinTypes.String);
   
-  var outputOut = this.addOutputPin("Enum", [], this);
+  var outputOut = this.addOutputPin("Enum", [], VVVV.PinTypes.Enum);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();

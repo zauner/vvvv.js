@@ -23,14 +23,14 @@ VVVV.Nodes.LFO = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var PeriodIn = this.addInputPin('Period', [1.0], this);
-  var PauseIn = this.addInputPin("Pause", [0], this);
-  var ReverseIn = this.addInputPin("Reverse", [0], this);
-  var ResetIn = this.addInputPin("Reset", [0], this);
-  var PhaseIn = this.addInputPin("Phase", [0.0], this);
+  var PeriodIn = this.addInputPin('Period', [1.0], VVVV.PinTypes.Value);
+  var PauseIn = this.addInputPin("Pause", [0], VVVV.PinTypes.Value);
+  var ReverseIn = this.addInputPin("Reverse", [0], VVVV.PinTypes.Value);
+  var ResetIn = this.addInputPin("Reset", [0], VVVV.PinTypes.Value);
+  var PhaseIn = this.addInputPin("Phase", [0.0], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
-  var CyclesOut = this.addOutputPin("Cycles", [0], this);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+  var CyclesOut = this.addOutputPin("Cycles", [0], VVVV.PinTypes.Value);
   
   var current = [];
   var cycles = [];
@@ -120,12 +120,12 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var positionIn = this.addInputPin("Go To Position", [0.0], this);
-  var filterTimeIn = this.addInputPin("FilterTime", [1.0], this);
+  var positionIn = this.addInputPin("Go To Position", [0.0], VVVV.PinTypes.Value);
+  var filterTimeIn = this.addInputPin("FilterTime", [1.0], VVVV.PinTypes.Value);
   
-  var positionOut = this.addOutputPin("Position Out", [0.0], this);
-  var velocityOut = this.addOutputPin("Velocity Out", [0.0], this);
-  var accelerationOut = this.addOutputPin("Acceleration Out", [0.0], this);
+  var positionOut = this.addOutputPin("Position Out", [0.0], VVVV.PinTypes.Value);
+  var velocityOut = this.addOutputPin("Velocity Out", [0.0], VVVV.PinTypes.Value);
+  var accelerationOut = this.addOutputPin("Acceleration Out", [0.0], VVVV.PinTypes.Value);
   
   var lastUpdate = [];
   var currPos = [];
@@ -218,11 +218,11 @@ VVVV.Nodes.Delay = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var inputIn = this.addInputPin("Input", [0.0], this);
-  var timeIn = this.addInputPin("Time", [1.0], this);
-  var insertIn = this.addInputPin("Insert", [1], this);
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
+  var timeIn = this.addInputPin("Time", [1.0], VVVV.PinTypes.Value);
+  var insertIn = this.addInputPin("Insert", [1], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
   
   var queue = [];
   var times = new Array(1024);
@@ -311,9 +311,9 @@ VVVV.Nodes.Change = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var inputIn = this.addInputPin("Input", [0.0], this);
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
   
-  var changeOut = this.addOutputPin("OnChange", [0], this);
+  var changeOut = this.addOutputPin("OnChange", [0], VVVV.PinTypes.Value);
   
   var values = [];
 
@@ -367,10 +367,10 @@ VVVV.Nodes.TogEdge = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var inputIn = this.addInputPin("Input", [0.0], this);
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
   
-  var upOut = this.addOutputPin("Up Edge", [0], this);
-  var downOut = this.addOutputPin("Down Edge", [0], this);
+  var upOut = this.addOutputPin("Up Edge", [0], VVVV.PinTypes.Value);
+  var downOut = this.addOutputPin("Down Edge", [0], VVVV.PinTypes.Value);
   
   var values = [];
 
@@ -417,11 +417,11 @@ VVVV.Nodes.FlipFlop = function(id, graph) {
     compatibility_issues: []
   };
   
-  var setIn = this.addInputPin("Set", [0], this);
-  var resetIn = this.addInputPin("Reset", [0], this);
+  var setIn = this.addInputPin("Set", [0], VVVV.PinTypes.Value);
+  var resetIn = this.addInputPin("Reset", [0], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0], this);
-  var inverseOutputOut = this.addOutputPin("Inverse Output", [1], this);
+  var outputOut = this.addOutputPin("Output", [0], VVVV.PinTypes.Value);
+  var inverseOutputOut = this.addOutputPin("Inverse Output", [1], VVVV.PinTypes.Value);
   
   var initialized = false;
   
@@ -482,10 +482,10 @@ VVVV.Nodes.SampleAndHold = function(id, graph) {
     compatibility_issues: ['different output slice count in pure VVVV, if Set pin has only one slice']
   };
   
-  var inputIn = this.addInputPin("Input", [0.0], this);
-  var setIn = this.addInputPin("Set", [0], this);
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
+  var setIn = this.addInputPin("Set", [0], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
   
 
   this.evaluate = function() {
@@ -531,11 +531,11 @@ VVVV.Nodes.FrameDelay = function(id, graph) {
   
   this.delays_output = true;
   
-  var input1In = this.addInputPin("Input 1", [0.0], this);
-  var default1In = this.addInputPin("Default 1", [0.0], this);
-  var initIn = this.addInputPin("Initialize", [0], this);
+  var input1In = this.addInputPin("Input 1", [0.0], VVVV.PinTypes.Value);
+  var default1In = this.addInputPin("Default 1", [0.0], VVVV.PinTypes.Value);
+  var initIn = this.addInputPin("Initialize", [0], VVVV.PinTypes.Value);
   
-  var output1Out = this.addOutputPin("Output 1", [0.0], this);
+  var output1Out = this.addOutputPin("Output 1", [0.0], VVVV.PinTypes.Value);
   
 
   this.evaluate = function() {
@@ -576,11 +576,11 @@ VVVV.Nodes.Toggle = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var inputIn = this.addInputPin("Input", [0], this);
-  var resetIn = this.addInputPin("Reset", [0], this);
+  var inputIn = this.addInputPin("Input", [0], VVVV.PinTypes.Value);
+  var resetIn = this.addInputPin("Reset", [0], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0], this);
-  var inverseOutputOut = this.addOutputPin("Inverse Output", [1], this);
+  var outputOut = this.addOutputPin("Output", [0], VVVV.PinTypes.Value);
+  var inverseOutputOut = this.addOutputPin("Inverse Output", [1], VVVV.PinTypes.Value);
   
   var initialized = false;
   
@@ -644,18 +644,18 @@ VVVV.Nodes.Counter = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var upIn = this.addInputPin("Up", [0], this);
-  var downIn = this.addInputPin("Down", [0], this);
-  var minIn = this.addInputPin("Minimum", [0], this);
-  var maxIn = this.addInputPin("Maximum", [15], this);
-  var incrIn = this.addInputPin("Increment", [1], this);
-  var defaultIn = this.addInputPin("Default", [0], this);
-  var resetIn = this.addInputPin("Reset", [0], this);
-  var modeIn = this.addInputPin("Mode", ['Wrap'], this);
+  var upIn = this.addInputPin("Up", [0], VVVV.PinTypes.Value);
+  var downIn = this.addInputPin("Down", [0], VVVV.PinTypes.Value);
+  var minIn = this.addInputPin("Minimum", [0], VVVV.PinTypes.Value);
+  var maxIn = this.addInputPin("Maximum", [15], VVVV.PinTypes.Value);
+  var incrIn = this.addInputPin("Increment", [1], VVVV.PinTypes.Value);
+  var defaultIn = this.addInputPin("Default", [0], VVVV.PinTypes.Value);
+  var resetIn = this.addInputPin("Reset", [0], VVVV.PinTypes.Value);
+  var modeIn = this.addInputPin("Mode", ['Wrap'], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
-  var uflowOut = this.addOutputPin("Underflow", [0.0], this);
-  var oflowOut = this.addOutputPin("Overflow", [0.0], this);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+  var uflowOut = this.addOutputPin("Underflow", [0.0], VVVV.PinTypes.Value);
+  var oflowOut = this.addOutputPin("Overflow", [0.0], VVVV.PinTypes.Value);
   
   var initialized = false;
   

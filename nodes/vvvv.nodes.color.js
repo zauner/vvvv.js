@@ -67,12 +67,12 @@ VVVV.Nodes.RGBJoin = function(id, graph) {
     compatibility_issues: []
   };
   
-  var redPin = this.addInputPin("Red", [1.0], this);
-  var greenPin = this.addInputPin("Green", [1.0], this);
-  var bluePin = this.addInputPin("Blue", [1.0], this);
-  var alphaPin = this.addInputPin("Alpha", [1.0], this);
+  var redPin = this.addInputPin("Red", [1.0], VVVV.PinTypes.Value);
+  var greenPin = this.addInputPin("Green", [1.0], VVVV.PinTypes.Value);
+  var bluePin = this.addInputPin("Blue", [1.0], VVVV.PinTypes.Value);
+  var alphaPin = this.addInputPin("Alpha", [1.0], VVVV.PinTypes.Value);
   
-  var outPin = this.addOutputPin("Output", ["1.0,1.0,1.0,1.0"], this, VVVV.PinTypes.Color);
+  var outPin = this.addOutputPin("Output", ["1.0,1.0,1.0,1.0"], VVVV.PinTypes.Color);
 
   this.evaluate = function() {
     if (redPin.pinIsChanged() || greenPin.pinIsChanged || bluePin.pinIsChanged() || alphaPin.pinIsChanged()) {
@@ -115,12 +115,12 @@ VVVV.Nodes.HSVJoin = function(id, graph) {
     compatibility_issues: []
   };
   
-  var huePin = this.addInputPin("Hue", [0.33], this);
-  var saturationPin = this.addInputPin("Saturation", [0.0], this);
-  var valuePin = this.addInputPin("Value", [1.0], this);
-  var alphaPin = this.addInputPin("Alpha", [1.0], this);
+  var huePin = this.addInputPin("Hue", [0.33], VVVV.PinTypes.Value);
+  var saturationPin = this.addInputPin("Saturation", [0.0], VVVV.PinTypes.Value);
+  var valuePin = this.addInputPin("Value", [1.0], VVVV.PinTypes.Value);
+  var alphaPin = this.addInputPin("Alpha", [1.0], VVVV.PinTypes.Value);
   
-  var outPin = this.addOutputPin("Output", ["1.0,1.0,1.0,1.0"], this, VVVV.PinTypes.Color);
+  var outPin = this.addOutputPin("Output", ["1.0,1.0,1.0,1.0"], VVVV.PinTypes.Color);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
@@ -165,13 +165,13 @@ VVVV.Nodes.IOBoxColor = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var colorinputIn = this.addInputPin('Color Input', ['0.0, 1.0, 0.0, 1.0'], this, false, VVVV.PinTypes.Color);
+  var colorinputIn = this.addInputPin('Color Input', ['0.0, 1.0, 0.0, 1.0'], VVVV.PinTypes.Color);
 
   // output pins
-  var coloroutputOut = this.addOutputPin('Color Output', ['0.0, 1.0, 0.0, 1.0'], this, VVVV.PinTypes.Color);
+  var coloroutputOut = this.addOutputPin('Color Output', ['0.0, 1.0, 0.0, 1.0'], VVVV.PinTypes.Color);
 
   // invisible pins
-  var rowsIn = this.addInvisiblePin('Rows', [1], this);
+  var rowsIn = this.addInvisiblePin('Rows', [1], VVVV.PinTypes.Value);
   
   this.evaluate = function() {
     
@@ -210,11 +210,11 @@ VVVV.Nodes.SetAlphaColor = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var inputIn = this.addInputPin('Input', ['0.0, 0.0, 0.0, 0.0'], this, false, VVVV.PinTypes.Color);
-  var alphaIn = this.addInputPin('Alpha', [1.0], this);
+  var inputIn = this.addInputPin('Input', ['0.0, 0.0, 0.0, 0.0'], VVVV.PinTypes.Color);
+  var alphaIn = this.addInputPin('Alpha', [1.0], VVVV.PinTypes.Value);
 
   // output pins
-  var outputOut = this.addOutputPin('Output', ['0.0, 0.0, 0.0, 1.0'], this, VVVV.PinTypes.Color);
+  var outputOut = this.addOutputPin('Output', ['0.0, 0.0, 0.0, 1.0'], VVVV.PinTypes.Color);
 
   this.evaluate = function() {
     
@@ -255,16 +255,16 @@ VVVV.Nodes.SwitchColorInput = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var switchIn = this.addInputPin('Switch', [0], this);
+  var switchIn = this.addInputPin('Switch', [0], VVVV.PinTypes.Value);
   var inputIn = [];
-  inputIn[0] = this.addInputPin('Input 1', ['1.0, 1.0, 1.0, 1.0'], this, false, VVVV.PinTypes.Color);
-  inputIn[1] = this.addInputPin('Input 2', ['1.0, 1.0, 1.0, 1.0'], this, false, VVVV.PinTypes.Color);
+  inputIn[0] = this.addInputPin('Input 1', ['1.0, 1.0, 1.0, 1.0'], VVVV.PinTypes.Color);
+  inputIn[1] = this.addInputPin('Input 2', ['1.0, 1.0, 1.0, 1.0'], VVVV.PinTypes.Color);
 
   // output pins
-  var outputOut = this.addOutputPin('Output', ['1.0, 1.0, 1.0, 1.0'], this, VVVV.PinTypes.Color);
+  var outputOut = this.addOutputPin('Output', ['1.0, 1.0, 1.0, 1.0'], VVVV.PinTypes.Color);
 
   // invisible pins
-  var inputcountIn = this.addInvisiblePin('Input Count', [2], this);
+  var inputcountIn = this.addInvisiblePin('Input Count', [2], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();

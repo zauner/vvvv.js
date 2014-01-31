@@ -24,14 +24,14 @@ VVVV.Nodes.Polar3d = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var xIn = this.addInputPin('X', [0], this);
-  var yIn = this.addInputPin('Y', [0], this);
-  var zIn = this.addInputPin('Z', [-1], this);
+  var xIn = this.addInputPin('X', [0], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin('Y', [0], VVVV.PinTypes.Value);
+  var zIn = this.addInputPin('Z', [-1], VVVV.PinTypes.Value);
 
   // output pins
-  var pitchOut = this.addOutputPin('Pitch', [0], this);
-  var yawOut = this.addOutputPin('Yaw', [0], this);
-  var lengthOut = this.addOutputPin('Length', [1], this);
+  var pitchOut = this.addOutputPin('Pitch', [0], VVVV.PinTypes.Value);
+  var yawOut = this.addOutputPin('Yaw', [0], VVVV.PinTypes.Value);
+  var lengthOut = this.addOutputPin('Length', [1], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     // to implement; maybe start with something like this:
@@ -80,14 +80,14 @@ VVVV.Nodes.Cartesian3d = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var pitchIn = this.addInputPin('Pitch', [0], this);
-  var yawIn = this.addInputPin('Yaw', [0], this);
-  var lengthIn = this.addInputPin('Length', [1], this);
+  var pitchIn = this.addInputPin('Pitch', [0], VVVV.PinTypes.Value);
+  var yawIn = this.addInputPin('Yaw', [0], VVVV.PinTypes.Value);
+  var lengthIn = this.addInputPin('Length', [1], VVVV.PinTypes.Value);
 
   // output pins
-  var xOut = this.addOutputPin('X', [0], this);
-  var yOut = this.addOutputPin('Y', [0], this);
-  var zOut = this.addOutputPin('Z', [1], this);
+  var xOut = this.addOutputPin('X', [0], VVVV.PinTypes.Value);
+  var yOut = this.addOutputPin('Y', [0], VVVV.PinTypes.Value);
+  var zOut = this.addOutputPin('Z', [1], VVVV.PinTypes.Value);
 
   
   this.evaluate = function() {
@@ -135,15 +135,15 @@ VVVV.Nodes.Normalize3d = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var xIn = this.addInputPin('X', [1], this);
-  var yIn = this.addInputPin('Y', [0], this);
-  var zIn = this.addInputPin('Z', [0], this);
+  var xIn = this.addInputPin('X', [1], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin('Y', [0], VVVV.PinTypes.Value);
+  var zIn = this.addInputPin('Z', [0], VVVV.PinTypes.Value);
 
   // output pins
-  var normalizedxOut = this.addOutputPin('NormalizedX', [1], this);
-  var normalizedyOut = this.addOutputPin('NormalizedY', [0], this);
-  var normalizedzOut = this.addOutputPin('NormalizedZ', [0], this);
-  var inputlengthOut = this.addOutputPin('Input Length', [0], this);
+  var normalizedxOut = this.addOutputPin('NormalizedX', [1], VVVV.PinTypes.Value);
+  var normalizedyOut = this.addOutputPin('NormalizedY', [0], VVVV.PinTypes.Value);
+  var normalizedzOut = this.addOutputPin('NormalizedZ', [0], VVVV.PinTypes.Value);
+  var inputlengthOut = this.addOutputPin('Input Length', [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     
@@ -193,11 +193,11 @@ VVVV.Nodes.Normalize3dVector = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var xyzIn = this.addInputPin('XYZ', [], this);
+  var xyzIn = this.addInputPin('XYZ', [], VVVV.PinTypes.Value);
 
   // output pins
-  var normalizedxyzOut = this.addOutputPin('NormalizedXYZ', [], this);
-  var inputlengthOut = this.addOutputPin('Input Length', [0], this);
+  var normalizedxyzOut = this.addOutputPin('NormalizedXYZ', [], VVVV.PinTypes.Value);
+  var inputlengthOut = this.addOutputPin('Input Length', [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     
@@ -243,11 +243,11 @@ VVVV.Nodes.Multiply3dCross = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var input1xyzIn = this.addInputPin('Input1 XYZ', [], this);
-  var input2xyzIn = this.addInputPin('Input2 XYZ', [], this);
+  var input1xyzIn = this.addInputPin('Input1 XYZ', [], VVVV.PinTypes.Value);
+  var input2xyzIn = this.addInputPin('Input2 XYZ', [], VVVV.PinTypes.Value);
 
   // output pins
-  var outputxyzOut = this.addOutputPin('Output XYZ', [], this);
+  var outputxyzOut = this.addOutputPin('Output XYZ', [], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     // to implement; maybe start with something like this:
@@ -292,11 +292,11 @@ VVVV.Nodes.Multiply3dDot = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var input1xyzIn = this.addInputPin('Input1 XYZ', [], this);
-  var input2xyzIn = this.addInputPin('Input2 XYZ', [], this);
+  var input1xyzIn = this.addInputPin('Input1 XYZ', [], VVVV.PinTypes.Value);
+  var input2xyzIn = this.addInputPin('Input2 XYZ', [], VVVV.PinTypes.Value);
 
   // output pins
-  var outputOut = this.addOutputPin('Output', [0], this);
+  var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
@@ -336,11 +336,11 @@ VVVV.Nodes.Multiply3dVector = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var transformIn = this.addInputPin('Transform', [], this, true, VVVV.PinTypes.Transform);
-  var xyzIn = this.addInputPin('XYZ UnTransformed', [0.0, 0.0, 0.0], this);
+  var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
+  var xyzIn = this.addInputPin('XYZ UnTransformed', [0.0, 0.0, 0.0], VVVV.PinTypes.Value);
 
   // output pins
-  var outputOut = this.addOutputPin('XYZ Transformed', [0.0, 0.0, 0.0], this);
+  var outputOut = this.addOutputPin('XYZ Transformed', [0.0, 0.0, 0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     var maxSize = Math.max(transformIn.getSliceCount(), xyzIn.getSliceCount()/3);
