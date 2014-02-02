@@ -126,11 +126,12 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
 
     VVVV.MainLoops = [];
 
-    $("script[language='VVVV']").each(function() {
+    $("script[language='VVVV']").each(function(i) {
       var p = new VVVV.Core.Patch($(this).attr('src'), function() {
         var m = new VVVV.Core.MainLoop(this);
         VVVV.MainLoops.push(m);
       });
+      VVVV.Patches[i] = p;
     });
 
     if (typeof callback === 'function') callback.call();

@@ -1299,7 +1299,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
         }
       }
         
-      var pin = thatNode.addInputPin(u.varname.replace(/_/g,' '), defaultValue, thatNode, pinType);
+      var pin = thatNode.addInputPin(u.varname.replace(/_/g,' '), defaultValue, pinType);
       pin.dimensions = u.dimension;
       shaderPins.push(pin);
     });
@@ -1973,7 +1973,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         if (layer.mesh != currentMesh || layer.shader.shaderProgram != currentShaderProgram) {
           gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
           _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
-            if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]])
+            if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]] || layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position==-1)
               return;
             gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
             gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, 0, b.offset);
