@@ -882,7 +882,7 @@ VVVV.Nodes.Cylinder = function(id, graph) {
     // other indices ...
     for (var y=0; y<yRes; y++) {
       for (var x=0; x<xRes; x++) {
-        var refP = x+xRes*y + 2;
+        var refP = x+(xRes+1)*y + 2;
         indices.push(refP);
         indices.push(refP+1);
         indices.push(refP+xRes+2);
