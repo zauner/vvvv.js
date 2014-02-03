@@ -1284,17 +1284,19 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       for (var i=0; i<shaderPins.length; i++) {
         if (shaderPins[i].pinname==u.varname.replace(/_/g,' ')) {
           shaderPins[i].dimensions = u.dimension;
+          if (shaderPins[i].unvalidated)
+            shaderPins[i].values = thatNode.defaultPinValues[shaderPins[i].pinname] ? thatNode.defaultPinValues[shaderPins[i].pinname].slice() : defaultValue;
           if (shaderPins[i].typeName!=pinType.typeName) {
             var values = shaderPins[i].values.slice();
             shaderPins[i].setType(pinType);
-            if (shaderPins[i].unvalidated && ((u.type!='mat' && u.type!='sampler') || shaderPins[i].isConnected()))
+            if (shaderPins[i].unvalidated && (pinType.primitive || shaderPins[i].isConnected()))
               shaderPins[i].values = values;
             if (shaderPins[i].isConnected() && !shaderPins[i].unvalidated) {
               shaderPins[i].connectionChanged();
               shaderPins[i].links[0].destroy();
             }
-            shaderPins[i].unvalidated = false;
           }
+          shaderPins[i].unvalidated = false;
           return;
         }
       }
