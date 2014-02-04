@@ -570,6 +570,10 @@ VVVV.Core = {
       });
     }
     
+    this.destroy = function() {
+      
+    }
+    
     this.serialize = function() {
       var $node = $("<NODE>");
       $node.attr("id", this.id);
@@ -891,6 +895,7 @@ VVVV.Core = {
             }
           }
           thisPatch.nodeList.splice(thisPatch.nodeList.indexOf(n),1);
+          n.destroy();
           delete thisPatch.nodeMap[n.id];
         }
         

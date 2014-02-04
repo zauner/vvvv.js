@@ -328,6 +328,13 @@ VVVV.Nodes.FileTexture = function(id, graph) {
     
     if (!gl)
       return;
+      
+    if (this.contextChanged) {
+      for (var i=0; i<textures.length; i++) {
+        textures[i].context.deleteTexture(textures[i]);
+      }
+      textures = [];
+    }
   
     if (filenamePin.pinIsChanged() || this.contextChanged) {
       var maxSize = this.getMaxInputSliceCount();
@@ -336,6 +343,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
         if (filename.indexOf('http://')===0 && VVVV.ImageProxyPrefix!==undefined)
           filename = VVVV.ImageProxyPrefix+encodeURI(filename);
         textures[i] = gl.createTexture();
+        textures[i].context = gl;
         textures[i].image = new Image();
         textures[i].image.onload = (function(j) {
           return function() {  // this is to create a new scope within the loop. see "javascript closure in for loops" http://www.mennovanslooten.nl/blog/post/62
@@ -356,6 +364,12 @@ VVVV.Nodes.FileTexture = function(id, graph) {
     }
     this.contextChanged = false;
   
+  }
+  
+  this.destroy = function() {
+    for (var i=0; i<textures.length; i++) {
+      textures[i].context.deleteTexture(textures[i]);
+    }
   }
 
 }
@@ -392,6 +406,11 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
     var gl = this.renderContexts[0];
     if (!gl)
       return;
+      
+    if (this.contextChanged && texture) {
+      texture.context.deleteTexture(texture);
+      texture = undefined;
+    }
 
     if (sourceIn.isConnected()) {
       var source = sourceIn.getValue(0);
@@ -403,8 +422,10 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
         outputOut.setValue(0, source);
       }
       else {
-        if (texture==undefined)
+        if (texture==undefined) {
           texture = gl.createTexture();
+          texture.context = gl;
+        }
         gl.bindTexture(gl.TEXTURE_2D, texture);
         //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
@@ -420,7 +441,14 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
       gl.deleteTexture(texture);
       outputOut.setValue(0, undefined);
     }
+    
+    this.contextChanged = false;
   
+  }
+  
+  this.destroy = function() {
+    if (texture)
+      texture.context.deleteTexture(texture);
   }
 
 }
@@ -1284,7 +1312,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       for (var i=0; i<shaderPins.length; i++) {
         if (shaderPins[i].pinname==u.varname.replace(/_/g,' ')) {
           shaderPins[i].dimensions = u.dimension;
-          if (shaderPins[i].unvalidated)
+          if (shaderPins[i].unvalidated && !shaderPins[i].isConnected())
             shaderPins[i].values = thatNode.defaultPinValues[shaderPins[i].pinname] ? thatNode.defaultPinValues[shaderPins[i].pinname].slice() : defaultValue;
           if (shaderPins[i].typeName!=pinType.typeName) {
             var values = shaderPins[i].values.slice();
@@ -1713,6 +1741,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var pMatrix;
   var vMatrix;
   
+  var canvas;
   this.ctxt = undefined;              // the renderer's active context. might be the canvas context, or the context of a connected downstream renderer
   var canvasCtxt = undefined;         // the context of the canvas which is connected to the renderer
   var gl;                             // just a convenience variable for keeping the lines short 
@@ -1720,7 +1749,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var bbufFramebuffer;
   var bbufTexture;
   
-  function attachMouseEvents(canvas) {
+  function attachMouseEvents() {
     $(canvas).detach('mousemove');
     $(canvas).detach('mousedown');
     $(canvas).detach('mouseup');
@@ -1764,7 +1793,6 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       return;
     var selector = this.invisiblePins["Descriptive Name"].getValue(0);
     var targetElement = $(selector).get(0);
-    var canvas;
     if (!targetElement || targetElement.nodeName!='CANVAS') {
       var w = parseInt(bufferWidthIn.getValue(0));
       var h = parseInt(bufferHeightIn.getValue(0));
@@ -1780,7 +1808,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     if (!canvas)
       return;
       
-    attachMouseEvents(canvas);
+    attachMouseEvents();
 
     try {
       canvasCtxt = canvas.get(0).getContext("experimental-webgl", {preserveDrawingBuffer: true});
@@ -1859,6 +1887,10 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     viewIn.markPinAsChanged();
     projIn.markPinAsChanged();
     
+  }
+  
+  this.destroy = function() {
+    $(canvas).remove();
   }
   
   var initialized = false;
