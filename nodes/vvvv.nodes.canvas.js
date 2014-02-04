@@ -1012,6 +1012,10 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
     canvas.ctx = ctx;
     
   }
+  
+  this.destroy = function() {
+    $(canvas).remove();
+  }
 
   this.evaluate = function() {
     
