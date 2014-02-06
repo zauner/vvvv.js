@@ -192,7 +192,7 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
 
 VVVV.Editors.BrowserEditor = {}
 
-VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
+VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
   
   this.state = UIState.Idle;
   
@@ -208,7 +208,10 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
   if (p.isSubpatch)
     pageURL = "patch.html";
   
-  this.window = window.open(pageURL, p.nodename, "location=no, width="+p.windowWidth+", height="+p.windowHeight+", toolbar=no" );
+  if (!selector)
+    this.window = window.open(pageURL, p.nodename, "location=no, width="+p.windowWidth+", height="+p.windowHeight+", toolbar=no" );
+  else
+    this.window = window;
   
   function resetSelection() {
     chart.selectAll('.vvvv-node.selected')
@@ -222,103 +225,116 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
       maxNodeId = Math.max(maxNodeId, patch.nodeList[i].id);
     }
     
-    thatWin.window.document.title = p.nodename;
-    root = d3.select(thatWin.window.document.body);
+    if (!selector) {
+      thatWin.window.document.title = p.nodename;
+      root = d3.select(thatWin.window.document.body);
+    }
+    else
+      root = d3.select($(selector).get(0));
     
-    $('body', thatWin.window.document).on('copy', function(e) {
-      var $patch = $('<PATCH>');
-      var links = [];
-      var selectedNodeIDs = _(selectedNodes).map(function(n) { return n.id });
-      for (var i=0; i<selectedNodes.length; i++) {
-        $patch.append(selectedNodes[i].serialize());
-        _(selectedNodes[i].inputPins).each(function(pin) {
-          for (var j=0; j<pin.links.length; j++) {
-            if (selectedNodeIDs.indexOf(pin.links[j].fromPin.node.id)>=0)
-              links.push(pin.links[j]);
-          }
-        });
-      }
-      for (var i=0; i<links.length; i++) {
-        $patch.append(links[i].serialize());
-      }
-      var xml = '<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta28.1.dtd" >\r\n'+$patch.wrapAll('<d></d>').parent().html();
-      xml = xml.replace(/<patch/g, "<PATCH");
-      xml = xml.replace(/<\/patch>/g, "\n  </PATCH>");
-      xml = xml.replace(/<node/g, "\n  <NODE");
-      xml = xml.replace(/<\/node>/g, "\n  </NODE>");
-      xml = xml.replace(/<bounds/g, "\n  <BOUNDS");
-      xml = xml.replace(/<\/bounds>/g, "\n  </BOUNDS>");
-      xml = xml.replace(/<pin/g, "\n  <PIN");
-      xml = xml.replace(/<\/pin>/g, "\n  </PIN>");
-      xml = xml.replace(/<lonk/g, "\n  <LINK");
-      xml = xml.replace(/<\/lonk>/g, "\n  </LINK>");
-      
-      e.originalEvent.clipboardData.setData("text/plain", xml);
-      e.preventDefault();
-      return false;
-    });
-    
-    var mouseX = 0;
-    var mouseY = 0;
-    $('body', thatWin.window.document).mousemove(function(e) {
-      mouseX = e.pageX;
-      mouseY = e.pageY;
-    });
-    $('body', thatWin.window.document).on('paste', function(e) {
-      var xml = e.originalEvent.clipboardData.getData("text/plain");
-      if (!xml.match(/^<!DOCTYPE PATCH/))
-        return false;
-      $patch = $(xml);
-      
-      var boundsLeft = undefined;
-      var boundsTop = undefined;
-      $patch.find('node bounds').each(function() {
-        var left = parseInt($(this).attr("left"));
-        var top = parseInt($(this).attr("top"));
-        if (!boundsLeft || left<boundsLeft)
-          boundsLeft = left;
-        if (!boundsTop || top<boundsTop)
-          boundsTop = top;
-      });
-      
-      var oldNewNodeIdMap = {};
-      $patch.find('node').each(function() {
-        maxNodeId++;
-        oldNewNodeIdMap[$(this).attr("id")] = maxNodeId;
-        $(this).attr("createme", "pronto");
-        $(this).attr("id", maxNodeId);
-        var left = parseInt($(this).find('bounds').attr("left")) - boundsLeft + mouseX*15;
-        var top = parseInt($(this).find('bounds').attr("top")) - boundsTop + mouseY*15;
-        $(this).find('bounds').attr("left", left);
-        $(this).find('bounds').attr("top", top);
-      });
-      $patch.find('link').each(function() {
-        $(this).attr("createme", "pronto");
-        var fromNodeId = $(this).attr("srcnodeid");
-        var toNodeId = $(this).attr("dstnodeid");
-        $(this).attr("srcnodeid", oldNewNodeIdMap[fromNodeId]);
-        $(this).attr("dstnodeid", oldNewNodeIdMap[toNodeId]);
-      });
-      
-      var xml = $patch.wrapAll('<d></d>').parent().html();
-      editor.update(patch, xml);
-      
-      resetSelection();
-      var newNodeIDs = _(oldNewNodeIdMap).map(function(node_id) { return node_id});
-      chart.selectAll('.vvvv-node').each(function(node) {
-        if (newNodeIDs.indexOf(parseInt(node.id))>=0) {
-          selectedNodes.push(node);
-          d3.select(this).attr("class", "vvvv-node selected");
+    if (!selector) {
+      $('body', thatWin.window.document).on('copy', function(e) {
+        var $patch = $('<PATCH>');
+        var links = [];
+        var selectedNodeIDs = _(selectedNodes).map(function(n) { return n.id });
+        for (var i=0; i<selectedNodes.length; i++) {
+          $patch.append(selectedNodes[i].serialize());
+          _(selectedNodes[i].inputPins).each(function(pin) {
+            for (var j=0; j<pin.links.length; j++) {
+              if (selectedNodeIDs.indexOf(pin.links[j].fromPin.node.id)>=0)
+                links.push(pin.links[j]);
+            }
+          });
         }
-      })
-    });
+        for (var i=0; i<links.length; i++) {
+          $patch.append(links[i].serialize());
+        }
+        var xml = '<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta28.1.dtd" >\r\n'+$patch.wrapAll('<d></d>').parent().html();
+        xml = xml.replace(/<patch/g, "<PATCH");
+        xml = xml.replace(/<\/patch>/g, "\n  </PATCH>");
+        xml = xml.replace(/<node/g, "\n  <NODE");
+        xml = xml.replace(/<\/node>/g, "\n  </NODE>");
+        xml = xml.replace(/<bounds/g, "\n  <BOUNDS");
+        xml = xml.replace(/<\/bounds>/g, "\n  </BOUNDS>");
+        xml = xml.replace(/<pin/g, "\n  <PIN");
+        xml = xml.replace(/<\/pin>/g, "\n  </PIN>");
+        xml = xml.replace(/<lonk/g, "\n  <LINK");
+        xml = xml.replace(/<\/lonk>/g, "\n  </LINK>");
+        
+        e.originalEvent.clipboardData.setData("text/plain", xml);
+        e.preventDefault();
+        return false;
+      });
+      
+      var mouseX = 0;
+      var mouseY = 0;
+      $('body', thatWin.window.document).mousemove(function(e) {
+        mouseX = e.pageX;
+        mouseY = e.pageY;
+      });
+      $('body', thatWin.window.document).on('paste', function(e) {
+        var xml = e.originalEvent.clipboardData.getData("text/plain");
+        if (!xml.match(/^<!DOCTYPE PATCH/))
+          return false;
+        $patch = $(xml);
+        
+        var boundsLeft = undefined;
+        var boundsTop = undefined;
+        $patch.find('node bounds').each(function() {
+          var left = parseInt($(this).attr("left"));
+          var top = parseInt($(this).attr("top"));
+          if (!boundsLeft || left<boundsLeft)
+            boundsLeft = left;
+          if (!boundsTop || top<boundsTop)
+            boundsTop = top;
+        });
+        
+        var oldNewNodeIdMap = {};
+        $patch.find('node').each(function() {
+          maxNodeId++;
+          oldNewNodeIdMap[$(this).attr("id")] = maxNodeId;
+          $(this).attr("createme", "pronto");
+          $(this).attr("id", maxNodeId);
+          var left = parseInt($(this).find('bounds').attr("left")) - boundsLeft + mouseX*15;
+          var top = parseInt($(this).find('bounds').attr("top")) - boundsTop + mouseY*15;
+          $(this).find('bounds').attr("left", left);
+          $(this).find('bounds').attr("top", top);
+        });
+        $patch.find('link').each(function() {
+          $(this).attr("createme", "pronto");
+          var fromNodeId = $(this).attr("srcnodeid");
+          var toNodeId = $(this).attr("dstnodeid");
+          $(this).attr("srcnodeid", oldNewNodeIdMap[fromNodeId]);
+          $(this).attr("dstnodeid", oldNewNodeIdMap[toNodeId]);
+        });
+        
+        var xml = $patch.wrapAll('<d></d>').parent().html();
+        editor.update(patch, xml);
+        
+        resetSelection();
+        var newNodeIDs = _(oldNewNodeIdMap).map(function(node_id) { return node_id});
+        chart.selectAll('.vvvv-node').each(function(node) {
+          if (newNodeIDs.indexOf(parseInt(node.id))>=0) {
+            selectedNodes.push(node);
+            d3.select(this).attr("class", "vvvv-node selected");
+          }
+        })
+      });
+    }
     
     chart = root
     .append('svg:svg')
       .attr('class','chart')
       .attr('width', Math.max(patch.windowWidth, patch.boundingBox.width))
       .attr('height', Math.max(patch.windowHeight, patch.boundingBox.height))
-      .on('mousemove', function() {
+      
+    var background = chart.append('svg:rect')
+    .attr('class','background')
+    .attr('width', Math.max(patch.windowWidth, patch.boundingBox.width))
+    .attr('height', Math.max(patch.windowHeight, patch.boundingBox.height))
+    
+    if (!selector) {
+      chart.on('mousemove', function() {
         if (thatWin.state==UIState.Connecting) {
           chart.select('.vvvv-link.current-link')
             .attr('x2', function(d) { return d3.event.pageX + (d3.select(this).attr('x1')<d3.event.pageX ? -1 : 1) })
@@ -509,85 +525,82 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
         resetSelection();
       })
       
-    chart.append('svg:rect')
-    .attr('class','background')
-    .attr('width', Math.max(patch.windowWidth, patch.boundingBox.width))
-    .attr('height', Math.max(patch.windowHeight, patch.boundingBox.height))
-    .on('click', function() {
-      thatWin.state = UIState.Idle;
-      $('.resettable', thatWin.window.document).remove();
-      $('#node_selection', thatWin.window.document).remove();
-      resetSelection();
-      linkStart = undefined;
-    })
-    
-    // set modifier keys
-    function setModifierKeys(e) {
-      modKeyPressed.CTRL = e.ctrlKey;
-      modKeyPressed.ALT = e.altKey;
-      modKeyPressed.SHIFT = e.shiftKey;
-    }
-    $(thatWin.window.document).keydown(setModifierKeys);
-    $(thatWin.window.document).keyup(setModifierKeys);
-    
-    $(thatWin.window.document).keydown(function(e) {
-      // DELETE key
-      if (e.which==46 && selectedNodes.length>0) {
-        var cmd = "<PATCH>";
-        for (var i=0; i<selectedNodes.length; i++) {
-          var n = selectedNodes[i];
-          cmd += "<NODE id='"+selectedNodes[i].id+"' deleteme='pronto'/>";
-          _(n.inputPins).each(function(pin) {
-            _(pin.links).each(function(l) {
-              cmd += "<LINK deleteme='pronto' srcnodeid='"+l.fromPin.node.id+"' srcpinname='"+l.fromPin.pinname+"' dstnodeid='"+l.toPin.node.id+"' dstpinname='"+l.toPin.pinname+"'/>";
-            });
-          })
-          _(n.outputPins).each(function(pin) {
-            _(pin.links).each(function(l) {
-              cmd += "<LINK deleteme='pronto' srcnodeid='"+l.fromPin.node.id+"' srcpinname='"+l.fromPin.pinname+"' dstnodeid='"+l.toPin.node.id+"' dstpinname='"+l.toPin.pinname+"'/>";
-            });
-          })
-        }
-        cmd += "</PATCH>";
-        
-        editor.update(patch, cmd);
-        selectedNodes = [];
-      }
-      // CTRL + S / Save
-      else if ((e.which==115 || e.which==83) && e.ctrlKey) {
-        editor.save(patch.nodename, patch.toXML());
-        e.preventDefault();
-        return false;
-      }
-      // CTRL + I / Open Inspector
-      else if ((e.which==73) && e.ctrlKey) {
-        if (editor.inspector)
-          editor.inspector.win.focus();
-        else {
-          editor.openInspector(".");
-        }
-        e.preventDefault();
-        return false;
-      }
-      // CTRL + A / Select All
-      else if ((e.which==65) && e.ctrlKey) {
+      background.on('click', function() {
+        thatWin.state = UIState.Idle;
+        $('.resettable', thatWin.window.document).remove();
+        $('#node_selection', thatWin.window.document).remove();
         resetSelection();
-        chart.selectAll('.vvvv-node').each(function(d) {
-          selectedNodes.push(d);
-          d3.select(this).attr("class", "vvvv-node selected");
-        });
-        e.preventDefault();
-        return false;
-      }
-    })
+        linkStart = undefined;
+      })
     
-    $(thatWin.window).resize(function() {
-      patch.windowWidth = $(this).width();
-      patch.windowHeight = $(this).height();
-      patch.boundingBox.width = Math.max(patch.windowWidth, patch.boundingBox.width);
-      patch.boundingBox.height = Math.max(patch.windowHeight, patch.boundingBox.height);
-      patch.afterUpdate();
-    })
+      // set modifier keys
+      function setModifierKeys(e) {
+        modKeyPressed.CTRL = e.ctrlKey;
+        modKeyPressed.ALT = e.altKey;
+        modKeyPressed.SHIFT = e.shiftKey;
+      }
+      $(thatWin.window.document).keydown(setModifierKeys);
+      $(thatWin.window.document).keyup(setModifierKeys);
+      
+      $(thatWin.window.document).keydown(function(e) {
+        // DELETE key
+        if (e.which==46 && selectedNodes.length>0) {
+          var cmd = "<PATCH>";
+          for (var i=0; i<selectedNodes.length; i++) {
+            var n = selectedNodes[i];
+            cmd += "<NODE id='"+selectedNodes[i].id+"' deleteme='pronto'/>";
+            _(n.inputPins).each(function(pin) {
+              _(pin.links).each(function(l) {
+                cmd += "<LINK deleteme='pronto' srcnodeid='"+l.fromPin.node.id+"' srcpinname='"+l.fromPin.pinname+"' dstnodeid='"+l.toPin.node.id+"' dstpinname='"+l.toPin.pinname+"'/>";
+              });
+            })
+            _(n.outputPins).each(function(pin) {
+              _(pin.links).each(function(l) {
+                cmd += "<LINK deleteme='pronto' srcnodeid='"+l.fromPin.node.id+"' srcpinname='"+l.fromPin.pinname+"' dstnodeid='"+l.toPin.node.id+"' dstpinname='"+l.toPin.pinname+"'/>";
+              });
+            })
+          }
+          cmd += "</PATCH>";
+          
+          editor.update(patch, cmd);
+          selectedNodes = [];
+        }
+        // CTRL + S / Save
+        else if ((e.which==115 || e.which==83) && e.ctrlKey) {
+          editor.save(patch.nodename, patch.toXML());
+          e.preventDefault();
+          return false;
+        }
+        // CTRL + I / Open Inspector
+        else if ((e.which==73) && e.ctrlKey) {
+          if (editor.inspector)
+            editor.inspector.win.focus();
+          else {
+            editor.openInspector(".");
+          }
+          e.preventDefault();
+          return false;
+        }
+        // CTRL + A / Select All
+        else if ((e.which==65) && e.ctrlKey) {
+          resetSelection();
+          chart.selectAll('.vvvv-node').each(function(d) {
+            selectedNodes.push(d);
+            d3.select(this).attr("class", "vvvv-node selected");
+          });
+          e.preventDefault();
+          return false;
+        }
+      })
+    
+      $(thatWin.window).resize(function() {
+        patch.windowWidth = $(this).width();
+        patch.windowHeight = $(this).height();
+        patch.boundingBox.width = Math.max(patch.windowWidth, patch.boundingBox.width);
+        patch.boundingBox.height = Math.max(patch.windowHeight, patch.boundingBox.height);
+        patch.afterUpdate();
+      })
+    }
     
     thatWin.drawComplete();
     
@@ -617,7 +630,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
     if (links)
       links.remove();
     
-    if (patch.windowWidth != $(thatWin.window).width() || patch.windowHeight != $(thatWin.window).height())
+    if (!selector && (patch.windowWidth != $(thatWin.window).width() || patch.windowHeight != $(thatWin.window).height()))
       thatWin.window.resizeTo(patch.windowWidth, patch.windowHeight);
       
     chart
@@ -706,28 +719,31 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
         var element = this;
         for (var i=0; i<rowCount; i++) {
           (function(j) {
-            d3.select(element)
+            var l = d3.select(element)
             .append('svg:rect')
               .attr('width', d.getWidth() +2)
               .attr('height', d.getHeight()/rowCount - 4)
               .attr('y', j*12 + 2)
-              .attr('fill', 'rgba(0,0,0,0)')
-            .on('contextmenu', function(d) {
-              if (d.IOBoxInputPin().getValue(0)!=undefined && !d.IOBoxInputPin().isConnected()) {
-                $('.resettable', thatWin.window.document).remove();
-                var $inputbox = $("<input type='text'/>");
-                $('body', thatWin.window.document).append($inputbox);
-                $inputbox.css('position', 'absolute');
-                $inputbox.css('left', $(this).offset().left);
-                $inputbox.css('top', $(this).offset().top + 2);
-                $inputbox.css('width', d.getWidth());
-                $inputbox.css('height', d.getHeight()/rowCount-4);
-                VVVV.PinTypes[d.IOBoxInputPin().typeName].openInputBox(thatWin.window, $inputbox, d.IOBoxInputPin(), j%sliceCount);
-              }
-              d3.event.stopPropagation();
-              d3.event.preventDefault();
-              return false;
-            })
+              .attr('fill', 'rgba(0,0,0,0)');
+            
+            if (!selector) {  
+              l.on('contextmenu', function(d) {
+                if (d.IOBoxInputPin().getValue(0)!=undefined && !d.IOBoxInputPin().isConnected()) {
+                  $('.resettable', thatWin.window.document).remove();
+                  var $inputbox = $("<input type='text'/>");
+                  $('body', thatWin.window.document).append($inputbox);
+                  $inputbox.css('position', 'absolute');
+                  $inputbox.css('left', $(this).offset().left);
+                  $inputbox.css('top', $(this).offset().top + 2);
+                  $inputbox.css('width', d.getWidth());
+                  $inputbox.css('height', d.getHeight()/rowCount-4);
+                  VVVV.PinTypes[d.IOBoxInputPin().typeName].openInputBox(thatWin.window, $inputbox, d.IOBoxInputPin(), j%sliceCount);
+                }
+                d3.event.stopPropagation();
+                d3.event.preventDefault();
+                return false;
+              })
+            }
           })(i);
         }
       }
@@ -874,132 +890,134 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor) {
     
     // Editing Functionality starts here ...
     
-    chart.selectAll('g.vvvv-input-pin')
-      .on('contextmenu', function(d, i) {
-        if (VVVV.PinTypes[d.typeName].openInputBox) {
-          if (d.getValue(0)!=undefined) {
-            $('.resettable', thatWin.window.document).remove();
-            var $inputbox = $("<input type='text'/>");
-            $('body', thatWin.window.document).append($inputbox);
-            $inputbox.css('position', 'absolute');
-            $inputbox.css('left', $(this).offset().left);
-            $inputbox.css('top', $(this).offset().top - 3);
-            $inputbox.css('width', 50);
-            $inputbox.css('height', 14);
-            VVVV.PinTypes[d.typeName].openInputBox(thatWin, $inputbox, d, 0);
+    if (!selector) {
+      chart.selectAll('g.vvvv-input-pin')
+        .on('contextmenu', function(d, i) {
+          if (VVVV.PinTypes[d.typeName].openInputBox) {
+            if (d.getValue(0)!=undefined) {
+              $('.resettable', thatWin.window.document).remove();
+              var $inputbox = $("<input type='text'/>");
+              $('body', thatWin.window.document).append($inputbox);
+              $inputbox.css('position', 'absolute');
+              $inputbox.css('left', $(this).offset().left);
+              $inputbox.css('top', $(this).offset().top - 3);
+              $inputbox.css('width', 50);
+              $inputbox.css('height', 14);
+              VVVV.PinTypes[d.typeName].openInputBox(thatWin, $inputbox, d, 0);
+            }
           }
-        }
-        
-        d3.event.stopPropagation();
-        d3.event.preventDefault();
-        return false;
-      })
-    
-    chart.selectAll('g.vvvv-input-pin, g.vvvv-output-pin')
-    .on('click', function(d, i) {
-      if (thatWin.state!=UIState.Connecting) {
-        linkStart = d;
-        thatWin.state = UIState.Connecting;
-        var that = this;
-        chart.append('svg:line')
-          .attr('class', 'vvvv-link current-link resettable')
-          .attr('stroke', '#000')
-          .attr('stroke-width', 1)
-          .attr('x1', d.x + d.node.x + 2 + .5)
-          .attr('y1', d.y + d.node.y + 2 + .5)
-          .attr('x2', d.x + d.node.x + 2 + .5)
-          .attr('y2', d.y + d.node.y + 2 + .5)
-        
-        if (linkStart.direction==PinDirection.Output)  
-          var targetDir = 'input';
-        else
-          var targetDir = 'output';
-        var upnodes = linkStart.node.getUpstreamNodes();
-        chart.selectAll('g.vvvv-'+targetDir+'-pin')
-          .filter(function(d) {
-            if (d.typeName!=linkStart.typeName && (linkStart.typeName!="Node" || VVVV.PinTypes[d.typeName].primitive && (d.typeName!="Node" || VVVV.PinTypes[linkStart.typeName].primitive)))
-              return false;
-            if (upnodes.indexOf(d.node)>=0 || d.node==linkStart.node)
-              return false;
-            return true;
-          })
-          .append('svg:rect')
-            .attr('class', 'vvvv-connection-highlight')
-            .attr('width', 4)
-            .attr('height', 3)
-            .attr('fill', 'rgba(0,0,0,1)')
-            .attr('y', function(d) { return d.direction==PinDirection.Input ? -3 : 3})
-      }
-      else {
-        
-        if (linkStart.direction==PinDirection.Input) {
-          var srcPin = d;
-          var dstPin = linkStart;
+          
+          d3.event.stopPropagation();
+          d3.event.preventDefault();
+          return false;
+        })
+      
+      chart.selectAll('g.vvvv-input-pin, g.vvvv-output-pin')
+      .on('click', function(d, i) {
+        if (thatWin.state!=UIState.Connecting) {
+          linkStart = d;
+          thatWin.state = UIState.Connecting;
+          var that = this;
+          chart.append('svg:line')
+            .attr('class', 'vvvv-link current-link resettable')
+            .attr('stroke', '#000')
+            .attr('stroke-width', 1)
+            .attr('x1', d.x + d.node.x + 2 + .5)
+            .attr('y1', d.y + d.node.y + 2 + .5)
+            .attr('x2', d.x + d.node.x + 2 + .5)
+            .attr('y2', d.y + d.node.y + 2 + .5)
+          
+          if (linkStart.direction==PinDirection.Output)  
+            var targetDir = 'input';
+          else
+            var targetDir = 'output';
+          var upnodes = linkStart.node.getUpstreamNodes();
+          chart.selectAll('g.vvvv-'+targetDir+'-pin')
+            .filter(function(d) {
+              if (d.typeName!=linkStart.typeName && (linkStart.typeName!="Node" || VVVV.PinTypes[d.typeName].primitive && (d.typeName!="Node" || VVVV.PinTypes[linkStart.typeName].primitive)))
+                return false;
+              if (upnodes.indexOf(d.node)>=0 || d.node==linkStart.node)
+                return false;
+              return true;
+            })
+            .append('svg:rect')
+              .attr('class', 'vvvv-connection-highlight')
+              .attr('width', 4)
+              .attr('height', 3)
+              .attr('fill', 'rgba(0,0,0,1)')
+              .attr('y', function(d) { return d.direction==PinDirection.Input ? -3 : 3})
         }
         else {
-          var srcPin = linkStart;
-          var dstPin = d;
-        }
-        
-        if ((srcPin.typeName == dstPin.typeName) || (srcPin.typeName=="Node" && !VVVV.PinTypes[dstPin.typeName].primitive) || (dstPin.typeName=="Node" && !VVVV.PinTypes[srcPin.typeName].primitive)) {
-          var cmd = "<PATCH>";
-          _(dstPin.links).each(function(l) {
-            cmd += "<LINK deleteme='pronto' srcnodeid='"+l.fromPin.node.id+"' srcpinname='"+l.fromPin.pinname+"' dstnodeid='"+l.toPin.node.id+"' dstpinname='"+l.toPin.pinname+"'/>";
-          });
-          cmd += "<LINK createme='pronto' srcnodeid='"+srcPin.node.id+"' srcpinname='"+srcPin.pinname+"' dstnodeid='"+dstPin.node.id+"' dstpinname='"+dstPin.pinname+"'/>";
-          cmd += "</PATCH>";
           
-          editor.update(patch, cmd);
+          if (linkStart.direction==PinDirection.Input) {
+            var srcPin = d;
+            var dstPin = linkStart;
+          }
+          else {
+            var srcPin = linkStart;
+            var dstPin = d;
+          }
           
-          chart.select('.vvvv-link.current-link').remove();
-          chart.select('.vvvv-connection-highlight').remove();
-          thatWin.state = UIState.Idle;
+          if ((srcPin.typeName == dstPin.typeName) || (srcPin.typeName=="Node" && !VVVV.PinTypes[dstPin.typeName].primitive) || (dstPin.typeName=="Node" && !VVVV.PinTypes[srcPin.typeName].primitive)) {
+            var cmd = "<PATCH>";
+            _(dstPin.links).each(function(l) {
+              cmd += "<LINK deleteme='pronto' srcnodeid='"+l.fromPin.node.id+"' srcpinname='"+l.fromPin.pinname+"' dstnodeid='"+l.toPin.node.id+"' dstpinname='"+l.toPin.pinname+"'/>";
+            });
+            cmd += "<LINK createme='pronto' srcnodeid='"+srcPin.node.id+"' srcpinname='"+srcPin.pinname+"' dstnodeid='"+dstPin.node.id+"' dstpinname='"+dstPin.pinname+"'/>";
+            cmd += "</PATCH>";
+            
+            editor.update(patch, cmd);
+            
+            chart.select('.vvvv-link.current-link').remove();
+            chart.select('.vvvv-connection-highlight').remove();
+            thatWin.state = UIState.Idle;
+          }
+          patch.afterUpdate();
         }
-        patch.afterUpdate();
-      }
-      d3.event.stopPropagation();
-    })
-    .on('mousedown', function() {
-      d3.event.stopPropagation();
-    })
-    
-    chart.selectAll('g.vvvv-link')
-      .on("contextmenu", function(d) {
-        editor.update(patch, "<PATCH><LINK deleteme='pronto' srcnodeid='"+d.fromPin.node.id+"' srcpinname='"+d.fromPin.pinname+"' dstnodeid='"+d.toPin.node.id+"' dstpinname='"+d.toPin.pinname+"'/></PATCH>")
-        
-        d3.event.preventDefault();
+        d3.event.stopPropagation();
+      })
+      .on('mousedown', function() {
+        d3.event.stopPropagation();
       })
       
-    nodes
-      .on('mousedown', function(d) {
-        $('.resettable', thatWin.window.document).remove();
-        thatWin.state = UIState.Moving;
-        if (selectedNodes.indexOf(d)<0) {
-          if (!modKeyPressed.SHIFT) {
-            resetSelection();
+      chart.selectAll('g.vvvv-link')
+        .on("contextmenu", function(d) {
+          editor.update(patch, "<PATCH><LINK deleteme='pronto' srcnodeid='"+d.fromPin.node.id+"' srcpinname='"+d.fromPin.pinname+"' dstnodeid='"+d.toPin.node.id+"' dstpinname='"+d.toPin.pinname+"'/></PATCH>")
+          
+          d3.event.preventDefault();
+        })
+        
+      nodes
+        .on('mousedown', function(d) {
+          $('.resettable', thatWin.window.document).remove();
+          thatWin.state = UIState.Moving;
+          if (selectedNodes.indexOf(d)<0) {
+            if (!modKeyPressed.SHIFT) {
+              resetSelection();
+            }
+            d3.select(this).attr('class', 'vvvv-node selected');
+            selectedNodes.push(d);
           }
-          d3.select(this).attr('class', 'vvvv-node selected');
-          selectedNodes.push(d);
-        }
-        dragStart.x = d3.event.pageX;
-        dragStart.y = d3.event.pageY;
-        if (editor.inspector)
-          editor.inspector.setNode(d);
-        d3.event.preventDefault();
-        d3.event.stopPropagation();
-        return false;
-      })
-      .on('contextmenu', function(d) {
-        if (d.isSubpatch) {
-          editor.openPatch(d);
-        }
-        else if (d.openUIWindow) {
-          d.openUIWindow();
-        }
-        d3.event.preventDefault();
-        d3.event.stopPropagation();
-        return false;
-      })
+          dragStart.x = d3.event.pageX;
+          dragStart.y = d3.event.pageY;
+          if (editor.inspector)
+            editor.inspector.setNode(d);
+          d3.event.preventDefault();
+          d3.event.stopPropagation();
+          return false;
+        })
+        .on('contextmenu', function(d) {
+          if (d.isSubpatch) {
+            editor.openPatch(d);
+          }
+          else if (d.openUIWindow) {
+            d.openUIWindow();
+          }
+          d3.event.preventDefault();
+          d3.event.stopPropagation();
+          return false;
+        })
+    }
   }
   
 }
@@ -1148,25 +1166,27 @@ VVVV.Editors.BrowserEditor.Interface = function() {
   }
   
   this.enable = function(p, opts) {
+    opts = opts || {}
     this.addPatch(p);
-    this.openPatch(p);
-    
-    var that = this;
-    $(window).bind('beforeunload', confirmLeave);
-    
-    $(window).unload(function() {
-      that.disable();
-    })
-    
-    this.openInspector(VVVV.Root);
-    
-    if (patchWindows[0].window) {
-      if (opts && opts.success)
-        opts.success();
-    }
-    else {
-      if (opts && opts.error)
-        opts.error();
+    this.openPatch(p, opts.selector);
+    if (!opts.selector) {
+      var that = this;
+      $(window).bind('beforeunload', confirmLeave);
+      
+      $(window).unload(function() {
+        that.disable();
+      })
+      
+      this.openInspector(VVVV.Root);
+      
+      if (patchWindows[0].window) {
+        if (opts && opts.success)
+          opts.success();
+      }
+      else {
+        if (opts && opts.error)
+          opts.error();
+      }
     }
   }
   
@@ -1214,8 +1234,8 @@ VVVV.Editors.BrowserEditor.Interface = function() {
     console.log(patches);
   }
   
-  this.openPatch = function(p) {
-    patchWindows.push(new VVVV.Editors.BrowserEditor.PatchWindow(p, this));
+  this.openPatch = function(p, selector) {
+    patchWindows.push(new VVVV.Editors.BrowserEditor.PatchWindow(p, this, selector));
   }
   
   this.update = function(node, cmd) {
@@ -1252,4 +1272,10 @@ VVVV.Editors.BrowserEditor.Interface = function() {
   
 };
 
-VVVV.Editors["edit"] = new VVVV.Editors.BrowserEditor.Interface();
+// Convinience function to easily inject a patch into the page
+VVVV.VVVViewer = function(patch, selector) {
+  var editor = new VVVV.Editors.BrowserEditor.Interface();
+  editor.enable(patch, {selector: selector});
+}
+
+VVVV.Editors["edit"] = VVVV.Editors.BrowserEditor.Interface;

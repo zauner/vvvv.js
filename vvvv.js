@@ -106,9 +106,6 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
         VVVV.loadScript('nodes/vvvv.nodes.astronomy.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.xml.js', loadMonitor);
       }
-      if (mode=='vvvviewer' || mode=='full') {
-        VVVV.loadScript('vvvviewer/vvvv.vvvviewer.js', loadMonitor);
-      }
       VVVV.loadScript('editors/vvvv.editors.browser_editor.js', loadMonitor);
     }
   }

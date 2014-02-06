@@ -1303,20 +1303,12 @@ VVVV.Core = {
     }
     
     // bind the #-shortcuts
-    
     function checkLocationHash() {
-      if (!VVVV.Editors["Connector"].isConnected() && (window.location.hash=='#sync/'+thisPatch.ressource || window.location.hash=='#syncandview/'+thisPatch.ressource)) {
-        console.log('enabling devel env');
-        VVVV.Editors["Connector"].disable();
-        VVVV.Editors["Connector"].host = 'ws://localhost';
-        VVVV.Editors["Connector"].enable(thisPatch);
-      }
-      if (!thisPatch.vvvviewer && (window.location.hash=='#view/'+thisPatch.ressource || window.location.hash=='#syncandview/'+thisPatch.ressource)) {
-        thisPatch.vvvviewer = new VVVV.VVVViewer(thisPatch);
-      }
-      if (window.location.hash=="#edit/"+thisPatch.ressource) {
+      var match = window.location.hash.match('#([^\/]+)\/'+thisPatch.ressource+'$');
+      if (match) {
         console.log('launching editor ...');
-        VVVV.Editors["edit"].enable(thisPatch);
+        var ed = new VVVV.Editors[match[1]]();
+        ed.enable(thisPatch);
       }
     }
     checkLocationHash();
