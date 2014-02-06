@@ -695,6 +695,14 @@ VVVV.Core = {
       return match[1] || '';
     }
     
+    this.destroy = function() {
+      for (var i=0; i<this.nodeList.length; i++) {
+        this.nodeList[i].destroy();
+        delete this.nodeMap[this.nodeList[i].id];
+        delete this.nodeList[i];
+      }
+    }
+    
     function splitValues(v) {
       if (v==undefined)
         return [];
@@ -842,6 +850,7 @@ VVVV.Core = {
                     }
                     while (p = p.parentPatch);
                   }
+                  this.setMainloop(thisPatch.mainloop);
                   thisPatch.afterUpdate();
                   if (thisPatch.resourcesPending<=0 && ready_callback) {
                     ready_callback();
@@ -1112,6 +1121,15 @@ VVVV.Core = {
         }
       }
       return ret;
+    }
+    
+    this.setMainloop = function(ml) {
+      this.mainloop = ml;
+      for (var i=0; i<this.nodeList.length; i++) {
+        if (this.nodeList[i].isSubpatch) {
+          this.nodeList[i].setMainloop(ml);
+        }
+      }
     }
     
     

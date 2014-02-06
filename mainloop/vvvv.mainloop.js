@@ -11,6 +11,10 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
   var measureStart = 0;
   var print_framerate = false;
   
+  this.deltaT = 1000/VVVV.fps;
+  
+  patch.setMainloop(this);
+  
   function update() {
     if (patch.resourcesPending==0) {
       framecount ++;
@@ -27,8 +31,9 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
         measureStart = start;
       }
     }
+    this.deltaT = Math.max(0, Math.round(1000/VVVV.fps-elapsed));
     if (run) // && framecount<1)
-      window.setTimeout(update, Math.max(0, Math.round(1000/VVVV.fps-elapsed)));
+      window.setTimeout(update, this.deltaT);
     
   }
   
