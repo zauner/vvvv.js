@@ -22,16 +22,38 @@ if(!window.console) {
 }
 
 // actual VVVV.js initialization code
+
+/** @namespace */
 VVVV = {};
-VVVV.Config = {};
-VVVV.Config.auto_undo = false;
+
+/** @namespace */
 VVVV.Nodes = {};
+
+/** @namespace */
 VVVV.PinTypes = {};
+
+VVVV.Types = {};
+
+/* 
+ * All implemented nodes are registered here
+ */
 VVVV.NodeLibrary = {};
+
 VVVV.NodeNames = [];
+
+/*
+ * This holds all created patches and their subpatches. Indices are the absolute patch file names. Patches that are loaded with the script tag are
+ * also stored in indices 0 .. n
+ */
 VVVV.Patches = {};
 VVVV.Editors = {};
 
+VVVV.Editors = {};
+
+/**
+ * Fired when a node is being created that is not implemented
+ * @param {String} nodename the name of the node which is not implemented
+ */
 VVVV.onNotImplemented = function(nodename) {
   console.log("Warning: "+nodename+" is not implemented.");
 };
@@ -49,7 +71,7 @@ VVVV.loadScript = function(url, callback) {
 };
 
 /**
- * Adds the neccessary JavaScripts to the head, calls the callback once everything is in place.
+ * Adds the neccessary JavaScripts to the head, calls the callback once everything is in place. Also automatically loads patches specified in script tags.
  * @param {String} path_to_vvvv points to the folder of your vvvv.js. This is relative to your html-file
  * @param {String} mode. Can be either "full", "vvvviewer" or "run". Depends on what you want to do 
  * @param {Function} callback will be called once all the scripts and initialisations have been finished.

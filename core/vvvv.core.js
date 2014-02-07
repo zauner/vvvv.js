@@ -3,26 +3,40 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
-VVVV.Types = {}
 
 VVVV.MousePositions = {'_all': {'x': 0.0, 'y': 0.0, 'wheel': 0.0, 'lb': 0.0, 'mb': 0.0, 'rb': 0.0}}
 
-VVVV.Types.Color = function(r, g, b, a) {
-  this.rgba = [r, g, b, a];
-  
-  this.toString = function() {
-    return "r="+(r*100)+"% "+"g="+(g*100)+"% "+"b="+(b*100)+"% "+"a="+(a*100)+"%";
-  }
-}
-
+/**
+ * @const
+ * @property {Integer} Input 0
+ * @property {Integer} Output 1
+ * @property {Integer} Configuration 2
+ */
 var PinDirection = { Input : 0,Output : 1,Configuration : 2 };
 
+/**
+ * The default pin type, used if no further specified
+ * @memberof VVVV.PinTypes
+ * @typedef
+ * @property {String} typeName Generic
+ * @property {Boolean} reset_on_disconnect true
+ * @property {String} defaultValue '0'
+ */
 VVVV.PinTypes.Generic = {
   typeName: "Generic",
   reset_on_disconnect: true,
   defaultValue: function() { return '0' }
 }
 
+/**
+ * Value Pin Type
+ * @memberof VVVV.PinTypes
+ * @typedef
+ * @property {String} typeName Value
+ * @property {Boolean} reset_on_disconnect false
+ * @property {String} defaultValue 0
+ * @property {Boolean} primitive true
+ */
 VVVV.PinTypes.Value = {
   typeName: "Value",
   reset_on_disconnect: false,
@@ -30,6 +44,15 @@ VVVV.PinTypes.Value = {
   primitive: true
 }
 
+/**
+ * String Pin Type
+ * @memberof VVVV.PinTypes
+ * @typedef
+ * @property {String} typeName String
+ * @property {Boolean} reset_on_disconnect false
+ * @property {String} defaultValue ''
+ * @property {Boolean} primitive true
+ */
 VVVV.PinTypes.String = {
   typeName: "String",
   reset_on_disconnect: false,
@@ -37,6 +60,15 @@ VVVV.PinTypes.String = {
   primitive: true
 }
 
+/**
+ * Enum Pin Type
+ * @memberof VVVV.PinTypes
+ * @typedef
+ * @property {String} typeName Enum
+ * @property {Boolean} reset_on_disconnect false
+ * @property {String} defaultValue ''
+ * @property {Boolean} primitive true
+ */
 VVVV.PinTypes.Enum = {
   typeName: "Enum",
   reset_on_disconnect: false,
@@ -44,8 +76,17 @@ VVVV.PinTypes.Enum = {
   primitive: true
 }
 
+/**
+ * Contains various unsorted helper methods
+ * @namespace
+ */
 VVVV.Helpers = {
   
+  /**
+   * Translates a verbous operator (from the nodename) to a symbol
+   * @param {String} l The verbous operator
+   * @return {String} the operator symbol
+   */
   translateOperators: function(l) {
     l = l.replace("Add", "+");
     l = l.replace("Subtract", "-");
@@ -59,6 +100,12 @@ VVVV.Helpers = {
     return l;
   },
   
+  /**
+   * Translates a relative path to an absolute one (usable by the browser) and replaces variables %VVVV% and %PAGE%
+   * @param {String} path the relative path
+   * @param {VVVV.Core.Patch} patch the patch which the above path is relative to
+   * @return {String} the absolute path, usable by the browser
+   */
   prepareFilePath: function(path, patch) {
     path = path.replace(/\\/g, '/');
     if (path.match(/^%VVVV%/)) // VVVV.js system path
@@ -89,22 +136,48 @@ VVVV.Helpers = {
   }
 }
 
+/** @namespace */
 VVVV.Core = {	
   
+  /**
+   * @class
+   * @constructor
+   * @param {String} pinname Pin Name
+   * @param {String} direction see {@link PinDirection}
+   * @param {Array} init_values the array of initial values
+   * @param {VVVV.Core.Node} node the node this pin is attached to
+   * @param {Object} [type] the PinType, default is {@link VVVV.PinTypes.Generic), see {@link VVVV.PinTypes}
+   */
   Pin: function(pinname,direction, init_values, node, type) {
+    /** @property {Integer} direction see {@link PinDirection} */
     this.direction = direction;
+    /** @property */
     this.pinname = pinname;
+    /** @property */
     this.links = [];
+    /** @propety */
     this.values = [];
+    /** @property */
     this.node = node;
+    /** @property */
     this.changed = true;
     this.active = false;
     this.reset_on_disconnect = false;
+    /** @property {VVVV.Core.Pin} slavePin if the pin is a subpatch's input pin, the slavePin is the corresponding IOBox input pin INSIDE the subpatch */ 
     this.slavePin = undefined;
+    /** @property {VVVV.Core.Pin} masterPin if the pin is a subpatch's output pin, the masterPin is the corresponding IOBox output pin INSIDE the subpatch */ 
     this.masterPin = undefined;
+    /** @property {Object} contains a row of named callback functions, each fired if the pin's connection has changed */
     this.connectionChangedHandlers = {};
+    /** @property {Array} enumOptions contains the options used if the pin is of type {@link VVVV.PinTypes.Enum} */
     this.enumOptions = [];
     
+    /**
+     * retreives pin's slices
+     * @param {Integer} i the slice/bin number
+     * @param {Integer} [binSize] the bin size, default is 1
+     * @return if binSize is 1, the value of the slice is returned; if binSize is > 1, an array with the slice values is returned
+     */
     this.getValue = function(i, binSize) {
       if (!binSize || binSize==1)
         return this.values[i%this.values.length];
@@ -115,6 +188,12 @@ VVVV.Core = {
       return ret;
     }
     
+    /**
+     * set a pin's slice value; if an output pin, it also sets the values of connected input pins. If the pin is a subpatch input pin, it also sets the slavePin inside the subpatch
+     * @param {Integer} i the slice number
+     * @param v the value to set
+     * @param {Boolean} [stopPropagation] default is false; if true, the function does not update slavePins to avoid infinite loops; this parameter should not be used in node implementations
+     */
     this.setValue = function(i, v, stopPropagation) {
       stopPropagation = stopPropagation || false
       this.values[i] = v;
@@ -141,6 +220,9 @@ VVVV.Core = {
       }
     }
     
+    /**
+     * used to mark a pin as changed without actually using {@link VVVV.Core.Pin#setValue}
+     */
     this.markPinAsChanged = function() {
       this.changed = true;
       this.node.dirty = true;
@@ -156,20 +238,35 @@ VVVV.Core = {
       }
     }
     
+    /**
+     * used to find out if a pin has changed since last evaluation
+     * @return {Boolean} true if changed, false if not changed
+     */
     this.pinIsChanged = function() {
       var ret = this.changed;
       this.changed = false;
       return ret;
     }
-	
+    
+    /**
+     * used do find out if a pin is connected
+     * @return true, if there are incoming or outgoing links to or from this pin (and its masterPin, if preset)
+     */
     this.isConnected = function() {
       return (this.links.length > 0 || (this.masterPin && this.masterPin.isConnected()));
     }
     
+    /**
+     * @return the number of slices
+     */
     this.getSliceCount = function() {
       return this.values.length;
     }
 	
+	  /**
+	   * sets the number of slices; also sets the slice number of connected downstream pins and the slavePin if present; absolutely necessary if the slice number decreases
+	   * @param {Integer} len the slice count
+	   */
     this.setSliceCount = function(len) {
       if (this.values.length==len)
         return;
@@ -187,6 +284,10 @@ VVVV.Core = {
       }
     }
     
+    /**
+     * used to change the pin's type during runtime. Also sets the value to the new pin type's default value
+     * @param {Object} newType the new type, see {@link VVVV.PinTypes}
+     */
     this.setType = function(newType) {
       if (newType.typeName == this.typeName)
         return;
@@ -227,6 +328,9 @@ VVVV.Core = {
       this.markPinAsChanged();
     }
     
+    /**
+     * called if the pin gets connected or disconnected; subsequently calls the callbacks registered in {@link VVVV.Core.Pin#connectionChangedHandlers}
+     */
     this.connectionChanged = function() {
       var that = this;
       _(this.connectionChangedHandlers).each(function(handler) {
