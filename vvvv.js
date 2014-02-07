@@ -30,6 +30,7 @@ VVVV.PinTypes = {};
 VVVV.NodeLibrary = {};
 VVVV.NodeNames = [];
 VVVV.Patches = {};
+VVVV.Editors = {};
 
 VVVV.onNotImplemented = function(nodename) {
   console.log("Warning: "+nodename+" is not implemented.");
@@ -79,7 +80,6 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
   
     if ($('script[src*="vvvv.core.js"]').length==0) {
       VVVV.loadScript('core/vvvv.core.js', loadMonitor);
-      VVVV.loadScript('core/vvvv.core.vvvvconnector.js', loadMonitor);
       if (mode=='run' || mode=='full') {
         VVVV.loadScript('mainloop/vvvv.mainloop.js', loadMonitor);
         VVVV.loadScript('mainloop/vvvv.dominterface.js', loadMonitor);
