@@ -11,7 +11,7 @@ VVVV.PinTypes.Color = {
   },
   primitive: true,
   hsvToRgb: function(h, s, v) {
-    h = h*360;
+    h = (h%1.0 + 1.0)%1.0 * 360;
     var hi = Math.floor(h/60.0);
     var f = (h/60.0) - hi;
     var p = v * (1-s);
