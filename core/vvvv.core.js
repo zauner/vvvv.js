@@ -803,7 +803,7 @@ VVVV.Core = {
         
         var nodeExists = thisPatch.nodeMap[$(this).attr('id')]!=undefined;
         if (!nodeExists) {
-          nodename = $(this).attr('systemname')!="" ? $(this).attr('systemname') : $(this).attr('nodename');
+          var nodename = $(this).attr('systemname')!="" ? $(this).attr('systemname') : $(this).attr('nodename');
           if (nodename==undefined)
             return;       
           if (VVVV.NodeLibrary[nodename.toLowerCase()]!=undefined) {
@@ -829,12 +829,10 @@ VVVV.Core = {
           else {
             if (/.v4p$/.test($(this).attr('filename'))) {
               thisPatch.resourcesPending++;
-              nodesLoading++;
               var that = this;
               var n = new VVVV.Core.Patch($(this).attr('filename'),
                 function() {
                   thisPatch.resourcesPending--;
-                  nodesLoading--;
                   if (VVVV_ENV=='development') console.log(this.nodename+'invoking update links')
                   updateLinks(xml);
                   if (thisPatch.editor)
@@ -855,9 +853,9 @@ VVVV.Core = {
                 },
                 function() {
                   thisPatch.resourcesPending--;
-                  nodesLoading--;
                   this.not_implemented = true;
                   VVVV.onNotImplemented(nodename);
+                  updateLinks(xml);
                   thisPatch.afterUpdate();
                   if (thisPatch.resourcesPending<=0 && ready_callback) {
                     ready_callback();
@@ -1017,7 +1015,7 @@ VVVV.Core = {
         });
       }
     
-      if (nodesLoading===0)
+      if (this.resourcesPending===0)
         updateLinks(xml);
         
       function updateLinks(xml) {
