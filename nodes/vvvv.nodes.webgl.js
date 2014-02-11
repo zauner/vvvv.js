@@ -319,6 +319,9 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   var filenamePin = this.addInputPin("Filename", [""], VVVV.PinTypes.String);
   var outputPin = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
   
+  var typeIn = this.addInvisiblePin("Type", ["Texture"], VVVV.PinTypes.Enum);
+  typeIn.enumOptions = ["Texture", "Cube Texture"];
+  
   var textures = [];
   
   this.evaluate = function() {
@@ -336,7 +339,8 @@ VVVV.Nodes.FileTexture = function(id, graph) {
       textures = [];
     }
   
-    if (filenamePin.pinIsChanged() || this.contextChanged) {
+    if (filenamePin.pinIsChanged() || typeIn.pinIsChanged() || this.contextChanged) {
+      var type = typeIn.getValue(0);
       var maxSize = this.getMaxInputSliceCount();
       for (var i=0; i<maxSize; i++) {
         var filename = VVVV.Helpers.prepareFilePath(filenamePin.getValue(i), this.parentPatch);
@@ -344,21 +348,57 @@ VVVV.Nodes.FileTexture = function(id, graph) {
           filename = VVVV.ImageProxyPrefix+encodeURI(filename);
         textures[i] = gl.createTexture();
         textures[i].context = gl;
-        textures[i].image = new Image();
-        textures[i].image.onload = (function(j) {
-          return function() {  // this is to create a new scope within the loop. see "javascript closure in for loops" http://www.mennovanslooten.nl/blog/post/62
-            gl.bindTexture(gl.TEXTURE_2D, textures[j]);
-            //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textures[j].image);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-            outputPin.markPinAsChanged();
-          }
-        })(i);
-        textures[i].image.src = filename;
+        if (type=="Texture") {
+          textures[i].image = new Image();
+          textures[i].image.onload = (function(j) {
+            return function() {  // this is to create a new scope within the loop. see "javascript closure in for loops" http://www.mennovanslooten.nl/blog/post/62
+              gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+              gl.bindTexture(gl.TEXTURE_2D, textures[j]);
+              //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+              gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textures[j].image);
+              gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+              gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+              gl.bindTexture(gl.TEXTURE_2D, null);
+              outputPin.setValue(j, textures[j]);
+            }
+          })(i);
+          textures[i].image.src = filename;
+        }
+        else if (type=="Cube Texture") {
+          textures[i].image = new Image();
+          textures[i].image.onload = (function(j) {
+            return function() {
+              var faces = [
+                {face: gl.TEXTURE_CUBE_MAP_POSITIVE_X, offset: [2, 1]},
+                {face: gl.TEXTURE_CUBE_MAP_NEGATIVE_X, offset: [0, 1]},
+                {face: gl.TEXTURE_CUBE_MAP_POSITIVE_Y, offset: [1, 0]},
+                {face: gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, offset: [1, 2]},
+                {face: gl.TEXTURE_CUBE_MAP_POSITIVE_Z, offset: [1, 1]},
+                {face: gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, offset: [3, 1]}];
+              gl.bindTexture(gl.TEXTURE_CUBE_MAP, textures[j]);
+              
+              var $texcanvas = $('<canvas style="display:none" width="'+(this.width/4)+'" height="'+(this.height/3)+'"></canvas>');
+              $('body').append($texcanvas);
+              var ctx = $texcanvas.get(0).getContext("2d");
+              
+              for (var k=0; k<6; k++) {
+                ctx.save();
+                ctx.translate(-this.width/4 * faces[k].offset[0], -this.height/3 * faces[k].offset[1]);
+                ctx.drawImage(this, 0, 0);
+                gl.texImage2D(faces[k].face, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, $texcanvas.get(0));
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+                ctx.restore();
+              }
+              gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+              $texcanvas.remove();
+              outputPin.setValue(j, textures[j]);
+            }
+          })(i);
+          textures[i].image.src = filename;
+        }
       
-        outputPin.setValue(i, textures[i]);
+        outputPin.setValue(i, VVVV.defaultTexture);
       }
       outputPin.setSliceCount(maxSize);
     }
@@ -1291,6 +1331,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
         case 'mat':
           pinType = VVVV.PinTypes.Transform;
           break;
+        case 'samplerCube':
         case 'sampler':
           pinType = VVVV.PinTypes.WebGlTexture;
           break;
@@ -1870,8 +1911,9 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     gl = this.ctxt;
  
     var pixels = new Uint8Array([255, 255, 255]);
-    gl.DefaultTexture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, gl.DefaultTexture);
+    gl.DefaultTexture = {};
+    gl.DefaultTexture['2D'] = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, gl.DefaultTexture['2D']);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -1879,6 +1921,21 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
     gl.bindTexture(gl.TEXTURE_2D, null);
+    
+    gl.DefaultTexture['CUBE'] = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, gl.DefaultTexture['CUBE']);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
     
     // this is to ensure that all the input pins get evaluated, if the gl context has been set after the node creation
     this.inputPins["Layers"].markPinAsChanged();
@@ -2034,9 +2091,18 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
             case "sampler":
               var tex = u.value;
               if (tex==VVVV.DefaultTexture)
-                tex = gl.DefaultTexture;
+                tex = gl.DefaultTexture['2D'];
               gl.activeTexture(gl['TEXTURE'+textureIdx]);
               gl.bindTexture(gl['TEXTURE_'+u.uniformSpec.dimension], tex);
+              gl.uniform1i(u.uniformSpec.position, textureIdx);
+              textureIdx++;
+              break;
+            case "samplerCube":
+              var tex = u.value;
+              if (tex==VVVV.DefaultTexture)
+                tex = gl.DefaultTexture['CUBE'];
+              gl.activeTexture(gl['TEXTURE'+textureIdx]);
+              gl.bindTexture(gl.TEXTURE_CUBE_MAP, tex);
               gl.uniform1i(u.uniformSpec.position, textureIdx);
               textureIdx++;
               break;
@@ -2051,6 +2117,9 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         currentRenderState = renderState;
         currentMesh = layer.mesh;
       }
+      
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
       
     }
     
