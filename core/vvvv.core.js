@@ -89,9 +89,6 @@ VVVV.Core = {
     this.connectionChangedHandlers = {};
     this.enumOptions = [];
     
-    if (type==undefined && VVVV_ENV=='development')
-      console.warn(node.nodename+" / "+pinname+" -> Generic");
-    
     this.getValue = function(i, binSize) {
       if (!binSize || binSize==1)
         return this.values[i%this.values.length];
@@ -205,7 +202,6 @@ VVVV.Core = {
       this.values = init_values.slice(0); // use slice(0) to create a copy of the array
     
     this.reset = function() {
-      console.log('resetting '+this.pinname);
       if (this.defaultValue) {
         this.setValue(0, this.defaultValue());
         this.setSliceCount(1);
@@ -1056,8 +1052,6 @@ VVVV.Core = {
             dstPin = thisPatch.nodeMap[$(this).attr('dstnodeid')].addInputPin($(this).attr('dstpinname'), undefined);
             
           if (srcPin && dstPin) {
-            if (srcPin.typeName!=dstPin.typeName && srcPin.typeName!='Node' && dstPin.typeName!='Node')
-              if (VVVV_ENV=='development') console.warn("Type Mismatch: "+srcPin.node.nodename+"/"+srcPin.pinname+" <-> "+dstPin.node.nodename+"/"+dstPin.pinname);
             var link = false;
             for (var i=0; i<thisPatch.linkList.length; i++) {
               if (thisPatch.linkList[i].fromPin.node.id==srcPin.node.id &&
