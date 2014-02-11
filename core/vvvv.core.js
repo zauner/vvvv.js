@@ -854,8 +854,15 @@ VVVV.Core = {
                   }
                 },
                 function() {
+                  thisPatch.resourcesPending--;
+                  nodesLoading--;
                   this.not_implemented = true;
                   VVVV.onNotImplemented(nodename);
+                  thisPatch.afterUpdate();
+                  if (thisPatch.resourcesPending<=0 && ready_callback) {
+                    ready_callback();
+                    ready_callback = undefined;
+                  }
                 },
                 thisPatch, $(that).attr('id')
               );
@@ -1265,6 +1272,10 @@ VVVV.Core = {
                 that.success();
               that.afterUpdate();
             });
+          },
+          error: function() {
+            if (that.error)
+              that.error();
           }
         });
       }
