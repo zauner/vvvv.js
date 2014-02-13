@@ -3,6 +3,11 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+/**
+ * The Node Pin Type
+ * @mixin
+ * @property {String} typeName "Node"
+ */
 VVVV.PinTypes.Node = {
   typeName: "Node"
 }

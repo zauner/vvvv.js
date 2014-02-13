@@ -17,7 +17,7 @@ var PinDirection = { Input : 0,Output : 1,Configuration : 2 };
 /**
  * The default pin type, used if no further specified
  * @memberof VVVV.PinTypes
- * @typedef
+ * @mixin
  * @property {String} typeName Generic
  * @property {Boolean} reset_on_disconnect true
  * @property {String} defaultValue '0'
@@ -31,7 +31,7 @@ VVVV.PinTypes.Generic = {
 /**
  * Value Pin Type
  * @memberof VVVV.PinTypes
- * @typedef
+ * @mixin
  * @property {String} typeName Value
  * @property {Boolean} reset_on_disconnect false
  * @property {String} defaultValue 0
@@ -47,7 +47,7 @@ VVVV.PinTypes.Value = {
 /**
  * String Pin Type
  * @memberof VVVV.PinTypes
- * @typedef
+ * @mixin
  * @property {String} typeName String
  * @property {Boolean} reset_on_disconnect false
  * @property {String} defaultValue ''
@@ -63,7 +63,7 @@ VVVV.PinTypes.String = {
 /**
  * Enum Pin Type
  * @memberof VVVV.PinTypes
- * @typedef
+ * @mixin
  * @property {String} typeName Enum
  * @property {Boolean} reset_on_disconnect false
  * @property {String} defaultValue ''
@@ -149,27 +149,27 @@ VVVV.Core = {
    * @param {Object} [type] the PinType, default is {@link VVVV.PinTypes.Generic), see {@link VVVV.PinTypes}
    */
   Pin: function(pinname,direction, init_values, node, type) {
-    /** @property {Integer} direction see {@link PinDirection} */
+    /** see {@link PinDirection} */
     this.direction = direction;
-    /** @property */
+    /** @member */
     this.pinname = pinname;
-    /** @property */
+    /** @member */
     this.links = [];
-    /** @propety */
+    /** @member */
     this.values = [];
-    /** @property */
+    /** @member */
     this.node = node;
-    /** @property */
+    /** @member */
     this.changed = true;
     this.active = false;
     this.reset_on_disconnect = false;
-    /** @property {VVVV.Core.Pin} slavePin if the pin is a subpatch's input pin, the slavePin is the corresponding IOBox input pin INSIDE the subpatch */ 
+    /** if the pin is a subpatch's input pin, the slavePin is the corresponding IOBox input pin INSIDE the subpatch */ 
     this.slavePin = undefined;
-    /** @property {VVVV.Core.Pin} masterPin if the pin is a subpatch's output pin, the masterPin is the corresponding IOBox output pin INSIDE the subpatch */ 
+    /** if the pin is a subpatch's output pin, the masterPin is the corresponding IOBox output pin INSIDE the subpatch */ 
     this.masterPin = undefined;
-    /** @property {Object} contains a row of named callback functions, each fired if the pin's connection has changed */
+    /** contains a row of named callback functions, each fired if the pin's connection has changed */
     this.connectionChangedHandlers = {};
-    /** @property {Array} enumOptions contains the options used if the pin is of type {@link VVVV.PinTypes.Enum} */
+    /** contains the options used if the pin is of type {@link VVVV.PinTypes.Enum} */
     this.enumOptions = [];
     
     /**
@@ -257,7 +257,7 @@ VVVV.Core = {
     }
     
     /**
-     * @return the number of slices
+     * @return {Integer} the number of slices
      */
     this.getSliceCount = function() {
       return this.values.length;
@@ -340,17 +340,34 @@ VVVV.Core = {
     }
   },
   
+  /**
+   * @class
+   * @constructor
+   * @param {Integer} id the Node ID
+   * @param {String} nodename the Node Name
+   * @param {VVVV.Core.Patch} [parentPatch] the {@link VVVV.Core.Patch} the node is nested
+   */
   Node: function(id, nodename, parentPatch) {
   
+    /** the nodename; might be e.g. a name in format NodeName (Category), SomeShader.fx or a path/to/a/subpatch.v4p */
     this.nodename = nodename;
+    /** the node ID */
     this.id = id;
+    /** X position in pixels inside the parent patch */
     this.x = 0;
+    /** Y position in pixels inside the parent patch */
     this.y = 0;
+    /** Node width (in a weird unit); use {@link VVVV.Core.Node.getWidth()} for pixel value */
     this.width = 0;
+    /** Node width (in a weird unit); use {@link VVVV.Core.Node.getHeight()} for pixel value */
     this.height = 0;
+    /** flag indicating whether a node is an IOBox */
     this.isIOBox = false;
+    /** flag indicating whether a node is a shader node */
     this.isShader = false;
+    /** the number of subsequent resources (subpatches, shaders, 3rd party libs, etc.) that are currently being loaded. Is 0 if nothing is pending */
     this.resourcesPending = 0;
+    /** flag indicating if this node should automatically output nil on all output pins, if a nil value is on any input pin */
     this.auto_nil = true;
     
     this.setupObject = function() { // had to put this into a method to allow Patch to "derive" from Node. Really have to understand this javascript prototype thing some day ...
@@ -362,19 +379,35 @@ VVVV.Core = {
 	  };
 	  this.setupObject();
     
+    /** a flag indicating if this node should evaluate each frame, no matter if it's marked dirty or not */
     this.auto_evaluate = false;
     this.delays_output = false;
     
+    /** a flag indicating if any of this node's input pins has changed */
     this.dirty = true;
     
+    /** the patch containing this node */
     this.parentPatch = parentPatch;
     if (parentPatch)
       this.parentPatch.nodeMap[id] = this;
 	  
+	  /**
+	   * saves a pin value coming from the patch XML for later use
+	   * @param {String} pinname the pin's name
+	   * @param {Array} value the array of values (slices)
+	   */
     this.addDefault = function(pinname, value) {
       this.defaultPinValues[pinname] = value;
     }
     
+    /**
+     * Creates a new input pin and adds it to the node. If pin values from the XML have been registered through {@link VVVV.Core.Node.addDefault},
+     * these values are assigned
+     * @param {String} pinname the new pin's name
+     * @param {Array} value the default spread
+     * @param {Object} type see {@link VVVV.PinTypes}
+     * @return {VVVV.Core.Pin} the new {@link VVVV.Core.Pin}
+     */
     this.addInputPin = function(pinname, value, type) {
       var pin = new VVVV.Core.Pin(pinname,PinDirection.Input, value, this, type);
       this.inputPins[pinname] = pin;
@@ -384,6 +417,13 @@ VVVV.Core = {
       return pin;
     }
  
+    /**
+     * Creates a new output pin and adds it to the node.
+     * @param {String} pinname the new pin's name
+     * @param {Array} value the default spread
+     * @param {Object} type see {@link VVVV.PinTypes}
+     * @return {VVVV.Core.Pin} the new {@link VVVV.Core.Pin}
+     */
     this.addOutputPin = function(pinname, value, type) {
       var pin = new VVVV.Core.Pin(pinname,PinDirection.Output, value, this, type);
       this.outputPins[pinname] = pin;
@@ -392,6 +432,10 @@ VVVV.Core = {
       return pin;
     }
     
+    /**
+     * deletes an input pin and all incoming links
+     * @param pinname the name of the pin to delete
+     */
     this.removeInputPin = function(pinname) {
       if (!this.inputPins[pinname]) return;
       var l = this.inputPins[pinname].links[0];
@@ -403,6 +447,10 @@ VVVV.Core = {
       this.dirty = true;
     }
     
+    /**
+     * deletes an output pin and all outgoing links
+     * @param pinname the name of the pin to delete
+     */
     this.removeOutputPin = function(pinname) {
       if (!this.outputPins[pinname]) return;
       var n = this.outputPins[pinname].links.length;
@@ -415,6 +463,14 @@ VVVV.Core = {
       this.dirty = true;
     }
     
+    /**
+     * Creates a new invisible/config pin and adds it to the node. If pin values from the XML have been registered through {@link VVVV.Core.Node.addDefault},
+     * these values are assigned
+     * @param {String} pinname the new pin's name
+     * @param {Array} value the default spread
+     * @param {Object} type see {@link VVVV.PinTypes}
+     * @return {VVVV.Core.Pin} the new {@link VVVV.Core.Pin}
+     */
     this.addInvisiblePin = function(pinname, value, type) {
       var pin = new VVVV.Core.Pin(pinname,PinDirection.Configuration, value, this, type);
       this.invisiblePins[pinname] = pin;
@@ -424,7 +480,11 @@ VVVV.Core = {
       }
       return pin;
     }
-	    
+	  
+	  /**
+	   * Helper to get the type of IOBox (e.g. Value Advanced, String, Color)
+	   * @return {String} the type of IOBox
+	   */  
     this.IOBoxType = function() {
       var match = /^IOBox \((.*)\)/.exec(this.nodename);
       if (match && match.length>1)
@@ -432,6 +492,10 @@ VVVV.Core = {
       return "";
     }
     
+    /**
+     * Returns the input pin of the IOBox which is represented by the IOBox label
+     * @return {VVVV.Core.Pin} the pin represented by the IOBox label, see {@link VVVV.Core.Pin}
+     */
     this.IOBoxInputPin = function() {
       switch (this.IOBoxType()) {
         case "Value Advanced":
@@ -446,6 +510,10 @@ VVVV.Core = {
       return undefined;
     }
     
+    /**
+     * Returns the output pin of the IOBox which is represented by the IOBox label
+     * @return {VVVV.Core.Pin} the pin represented by the IOBox label, see {@link VVVV.Core.Pin}
+     */
     this.IOBoxOutputPin = function() {
       switch (this.IOBoxType()) {
         case "Value Advanced":
@@ -460,6 +528,10 @@ VVVV.Core = {
       return undefined;
     }
     
+    /**
+     * Returns the number of visible rows of an IOBox. This is basically a convenience method for getting the value of the "Rows" pin 
+     * @return {Integer} the number of visible rows
+     */
     this.IOBoxRows = function() {
 		if (this.invisiblePins["Rows"])
 			return this.invisiblePins["Rows"].getValue(0);
@@ -467,10 +539,20 @@ VVVV.Core = {
 			return 1;
     }
     
+    /**
+     * Tells, if a node is a comment node. Reverse engineering revealed that this is the case, if a String IOBox has no output
+     * pins. Maybe better ask someone who actually knows.
+     * @return {Boolean} true, if the node is a comment, false otherwise.
+     */
     this.isComment = function() {
       return this.isIOBox && _(this.outputPins).size()==0
     }
     
+    /**
+     * Returns the text shown inside a node box in the editor. In case of an IOBox this is the result of {@link VVVV.Core.Node.IOBoxInputPin};
+     * in case of a subpatch this is "|| SubPatchName" (the .v4p extension stripped); in case of a normal node, this is the node name.
+     * @return {String} the node's representative label
+     */
     this.label = function() {
       if (this.isIOBox) {
         if (this.IOBoxInputPin().getValue(0))
@@ -487,6 +569,10 @@ VVVV.Core = {
       return label;
     }
     
+    /**
+     * Returns the node with in pixels, used for displaying the patch
+     * @return {Integer} the node width in pixels
+     */
     this.getWidth = function() {
       var ret;
       if (this.width==100 || this.width==0) {
@@ -501,6 +587,10 @@ VVVV.Core = {
       return ret;
     }
     
+    /**
+     * Returns the node height in pixels, used for displaying the patch
+     * @return {Integer} the node height in pixels
+     */
     this.getHeight = function() {
       if (this.isIOBox && this.height==100)
         return 18 * this.IOBoxRows();
@@ -510,6 +600,10 @@ VVVV.Core = {
         return Math.max(18, this.height/15);
     }
     
+    /**
+     * Returns all nodes which are connected to a node's input pins
+     * @return {Array} an Array of {@link VVVV.Core.Node} objects
+     */
     this.getUpstreamNodes = function() {
       var ret = [];
       _(this.inputPins).each(function(p) {
@@ -519,6 +613,10 @@ VVVV.Core = {
       return ret;
     }
     
+    /**
+     * Returns all nodes which are connected to a node's output pins
+     * @return {Array} an Array of {@link VVVV.Core.Node} objects
+     */
     this.getDownstreamNodes = function() {
       var ret = [];
       _(this.outputPins).each(function(p) {
@@ -529,6 +627,11 @@ VVVV.Core = {
       return ret;
     }
     
+    /**
+     * Finds all nodes with a certain name, the node's data eventually flows into.
+     * @param {String} name the name of the node to search for
+     * @result {Array} an Array of {@link VVVV.Core.Node} objects matching the search
+     */
     this.findDownstreamNodes = function(name) {
       var ret = [];
     	_(this.outputPins).each(function(p) {
@@ -552,6 +655,10 @@ VVVV.Core = {
     	return ret;
     }
     
+    /**
+     * Tells, if a node has any nil inputs
+     * @return true, if any of the input pins are true, false otherwise
+     */
     this.hasNilInputs = function() {
       var result = false
       _(this.inputPins).each(function(p) {
@@ -561,6 +668,10 @@ VVVV.Core = {
       return result;
     }
     
+    /**
+     * Returns the maximum number of slices of a node's input pins
+     * @return the maximum number of slices
+     */
     this.getMaxInputSliceCount = function() {
       var ret = 0;
       _(this.inputPins).each(function(p) {
@@ -570,6 +681,10 @@ VVVV.Core = {
       return ret;
     }
     
+    /**
+     * Applies values from the patch XML to an input pin, if present
+     * @param {String} pinname the name of the pin
+     */
     this.applyPinValuesFromXML = function(pinname) {
       if (!this.inputPins[pinname])
         return;
@@ -588,6 +703,10 @@ VVVV.Core = {
       }
     }
     
+    /**
+     * Called, if an IOBox's Descriptive Name inside a subpatch changes, this method creates and updates the subpatch's in and output
+     * pins. Subsequently triggers connection changed events for the IOBox's input and output pins.
+     */
     this.registerInterfacePin = function() {
       var that = this;
       if (this.isIOBox) {
@@ -674,17 +793,31 @@ VVVV.Core = {
         }
       }
     }
-	
+    
+    /**
+     * Method called immediatly after node creation for setting up common node settings
+     */
     this.setup = function() 
     {
       //Add descriptive name for all nodes
       this.addInvisiblePin("Descriptive Name",[""], VVVV.PinTypes.String);
     }
-	   
+	  
+	  /**
+	   * Method called AFTER a node's pins have been created and populated with values from patch XML, and BEFORE node links are created.
+	   * This method should be overwritten by any Node implementation and is useful for e.g. creating dynamic number of input pins and
+	   * other initialising code which should run before first call of {@link VVVV.Core.Node.evaluate}.
+	   * @abstract
+	   */ 
     this.initialize = function() {
 		
     }
-	   
+	  
+	  /**
+	   * Method called each frame, if a node is marked dirty or {@link VVVV.Core.Node.auto_evaluate} is true. This method should
+	   * be overwritten by any Node implementation and usually holds the node's main logic.
+	   * @abstract
+	   */ 
     this.evaluate = function() {
       var that = this;
       _(this.outputPins).each(function(p) {
@@ -692,6 +825,11 @@ VVVV.Core = {
       });
     }
     
+    /**
+     * Method called when a node is being deleted. Should be overwritten by any Node implementation to free resources and gracefully
+     * shut itself down
+     * @abstract
+     */
     this.destroy = function() {
       if (this.isIOBox) {
         if (this.IOBoxInputPin().masterPin) {
@@ -705,6 +843,11 @@ VVVV.Core = {
       }
     }
     
+    /**
+     * Creates the XML code representing the node and its pins. Called by {@link VVVV.Core.Patch.toXML} on serializing a patch and
+     * directly by the editor when nodes are being copied to clipboard
+     * @return {String} the node's XML code
+     */
     this.serialize = function() {
       var $node = $("<NODE>");
       $node.attr("id", this.id);
@@ -760,6 +903,12 @@ VVVV.Core = {
 
   },
   
+  /**
+   * @class
+   * @constructor
+   * @param {VVVV.Core.Pin} fromPin the output pin which is the source of the connection
+   * @param {VVVV.Core.Pin} toPin the input pin which is the destination of the connection
+   */
   Link: function(fromPin, toPin) {
     this.fromPin = fromPin;
     this.toPin = toPin;
@@ -767,6 +916,9 @@ VVVV.Core = {
     this.fromPin.links.push(this);
     this.toPin.links.push(this);
     
+    /**
+     * deletes resources associated with a link
+     */
     this.destroy = function() {
       if (this.toPin.reset_on_disconnect)
         this.toPin.reset();
@@ -777,6 +929,9 @@ VVVV.Core = {
       this.fromPin.node.parentPatch.linkList.splice(this.fromPin.node.parentPatch.linkList.indexOf(this),1);
     }
     
+    /**
+     * Returns the XML string representing the link. Used for saving the patch and copying to clipboard
+     */
     this.serialize = function() {
       // calling it LONK instead of LINK here, because jquery does not make a closing tag for LINK elements
       // renaming it to LINK later ...
@@ -789,24 +944,41 @@ VVVV.Core = {
     }
   },
 
-
+  /**
+   * @class
+   * @constructor
+   * @param {String} ressource either a path/to/some/patch.v4p or VVVV XML code
+   * @param {Function} success_handler called after the patch (and all sub components) has completely loaded and is ready
+   * @param {Function} error_handler called if an error occured, most likey because the .v4p file was not found
+   * @param {VVVV.Core.Patch} [parentPatch] the parent patch, if it's a subpatch
+   * @param {Integer} id the patch's ID in the parent patch, if it's a subpatch 
+   */
   Patch: function(ressource, success_handler, error_handler, parentPatch, id) {
     
     this.ressource = ressource;
     this.vvvv_version = "45_26.1";
+    /** the diameter of the patch / the maximum X and Y coordinates of all nodes in a patch */
     this.boundingBox = {width: 0, height: 0};
+    /** @member*/
     this.windowWidth = 500;
+    /** @member */
     this.windowHeight = 500;
     
+    /** a hash table containing the pins of all nodes inside a patch, indexed with [node_id]_[in|out|inv]_[pinname] */
     this.pinMap = {};
+    /** a hash table containing all nodes inside a patch, indexed with the node ID */
     this.nodeMap = {};
+    /** an array containing all nodes inside a patch */
     this.nodeList = [];
+    /** an array containing all links inside a patch */
     this.linkList = [];
+    
+    /** The {@link VVVV.MainLoop} Object running this patch */
+    this.mainloop = undefined;
     
     this.success = success_handler;
     this.error = error_handler;
     
-    this.XMLCode = '';
     this.editor = undefined;
     
     this.setupObject();
@@ -818,6 +990,10 @@ VVVV.Core = {
     
     var print_timing = false;
     
+    /**
+     * Returns the patch's absolute path, usable for the browser
+     * @return {String} the absolute path
+     */
     this.getAbsolutePath = function() {
       var path = this.getRelativePath();
       if (this.parentPatch)
@@ -825,11 +1001,18 @@ VVVV.Core = {
       return path;
     }
     
+    /**
+     * Returns a patch's relative path, as it is specified in the paret patch
+     * @return {String} the patch's path relative to its parent patch
+     */
     this.getRelativePath = function() {
       var match = this.nodename.match(/(.*\/)?[^/]+\.v4p/);
       return match[1] || '';
     }
     
+    /**
+     * Called when a patch is deleted. Deletes all containing nodes.
+     */
     this.destroy = function() {
       for (var i=0; i<this.nodeList.length; i++) {
         this.nodeList[i].destroy();
@@ -838,6 +1021,10 @@ VVVV.Core = {
       }
     }
     
+    /**
+     * Creates an array of slices out of pin value string coming from a patch XML
+     * @param {String} v the pin value string from the XML
+     */
     function splitValues(v) {
       if (v==undefined)
         return [];
@@ -876,6 +1063,12 @@ VVVV.Core = {
     
     var thisPatch = this;
     
+    /**
+     * Takes a patch XML string, parses it, and applies it to the patch. This method is called once by the constructor, passing the complete patch code, and
+     * frequently by an editor, passing in XML snippets. This is the only method you should use to manipulate a patch.
+     * @param {String} xml VVVV Patch XML
+     * @param {Function} ready_callback called after the XML code has been completely processed, and the patch is fully loaded and ready again
+     */
     this.doLoad = function(xml, ready_callback) {
       var p = this;
       do {
@@ -892,7 +1085,6 @@ VVVV.Core = {
       if (/\s<PATCH/.test(xml) || thisPatch.vvvv_version<="45_26") {
         syncmode = 'complete';
         if (VVVV_ENV=='development') console.log('complete: '+this.nodename);
-        thisPatch.XMLCode = xml;
       }
     
       var $windowBounds = $(xml).find('bounds[type="Window"]').first();
@@ -1246,6 +1438,10 @@ VVVV.Core = {
       
     }
     
+    /**
+     * Recursively fetches and returns all subpatches inside a patch
+     * @return {Array} an array of {@link VVVV.Core.Patch} objects
+     */
     this.getSubPatches = function() {
       var ret = [];
       for (var i=0; i<this.nodeList.length; i++) {
@@ -1257,6 +1453,10 @@ VVVV.Core = {
       return ret;
     }
     
+    /**
+     * Sets the {@link VVVV.Core.MainLoop} object of the patch and all containing subpatches
+     * @param {VVVV.Core.MainLoop} ml
+     */
     this.setMainloop = function(ml) {
       this.mainloop = ml;
       for (var i=0; i<this.nodeList.length; i++) {
@@ -1266,15 +1466,26 @@ VVVV.Core = {
       }
     }
     
-    
+    /**
+     * Called always after the patch has been evaluated
+     * @abstract
+     */
     this.afterEvaluate = function() {
       
     }
     
+    /**
+     * Called always after the patch has been modified using {@link VVVV.Core.Patch.doLoad}
+     * @abstract
+     */
     this.afterUpdate = function() {
       
     }
     
+    /**
+     * Returns the VVVV XML string representing the patch, ready to be saved
+     * @return {String}
+     */
     this.toXML = function() {
       var $patch = $("<PATCH>");
       var $bounds = $("<BOUNDS>");
@@ -1307,7 +1518,9 @@ VVVV.Core = {
       return xml;
     }
     
-    
+    /**
+     * Evaluates the patch once. Is called by the patch's {@link VVVV.Core.MainLoop} each frame, and should not be called directly
+     */
     this.evaluate = function() {
       if (this.resourcesPending>0) // this.resourcesPending is >0 when thirdbarty libs or subpatches are loading at the moment
         return;
@@ -1434,18 +1647,6 @@ VVVV.Core = {
           that.afterUpdate();
         });
       }
-    }
-    else if (/^ws:\/\//.test(ressource)) {
-      var that = this;
-      VVVV.Editors["Connector"].host = ressource;
-      VVVV.Editors["Connector"].enable(this, {
-        success: function() {
-          if (that.success) that.success();
-        },
-        error: function() {
-          if (that.error) that.error();
-        }
-      });
     }
     else {
       this.doLoad(ressource, function() {

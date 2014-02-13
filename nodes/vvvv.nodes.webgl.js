@@ -3,12 +3,25 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+/** A hash table of {@VVVV.Types.ShaderCodeResource} objects, indexed with the name/path of the shader code resource */
 VVVV.ShaderCodeResources = {};
+
+/**
+ * Stores and caches shader code, which comes from loaded .vvvvjs.fx files or a DefineEffect node 
+ * @class
+ * @constructor
+ */
 VVVV.Types.ShaderCodeResource = function() {
   var sourceCode = '';
+  /** An array of all nodes which utilize this shader code */
   this.relatedNodes = [];
+  /** the DefineNode node which defines this shader code; undefined if the shader code comes from a .vvvvjs.fx file */
   this.definingNode = undefined;
   
+  /**
+   * Sets the source code
+   * @param {String} str the shader code as string
+   */
   this.setSourceCode = function(src) {
     sourceCode = src;
     for (var i=0; i<this.relatedNodes.length; i++) {
@@ -16,6 +29,10 @@ VVVV.Types.ShaderCodeResource = function() {
     }
   }
   
+  /**
+   * registers a shader node with this shader code resource
+   * @param {VVVV.Core.Node} the shader node
+   */
   this.addRelatedNode = function(node) {
     this.relatedNodes.push(node);
     if (sourceCode!='')
@@ -26,17 +43,35 @@ VVVV.Types.ShaderCodeResource = function() {
 
 var identity = mat4.identity(mat4.create());
 
+/**
+ * A data structure which contains all render state attributes that can be set in VVVV.js
+ * This is the data object which flows between WebGlRenderState pins
+ * @class
+ * @constructor
+ */
 VVVV.Types.WebGlRenderState = function() {
+  /* @member */
   this.alphaBlending = true;
+  /* @member */
   this.srcBlendMode = "SRC_ALPHA";
+  /* @member */
   this.destBlendMode = "ONE_MINUS_SRC_ALPHA";
   
+  /* @member */
   this.enableZWrite = true;
+  /* @member */
   this.depthFunc = "LEQUAL";
+  /* @member */
   this.depthOffset = 0.0;
   
+  /* @member */
   this.polygonDrawMode = "TRIANGLES";
   
+  /**
+   * Used to create a copy of a WebGlRenderState object. Heavily used by the (EX9.RenderState) nodes to create altered versions
+   * of the incoming render state
+   * @param {VVVV.Types.WebGlRenderState} other the source render state
+   */
   this.copy_attributes = function(other) {
     this.alphaBlending = other.alphaBlending;
     this.alphaFunc = other.alphaFunc;
@@ -48,6 +83,10 @@ VVVV.Types.WebGlRenderState = function() {
     this.polygonDrawMode = other.polygonDrawMode;
   }
   
+  /**
+   * makes the WebGL calls to establish the render state
+   * @param {WebGlContext} gl the WebGL context
+   */
   this.apply = function(gl) {
     if (this.alphaBlending)
       gl.enable(gl.BLEND);
@@ -60,12 +99,30 @@ VVVV.Types.WebGlRenderState = function() {
   }
 }
 
+/**
+ * The VertexBuffer class holds vertex data and provides methods to create vertex buffer objects in a given WebGL context;
+ * VVVV.Types.VertexBuffer objects mainly are used in (EX9.Geometry) nodes, and
+ * ultimately are parts of a {@link VVVV.Types.Mesh} object
+ * @class
+ * @constructor
+ * @param {WebGlContext} gl the WebGL context
+ * @param {Array} p an array of vertex positions
+ */
 VVVV.Types.VertexBuffer = function(gl, p) {
   
+  /** the WebGL Vertex Buffer Object */
   this.vbo = undefined;
+  /** @member */
   this.subBuffers = {};
+  /** total buffer length */
   this.length = 0;
   
+  /**
+   * sets sub buffer data
+   * @param {String} u the buffer usage (e.g. POSITION, NORMAL, TEXCOORD0, TEXCOORD1, ...)
+   * @param {Integer} s the sub buffer size
+   * @param {Array} d the sub buffer data
+   */
   this.setSubBuffer = function(u, s, d) {
     this.subBuffers[u] = {
       usage: u,
@@ -77,6 +134,9 @@ VVVV.Types.VertexBuffer = function(gl, p) {
   }
   this.setSubBuffer('POSITION', 3, p);
   
+  /**
+   * Creates the VBO in the WebGL context and stores the vertex data
+   */
   this.create = function() {
     this.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -89,28 +149,62 @@ VVVV.Types.VertexBuffer = function(gl, p) {
   
 }
 
+/**
+ * A Mesh consists of a {@link VVVV.Types.VertexBuffer} object and a list of indices. It creates a new index buffer
+ * in the given WebGL context. Mesh objects are usually created by (EX9.Geometry) nodes and flow into a shader node's
+ * Mesh input pin
+ * @class
+ * @constructor
+ * @param {WebGlContext} gl the WebGL context
+ * @param {VVVV.Core.VertexBuffer} the vertex data
+ * @param {Array} indices the list of indices
+ */
 VVVV.Types.Mesh = function(gl, vertexBuffer, indices) {
+  /* @member */
   this.vertexBuffer = vertexBuffer;
+  /* @member */
   this.indexBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+  /* @member */
   this.numIndices = indices.length;
 }
 
+/** 
+ * A Layer is the sum of a mesh, textures, render state, shaders and it parameters. Usually, a Layer object is the output
+ * of a shader node and flows into a Renderer (EX9) or Group (EX9) node.
+ * @class
+ * @constructor
+ */
 VVVV.Types.Layer = function() {
+  /** @member */
   this.mesh = null;
+  /** An array of WebGlTexture objects */
   this.textures = [];
+  /** @type VVVV.Types.ShaderProgram */
   this.shader = null;
+  /** @member */
   this.uniforms = {};
+  /** @member */
   this.uniformNames = []; // to help iterate through this.uniforms
+  /** @type VVVV.Types.WebGlRenderState */
   this.renderState = defaultWebGlRenderState;
   
+  /** returns "Layer" */
   this.toString = function() {
     return "Layer";
   }
   
 }
 
+/**
+ * The WebGlResource Pin Type. Its connectionChangedHandler finds a downstream Renderer (EX9) node, gets its WebGL context, and
+ * sets it to all upstream WebGL nodes' renderContext members.
+ * @mixin
+ * @property {String} typeName "WebGlResource"
+ * @property {Boolean} reset_on_disconnect true
+ * @property {Object} connectionChangedHandlers "webglresource" => function
+ */
 VVVV.PinTypes.WebGlResource = {
   typeName: "WebGlResource",
   reset_on_disconnect: true,
@@ -165,6 +259,14 @@ VVVV.PinTypes.WebGlResource = {
   }
 }
 
+/**
+ * The WebGLTexture Pin Type, has the same connectionChangedHandler as {@link VVVV.PinTypes.WebGlResource}.
+ * @mixin
+ * @property {String} typeName "WebGlTexture"
+ * @property {Boolean} reset_on_disconnect true
+ * @property {Object} connectionChangedHandlers "webglresource" => function
+ * @property {Function} defaultValue a function returning {@link VVVV.DefaultTexture}
+ */
 VVVV.PinTypes.WebGlTexture = {
   typeName: "WebGlTexture",
   reset_on_disconnect: true,
@@ -177,6 +279,13 @@ VVVV.PinTypes.WebGlTexture = {
 }
 
 var defaultWebGlRenderState = new VVVV.Types.WebGlRenderState();
+/**
+ * The WebGlRenderState Pin Type
+ * @mixin
+ * @property {String} typeName "WebGlRenderState"
+ * @property {Boolean} reset_on_disconnect true
+ * @property {Function} defaultValue a function returning the default {@link VVVV.Types.WebGlRenderState} object
+ */
 VVVV.PinTypes.WebGlRenderState = {
   typeName: "WebGlRenderState",
   reset_on_disconnect: true,
@@ -185,8 +294,16 @@ VVVV.PinTypes.WebGlRenderState = {
   }
 }
 
+/**
+ * Constant representing a WebGl context's default texture
+ * @const
+ */
 VVVV.DefaultTexture = "Empty Texture";
 
+/**
+ * The ShaderProgram class holds vertex shader and fragment shader code and provides methods to extract uniform/attribute positions
+ * and to create the shader program in the WebGl context
+ */
 VVVV.Types.ShaderProgram = function() {
 
   this.uniformSpecs = {};

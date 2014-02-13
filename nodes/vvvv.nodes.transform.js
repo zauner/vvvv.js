@@ -3,6 +3,13 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+/**
+ * The Transform Pin Type
+ * @mixin
+ * @property {String} typeName "Transform"
+ * @property {Boolean} reset_on_disconnect true
+ * @property {Function} defaultValue Function returning an identity matrix
+ */
 VVVV.PinTypes.Transform = {
   typeName: "Transform",
   reset_on_disconnect: true,

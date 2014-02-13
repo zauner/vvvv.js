@@ -3,6 +3,13 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+/**
+ * The HTML5Texture Pin Type
+ * @mixin
+ * @property {String} typeName "HTML5Texture"
+ * @property {Boolean} reset_on_disconnect true
+ * @property {Function} defaultValue function returning "Empty Texture"
+ */
 VVVV.PinTypes.HTML5Texture = {
   typeName: "HTML5Texture",
   reset_on_disconnect: true,

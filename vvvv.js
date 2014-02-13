@@ -34,20 +34,16 @@ VVVV.PinTypes = {};
 
 VVVV.Types = {};
 
-/* 
- * All implemented nodes are registered here
- */
+/** All implemented nodes are registered here */
 VVVV.NodeLibrary = {};
 
 VVVV.NodeNames = [];
 
-/*
+/**
  * This holds all created patches and their subpatches. Indices are the absolute patch file names. Patches that are loaded with the script tag are
  * also stored in indices 0 .. n
  */
 VVVV.Patches = {};
-VVVV.Editors = {};
-
 VVVV.Editors = {};
 
 /**
