@@ -133,11 +133,6 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
   var currPos = [];
   var velocity = [];
   var deltaPos = [];
-  var direction = [];
-  
-  function sign(n) {
-    return n>=0;
-  }
 
   this.evaluate = function() {
     
@@ -160,20 +155,16 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
         deltaPos[i] = undefined;
         targetPos[i] = pos;
         filterTimes[i] = filterTime;
-        direction[i] = sign(targetPos[i]-currPos[i]);
         if (filterTimes[i]>0)
           velocity[i] = (targetPos[i]-currPos[i])/(filterTimes[i]*1000);
         else
           velocity[i] = 0;
       }
       
-      if (direction[i] == sign(targetPos[i]-currPos[i]))
-        currPos[i] += velocity[i]*dt;
-      
-      if (deltaPos[i]!=undefined && sign(targetPos[i]-currPos[i]) != sign(deltaPos[i])) {
-        velocity[i] = 0;
+      if (Math.abs(velocity[i]*dt) > Math.abs(targetPos[i]-currPos[i]))
         currPos[i] = targetPos[i];
-      }
+      else
+        currPos[i] += velocity[i]*dt;
       
       if (deltaPos[i]!=0) {
         positionOut.setValue(i, currPos[i]);
@@ -233,11 +224,6 @@ VVVV.Nodes.Damper = function(id, graph) {
   var currPos = [];
   var velocity = [];
   var deltaPos = [];
-  var direction = [];
-  
-  function sign(n) {
-    return n>=0;
-  }
 
   this.evaluate = function() {
     
@@ -256,20 +242,17 @@ VVVV.Nodes.Damper = function(id, graph) {
       if (currPos[i]==undefined)
         currPos[i] = pos;
         
-      deltaPos[i] = undefined;
-      direction[i] = sign(pos-currPos[i]);
+      if (deltaPos[i]==undefined)
+        deltaPos[i] = pos - currPos[i];
       if (filterTime>0)
         velocity[i] = (pos-currPos[i])/(filterTime*1000);
       else
         velocity[i] = 0;
       
-      if (direction[i] == sign(pos-currPos[i]))
-        currPos[i] += velocity[i]*dt;
-      
-      if (deltaPos[i]!=undefined && sign(pos-currPos[i]) != sign(deltaPos[i])) {
-        velocity[i] = 0;
+      if (Math.abs(velocity[i]*dt) > Math.abs(pos-currPos[i]))
         currPos[i] = pos;
-      }
+      else
+        currPos[i] += velocity[i]*dt;
       
       if (deltaPos[i]!=0) {
         positionOut.setValue(i, currPos[i]);

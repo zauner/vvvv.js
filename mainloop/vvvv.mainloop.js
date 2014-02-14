@@ -7,6 +7,7 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
   var framecount = 0;
   var dom = new VVVV.Core.DOMInterface(patch);
   var run = true;
+  var start = undefined;
   
   var measureStart = 0;
   var print_framerate = false;
@@ -14,11 +15,15 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
   this.deltaT = 1000/VVVV.fps;
   
   patch.setMainloop(this);
-  
+
+  var that = this;  
   function update() {
     if (patch.resourcesPending==0) {
       framecount ++;
-      var start = new Date().getTime();
+      var now = new Date().getTime();
+      if (start)
+        that.deltaT = now - start;
+      start = now;
       dom.populateInputConnectors();
       patch.evaluate();
       dom.processOutputConnectors();
@@ -31,9 +36,8 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
         measureStart = start;
       }
     }
-    this.deltaT = Math.max(0, Math.round(1000/VVVV.fps-elapsed));
     if (run) // && framecount<1)
-      window.setTimeout(update, this.deltaT);
+      window.setTimeout(update, Math.max(0, Math.round(1000/VVVV.fps-elapsed)));
     
   }
   
