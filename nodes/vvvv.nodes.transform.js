@@ -218,7 +218,7 @@ VVVV.Nodes.Perspective = function(id, graph) {
   
     if (this.inputPins["Transform In"].isConnected())
     {
-     	var transformin = this.inputPins["Transform In"].getValue(i);
+     	var transformin = this.inputPins["Transform In"].getValue(0);
      	mat4.multiply(transformin, t, t);
     }
 
