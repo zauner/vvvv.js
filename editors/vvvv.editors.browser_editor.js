@@ -941,7 +941,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
               return true;
             })
             .append('svg:rect')
-              .attr('class', 'vvvv-connection-highlight')
+              .attr('class', 'vvvv-connection-highlight resettable')
               .attr('width', 4)
               .attr('height', 3)
               .attr('fill', 'rgba(0,0,0,1)')
@@ -958,7 +958,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             var dstPin = d;
           }
           
-          if ((srcPin.typeName == dstPin.typeName) || (srcPin.typeName=="Node" && !VVVV.PinTypes[dstPin.typeName].primitive) || (dstPin.typeName=="Node" && !VVVV.PinTypes[srcPin.typeName].primitive)) {
+          if ((srcPin.typeName == dstPin.typeName && srcPin.direction!=dstPin.direction) || (srcPin.typeName=="Node" && !VVVV.PinTypes[dstPin.typeName].primitive) || (dstPin.typeName=="Node" && !VVVV.PinTypes[srcPin.typeName].primitive)) {
             var cmd = "<PATCH>";
             _(dstPin.links).each(function(l) {
               cmd += "<LINK deleteme='pronto' srcnodeid='"+l.fromPin.node.id+"' srcpinname='"+l.fromPin.pinname+"' dstnodeid='"+l.toPin.node.id+"' dstpinname='"+l.toPin.pinname+"'/>";
