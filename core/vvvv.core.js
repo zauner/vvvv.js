@@ -633,6 +633,10 @@ VVVV.Core = {
     this.toPin.links.push(this);
     
     this.destroy = function() {
+      if (this.toPin.reset_on_disconnect)
+        this.toPin.reset();
+      else
+        this.toPin.node.defaultPinValues[this.toPin.pinname] = this.toPin.values.slice(0);
       this.fromPin.links.splice(this.fromPin.links.indexOf(this), 1);
       this.toPin.links.splice(this.toPin.links.indexOf(this), 1);
       this.fromPin.node.parentPatch.linkList.splice(this.fromPin.node.parentPatch.linkList.indexOf(this),1);
@@ -786,8 +790,6 @@ VVVV.Core = {
               link.destroy();
               link.toPin.connectionChanged();
               link.toPin.markPinAsChanged();
-              if (link.toPin.reset_on_disconnect)
-                link.toPin.reset();
             });
           })
           
@@ -1042,8 +1044,6 @@ VVVV.Core = {
           fromPin.connectionChanged();
           toPin.connectionChanged();
           toPin.markPinAsChanged();
-          if (toPin.reset_on_disconnect)
-            toPin.reset();
         });
         
         $(xml).find('link[deleteme!="pronto"]').each(function() {
