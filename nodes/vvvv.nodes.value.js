@@ -260,7 +260,7 @@ VVVV.Nodes.MultiplyValue = function(id, graph) {
   	var incnt = cntCfg.getValue(0);
   	for (var i = 0; i < incnt; i++)
   	{
-  		var InPin = this.addInputPin("Input " + (i+1),[0.0],VVVV.PinTypes.Value);
+  		var InPin = this.addInputPin("Input " + (i+1),[1.0],VVVV.PinTypes.Value);
   		inputPins[i] = InPin;
   	}
   }
@@ -477,7 +477,7 @@ VVVV.Nodes.SelectValue = function(id, graph) {
     var outputIndex = 0;
     for (var i=0; i<maxSize; i++) {
       for (var j=0; j<selectIn.getValue(i); j++) {
-        outputOut.setValue(outputIndex, inputIn.getValue(i));
+        outputOut.setValue(outputIndex, parseFloat(inputIn.getValue(i)));
         formerSliceOut.setValue(outputIndex, i);
         outputIndex++;
       }
@@ -662,7 +662,7 @@ VVVV.Nodes.WaveShaperValue = function(id, graph) {
     var twoPi = 6.28318530717959;
     
     for (var i=0; i<maxSize; i++) {
-      var input = inputIn.getValue(i);
+      var input = parseFloat(inputIn.getValue(i));
       var shape = shapeIn.getValue(i);
 
       switch (shape) {
