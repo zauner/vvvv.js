@@ -631,7 +631,7 @@ VVVV.Nodes.MeshJoin = function(id, graph) {
     compatibility_issues: []
   };
   
-  var vbIn = this.addInputPin("Vertex Buffer", [], this);
+  var vbIn = this.addInputPin("Vertex Buffer", [], VVVV.PinTypes.WebGlResource);
   var indicesIn = this.addInputPin("Indices", [0], VVVV.PinTypes.Value);
   var applyIn = this.addInputPin("Apply", [1], VVVV.PinTypes.Value);
   
