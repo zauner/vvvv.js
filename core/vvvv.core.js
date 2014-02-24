@@ -52,6 +52,10 @@ VVVV.Helpers = {
     l = l.replace("Multiply", "*");
     l = l.replace("Divide", "/");
     l = l.replace("EQ", "=");
+    l = l.replace("GT", ">");
+    l = l.replace("GTE", ">=");
+    l = l.replace("LT", "<");
+    l = l.replace("LTE", "<=");
     return l;
   },
   
