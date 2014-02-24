@@ -18,21 +18,34 @@ VVVV.Nodes.GetSliceSpreads = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['Bin Size not implemented']
+    compatibility_issues: []
   };
   
-  this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
-  this.addInputPin("Bin Size", [1], VVVV.PinTypes.Value);
-  this.addInputPin("Index", [0], VVVV.PinTypes.Value);
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
+  var binSizeIn = this.addInputPin("Bin Size", [1], VVVV.PinTypes.Value);
+  var indexIn = this.addInputPin("Index", [0], VVVV.PinTypes.Value);
   
-  this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {  
-    var size = this.inputPins["Index"].values.length;
+    var size = indexIn.getSliceCount();
+    var res, binSize;
+    var outIdx = 0;
     for (var i=0; i<size; i++) {
-      this.outputPins["Output"].setValue(i, parseFloat(this.inputPins["Input"].getValue(Math.round(this.inputPins["Index"].getValue(i)))));
+      binSize = binSizeIn.getValue(i);
+      res = inputIn.getValue(Math.round(indexIn.getValue(i)), binSize);
+      if (binSize>1) {
+        for (var j=0; j<res.length; j++) {
+          outputOut.setValue(outIdx, parseFloat(res[j]));
+          outIdx++;
+        }
+      }
+      else {
+        outputOut.setValue(i, parseFloat(res));
+        outIdx++;
+      }
     }
-    this.outputPins["Output"].setSliceCount(size);
+    outputOut.setSliceCount(outIdx);
   }
 
 }
