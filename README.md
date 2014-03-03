@@ -53,7 +53,7 @@ dots in directory names, so make sure to really rename the 'vvvv.js' from the ar
     <script language="VVVV" src="mypatch.v4p"></script>
     <script language="JavaScript">
       $(document).ready(function() {
-        VVVV.init("javascripts/vvvv_js/", 'full');
+        VVVV.init("javascripts/vvvv_js/", 'full', function() {
           console.log('VVVV.js initialized'); 
         });
       });
