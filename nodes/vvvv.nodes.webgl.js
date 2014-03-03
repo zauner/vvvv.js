@@ -1710,15 +1710,10 @@ VVVV.Nodes.Group = function(id, graph) {
   var layerOut = this.addOutputPin("Layer", [], VVVV.PinTypes.WebGlResource);
   
   this.initialize = function() {
-  	var layerCount = layerCountIn.getValue(0);
-    for (var i=layerIns.length; i<layerCount; i++) {
-      layerIns[i] = this.addInputPin("Layer "+(i+1), [], VVVV.PinTypes.WebGlResource);
-    }
-    for (var i=layerCount; i<layerIns.length; i++) {
-      this.removeInputPin(layerIns[i].pinname);
-    }
-    layerIns.length = layerCount;
-    graph.afterUpdate();
+  	var layerCount = Math.max(2, layerCountIn.getValue(0));
+  	VVVV.Helpers.dynamicPins(this, layerIns, layerCount, function(i) {
+      return this.addInputPin("Layer "+(i+1), [], VVVV.PinTypes.WebGlResource);
+    });
   }
   
   this.evaluate = function() {

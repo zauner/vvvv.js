@@ -881,29 +881,34 @@ VVVV.Nodes.GroupCanvas = function(id, graph) {
     compatibility_issues: []
   };
   
+  var layerCountIn = this.addInvisiblePin("Layer Count", [2], VVVV.PinTypes.Value);
+  
   var layerIns = [];
   
   var layerOut = this.addOutputPin("Layer", [], VVVV.PinTypes.CanvasLayer);
   
   this.initialize = function() {
-    for (var i=0; i<2; i++) {
-      layerIns[i] = this.addInputPin("Layer "+(i+1), [], VVVV.PinTypes.CanvasLayer);
-    }
+    var layerCount = Math.max(2, layerCountIn.getValue(0));
+    VVVV.Helpers.dynamicPins(this, layerIns, layerCount, function(i) {
+      return this.addInputPin("Layer "+(i+1), [], VVVV.PinTypes.CanvasLayer);
+    });
   }
   
   this.evaluate = function() {
-  
+    if (layerCountIn.pinIsChanged())
+      this.initialize();
     var outSliceIdx = 0;
-    for (var i=0; i<2; i++) {
+    var layerCount = layerIns.length;
+    var sliceCount;
+    for (var i=0; i<layerCount; i++) {
       if (layerIns[i].isConnected()) {
-        for (var j=0; j<layerIns[i].values.length; j++) {
+        sliceCount = layerIns[i].getSliceCount();
+        for (var j=0; j<sliceCount; j++) {
           layerOut.setValue(outSliceIdx++, layerIns[i].getValue(j));
         }
       }
     }
-    
     layerOut.setSliceCount(outSliceIdx);
-    
   }
   
 }

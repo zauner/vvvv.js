@@ -85,6 +85,7 @@ VVVV.Helpers = {
       node.removeInputPin(pins[i].pinname);
     }
     pins.length = count;
+    node.parentPatch.afterUpdate();
   }
 }
 
