@@ -571,7 +571,14 @@ VVVV.Core = {
     }
     
     this.destroy = function() {
-      
+      if (this.isIOBox) {
+        if (this.IOBoxInputPin().masterPin) {
+          this.parentPatch.removeInputPin(this.IOBoxInputPin().masterPin.pinname);
+        }
+        if (this.IOBoxOutputPin().slavePin) {
+          this.parentPatch.removeOutputPin(this.IOBoxOutputPin().slavePin.pinname);
+        }
+      }
     }
     
     this.serialize = function() {
