@@ -54,25 +54,30 @@ VVVV.Nodes.SwitchStringInput = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['No dynamic pin count yet']
+    compatibility_issues: []
   };
+  
+  var inputCountIn = this.addInvisiblePin("Input Count", [2], VVVV.PinTypes.Value);
   
   var switchIn = this.addInputPin("Switch", [0], VVVV.PinTypes.Value);
   var inputIn = []
-  inputIn[0] = this.addInputPin("Input 1", ["text"], VVVV.PinTypes.String);
-  inputIn[1] = this.addInputPin("Input 2", ["text"], VVVV.PinTypes.String);
   
   var outputOut = this.addOutputPin("Output", ["text"], VVVV.PinTypes.String);
+  
+  this.initialize = function() {
+    var inputCount = Math.max(2, inputCountIn.getValue(0));
+    VVVV.Helpers.dynamicPins(this, inputIn, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), ['text'], VVVV.PinTypes.String);
+    })
+  }
 
   this.evaluate = function() {
+    if (inputCountIn.pinIsChanged())
+      this.initialize();
     var maxSize = this.getMaxInputSliceCount();
     
-    if (switchIn.getValue(0)==undefined) {
-      outputOut.setValue(0, undefined);
-      return;
-    }
     for (var i=0; i<maxSize; i++) {
-      outputOut.setValue(i, inputIn[switchIn.getValue(i)%inputIn.length].getValue(i));
+      outputOut.setValue(i, inputIn[Math.round(Math.abs(switchIn.getValue(i)))%inputIn.length].getValue(i));
     }
     outputOut.setSliceCount(maxSize);
   }
@@ -98,15 +103,24 @@ VVVV.Nodes.AddString = function(id, graph) {
     compatibility_issues: ['No dynamic pin count yet', 'Intersperse *Enum* not implemented']
   };
   
+  var inputCountIn = this.addInvisiblePin("Input Count", [2], VVVV.PinTypes.Value);
+  
   var inputIn = []
-  inputIn[0] = this.addInputPin("Input 1", ["text"], VVVV.PinTypes.String);
-  inputIn[1] = this.addInputPin("Input 2", ["text"], VVVV.PinTypes.String);
   
   var intersperseStringIn = this.addInputPin("Intersperse String", [""], VVVV.PinTypes.String);
   
   var outputOut = this.addOutputPin("Output", ["texttext"], VVVV.PinTypes.String);
 
+  this.initialize = function() {
+    var inputCount = Math.max(2, inputCountIn.getValue(0));
+    VVVV.Helpers.dynamicPins(this, inputIn, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), ['text'], VVVV.PinTypes.String);
+    })
+  }
+
   this.evaluate = function() {
+    if (inputCountIn.pinIsChanged())
+      this.initialize();
     var maxSize = this.getMaxInputSliceCount();
 
     for (var i=0; i<maxSize; i++) {

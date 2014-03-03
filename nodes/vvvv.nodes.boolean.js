@@ -19,29 +19,36 @@ VVVV.Nodes.And = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['No dynamic pin count yet']
+    compatibility_issues: []
   };
   
-  var input1In = this.addInputPin("Input 1", [1], VVVV.PinTypes.Value);
-  var input2In = this.addInputPin("Input 2", [1], VVVV.PinTypes.Value);
+  var inputCountIn = this.addInvisiblePin("Input Count", [2], VVVV.PinTypes.Value);
+  
+  var inputPins = [];
   
   var outputOut = this.addOutputPin("Output", [1], VVVV.PinTypes.Value);
+  
+  this.initialize = function() {
+    var inputCount = Math.max(2, inputCountIn.getValue(0));
+    VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), [1], VVVV.PinTypes.Value);
+    })
+  }
 
   this.evaluate = function() {
-  
-  
-    if (input1In.pinIsChanged() || input2In.pinIsChanged()) {
-      
-      for (var i=0; i<this.getMaxInputSliceCount(); i++) {
-        if (Math.round(input1In.getValue(i))>=1 && Math.round(input2In.getValue(i))>=1)
-          outputOut.setValue(i, 1);
-        else
-          outputOut.setValue(i, 0);
+    if (inputCountIn.pinIsChanged())
+      this.initialize();
+    var maxSliceCount = this.getMaxInputSliceCount();
+    var inputCount = inputPins.length;
+    var res;
+    for (var i=0; i<maxSliceCount; i++) {
+      res = true;
+      for (var j=0; j<inputCount; j++) {
+        res = res && inputPins[j].getValue(i)>=0.5;
       }
-      outputOut.setSliceCount(this.getMaxInputSliceCount());
+      outputOut.setValue(i, res ? 1 : 0);
     }
-    
-    
+    outputOut.setSliceCount(maxSliceCount);
   }
 
 }
@@ -62,30 +69,36 @@ VVVV.Nodes.Or = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['No dynamic pin count yet']
+    compatibility_issues: []
   };
   
-  var input1In = this.addInputPin("Input 1", [1], VVVV.PinTypes.Value);
-  var input2In = this.addInputPin("Input 2", [1], VVVV.PinTypes.Value);
+  var inputCountIn = this.addInvisiblePin("Input Count", [2], VVVV.PinTypes.Value);
+  
+  var inputPins = [];
   
   var outputOut = this.addOutputPin("Output", [1], VVVV.PinTypes.Value);
+  
+  this.initialize = function() {
+    var inputCount = Math.max(2, inputCountIn.getValue(0));
+    VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), [1], VVVV.PinTypes.Value);
+    })
+  }
 
   this.evaluate = function() {
-  
-  
-    if (input1In.pinIsChanged() || input2In.pinIsChanged()) {
-      
-      for (var i=0; i<this.getMaxInputSliceCount(); i++) {
-        if (Math.round(input1In.getValue(i))>=1 || Math.round(input2In.getValue(i))>=1)
-          outputOut.setValue(i, 1);
-        else
-          outputOut.setValue(i, 0);
+    if (inputCountIn.pinIsChanged())
+      this.initialize();
+    var maxSliceCount = this.getMaxInputSliceCount();
+    var inputCount = inputPins.length;
+    var res;
+    for (var i=0; i<maxSliceCount; i++) {
+      res = false;
+      for (var j=0; j<inputCount; j++) {
+        res = res || inputPins[j].getValue(i)>=0.5;
       }
-      outputOut.setSliceCount(this.getMaxInputSliceCount());
-      
+      outputOut.setValue(i, res ? 1 : 0);
     }
-    
-    
+    outputOut.setSliceCount(maxSliceCount);
   }
 
 }
@@ -114,18 +127,11 @@ VVVV.Nodes.Not = function(id, graph) {
   var outputOut = this.addOutputPin("Output", [1], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
-  
-  
-    if (inputIn.pinIsChanged()) {
-      
-      for (var i=0; i<this.getMaxInputSliceCount(); i++) {
-        outputOut.setValue(i, 1-Math.round(parseFloat(inputIn.getValue(i))));
-      }
-      outputOut.setSliceCount(this.getMaxInputSliceCount());
-      
+    var maxSliceCount = this.getMaxInputSliceCount();
+    for (var i=0; i<maxSliceCount; i++) {
+      outputOut.setValue(i, 1-Math.round(parseFloat(inputIn.getValue(i))));
     }
-    
-    
+    outputOut.setSliceCount(this.getMaxInputSliceCount());
   }
 
 }

@@ -74,6 +74,17 @@ VVVV.Helpers = {
       return patch.getAbsolutePath()+path;
     else
       return path;
+  }, 
+  
+  dynamicPins: function(node, pins, count, create_callback) {
+    var currentCount = pins.length;
+    for (var i=currentCount; i<count; i++) {
+      pins[i] = create_callback.call(node, i);
+    }
+    for (var i=count; i<pins.length; i++) {
+      node.removeInputPin(pins[i].pinname);
+    }
+    pins.length = count;
   }
 }
 
