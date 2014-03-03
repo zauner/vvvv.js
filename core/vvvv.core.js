@@ -515,6 +515,7 @@ VVVV.Core = {
               that.parentPatch.removeOutputPin(that.IOBoxOutputPin().slavePin.pinname);
               that.IOBoxOutputPin().slavePin.pinname = pinname;
             }
+            this.node.parentPatch.parentPatch.afterUpdate();
           }
           this.IOBoxInputPin().connectionChanged();
           
@@ -559,6 +560,7 @@ VVVV.Core = {
               that.parentPatch.removeInputPin(that.IOBoxInputPin().masterPin.pinname);
               that.IOBoxInputPin().masterPin.pinname = pinname;
             }
+            this.node.parentPatch.parentPatch.afterUpdate();
           }
           this.IOBoxOutputPin().connectionChanged();
         }
@@ -586,9 +588,11 @@ VVVV.Core = {
       if (this.isIOBox) {
         if (this.IOBoxInputPin().masterPin) {
           this.parentPatch.removeInputPin(this.IOBoxInputPin().masterPin.pinname);
+          this.parentPatch.parentPatch.afterUpdate();
         }
         if (this.IOBoxOutputPin().slavePin) {
           this.parentPatch.removeOutputPin(this.IOBoxOutputPin().slavePin.pinname);
+          this.parentPatch.parentPatch.afterUpdate();
         }
       }
     }
