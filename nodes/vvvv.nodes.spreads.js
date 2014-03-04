@@ -593,17 +593,15 @@ VVVV.Nodes.ConsSpreads = function(id, graph) {
   
   // initialize() will be called after node creation
   this.initialize = function() {
-    var inputCount = inputcountIn.getValue(0);
-    for (var i=inputPins.length; i<inputCount; i++) {
-      inputPins[i] = this.addInputPin("Input "+(i+1), [0.0], VVVV.PinTypes.Value);
-    }
-    inputPins.length = inputCount;
+    var inputCount = Math.max(2, inputcountIn.getValue(0));
+    VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
+    })
   }
 
   this.evaluate = function() {
-    if (inputcountIn.pinIsChanged()) {
+    if (inputcountIn.pinIsChanged())
       this.initialize();
-    }
     
     var idx = 0;
     for (var i=0; i<inputPins.length; i++) {
