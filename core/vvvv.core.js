@@ -498,22 +498,24 @@ VVVV.Core = {
                that.parentPatch.removeInputPin(pinname);
                this.masterPin = undefined;
             }
-            if (!that.IOBoxOutputPin().slavePin) {
-              if (VVVV_ENV=='development') console.log('interfacing output pin detected: '+pinname);
-              var pin = that.parentPatch.outputPins[pinname];
-              if (pin==undefined)
-                var pin = that.parentPatch.addOutputPin(pinname, that.IOBoxOutputPin().values);
-                
-              pin.setType(VVVV.PinTypes[that.IOBoxOutputPin().typeName]);
-                
-              that.IOBoxOutputPin().slavePin = pin;
-              pin.masterPin = that.IOBoxOutputPin();
-            }
-            else if (that.IOBoxOutputPin().slavePin.pinname!=pinname) { // rename subpatch pin
-              if (VVVV_ENV=='development') console.log('renaming '+that.IOBoxOutputPin().slavePin.pinname+" to "+pinname);
-              that.parentPatch.outputPins[pinname] = that.parentPatch.outputPins[that.IOBoxOutputPin().slavePin.pinname];
-              that.parentPatch.removeOutputPin(that.IOBoxOutputPin().slavePin.pinname);
-              that.IOBoxOutputPin().slavePin.pinname = pinname;
+            if (that.IOBoxOutputPin().links.length==0) {
+              if (!that.IOBoxOutputPin().slavePin) {
+                if (VVVV_ENV=='development') console.log('interfacing output pin detected: '+pinname);
+                var pin = that.parentPatch.outputPins[pinname];
+                if (pin==undefined)
+                  var pin = that.parentPatch.addOutputPin(pinname, that.IOBoxOutputPin().values);
+                  
+                pin.setType(VVVV.PinTypes[that.IOBoxOutputPin().typeName]);
+                  
+                that.IOBoxOutputPin().slavePin = pin;
+                pin.masterPin = that.IOBoxOutputPin();
+              }
+              else if (that.IOBoxOutputPin().slavePin.pinname!=pinname) { // rename subpatch pin
+                if (VVVV_ENV=='development') console.log('renaming '+that.IOBoxOutputPin().slavePin.pinname+" to "+pinname);
+                that.parentPatch.outputPins[pinname] = that.parentPatch.outputPins[that.IOBoxOutputPin().slavePin.pinname];
+                that.parentPatch.removeOutputPin(that.IOBoxOutputPin().slavePin.pinname);
+                that.IOBoxOutputPin().slavePin.pinname = pinname;
+              }
             }
             this.node.parentPatch.parentPatch.afterUpdate();
           }
@@ -528,37 +530,39 @@ VVVV.Core = {
                that.parentPatch.removeOutputPin(pinname);
                this.slavePin = undefined;
             }
-            if (!that.IOBoxInputPin().masterPin) {
-              if (VVVV_ENV=='development') console.log('interfacing input pin detected: '+pinname);
-              var pin = that.parentPatch.inputPins[pinname];
-              if (pin==undefined) {
-                if (VVVV_ENV=='development') console.log('creating new input pin at parent patch, using IOBox values');
-                var pin = that.parentPatch.addInputPin(pinname, that.IOBoxInputPin().values);
-              }
-              else {
-                slicecount = pin.getSliceCount();
-                for (var i=0; i<slicecount; i++) {
-                  that.IOBoxInputPin().setValue(i, pin.getValue(i));
+            if (that.IOBoxInputPin().links.length==0) {
+              if (!that.IOBoxInputPin().masterPin) {
+                if (VVVV_ENV=='development') console.log('interfacing input pin detected: '+pinname);
+                var pin = that.parentPatch.inputPins[pinname];
+                if (pin==undefined) {
+                  if (VVVV_ENV=='development') console.log('creating new input pin at parent patch, using IOBox values');
+                  var pin = that.parentPatch.addInputPin(pinname, that.IOBoxInputPin().values);
                 }
-                if (slicecount>0)
-                  that.IOBoxInputPin().setSliceCount(pin.getSliceCount());
+                else {
+                  slicecount = pin.getSliceCount();
+                  for (var i=0; i<slicecount; i++) {
+                    that.IOBoxInputPin().setValue(i, pin.getValue(i));
+                  }
+                  if (slicecount>0)
+                    that.IOBoxInputPin().setSliceCount(pin.getSliceCount());
+                }
+                
+                var savedValues = pin.values.slice();
+                pin.setType(VVVV.PinTypes[that.IOBoxInputPin().typeName]);
+                if ((pin.unvalidated && VVVV.PinTypes[pin.typeName].primitive) || pin.isConnected()) {
+                  pin.values = savedValues;
+                  pin.unvalidated = false;
+                }
+                
+                pin.slavePin = that.IOBoxInputPin();
+                that.IOBoxInputPin().masterPin = pin;
               }
-              
-              var savedValues = pin.values.slice();
-              pin.setType(VVVV.PinTypes[that.IOBoxInputPin().typeName]);
-              if ((pin.unvalidated && VVVV.PinTypes[pin.typeName].primitive) || pin.isConnected()) {
-                pin.values = savedValues;
-                pin.unvalidated = false;
+              else if (that.IOBoxInputPin().masterPin.pinname!=pinname) { // rename subpatch pin
+                console.log('renaming '+that.IOBoxInputPin().masterPin.pinname+" to "+pinname);
+                that.parentPatch.inputPins[pinname] = that.parentPatch.inputPins[that.IOBoxInputPin().masterPin.pinname];
+                that.parentPatch.removeInputPin(that.IOBoxInputPin().masterPin.pinname);
+                that.IOBoxInputPin().masterPin.pinname = pinname;
               }
-              
-              pin.slavePin = that.IOBoxInputPin();
-              that.IOBoxInputPin().masterPin = pin;
-            }
-            else if (that.IOBoxInputPin().masterPin.pinname!=pinname) { // rename subpatch pin
-              console.log('renaming '+that.IOBoxInputPin().masterPin.pinname+" to "+pinname);
-              that.parentPatch.inputPins[pinname] = that.parentPatch.inputPins[that.IOBoxInputPin().masterPin.pinname];
-              that.parentPatch.removeInputPin(that.IOBoxInputPin().masterPin.pinname);
-              that.IOBoxInputPin().masterPin.pinname = pinname;
             }
             this.node.parentPatch.parentPatch.afterUpdate();
           }
