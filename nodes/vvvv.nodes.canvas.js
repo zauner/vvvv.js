@@ -751,9 +751,11 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
           subIndex = 0;
         }
       }
-      if (binSizeIn.getValue(0)<0 && subIndex<layers[binNum].x.length) {
-        adjustVertexListSize(layers[binNum], subIndex);
-        layers.splice(1);
+      if (binSizeIn.getValue(0)<0) {
+        if (subIndex<layers[binNum].x.length) {
+          adjustVertexListSize(layers[binNum], subIndex);
+          layers.splice(1);
+        }
       }
       else
         layers.splice(binNum);
