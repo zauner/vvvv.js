@@ -242,8 +242,6 @@ VVVV.Nodes.Damper = function(id, graph) {
       if (currPos[i]==undefined)
         currPos[i] = pos;
         
-      if (deltaPos[i]==undefined)
-        deltaPos[i] = pos - currPos[i];
       if (filterTime>0)
         velocity[i] = (pos-currPos[i])/(filterTime*1000);
       else
