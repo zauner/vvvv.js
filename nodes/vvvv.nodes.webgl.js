@@ -50,21 +50,21 @@ var identity = mat4.identity(mat4.create());
  * @constructor
  */
 VVVV.Types.WebGlRenderState = function() {
-  /* @member */
+  /** @member */
   this.alphaBlending = true;
-  /* @member */
+  /** @member */
   this.srcBlendMode = "SRC_ALPHA";
-  /* @member */
+  /** @member */
   this.destBlendMode = "ONE_MINUS_SRC_ALPHA";
   
-  /* @member */
+  /** @member */
   this.enableZWrite = true;
-  /* @member */
+  /** @member */
   this.depthFunc = "LEQUAL";
-  /* @member */
+  /** @member */
   this.depthOffset = 0.0;
   
-  /* @member */
+  /** @member */
   this.polygonDrawMode = "TRIANGLES";
   
   /**
@@ -160,13 +160,13 @@ VVVV.Types.VertexBuffer = function(gl, p) {
  * @param {Array} indices the list of indices
  */
 VVVV.Types.Mesh = function(gl, vertexBuffer, indices) {
-  /* @member */
+  /** @member */
   this.vertexBuffer = vertexBuffer;
-  /* @member */
+  /** @member */
   this.indexBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-  /* @member */
+  /** @member */
   this.numIndices = indices.length;
 }
 

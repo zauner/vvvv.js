@@ -123,6 +123,14 @@ VVVV.Helpers = {
       return path;
   }, 
   
+  /**
+   * Helper function that helps creating a dynamic number of input pins
+   * see e.g. Add (Value) for usage
+   * @param {VVVV.Core.Node} node the node the pins should be added to/removed from
+   * @param {Array} pins the array which holds the VVVV.Core.Pin objects; will be modified by the function
+   * @param {Integer} count the desired number of pins
+   * @param {Function} create_callback the function which actually creates the pin
+   */
   dynamicPins: function(node, pins, count, create_callback) {
     var currentCount = pins.length;
     for (var i=currentCount; i<count; i++) {
@@ -329,7 +337,7 @@ VVVV.Core = {
     }
     
     /**
-     * called if the pin gets connected or disconnected; subsequently calls the callbacks registered in {@link VVVV.Core.Pin#connectionChangedHandlers}
+     * called when the pin gets connected or disconnected; subsequently calls the callbacks registered in {@link VVVV.Core.Pin#connectionChangedHandlers}
      */
     this.connectionChanged = function() {
       var that = this;
