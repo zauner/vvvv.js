@@ -1203,11 +1203,15 @@ VVVV.Core = {
       return xml;
     }
     
+    
     this.evaluate = function() {
       if (this.resourcesPending>0) // this.resourcesPending is >0 when thirdbarty libs or subpatches are loading at the moment
         return;
-      if (print_timing)
+      if (print_timing) {
+        var nodeProfiles = {};
         var start = new Date().getTime();
+        var elapsed = 0;
+      }
       var invalidNodes = {};
       var terminalNodes = {}
       for (var i=0; i<this.nodeList.length; i++) {
@@ -1244,13 +1248,19 @@ VVVV.Core = {
             catch (e) {
               console.log('VVVV.Js / Error evaluating '+node.nodename+': '+e.message);
             }
-            if (print_timing)
-              console.log(node.nodename+' / '+node.id+': '+(new Date().getTime() - start)+'ms')
             node.dirty = false;
             
             _(node.inputPins).each(function(inPin) {
               inPin.changed = false;
             });
+          }
+          if (print_timing) {
+            if (!nodeProfiles[node.nodename])
+              nodeProfiles[node.nodename] = {count: 0, dt: 0};
+            elapsed = new Date().getTime() - start;
+            nodeProfiles[node.nodename].count++;
+            nodeProfiles[node.nodename].dt += elapsed;
+            console.log(node.nodename+' / '+node.id+': '+elapsed+'ms')
           }
         }
         delete invalidNodes[node.id];
@@ -1264,8 +1274,12 @@ VVVV.Core = {
           evaluateSubGraph(n);
       });
       
-      if (print_timing)
+      if (print_timing) {
+        _(nodeProfiles).each(function(p, nodename) {
+          console.log(p.count+'x '+nodename+': '+p.dt+'ms');
+        });
         var start = new Date().getTime();
+      }
       this.afterEvaluate();
       if (print_timing)
         console.log('patch rendering: '+(new Date().getTime() - start)+'ms')
