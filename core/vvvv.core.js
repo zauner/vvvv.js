@@ -1005,7 +1005,7 @@ VVVV.Core = {
     this.getAbsolutePath = function() {
       var path = this.getRelativePath();
       if (this.parentPatch)
-        path = this.parentPatch.getRelativePath()+path;
+        path = this.parentPatch.getAbsolutePath()+path;
       return path;
     }
     
