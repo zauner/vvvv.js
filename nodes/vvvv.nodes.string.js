@@ -22,12 +22,12 @@ VVVV.Nodes.IOBoxString = function(id, graph) {
     compatibility_issues: []
   };
   
-  this.addInvisiblePin("Rows",[1.0],this);
+  this.addInvisiblePin("Rows",[1.0],VVVV.PinTypes.Value);
   
-  this.addInputPin("SliceOffset", [0], this);
-  this.addInputPin("Input String", [""], this);
+  this.addInputPin("SliceOffset", [0], VVVV.PinTypes.Value);
+  this.addInputPin("Input String", [""], VVVV.PinTypes.String);
   
-  this.addOutputPin("Output String", [""], this);
+  this.addOutputPin("Output String", [""], VVVV.PinTypes.String);
 
   this.evaluate = function() {
 	  this.outputPins["Output String"].setSliceCount(this.inputPins["Input String"].getSliceCount());
@@ -54,25 +54,30 @@ VVVV.Nodes.SwitchStringInput = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['No dynamic pin count yet']
+    compatibility_issues: []
   };
   
-  var switchIn = this.addInputPin("Switch", [0], this);
-  var inputIn = []
-  inputIn[0] = this.addInputPin("Input 1", ["text"], this);
-  inputIn[1] = this.addInputPin("Input 2", ["text"], this);
+  var inputCountIn = this.addInvisiblePin("Input Count", [2], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", ["text"], this);
+  var switchIn = this.addInputPin("Switch", [0], VVVV.PinTypes.Value);
+  var inputIn = []
+  
+  var outputOut = this.addOutputPin("Output", ["text"], VVVV.PinTypes.String);
+  
+  this.initialize = function() {
+    var inputCount = Math.max(2, inputCountIn.getValue(0));
+    VVVV.Helpers.dynamicPins(this, inputIn, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), ['text'], VVVV.PinTypes.String);
+    })
+  }
 
   this.evaluate = function() {
+    if (inputCountIn.pinIsChanged())
+      this.initialize();
     var maxSize = this.getMaxInputSliceCount();
     
-    if (switchIn.getValue(0)==undefined) {
-      outputOut.setValue(0, undefined);
-      return;
-    }
     for (var i=0; i<maxSize; i++) {
-      outputOut.setValue(i, inputIn[switchIn.getValue(i)%inputIn.length].getValue(i));
+      outputOut.setValue(i, inputIn[Math.round(Math.abs(switchIn.getValue(i)))%inputIn.length].getValue(i));
     }
     outputOut.setSliceCount(maxSize);
   }
@@ -98,15 +103,24 @@ VVVV.Nodes.AddString = function(id, graph) {
     compatibility_issues: ['No dynamic pin count yet', 'Intersperse *Enum* not implemented']
   };
   
+  var inputCountIn = this.addInvisiblePin("Input Count", [2], VVVV.PinTypes.Value);
+  
   var inputIn = []
-  inputIn[0] = this.addInputPin("Input 1", ["text"], this);
-  inputIn[1] = this.addInputPin("Input 2", ["text"], this);
   
-  var intersperseStringIn = this.addInputPin("Intersperse String", [""], this);
+  var intersperseStringIn = this.addInputPin("Intersperse String", [""], VVVV.PinTypes.String);
   
-  var outputOut = this.addOutputPin("Output", ["texttext"], this);
+  var outputOut = this.addOutputPin("Output", ["texttext"], VVVV.PinTypes.String);
+
+  this.initialize = function() {
+    var inputCount = Math.max(2, inputCountIn.getValue(0));
+    VVVV.Helpers.dynamicPins(this, inputIn, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), ['text'], VVVV.PinTypes.String);
+    })
+  }
 
   this.evaluate = function() {
+    if (inputCountIn.pinIsChanged())
+      this.initialize();
     var maxSize = this.getMaxInputSliceCount();
 
     for (var i=0; i<maxSize; i++) {
@@ -144,11 +158,11 @@ VVVV.Nodes.GetSliceString = function(id, graph) {
     compatibility_issues: ['Bin Size not implemented']
   };
   
-  var inputIn = this.addInputPin("Input", ["text"], this);
-  var binSizeIn = this.addInputPin("Bin Size", [1], this);
-  var indexIn = this.addInputPin("Index", [0], this);
+  var inputIn = this.addInputPin("Input", ["text"], VVVV.PinTypes.String);
+  var binSizeIn = this.addInputPin("Bin Size", [1], VVVV.PinTypes.Value);
+  var indexIn = this.addInputPin("Index", [0], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", ["text"], this);
+  var outputOut = this.addOutputPin("Output", ["text"], VVVV.PinTypes.String);
 
   this.evaluate = function() {
       for (var i=0; i<indexIn.values.length; i++) {
@@ -179,10 +193,10 @@ VVVV.Nodes.AsValue = function(id, graph) {
     compatibility_issues: []
   };
   
-  var inputIn = this.addInputPin("Input", [], this);
-  var defaultIn = this.addInputPin("Default", [0.0], this);
+  var inputIn = this.addInputPin("Input", [], VVVV.PinTypes.String);
+  var defaultIn = this.addInputPin("Default", [0.0], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     
@@ -222,12 +236,12 @@ VVVV.Nodes.SortString = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var inputIn = this.addInputPin('Input', ['text'], this);
-  var reversesortingIn = this.addInputPin('Reverse Sorting', [0], this);
+  var inputIn = this.addInputPin('Input', ['text'], VVVV.PinTypes.String);
+  var reversesortingIn = this.addInputPin('Reverse Sorting', [0], VVVV.PinTypes.Value);
 
   // output pins
-  var outputOut = this.addOutputPin('Output', ['text'], this);
-  var formerindexOut = this.addOutputPin('Former Index', [0], this);
+  var outputOut = this.addOutputPin('Output', ['text'], VVVV.PinTypes.String);
+  var formerindexOut = this.addOutputPin('Former Index', [0], VVVV.PinTypes.Value);
 
   // invisible pins
 
@@ -277,10 +291,10 @@ VVVV.Nodes.LengthString = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var inputIn = this.addInputPin('Input', ['text'], this);
+  var inputIn = this.addInputPin('Input', ['text'], VVVV.PinTypes.String);
 
   // output pins
-  var countOut = this.addOutputPin('Count', [0], this);
+  var countOut = this.addOutputPin('Count', [0], VVVV.PinTypes.Value);
 
   // evaluate() will be called each frame
   // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
@@ -321,16 +335,17 @@ VVVV.Nodes.SiftString = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var inputIn = this.addInputPin('Input', ['text'], this);
-  var filterIn = this.addInputPin('Filter', ['text'], this);
-  var comparisonIn = this.addInputPin('Comparison', ['Matches'], this);
-  var casesensitiveIn = this.addInputPin('Case Sensitive', [0], this);
+  var inputIn = this.addInputPin('Input', ['text'], VVVV.PinTypes.String);
+  var filterIn = this.addInputPin('Filter', ['text'], VVVV.PinTypes.String);
+  var comparisonIn = this.addInputPin('Comparison', ['Matches'], VVVV.PinTypes.Enum);
+  comparisonIn.enumOptions = ['Matches', 'Contains', 'MatchesAny', 'ContainsAny'];
+  var casesensitiveIn = this.addInputPin('Case Sensitive', [0], VVVV.PinTypes.Value);
 
   // output pins
-  var hitsOut = this.addOutputPin('Hits', [0], this);
-  var inputindexOut = this.addOutputPin('Input Index', [0], this);
-  var filterindexOut = this.addOutputPin('Filter Index', [0], this);
-  var foundatpositionOut = this.addOutputPin('Found At Position', [0], this);
+  var hitsOut = this.addOutputPin('Hits', [0], VVVV.PinTypes.Value);
+  var inputindexOut = this.addOutputPin('Input Index', [0], VVVV.PinTypes.Value);
+  var filterindexOut = this.addOutputPin('Filter Index', [0], VVVV.PinTypes.Value);
+  var foundatpositionOut = this.addOutputPin('Found At Position', [0], VVVV.PinTypes.Value);
 
   // evaluate() will be called each frame
   // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
@@ -408,15 +423,17 @@ VVVV.Nodes.SeparateString = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var inputIn = this.addInputPin('Input', ['text'], this);
-  var intersperseIn = this.addInputPin('Intersperse', ['None'], this);
-  var interspersestringIn = this.addInputPin('Intersperse String', [''], this);
-  var ignorebetweenIn = this.addInputPin('Ignore between', ['Double'], this);
-  var keepquotesIn = this.addInputPin('Keep Quotes', [0], this);
+  var inputIn = this.addInputPin('Input', ['text'], VVVV.PinTypes.String);
+  var intersperseIn = this.addInputPin('Intersperse', ['None'], VVVV.PinTypes.Enum);
+  intersperseIn.enumOptions = ["None","Space","Comma","CommaPlusSpace","Semicolon","Colon","Pipe","UnixPath","DosPath","Dash","NewLineAutoDetection","Dot","UnderScore","Minus"];
+  var interspersestringIn = this.addInputPin('Intersperse String', [''], VVVV.PinTypes.String);
+  var ignorebetweenIn = this.addInputPin('Ignore between', ['Double'], VVVV.PinTypes.Enum);
+  ignorebetweenIn.enumOptions = ['Single', 'Double'];
+  var keepquotesIn = this.addInputPin('Keep Quotes', [0], VVVV.PinTypes.Value);
 
   // output pins
-  var outputOut = this.addOutputPin('Output', ['text'], this);
-  var formerindexOut = this.addOutputPin('Former Index', [0], this);
+  var outputOut = this.addOutputPin('Output', ['text'], VVVV.PinTypes.String);
+  var formerindexOut = this.addOutputPin('Former Index', [0], VVVV.PinTypes.Value);
   
   var intersperseMap = {
     "None": "",
@@ -498,13 +515,13 @@ VVVV.Nodes.EQString = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var input1In = this.addInputPin('Input 1', [''], this);
-  var input2In = this.addInputPin('Input 2', [''], this);
-  var casesensitiveIn = this.addInputPin('Case Sensitive', [1], this);
+  var input1In = this.addInputPin('Input 1', [''], VVVV.PinTypes.String);
+  var input2In = this.addInputPin('Input 2', [''], VVVV.PinTypes.String);
+  var casesensitiveIn = this.addInputPin('Case Sensitive', [1], VVVV.PinTypes.Value);
 
   // output pins
-  var outputOut = this.addOutputPin('Output', [0], this);
-  var inverseoutputOut = this.addOutputPin('Inverse Output', [0], this);
+  var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
+  var inverseoutputOut = this.addOutputPin('Inverse Output', [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
@@ -548,11 +565,11 @@ VVVV.Nodes.SelectString = function(id, graph) {
     compatibility_issues: []
   };
   
-  var inputIn = this.addInputPin("Input", [''], this);
-  var selectIn = this.addInputPin("Select", [1], this);
+  var inputIn = this.addInputPin("Input", [''], VVVV.PinTypes.String);
+  var selectIn = this.addInputPin("Select", [1], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
-  var formerSliceOut = this.addOutputPin("Former Slice", [0], this);
+  var outputOut = this.addOutputPin("Output", [''], VVVV.PinTypes.String);
+  var formerSliceOut = this.addOutputPin("Former Slice", [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
@@ -586,6 +603,8 @@ VVVV.Nodes.SelectString.prototype = new VVVV.Core.Node();
 VVVV.Nodes.CountString = function(id, graph) {
   this.constructor(id, "Count (String)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -593,10 +612,10 @@ VVVV.Nodes.CountString = function(id, graph) {
     compatibility_issues: []
   };
   
-  this.addInputPin("Input", [''], this);
+  this.addInputPin("Input", [''], VVVV.PinTypes.String);
   
-  this.addOutputPin("Count", [1.0], this);
-  this.addOutputPin("High", [0.0], this);
+  this.addOutputPin("Count", [1.0], VVVV.PinTypes.Value);
+  this.addOutputPin("High", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     if (this.inputPins["Input"].pinIsChanged()) {
@@ -630,10 +649,10 @@ VVVV.Nodes.CleanString = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var inputIn = this.addInputPin('Input', ['text'], this);
+  var inputIn = this.addInputPin('Input', ['text'], VVVV.PinTypes.String);
 
   // output pins
-  var outputOut = this.addOutputPin('Output', ['text'], this);
+  var outputOut = this.addOutputPin('Output', ['text'], VVVV.PinTypes.String);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
@@ -650,3 +669,111 @@ VVVV.Nodes.CleanString = function(id, graph) {
 
 }
 VVVV.Nodes.CleanString.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: AvoidNil (String)
+ Author(s): Matthias Zauner
+ Original Node Author(s): Kalle
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.AvoidNilString = function(id, graph) {
+  this.constructor(id, "AvoidNIL (String)", graph);
+  
+  this.auto_nil = false;
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['Kalle'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var inputIn = this.addInputPin("Input", ['text'], VVVV.PinTypes.String);
+  var defaultIn = this.addInputPin("Default", ['text'], VVVV.PinTypes.String);
+  
+  var outputOut = this.addOutputPin("Output", ['text'], VVVV.PinTypes.String);
+
+  this.evaluate = function() {
+    if (inputIn.pinIsChanged() || defaultIn.pinIsChanged()) {
+      var source = inputIn;
+      if (inputIn.values[0]==undefined) {
+        source = defaultIn;
+      }
+      for (var i=0; i<source.values.length; i++) {
+        outputOut.setValue(i, source.getValue(i));
+      }
+      outputOut.setSliceCount(source.getSliceCount());
+    }
+    
+
+  }
+
+}
+VVVV.Nodes.AvoidNilString.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Cons (String)
+ Author(s): 'David Gann'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.ConsString = function(id, graph) {
+  this.constructor(id, "Cons (String)", graph);
+  
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  //var input1In = this.addInputPin('Input 1', ['text'], VVVV.PinTypes.String);
+  //var input2In = this.addInputPin('Input 2', ['text'], VVVV.PinTypes.String);
+  
+  var inputPins = [];
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', ['text'], VVVV.PinTypes.String);
+  var outputbinsizeOut = this.addOutputPin('Output Bin Size', [1], VVVV.PinTypes.String);
+
+  // invisible pins
+  var inputcountIn = this.addInvisiblePin('Input Count', [2], VVVV.PinTypes.Value);
+  
+  
+    // initialize() will be called after node creation
+  this.initialize = function() {
+    var inputCount = Math.max(2, inputcountIn.getValue(0));
+    VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), ['text'], VVVV.PinTypes.String);
+    })
+  }
+  
+
+  // evaluate() will be called each frame
+  // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
+  this.evaluate = function() {
+    // to implement; maybe start with something like this:
+    if (inputcountIn.pinIsChanged())
+      this.initialize();
+	  
+    var idx = 0;
+    for (var i=0; i<inputPins.length; i++) {
+      for (var j=0; j<inputPins[i].getSliceCount(); j++) {
+        outputOut.setValue(idx++, inputPins[i].getValue(j));
+      }
+    }
+    outputOut.setSliceCount(idx);
+  }
+
+}
+VVVV.Nodes.ConsString.prototype = new VVVV.Core.Node();
+
