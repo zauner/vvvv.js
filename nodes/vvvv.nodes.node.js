@@ -116,15 +116,16 @@ VVVV.Nodes.SwitchNodeInput = function(id, graph) {
     compatibility_issues: ['No dynamic pin count yet']
   };
   
+  
   var switchIn = this.addInputPin("Switch", [0], VVVV.PinTypes.Value);
   var inputcountIn = this.addInvisiblePin("Input Count", [2], VVVV.PinTypes.Value);
   var inputIn = []
   
-  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Node);
+  var outputOut = this.addOutputPin("Output", [], VVVV.PinTypes.Node);
   
     this.initialize = function() {
     var inputCount = Math.max(2, inputcountIn.getValue(0));
-	 VVVV.Helpers.dynamicPins(this, inputIn, inputCount, function(i) {
+	VVVV.Helpers.dynamicPins(this, inputIn, inputCount, function(i) {
      return this.addInputPin('Input '+(i+1), [], VVVV.PinTypes.Node);
    })
  }
@@ -141,15 +142,23 @@ VVVV.Nodes.SwitchNodeInput = function(id, graph) {
 
   this.evaluate = function() {
     
-    if (inputcountIn.pinIsChanged()) {
+    if (inputcountIn.pinIsChanged())
       this.initialize();
+	var maxSize = this.getMaxInputSliceCount();
+  
+    for (var i=0; i<maxSize; i++) {
+      outputOut.setValue(i, inputIn[Math.round(Math.abs(switchIn.getValue(i)))%inputIn.length].getValue(i));
     }
-    
+    outputOut.setSliceCount(maxSize);
+  }  
+	
+	
+/*    
     if (switchIn.getValue(0)==undefined) {
       outputOut.setValue(0, undefined);
       return;
     }
-    
+   
     var pin = inputIn[Math.round(Math.abs(switchIn.getValue(0)))%inputIn.length]
     var slices = pin.getSliceCount();
     
@@ -158,6 +167,8 @@ VVVV.Nodes.SwitchNodeInput = function(id, graph) {
     }
     outputOut.setSliceCount(slices);
   }
+*/  
+
 
 }
 VVVV.Nodes.SwitchNodeInput.prototype = new VVVV.Core.Node();
@@ -170,7 +181,7 @@ VVVV.Nodes.SwitchNodeInput.prototype = new VVVV.Core.Node();
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-VVVV.Nodes.SelectValue = function(id, graph) {
+VVVV.Nodes.SelectNode = function(id, graph) {
   this.constructor(id, "Select (Node)", graph);
   
   this.meta = {
@@ -202,7 +213,7 @@ VVVV.Nodes.SelectValue = function(id, graph) {
   }
 
 }
-VVVV.Nodes.SelectValue.prototype = new VVVV.Core.Node();
+VVVV.Nodes.SelectNode.prototype = new VVVV.Core.Node();
 
 
 
