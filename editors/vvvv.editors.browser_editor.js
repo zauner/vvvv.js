@@ -39,7 +39,7 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
   
   $inputbox.change(function() {
     pin.setValue(sliceIdx, $(this).val());
-    pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+_(pin.values).map(function(v) { return '|'+v+'|'}).join(',')+"'/></NODE>");
+    pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+_(pin.values).map(function(v) { return '|'+v.toString().replace(/\|/g, "||")+'|'}).join(',')+"'/></NODE>");
     //pin.node.parentPatch.afterUpdate();
   });
   $inputbox.keydown(function(e) {

@@ -891,7 +891,7 @@ VVVV.Core = {
         $pin.attr("pinname", p.pinname);
         $pin.attr("visible", "1");
         if ((!p.isConnected() || p.masterPin) && VVVV.PinTypes[p.typeName].primitive && that.defaultPinValues[p.pinname]) {
-          $pin.attr("values", _(that.defaultPinValues[p.pinname]).map(function(v) { return "|"+v+"|"; }).join(","));
+          $pin.attr("values", _(that.defaultPinValues[p.pinname]).map(function(v) { return "|"+v.toString().replace(/\|/g, "||")+"|"; }).join(","));
         }
         $node.append($pin);
       })
@@ -901,7 +901,7 @@ VVVV.Core = {
         $pin.attr("pinname", p.pinname);
         $pin.attr("visible", "0");
         if (VVVV.PinTypes[p.typeName].primitive) {
-          $pin.attr("values", _(p.values).map(function(v) { return "|"+v+"|"; }).join(","));
+          $pin.attr("values", _(p.values).map(function(v) { return "|"+v.toString().replace(/\|/g, "||")+"|"; }).join(","));
         }
         $node.append($pin);
       })
@@ -1053,8 +1053,12 @@ VVVV.Core = {
           result.push(currSlice);
           currSlice = '';
         }
-        else if (v[i]=='|')
-          insideValue = !insideValue;
+        else if (v[i]=='|') {
+          if (v[i+1]!='|' || i+1==v.length-1)
+            insideValue = !insideValue;
+          else
+            currSlice += v[++i];
+        }
         else
           currSlice += v[i];
       }
