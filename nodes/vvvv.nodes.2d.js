@@ -281,3 +281,86 @@ VVVV.Nodes.Vector2Points2d = function(id, graph) {
 
 }
 VVVV.Nodes.Vector2Points2d.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Attractor (2d)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Attractor2d = function(id, graph) {
+  this.constructor(id, "Attractor (2d)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var xIn = this.addInputPin('X', [0], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin('Y', [0], VVVV.PinTypes.Value);
+  var attractorxIn = this.addInputPin('Attractor X', [0], VVVV.PinTypes.Value);
+  var attractoryIn = this.addInputPin('Attractor Y', [0], VVVV.PinTypes.Value);
+  var attractorstrengthIn = this.addInputPin('Attractor Strength', [1], VVVV.PinTypes.Value);
+  var attractorpowerIn = this.addInputPin('Attractor Power', [1], VVVV.PinTypes.Value);
+  var attractorradiusIn = this.addInputPin('Attractor Radius', [0.1], VVVV.PinTypes.Value);
+
+  // output pins
+  var outputxOut = this.addOutputPin('Output X', [0], VVVV.PinTypes.Value);
+  var outputyOut = this.addOutputPin('Output Y', [0], VVVV.PinTypes.Value);
+  
+  function sign(f) {
+    return f<0 ? -1 : ( f>0 ? 1 : 0);
+  }
+
+  this.evaluate = function() {
+    
+    var posSize = Math.max(xIn.getSliceCount(), yIn.getSliceCount());
+    var attrSize = Math.max(attractorxIn.getSliceCount(), attractoryIn.getSliceCount());
+    
+    var x, y, attractorx, attractory, attractorystrength, attractorpower, attractorradius;
+    var dx, dy;
+    
+    for (var i=0; i<posSize; i++) {
+      x = parseFloat(xIn.getValue(i));
+      y = parseFloat(yIn.getValue(i));
+      
+      for (var j=0; j<attrSize; j++) {
+        attractorx = parseFloat(attractorxIn.getValue(j));
+        attractory = parseFloat(attractoryIn.getValue(j));
+        attractorstrength = parseFloat(attractorstrengthIn.getValue(j));
+        attractorpower = parseFloat(attractorpowerIn.getValue(j));
+        attractorradius = parseFloat(attractorradiusIn.getValue(j));
+  
+        dx = x - attractorx;
+        dy = y - attractory;
+        if (dx!=0 || dy!=0) {
+          var l = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2))
+          var m = 0.0;
+          if (l<=attractorradius) {
+            var s = l / attractorradius;
+            m = attractorstrength * (Math.pow(s, attractorpower) * sign(s) / s - 1);
+          }
+          
+          x += dx * m;
+          y += dy * m;
+        }
+      }
+      outputxOut.setValue(i, x);
+      outputyOut.setValue(i, y);
+    }
+    
+    // you also might want to do stuff like this:
+    outputxOut.setSliceCount(posSize);
+    outputyOut.setSliceCount(posSize);
+  }
+
+}
+VVVV.Nodes.Attractor2d.prototype = new VVVV.Core.Node();
