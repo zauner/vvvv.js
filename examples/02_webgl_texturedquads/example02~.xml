@@ -1,5 +1,5 @@
-<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta26.dtd" >
-   <PATCH nodename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\vvvv_js_page\vvvv_js\examples\02_webgl_texturedquads\example02.v4p" filename="C:\Dokumente und Einstellungen\matthias\Eigene Dateien\My Dropbox\vvvv_js_page\vvvv_js\examples\01_canvas_arcs\example01.v4p" systemname="example01">
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta28.1.dtd" >
+   <PATCH nodename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\vvvv_js\examples\02_webgl_texturedquads\example02.v4p" filename="C:\Dokumente und Einstellungen\matthias\Eigene Dateien\My Dropbox\vvvv_js_page\vvvv_js\examples\01_canvas_arcs\example01.v4p" systemname="example01">
    <BOUNDS height="10035" left="5880" top="2550" type="Window" width="5415">
    </BOUNDS>
    <NODE componentmode="InAWindow" id="12" nodename="Renderer (EX9)" systemname="RENDERER (EX9)">
@@ -18,6 +18,14 @@
    <PIN pinname="View" visible="1">
    </PIN>
    <PIN pinname="Windowed Depthbuffer Format" slicecount="1" values="NONE">
+   </PIN>
+   <PIN pinname="Fullscreen Depthbuffer Format" slicecount="1" values="NONE">
+   </PIN>
+   <PIN pinname="Fullscreen Dimensions" slicecount="1" values="|1024 x 768|">
+   </PIN>
+   <PIN pinname="Fullscreen Antialiasing Quality Level" slicecount="1" values="NONE">
+   </PIN>
+   <PIN pinname="Windowed Antialiasing Quality Level" slicecount="1" values="NONE">
    </PIN>
    </NODE>
    <NODE componentmode="Hidden" id="14" nodename="FileTexture (EX9.Texture)" systemname="FileTexture (EX9.Texture)">
@@ -193,13 +201,13 @@
    <LINK dstnodeid="34" dstpinname="Y" srcnodeid="36" srcpinname="Output">
    </LINK>
    <NODE systemname="Quad (DX9)" nodename="Quad (DX9)" componentmode="Hidden" id="47">
-   <BOUNDS type="Node" left="960" top="5445" width="100" height="100">
+   <BOUNDS type="Node" left="1065" top="5250" width="100" height="100">
    </BOUNDS>
    <PIN pinname="Transform" visible="1">
    </PIN>
    <PIN pinname="Layer" visible="1">
    </PIN>
-   <PIN pinname="Texture" visible="1">
+   <PIN pinname="Texture" visible="1" slicecount="1" values="||">
    </PIN>
    <PIN pinname="Color" visible="1">
    </PIN>
@@ -207,8 +215,6 @@
    <LINK srcnodeid="33" srcpinname="Transform Out" dstnodeid="47" dstpinname="Transform">
    </LINK>
    <LINK srcnodeid="47" srcpinname="Layer" dstnodeid="12" dstpinname="Layers">
-   </LINK>
-   <LINK srcnodeid="14" srcpinname="Texture Out" dstnodeid="47" dstpinname="Texture">
    </LINK>
    <LINK srcnodeid="21" srcpinname="Output" dstnodeid="47" dstpinname="Color">
    </LINK>

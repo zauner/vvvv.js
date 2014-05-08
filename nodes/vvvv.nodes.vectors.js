@@ -21,10 +21,10 @@ VVVV.Nodes.Join2dVector = function(id, graph) {
     compatibility_issues: ['']
   };
   
-  var xIn = this.addInputPin("X", [0.0], this);
-  var yIn = this.addInputPin("Y", [0.0], this);
+  var xIn = this.addInputPin("X", [0.0], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin("Y", [0.0], VVVV.PinTypes.Value);
   
-  var xyOut = this.addOutputPin("XY", [0.0,0.0], this);
+  var xyOut = this.addOutputPin("XY", [0.0,0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() 
   {  
@@ -59,11 +59,11 @@ VVVV.Nodes.Join3dVector = function(id, graph) {
     compatibility_issues: ['']
   };
   
-  var xIn = this.addInputPin("X", [0.0], this);
-  var yIn = this.addInputPin("Y", [0.0], this);
-  var zIn = this.addInputPin("Z", [0.0], this);
+  var xIn = this.addInputPin("X", [0.0], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin("Y", [0.0], VVVV.PinTypes.Value);
+  var zIn = this.addInputPin("Z", [0.0], VVVV.PinTypes.Value);
   
-  var xyzOut = this.addOutputPin("XYZ", [0.0,0.0,0.0], this);
+  var xyzOut = this.addOutputPin("XYZ", [0.0,0.0,0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() 
   {  
@@ -99,12 +99,12 @@ VVVV.Nodes.Join4dVector = function(id, graph) {
     compatibility_issues: ['']
   };
   
-  var xIn = this.addInputPin("X", [0.0], this);
-  var yIn = this.addInputPin("Y", [0.0], this);
-  var zIn = this.addInputPin("Z", [0.0], this);
-  var wIn = this.addInputPin("W", [0.0], this);
+  var xIn = this.addInputPin("X", [0.0], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin("Y", [0.0], VVVV.PinTypes.Value);
+  var zIn = this.addInputPin("Z", [0.0], VVVV.PinTypes.Value);
+  var wIn = this.addInputPin("W", [0.0], VVVV.PinTypes.Value);
   
-  var xyzwOut = this.addOutputPin("XYZW", [0.0,0.0,0.0,1.0], this);
+  var xyzwOut = this.addOutputPin("XYZW", [0.0,0.0,0.0,1.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() 
   {  
@@ -142,10 +142,10 @@ VVVV.Nodes.Split2dVector = function(id, graph) {
     compatibility_issues: ['']
   };
   
-  var xyIn = this.addInputPin("XY", [0.0], this);
+  var xyIn = this.addInputPin("XY", [0.0], VVVV.PinTypes.Value);
   
-  var xOut = this.addOutputPin("X", [0.0], this);
-  var yOut = this.addOutputPin("Y", [0.0], this);
+  var xOut = this.addOutputPin("X", [0.0], VVVV.PinTypes.Value);
+  var yOut = this.addOutputPin("Y", [0.0], VVVV.PinTypes.Value);
   
   this.evaluate = function() 
   {  
@@ -184,11 +184,11 @@ VVVV.Nodes.Split3dVector = function(id, graph) {
     compatibility_issues: ['']
   };
   
-  var xyzIn = this.addInputPin("XYZ", [0.0], this);
+  var xyzIn = this.addInputPin("XYZ", [0.0], VVVV.PinTypes.Value);
   
-  var xOut = this.addOutputPin("X", [0.0], this);
-  var yOut = this.addOutputPin("Y", [0.0], this);
-  var zOut = this.addOutputPin("Z", [0.0], this);
+  var xOut = this.addOutputPin("X", [0.0], VVVV.PinTypes.Value);
+  var yOut = this.addOutputPin("Y", [0.0], VVVV.PinTypes.Value);
+  var zOut = this.addOutputPin("Z", [0.0], VVVV.PinTypes.Value);
   
   this.evaluate = function() 
   {  
@@ -230,12 +230,12 @@ VVVV.Nodes.Split4dVector = function(id, graph) {
     compatibility_issues: ['']
   };
   
-  var xyzwIn = this.addInputPin("XYZW", [0.0,0.0,0.0,1.0], this);
+  var xyzwIn = this.addInputPin("XYZW", [0.0,0.0,0.0,1.0], VVVV.PinTypes.Value);
   
-  var xOut = this.addOutputPin("X", [0.0], this);
-  var yOut = this.addOutputPin("Y", [0.0], this);
-  var zOut = this.addOutputPin("Z", [0.0], this);
-  var wOut = this.addOutputPin("W", [0.0], this);
+  var xOut = this.addOutputPin("X", [0.0], VVVV.PinTypes.Value);
+  var yOut = this.addOutputPin("Y", [0.0], VVVV.PinTypes.Value);
+  var zOut = this.addOutputPin("Z", [0.0], VVVV.PinTypes.Value);
+  var wOut = this.addOutputPin("W", [0.0], VVVV.PinTypes.Value);
   
   this.evaluate = function() 
   {  

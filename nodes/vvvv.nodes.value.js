@@ -22,24 +22,22 @@ VVVV.Nodes.AddValue = function(id, graph) {
     compatibility_issues: ['']
   };
   
-  var cntCfg = this.addInvisiblePin("Input Count",[2.0],this); 
+  var cntCfg = this.addInvisiblePin("Input Count",[2],VVVV.PinTypes.Value); 
   var inputPins = []; 
-  var outPin;
+  var outPin = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);;
   
   this.initialize = function() {
-  	outPin = this.addOutputPin("Output", [0.0], this);
-  	
-  	var incnt = cntCfg.getValue(0);
-  	for (var i = 0; i < incnt; i++)
-  	{
-  		var InPin = this.addInputPin("Input " + (i+1),[0.0],this);
-  		inputPins[i] = InPin;
-  	}
+    var inputCount = Math.max(2, cntCfg.getValue(0));
+    VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
+    })
   }
   
 
   this.evaluate = function() 
   {
+    if (cntCfg.pinIsChanged())
+      this.initialize();
   	var maxSpreadSize = this.getMaxInputSliceCount();
   	
   	outPin.setSliceCount(maxSpreadSize);
@@ -76,24 +74,22 @@ VVVV.Nodes.SubtractValue = function(id, graph) {
     compatibility_issues: ['']
   };
   
-  var cntCfg = this.addInvisiblePin("Input Count",[2.0],this); 
+  var cntCfg = this.addInvisiblePin("Input Count",[2.0],VVVV.PinTypes.Value); 
   var inputPins = []; 
-  var outPin;
+  var outPin = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);;
   
   this.initialize = function() {
-  	outPin = this.addOutputPin("Output", [0.0], this);
-  	
-  	var incnt = cntCfg.getValue(0);
-  	for (var i = 0; i < incnt; i++)
-  	{
-  		var InPin = this.addInputPin("Input " + (i+1),[0.0],this);
-  		inputPins[i] = InPin;
-  	}
+    var inputCount = Math.max(2, cntCfg.getValue(0));
+    VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
+    })
   }
   
 
   this.evaluate = function() 
   {
+    if (cntCfg.pinIsChanged())
+      this.initialize();
   	var maxSpreadSize = this.getMaxInputSliceCount();
   	
   	outPin.setSliceCount(maxSpreadSize);
@@ -131,12 +127,12 @@ VVVV.Nodes.EqValue = function(id, graph) {
     compatibility_issues: []
   };
   
-  var input1In = this.addInputPin("Input 1", [0.0], this);
-  var input2In = this.addInputPin("Input 2", [0.0], this);
-  var epsilonIn = this.addInputPin("Epsilon", [0.0], this);
+  var input1In = this.addInputPin("Input 1", [0.0], VVVV.PinTypes.Value);
+  var input2In = this.addInputPin("Input 2", [0.0], VVVV.PinTypes.Value);
+  var epsilonIn = this.addInputPin("Epsilon", [0.0], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
-  var invOutputOut = this.addOutputPin("Inverse Output", [0.0], this);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+  var invOutputOut = this.addOutputPin("Inverse Output", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
@@ -174,10 +170,10 @@ VVVV.Nodes.GtValue = function(id, graph) {
     compatibility_issues: ['No dynamic pin count yet']
   };
   
-  var input1In = this.addInputPin("Input 1", [0.0], this);
-  var input2In = this.addInputPin("Input 2", [0.0], this);
+  var input1In = this.addInputPin("Input 1", [0.0], VVVV.PinTypes.Value);
+  var input2In = this.addInputPin("Input 2", [0.0], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
@@ -212,10 +208,10 @@ VVVV.Nodes.LtValue = function(id, graph) {
     compatibility_issues: ['No dynamic pin count yet']
   };
   
-  var input1In = this.addInputPin("Input 1", [0.0], this);
-  var input2In = this.addInputPin("Input 2", [0.0], this);
+  var input1In = this.addInputPin("Input 1", [0.0], VVVV.PinTypes.Value);
+  var input2In = this.addInputPin("Input 2", [0.0], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
@@ -250,24 +246,22 @@ VVVV.Nodes.MultiplyValue = function(id, graph) {
     compatibility_issues: ['']
   };
   
-  var cntCfg = this.addInvisiblePin("Input Count",[2.0],this); 
+  var cntCfg = this.addInvisiblePin("Input Count",[2.0],VVVV.PinTypes.Value); 
   var inputPins = []; 
-  var outPin;
+  var outPin = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);;
   
   this.initialize = function() {
-  	outPin = this.addOutputPin("Output", [0.0], this);
-  	
-  	var incnt = cntCfg.getValue(0);
-  	for (var i = 0; i < incnt; i++)
-  	{
-  		var InPin = this.addInputPin("Input " + (i+1),[0.0],this);
-  		inputPins[i] = InPin;
-  	}
+    var inputCount = Math.max(2, cntCfg.getValue(0));
+    VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), [1.0], VVVV.PinTypes.Value);
+    })
   }
   
 
   this.evaluate = function() 
   {
+    if (cntCfg.pinIsChanged())
+      this.initialize();
   	var maxSpreadSize = this.getMaxInputSliceCount();
   	
   	outPin.setSliceCount(maxSpreadSize);
@@ -304,11 +298,11 @@ VVVV.Nodes.DivideValue = function(id, graph) {
     compatibility_issues: []
   };
   
-  var inputCfg = this.addInvisiblePin("Inputs Count",[2.0],this);
-  var input1In = this.addInputPin("Input", [0.0], this);
-  var input2In = this.addInputPin("Input 2", [0.0], this);
+  var inputCfg = this.addInvisiblePin("Inputs Count",[2.0],VVVV.PinTypes.Value);
+  var input1In = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
+  var input2In = this.addInputPin("Input 2", [0.0], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
   
   
   this.initialize = function() {
@@ -320,6 +314,10 @@ VVVV.Nodes.DivideValue = function(id, graph) {
     var maxSize = this.getMaxInputSliceCount();
 
     for (var i=0; i<maxSize; i++) {
+      if (input2In.getValue(i)==0) {
+        outputOut.setValue(i, 1.0);
+        continue;
+      }
       outputOut.setValue(i, input1In.getValue(i)/input2In.getValue(i));
     }
     outputOut.setSliceCount(maxSize);
@@ -346,28 +344,24 @@ VVVV.Nodes.IOBoxValueAdvanced = function(id, graph) {
     compatibility_issues: []
   };
   
-  this.addInputPin("SliceOffset", [0], this);
-  this.addInputPin("X Input Value", [0.0], this);
-  this.addInputPin("Y Input Value", [0.0], this);
-  this.addInvisiblePin("Rows",[1.0],this);
+  //this.addInputPin("SliceOffset", [0], this);
+  //this.addInputPin("X Input Value", [0.0], this);
+  this.addInputPin("Y Input Value", [0.0], VVVV.PinTypes.Value);
+  this.addInvisiblePin("Rows",[1.0],VVVV.PinTypes.Value);
   
-  this.addOutputPin("X Output Value", [0.0], this);
-  this.addOutputPin("Y Output Value", [0.0], this);
+  //this.addOutputPin("X Output Value", [0.0], this);
+  this.addOutputPin("Y Output Value", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
-    if (this.inputPins["Y Input Value"].pinIsChanged()) {
-      for (var i=0; i<this.inputPins["Y Input Value"].values.length; i++) {
-        this.outputPins["Y Output Value"].setValue(i, parseFloat(this.inputPins["Y Input Value"].values[i]));
-      }
-      this.outputPins["Y Output Value"].setSliceCount(this.inputPins["Y Input Value"].getSliceCount());
+    var sliceCount = this.inputPins["Y Input Value"].getSliceCount();
+    var v;
+    for (var i=0; i<sliceCount; i++) {
+      v = parseFloat(this.inputPins["Y Input Value"].getValue(i));
+      if (!isFinite(v))
+        v = 0.0;
+      this.outputPins["Y Output Value"].setValue(i, v);
     }
-    
-    if (this.inputPins["X Input Value"].pinIsChanged()) {
-      for (var i=0; i<this.inputPins["X Input Value"].values.length; i++) {
-        this.outputPins["X Output Value"].setValue(i, parseFloat(this.inputPins["X Input Value"].values[i]));
-      }
-      this.outputPins["X Output Value"].setSliceCount(this.inputPins["X Input Value"].getSliceCount());
-    }
+    this.outputPins["Y Output Value"].setSliceCount(this.inputPins["Y Input Value"].getSliceCount());
   }
 
 }
@@ -386,6 +380,8 @@ VVVV.Nodes.IOBoxValueAdvanced.prototype = new VVVV.Core.Node();
 VVVV.Nodes.CountValue = function(id, graph) {
   this.constructor(id, "Count (Value)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -393,10 +389,10 @@ VVVV.Nodes.CountValue = function(id, graph) {
     compatibility_issues: []
   };
   
-  this.addInputPin("Input", [0.0], this);
+  this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
   
-  this.addOutputPin("Count", [1.0], this);
-  this.addOutputPin("High", [0.0], this);
+  this.addOutputPin("Count", [1.0], VVVV.PinTypes.Value);
+  this.addOutputPin("High", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     if (this.inputPins["Input"].pinIsChanged()) {
@@ -426,20 +422,25 @@ VVVV.Nodes.SwitchValueInput = function(id, graph) {
     compatibility_issues: ['No dynamic pin count yet']
   };
   
-  var switchIn = this.addInputPin("Switch", [0], this);
-  var inputIn = []
-  inputIn[0] = this.addInputPin("Input 1", [0.0], this);
-  inputIn[1] = this.addInputPin("Input 2", [0.0], this);
+  var inputCountIn = this.addInvisiblePin("Input Count", [2], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
+  var switchIn = this.addInputPin("Switch", [0], VVVV.PinTypes.Value);
+  var inputIn = [];
+  
+  this.initialize = function() {
+    var inputCount = Math.max(2, inputCountIn.getValue(0));
+    VVVV.Helpers.dynamicPins(this, inputIn, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
+    })
+  }
+  
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
+    if (inputCountIn.pinIsChanged())
+      this.initialize();
     var maxSize = this.getMaxInputSliceCount();
     
-    if (switchIn.getValue(0)==undefined) {
-      outputOut.setValue(0, undefined);
-      return;
-    }
     for (var i=0; i<maxSize; i++) {
       outputOut.setValue(i, inputIn[Math.round(Math.abs(switchIn.getValue(i)))%inputIn.length].getValue(i));
     }
@@ -467,11 +468,11 @@ VVVV.Nodes.SelectValue = function(id, graph) {
     compatibility_issues: []
   };
   
-  var inputIn = this.addInputPin("Input", [0.0], this);
-  var selectIn = this.addInputPin("Select", [1], this);
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
+  var selectIn = this.addInputPin("Select", [1], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
-  var formerSliceOut = this.addOutputPin("Former Slice", [0], this);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+  var formerSliceOut = this.addOutputPin("Former Slice", [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
@@ -479,7 +480,7 @@ VVVV.Nodes.SelectValue = function(id, graph) {
     var outputIndex = 0;
     for (var i=0; i<maxSize; i++) {
       for (var j=0; j<selectIn.getValue(i); j++) {
-        outputOut.setValue(outputIndex, inputIn.getValue(i));
+        outputOut.setValue(outputIndex, parseFloat(inputIn.getValue(i)));
         formerSliceOut.setValue(outputIndex, i);
         outputIndex++;
       }
@@ -510,10 +511,11 @@ VVVV.Nodes.AsString = function(id, graph) {
     compatibility_issues: ['SubType not implemented, always returns float formatting']
   };
   
-  var inputIn = this.addInputPin("Input", [0.0], this);
-  var subtypeIn = this.addInputPin("SubType", ['Real (MinFloat .. MaxFloat)'], this);
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
+  var subtypeIn = this.addInputPin("SubType", ['Real (MinFloat .. MaxFloat)'], VVVV.PinTypes.Enum);
+  subtypeIn.enumOptions = ['Real (MinFloat .. MaxFloat)', 'Integer (MinInt .. MaxInt)'];
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.String);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
@@ -525,7 +527,7 @@ VVVV.Nodes.AsString = function(id, graph) {
         case "Real": out = parseFloat(inputIn.getValue(i)).toFixed(4); break;
         case "Integer": out = parseInt(inputIn.getValue(i)).toFixed(0); break;
       }
-      outputOut.setValue(i, parseFloat(inputIn.getValue(i)).toFixed(4));
+      outputOut.setValue(i, out);
     }
     outputOut.setSliceCount(maxSize);
 
@@ -552,10 +554,10 @@ VVVV.Nodes.Frac = function(id, graph) {
     compatibility_issues: []
   };
   
-  var inputIn = this.addInputPin("Input", [0.0], this);
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
   
-  var wholeOut = this.addOutputPin("Whole Part", [0], this);
-  var realOut = this.addOutputPin("Real Part", [0.5], this);
+  var wholeOut = this.addOutputPin("Whole Part", [0], VVVV.PinTypes.Value);
+  var realOut = this.addOutputPin("Real Part", [0.5], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
@@ -591,10 +593,10 @@ VVVV.Nodes.AddValueSpectral = function(id, graph) {
     compatibility_issues: []
   };
   
-  this.addInputPin("Input", [0.0], this);
-  this.addInputPin("Bin Size", [-1], this);
+  this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
+  this.addInputPin("Bin Size", [-1], VVVV.PinTypes.Value);
   
-  this.addOutputPin("Output", [0.0], this);
+  this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     var maxSpreadSize = this.getMaxInputSliceCount();
@@ -644,11 +646,12 @@ VVVV.Nodes.WaveShaperValue = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var inputIn = this.addInputPin('Input', [0], this);
-  var shapeIn = this.addInputPin('Shape',["Linear"], this);
+  var inputIn = this.addInputPin('Input', [0], VVVV.PinTypes.Value);
+  var shapeIn = this.addInputPin('Shape',["Linear"], VVVV.PinTypes.Enum);
+  shapeIn.enumOptions = ['Linear', 'Inverse', 'Triangle', 'Sine', 'Rectangle'];
 
   // output pins
-  var outputOut = this.addOutputPin('Output', [0], this);
+  var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
 
   // initialize() will be called after node creation
   this.initialize = function() {   
@@ -662,7 +665,7 @@ VVVV.Nodes.WaveShaperValue = function(id, graph) {
     var twoPi = 6.28318530717959;
     
     for (var i=0; i<maxSize; i++) {
-      var input = inputIn.getValue(i);
+      var input = parseFloat(inputIn.getValue(i));
       var shape = shapeIn.getValue(i);
 
       switch (shape) {
@@ -733,15 +736,16 @@ VVVV.Nodes.MapValue = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var inputIn = this.addInputPin('Input', [0.5], this);
-  var srcMinimumIn = this.addInputPin('Source Minimum', [0], this);
-  var srcMaximumIn = this.addInputPin('Source Maximum', [1], this);
-  var destMinimumIn = this.addInputPin('Destination Minimum', [0], this);
-  var destMaximumIn = this.addInputPin('Destination Maximum', [1], this);
-  var mappingIn = this.addInputPin('Mapping', ['Float'], this);
+  var inputIn = this.addInputPin('Input', [0.5], VVVV.PinTypes.Value);
+  var srcMinimumIn = this.addInputPin('Source Minimum', [0], VVVV.PinTypes.Value);
+  var srcMaximumIn = this.addInputPin('Source Maximum', [1], VVVV.PinTypes.Value);
+  var destMinimumIn = this.addInputPin('Destination Minimum', [0], VVVV.PinTypes.Value);
+  var destMaximumIn = this.addInputPin('Destination Maximum', [1], VVVV.PinTypes.Value);
+  var mappingIn = this.addInputPin('Mapping', ['Float'], VVVV.PinTypes.Enum);
+  mappingIn.enumOptions = ['Float', 'Wrap', 'Clamp'];
 
   // output pins
-  var outputOut = this.addOutputPin('Output', [0.5], this);
+  var outputOut = this.addOutputPin('Output', [0.5], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     
@@ -754,6 +758,11 @@ VVVV.Nodes.MapValue = function(id, graph) {
       var destMin = parseFloat(destMinimumIn.getValue(i));
       var destMax = parseFloat(destMaximumIn.getValue(i));
       var mapping = mappingIn.getValue(i);
+      
+      if (srcMax == srcMin) {
+        outputOut.setValue(i, destMin);
+        continue;
+      }
       
       input = input - srcMin;
       srcMax = srcMax - srcMin;
@@ -803,21 +812,19 @@ VVVV.Nodes.MinValue = function(id, graph) {
   this.auto_evaluate = false;
 
   // output pins
-  var outputOut = this.addOutputPin('Output', [0], this);
+  var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
 
   // invisible pins
-  var inputcountIn = this.addInvisiblePin('Input Count', [0.0], this);
+  var inputcountIn = this.addInvisiblePin('Input Count', [2], VVVV.PinTypes.Value);
   
   var inputPins = [];
   
   // initialize() will be called after node creation
   this.initialize = function() {
     var inputCount = Math.max(2, inputcountIn.getValue(0));
-    var currentCount = inputPins.length;
-    for (var i=currentCount; i<inputCount; i++) {
-      inputPins[i] = this.addInputPin('Input '+(i+1), [0.0], this);
-    }
-    inputPins.length = inputCount;
+    VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
+    })
   }
 
   this.evaluate = function() {
@@ -864,21 +871,19 @@ VVVV.Nodes.MaxValue = function(id, graph) {
   this.auto_evaluate = false;
 
   // output pins
-  var outputOut = this.addOutputPin('Output', [0], this);
+  var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
 
   // invisible pins
-  var inputcountIn = this.addInvisiblePin('Input Count', [0.0], this);
+  var inputcountIn = this.addInvisiblePin('Input Count', [2], VVVV.PinTypes.Value);
   
   var inputPins = [];
   
   // initialize() will be called after node creation
   this.initialize = function() {
     var inputCount = Math.max(2, inputcountIn.getValue(0));
-    var currentCount = inputPins.length;
-    for (var i=currentCount; i<inputCount; i++) {
-      inputPins[i] = this.addInputPin('Input '+(i+1), [0.0], this);
-    }
-    inputPins.length = inputCount;
+    VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
+    })
   }
 
   this.evaluate = function() {
@@ -925,21 +930,19 @@ VVVV.Nodes.ModValue = function(id, graph) {
   this.auto_evaluate = false;
 
   // output pins
-  var outputOut = this.addOutputPin('Output', [0], this);
+  var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
 
   // invisible pins
-  var inputcountIn = this.addInvisiblePin('Input Count', [0.0], this);
+  var inputcountIn = this.addInvisiblePin('Input Count', [2], VVVV.PinTypes.Value);
   
   var inputPins = [];
   
   // initialize() will be called after node creation
   this.initialize = function() {
     var inputCount = Math.max(2, inputcountIn.getValue(0));
-    var currentCount = inputPins.length;
-    for (var i=currentCount; i<inputCount; i++) {
-      inputPins[i] = this.addInputPin('Input '+(i+1), [0.0], this);
-    }
-    inputPins.length = inputCount;
+    VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
+    })
   }
 
   this.evaluate = function() {
@@ -988,21 +991,19 @@ VVVV.Nodes.PowerValue = function(id, graph) {
   this.auto_evaluate = false;
 
   // output pins
-  var outputOut = this.addOutputPin('Output', [0], this);
+  var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
 
   // invisible pins
-  var inputcountIn = this.addInvisiblePin('Input Count', [0.0], this);
+  var inputcountIn = this.addInvisiblePin('Input Count', [2], VVVV.PinTypes.Value);
   
   var inputPins = [];
   
   // initialize() will be called after node creation
   this.initialize = function() {
     var inputCount = Math.max(2, inputcountIn.getValue(0));
-    var currentCount = inputPins.length;
-    for (var i=currentCount; i<inputCount; i++) {
-      inputPins[i] = this.addInputPin('Input '+(i+1), [1.0], this);
-    }
-    inputPins.length = inputCount;
+    VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
+    })
   }
 
   this.evaluate = function() {
@@ -1048,13 +1049,13 @@ VVVV.Nodes.RandomValue = function(id, graph) {
   this.auto_evaluate = true;
   
   // input pins
-  var enabledIn = this.addInputPin('Enabled', [1], this);
-  var isintegerIn = this.addInputPin('Is Integer', [0], this);
-  var scaleIn = this.addInputPin('Scale', [1], this);
-  var preventfromdoublesIn = this.addInputPin('Prevent from doubles', [1], this);
+  var enabledIn = this.addInputPin('Enabled', [1], VVVV.PinTypes.Value);
+  var isintegerIn = this.addInputPin('Is Integer', [0], VVVV.PinTypes.Value);
+  var scaleIn = this.addInputPin('Scale', [1], VVVV.PinTypes.Value);
+  var preventfromdoublesIn = this.addInputPin('Prevent from doubles', [1], VVVV.PinTypes.Value);
 
   // output pins
-  var outputOut = this.addOutputPin('Output', [0], this);
+  var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
   
   this.evaluate = function() {
     
@@ -1111,11 +1112,11 @@ VVVV.Nodes.SignValue = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var inputIn = this.addInputPin('Input', [0], this);
+  var inputIn = this.addInputPin('Input', [0], VVVV.PinTypes.Value);
 
   // output pins
-  var signpartOut = this.addOutputPin('Sign Part', [0], this);
-  var absolutepartOut = this.addOutputPin('Absolute Part', [0], this);
+  var signpartOut = this.addOutputPin('Sign Part', [0], VVVV.PinTypes.Value);
+  var absolutepartOut = this.addOutputPin('Absolute Part', [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
@@ -1154,23 +1155,21 @@ VVVV.Nodes.InputMorphValue = function(id, graph) {
   
   this.auto_evaluate = false;
   
-  var switchIn = this.addInputPin('Switch', [0], this);
+  var switchIn = this.addInputPin('Switch', [0], VVVV.PinTypes.Value);
 
   // output pins
-  var outputOut = this.addOutputPin('Output', [0], this);
+  var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
 
   // invisible pins
-  var inputcountIn = this.addInvisiblePin('Input Count', [0.0], this);
+  var inputcountIn = this.addInvisiblePin('Input Count', [2], VVVV.PinTypes.Value);
   
   var inputPins = [];
   
   this.initialize = function() {
     var inputCount = Math.max(2, inputcountIn.getValue(0));
-    var currentCount = inputPins.length;
-    for (var i=currentCount; i<inputCount; i++) {
-      inputPins[i] = this.addInputPin('Input '+(i+1), [0.0], this);
-    }
-    inputPins.length = inputCount;
+    VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
+    })
   }
 
   this.evaluate = function() {
@@ -1220,15 +1219,16 @@ VVVV.Nodes.Sift = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var inputIn = this.addInputPin('Input', [0.0], this);
-  var filterIn = this.addInputPin('Filter', [0.0], this);
-  var epsilonIn = this.addInputPin('Epsilon', [0.0], this);
-  var findModeIn = this.addInputPin('Find', ['First'], this);
+  var inputIn = this.addInputPin('Input', [0.0], VVVV.PinTypes.Value);
+  var filterIn = this.addInputPin('Filter', [0.0], VVVV.PinTypes.Value);
+  var epsilonIn = this.addInputPin('Epsilon', [0.0], VVVV.PinTypes.Value);
+  var findModeIn = this.addInputPin('Find', ['First'], VVVV.PinTypes.Enum);
+  findModeIn.enumOptions = ['First', 'Last', 'All'];
 
   // output pins
-  var hitsOut = this.addOutputPin('Hits', [0], this);
-  var inputindexOut = this.addOutputPin('Input Index', [0], this);
-  var filterindexOut = this.addOutputPin('Filter Index', [0], this);
+  var hitsOut = this.addOutputPin('Hits', [0], VVVV.PinTypes.Value);
+  var inputindexOut = this.addOutputPin('Input Index', [0], VVVV.PinTypes.Value);
+  var filterindexOut = this.addOutputPin('Filter Index', [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     

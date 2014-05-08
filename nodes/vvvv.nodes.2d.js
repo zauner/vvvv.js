@@ -24,15 +24,15 @@ VVVV.Nodes.Cross2d = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var xinIn = this.addInputPin('X In', [0], this);
-  var yinIn = this.addInputPin('Y In', [0], this);
-  var includeupperIn = this.addInputPin('Include Upper', [1], this);
-  var includelowerIn = this.addInputPin('Include Lower', [1], this);
-  var includeequalIn = this.addInputPin('Include Equal', [1], this);
+  var xinIn = this.addInputPin('X In', [0], VVVV.PinTypes.Value);
+  var yinIn = this.addInputPin('Y In', [0], VVVV.PinTypes.Value);
+  var includeupperIn = this.addInputPin('Include Upper', [1], VVVV.PinTypes.Value);
+  var includelowerIn = this.addInputPin('Include Lower', [1], VVVV.PinTypes.Value);
+  var includeequalIn = this.addInputPin('Include Equal', [1], VVVV.PinTypes.Value);
 
   // output pins
-  var xoutOut = this.addOutputPin('X Out', [0], this);
-  var youtOut = this.addOutputPin('Y Out', [0], this);
+  var xoutOut = this.addOutputPin('X Out', [0], VVVV.PinTypes.Value);
+  var youtOut = this.addOutputPin('Y Out', [0], VVVV.PinTypes.Value);
 
   // evaluate() will be called each frame
   // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
@@ -81,12 +81,12 @@ VVVV.Nodes.Polar2d = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var xIn = this.addInputPin('X', [1], this);
-  var yIn = this.addInputPin('Y', [0], this);
+  var xIn = this.addInputPin('X', [1], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin('Y', [0], VVVV.PinTypes.Value);
 
   // output pins
-  var angleOut = this.addOutputPin('Angle', [0], this);
-  var lengthOut = this.addOutputPin('Length', [1], this);
+  var angleOut = this.addOutputPin('Angle', [0], VVVV.PinTypes.Value);
+  var lengthOut = this.addOutputPin('Length', [1], VVVV.PinTypes.Value);
 
   this.initialize = function() {
     
@@ -133,12 +133,12 @@ VVVV.Nodes.Cartesian2d = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var angleIn = this.addInputPin('Angle', [0], this);
-  var lengthIn = this.addInputPin('Length', [1], this);
+  var angleIn = this.addInputPin('Angle', [0], VVVV.PinTypes.Value);
+  var lengthIn = this.addInputPin('Length', [1], VVVV.PinTypes.Value);
 
   // output pins
-  var xOut = this.addOutputPin('X', [1], this);
-  var yOut = this.addOutputPin('Y', [0], this);
+  var xOut = this.addOutputPin('X', [1], VVVV.PinTypes.Value);
+  var yOut = this.addOutputPin('Y', [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     
@@ -181,16 +181,16 @@ VVVV.Nodes.Points2Vector2d = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var x1In = this.addInputPin('X1', [0], this);
-  var y1In = this.addInputPin('Y1', [0], this);
-  var x2In = this.addInputPin('X2', [1], this);
-  var y2In = this.addInputPin('Y2', [0], this);
+  var x1In = this.addInputPin('X1', [0], VVVV.PinTypes.Value);
+  var y1In = this.addInputPin('Y1', [0], VVVV.PinTypes.Value);
+  var x2In = this.addInputPin('X2', [1], VVVV.PinTypes.Value);
+  var y2In = this.addInputPin('Y2', [0], VVVV.PinTypes.Value);
 
   // output pins
-  var xOut = this.addOutputPin('X', [0], this);
-  var yOut = this.addOutputPin('Y', [0], this);
-  var lengthOut = this.addOutputPin('Length', [1], this);
-  var angleOut = this.addOutputPin('Angle', [0], this);
+  var xOut = this.addOutputPin('X', [0], VVVV.PinTypes.Value);
+  var yOut = this.addOutputPin('Y', [0], VVVV.PinTypes.Value);
+  var lengthOut = this.addOutputPin('Length', [1], VVVV.PinTypes.Value);
+  var angleOut = this.addOutputPin('Angle', [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     
@@ -242,16 +242,16 @@ VVVV.Nodes.Vector2Points2d = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var xIn = this.addInputPin('X', [0], this);
-  var yIn = this.addInputPin('Y', [0], this);
-  var lengthIn = this.addInputPin('Length', [1], this);
-  var angleIn = this.addInputPin('Angle', [0], this);
+  var xIn = this.addInputPin('X', [0], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin('Y', [0], VVVV.PinTypes.Value);
+  var lengthIn = this.addInputPin('Length', [1], VVVV.PinTypes.Value);
+  var angleIn = this.addInputPin('Angle', [0], VVVV.PinTypes.Value);
 
   // output pins
-  var x1Out = this.addOutputPin('X1', [0], this);
-  var y1Out = this.addOutputPin('Y1', [0], this);
-  var x2Out = this.addOutputPin('X2', [0], this);
-  var y2Out = this.addOutputPin('Y2', [0], this);
+  var x1Out = this.addOutputPin('X1', [0], VVVV.PinTypes.Value);
+  var y1Out = this.addOutputPin('Y1', [0], VVVV.PinTypes.Value);
+  var x2Out = this.addOutputPin('X2', [0], VVVV.PinTypes.Value);
+  var y2Out = this.addOutputPin('Y2', [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     

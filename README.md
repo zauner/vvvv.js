@@ -1,9 +1,23 @@
 VVVV.js - Visual Web Client Programming
-======================================
+=======================================
 
-vvvvjs.quasipartikel.at
+[www.vvvvjs.com](http://www.vvvvjs.com)
 
-**An open project, which aims to bring the visual programming language VVVV to your web browser.**
+**The visual programming language VVVV brought to your web browser.**
+
+VVVV.js allows you to use the world's greatest visual programming language [VVVV](http://vvvv.org) to enhance your web projects. You can create
+2D Canvas and 3D WebGL graphics without writing a single line of code. It comes with a built in, browser based patch editor,
+you don't need any additional software.
+
+Main Features
+-------------
+
+* Run VVVV Patches seemlessly embedded in your web project
+* Real-time patching using the built in browser based patch editor
+* Supports subpatches so you can better structure your patches
+* 2D Canvas graphics and 3D WebGL graphics with built in shader code editor
+* Access and manipulate the DOM of the surrounding page from your VVVV.js patch
+* VVVV compatible data format, so you can exchange patch snippets with classic VVVV
 
 Licence
 -------
@@ -13,76 +27,78 @@ VVVV.js is freely distributable under the MIT license (see details in LICENCE fi
 This software uses jQuery, underscore.js, d3.js and glMatrix.js. See the corrensponding licence files in the lib folder for details.
 
 
-Setup / Run
------------
+Getting Started
+---------------
 
-**Note:** For developing VVVV patches you will need the original VVVV, so if you don't have it already, get it from the [VVVV Download Page](http://www.vvvv.org/downloads).
-**Make sure to check the [Licencing Page](http://www.vvvv.org/licensing) as well!**
+The best way to dive straight into VVVV.js is to head over to the [VVVV.js Lab](http://lab.vvvvjs.com) and try it out. There, you can try patching VVVV.js without the need of installing anything. Read on to find out how you can use VVVV.js in your own project.
 
-### Deploying VVVV.js
+### Loading VVVV.js and running patches
 
-#### Setup VVVV.js scripts
+The template (see the template directory) gives a good starting point to see how to integrate VVVV.js with your web page.
 
-Unpack the files into your project directory. Unfortunatly, the directory is named 'vvvv.js', which might cause problems with most webservers, so better rename it to "vvvv_js".
+However, here are the single steps:
 
-Include the script somehow like this:
+1. Download VVVV.js and extract it (or clone the github repo) to the location in your project where you keep your JavaScript. Here, we are using javascripts/vvvv_js. Some webservers seem to have problems with
+dots in directory names, so make sure to really rename the 'vvvv.js' from the archive to 'vvvv_js'.
+
+2. Create a new patch. You do so by just creating an empty .v4p file at the location you'd like to have it, for example, mypatch.v4p.
+
+3. Include VVVV.js and the mypatch.v4p in your website (e.g. index.html) like this:
+
+index.html:
 
     <head>
     ...
-    <script language="JavaScript" src="vvvv_js/lib/jquery/jquery-1.8.2.min.js"></script>
-    <script language="JavaScript" src="vvvv_js/vvvv.js"></script>
+    <script language="JavaScript" src="javascripts/vvvv_js/lib/jquery/jquery-1.8.2.min.js"></script> 
+    <script language="JavaScript" src="javascripts/vvvv_js/vvvv.js"></script>
+    <script language="VVVV" src="mypatch.v4p"></script>
+    <script language="JavaScript">
+      $(document).ready(function() {
+        VVVV.init("javascripts/vvvv_js/", 'full', function() {
+          console.log('VVVV.js initialized'); 
+        });
+      });
+    </script>
     ...
     </head>
     
-### Load and run VVVV.js patches
+All the patches (and subpatches) loaded are stored in the VVVV.Patches object. You can access the VVVV.Core.Patch object created above for further processing via
 
-Initialize VVVV.js and run a certain .v4p file at startup like this (uses jQuery):
+    VVVV.Patches[0];
+    
+### Launching the patch editor
 
-    var patch;
-    var mainloop;
-    $(document).ready(function() {
-      
-      VVVV.init('vvvv_js','full', function() {
-      
-        patch = new VVVV.Core.Patch("main.v4p", function() {
-          mainloop = new VVVV.Core.MainLoop(this);
+1. Launch the editor by appending #edit/mypatch.v4p to the URL in the address bar. This will launch the editor in a popup, make sure your browser allows it.
+
+2. To save, hit CTRL+S in the editor. This will trigger a file download. Overwrite your existing mypatch.v4p with the downloaded file2
+
+### Manually loading patches
+
+If the &lt;script&gt; tag method above doesn't suit your needs (e.g. because you don't want to run the patch immeditely), you can create
+the VVVV.Core.Patch object yourself like so:
+
+    <head>
+    ...
+    <script language="JavaScript" src="javascripts/vvvv_js/lib/jquery/jquery-1.8.2.min.js"></script> 
+    <script language="JavaScript" src="javascripts/vvvv_js/vvvv.js"></script>
+    <script language="JavaScript">
+      $(document).ready(function() {
+        VVVV.init("javascripts/vvvv_js/", 'full', function() {
+          console.log('VVVV.js initialized');
+          
+          var patch = new VVVV.Core.Patch("mypatch.v4p", function() {
+            var mainloop = new VVVV.MainLoop(p);
+            console.log('patch loaded and started');
+          });
         });
       });
-
-    });
-  
-  
-`initVVVV(...)` initializes VVVV.js and loads all the needed script files, where the argument is the path to where you unpacked VVVV.js to.
-`VVVV.Core.Patch(...)` loads the .v4p file, and calls the function supplied in the 2nd argument when finished. `VVVV.Core.MainLoop(this)` will run the patch.
-
-You can pause and resume the mainloop by using
-
-    // pause mainloop
-    mainloop.stop();
-
-    // resume mainloop
-    mainloop.start();
-  
-### Patching VVVV.js
-
-#### Install the VVVV.js SDK
-
-Fire up VVVV and hit Alt+R to show the root patch. Add the path `path/to/vvvv_js/vvvv_js_sdk` to the list of external resources. Save the root patch.
-Open a new patch, and check, if you can add e.g. the `Renderer (Canvas VVVVjs)` node.
-
-#### Realtime Patching by connecting VVVV.js and VVVV
-
-To get VVVV's great realtime-patching experience, you can connect your classic VVVV to the browser running a VVVV.js website. Open an empty patch
-and add the VVVVJsConnector node. Your VVVV is now ready to establish a connection. In your browser, add the string `#sync/name_of_your_patch.v4p`
-in the address bar. Hit enter, and VVVV.js and VVVV should be synced, so you can alter the patch in VVVV.
-
-Note, that VVVV doesn't know anything abot VVVV.js, so just because you can create a node in VVVV doesn't mean that VVVV.js can actually run it.
-Keep an eye on the JavaScript console to know what's going on.
-
+    </script>
+    ...
+    </head>
 
 ### Rendering Patches with the VVVViewer
 
-You can load and view a patch by first creating a Patch object as shown above, and then pass it to a newly created VVVViewer object:
+You can load and render a patch embedded in a web site by first creating a Patch object as shown above, and then pass it to a newly created VVVViewer object:
 
     var myvvvviewer;
     var mypatch = new VVVV.Core.Patch("mypatch.v4p", function() {
@@ -96,3 +112,7 @@ This is the corresponding HTML code:
 While in the example above the Patch constructor new VVVV.Core.Patch("mypatch.v4p", ...) loads a VVVV patch file from the remote server,
 it is also possible to just pass actual VVVV XML Code to the constructor instead of a filename.
 This might be the case, when you display VVVV Code which comes from a forum post or a blog entry.
+
+### More Information
+
+Find more information and guides on [www.vvvvjs.com](http://www.vvvvjs.com).

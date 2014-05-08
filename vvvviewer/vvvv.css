@@ -1,36 +1,32 @@
-body{
-  font-family:Arial;
-  font-size:10pt;
-}
-
 h1{
   font-size:14pt;
-}
-
-
-#patchxml{
-  background-color: #e6e6e6;
-  width:500px;
-  height:500px;
-  border:0;
 }
 
 .background{
   fill: #e6e6e6; 
 }
 
-.vvvv-link{
-  stroke: #000;
-  stroke-width: 1;
+.vvvv-node.selected .vvvv-node-background{
+  fill: #9a9a9a;
 }
 
-a{
-  text-decoration:none;
+
+/* Interactive Elements */
+
+.pininputbox{
+  position:absolute;
+  border:0px;
+  font-size:10px;
+  height:2em;
 }
 
-pre{
-  border:1px solid #e6e6e6;
-  width:500px;
-  height: 500px;
-  overflow:auto;
+#node_selection{
+  position:absolute;
+  width: 300px;
+}
+
+#node_selection #new_node, #node_selection #node_filter{
+  width:300px;
+  border:1px solid black;
+  margin: 0;
 }

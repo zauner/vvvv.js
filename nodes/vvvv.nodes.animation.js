@@ -23,14 +23,14 @@ VVVV.Nodes.LFO = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var PeriodIn = this.addInputPin('Period', [1.0], this);
-  var PauseIn = this.addInputPin("Pause", [0], this);
-  var ReverseIn = this.addInputPin("Reverse", [0], this);
-  var ResetIn = this.addInputPin("Reset", [0], this);
-  var PhaseIn = this.addInputPin("Phase", [0.0], this);
+  var PeriodIn = this.addInputPin('Period', [1.0], VVVV.PinTypes.Value);
+  var PauseIn = this.addInputPin("Pause", [0], VVVV.PinTypes.Value);
+  var ReverseIn = this.addInputPin("Reverse", [0], VVVV.PinTypes.Value);
+  var ResetIn = this.addInputPin("Reset", [0], VVVV.PinTypes.Value);
+  var PhaseIn = this.addInputPin("Phase", [0.0], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
-  var CyclesOut = this.addOutputPin("Cycles", [0], this);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+  var CyclesOut = this.addOutputPin("Cycles", [0], VVVV.PinTypes.Value);
   
   var current = [];
   var cycles = [];
@@ -55,7 +55,7 @@ VVVV.Nodes.LFO = function(id, graph) {
       if (current[i]==undefined) current[i] = 0.0;
       if (cycles[i]==undefined) cycles[i] = 0.0;
 
-      if (paused<=0 && period!=0 && isFinite(period)) {
+      if (paused<0.5 && period!=0 && isFinite(period)) {
 
         dv = (1/(period*1000)*dt);
 
@@ -77,11 +77,12 @@ VVVV.Nodes.LFO = function(id, graph) {
 
       lastUpdate = new Date().getTime();
 
-      if (reset>0){
+      if (reset>=0.5){
         current[i] = 0.0;
+        cycles[i] = 0;
       }
 
-      if (paused<0.5) { 
+      if (paused<0.5 || reset>=0.5) { 
         outputOut.setValue(i, (current[i]+phase)%1);
         CyclesOut.setValue(i, cycles[i]);
       }
@@ -114,27 +115,24 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['Sometimes doesnt stop when target reached', 'Cyclic Pin not implemented', 'Acceleration and Velocitity Out are not set yet']
+    compatibility_issues: ['Cyclic Pin not implemented', 'Acceleration Out is not set yet']
   };
   
   this.auto_evaluate = true;
   
-  var positionIn = this.addInputPin("Go To Position", [0.0], this);
-  var filterTimeIn = this.addInputPin("FilterTime", [1.0], this);
+  var positionIn = this.addInputPin("Go To Position", [0.0], VVVV.PinTypes.Value);
+  var filterTimeIn = this.addInputPin("FilterTime", [1.0], VVVV.PinTypes.Value);
   
-  var positionOut = this.addOutputPin("Position Out", [0.0], this);
-  var velocityOut = this.addOutputPin("Velocity Out", [0.0], this);
-  var accelerationOut = this.addOutputPin("Acceleration Out", [0.0], this);
+  var positionOut = this.addOutputPin("Position Out", [0.0], VVVV.PinTypes.Value);
+  var velocityOut = this.addOutputPin("Velocity Out", [0.0], VVVV.PinTypes.Value);
+  var accelerationOut = this.addOutputPin("Acceleration Out", [0.0], VVVV.PinTypes.Value);
   
   var lastUpdate = [];
+  var targetPos = [];
+  var filterTimes = [];
   var currPos = [];
   var velocity = [];
   var deltaPos = [];
-  var direction = [];
-  
-  function sign(n) {
-    return n>=0;
-  }
 
   this.evaluate = function() {
     
@@ -145,41 +143,121 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
     
       if (lastUpdate[i]==undefined)
         lastUpdate[i] = new Date().getTime();
-      var dt = new Date().getTime()-lastUpdate[i];
+      var dt = this.parentPatch.mainloop.deltaT; //new Date().getTime()-lastUpdate[i];
         
-      var targetPos = parseFloat(positionIn.getValue(i));
+      var pos = parseFloat(positionIn.getValue(i));
       var filterTime = parseFloat(filterTimeIn.getValue(i));
       
       if (currPos[i]==undefined)
-        currPos[i] = targetPos;
-      
-      if (!isFinite(targetPos) || !isFinite(filterTime)) {
-        currPos[i] = undefined;
-        positionOut.setValue(i, undefined);
-        continue;
-      }
+        currPos[i] = pos;
         
-      if (pinsChanged) {
+      if (pos!=targetPos[i] || filterTime!=filterTimes[i]) {
         deltaPos[i] = undefined;
-        direction[i] = sign(targetPos-currPos[i]);
-        if (filterTime>0)
-          velocity[i] = (targetPos-currPos[i])/(filterTime*1000);
+        targetPos[i] = pos;
+        filterTimes[i] = filterTime;
+        if (filterTimes[i]>0)
+          velocity[i] = (targetPos[i]-currPos[i])/(filterTimes[i]*1000);
         else
           velocity[i] = 0;
       }
       
-      if (direction[i] == sign(targetPos-currPos[i]))
+      if (Math.abs(velocity[i]*dt) > Math.abs(targetPos[i]-currPos[i]))
+        currPos[i] = targetPos[i];
+      else
         currPos[i] += velocity[i]*dt;
       
-      if (deltaPos[i]!=undefined && sign(targetPos-currPos[i]) != sign(deltaPos[i])) {
-        velocity[i] = 0;
-        currPos[i] = targetPos;
+      if (deltaPos[i]!=0) {
+        positionOut.setValue(i, currPos[i]);
+        velocityOut.setValue(i, velocity[i]);
       }
       
-      if (deltaPos[i]!=0)
-        positionOut.setValue(i, currPos[i]);
+      deltaPos[i] = targetPos[i] - currPos[i];
       
-      deltaPos[i] = targetPos - currPos[i];
+      lastUpdate[i] = new Date().getTime();
+    }
+    
+    if (pinsChanged && positionOut.getSliceCount()!=maxSize) {
+      targetPos.splice(maxSize);
+      filterTimes.splice(maxSize);
+      lastUpdate.splice(maxSize);
+      currPos.splice(maxSize);
+      velocity.splice(maxSize);
+      deltaPos.splice(maxSize);
+      positionOut.setSliceCount(maxSize);
+    }
+    
+  }
+
+}
+VVVV.Nodes.LinearFilter.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Damper (Animation)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+
+VVVV.Nodes.Damper = function(id, graph) {
+  this.constructor(id, "Damper (Animation)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Cyclic Pin not implemented', 'Acceleration Out is not set yet']
+  };
+  
+  this.auto_evaluate = true;
+  
+  var positionIn = this.addInputPin("Go To Position", [0.0], VVVV.PinTypes.Value);
+  var filterTimeIn = this.addInputPin("FilterTime", [1.0], VVVV.PinTypes.Value);
+  
+  var positionOut = this.addOutputPin("Position Out", [0.0], VVVV.PinTypes.Value);
+  var velocityOut = this.addOutputPin("Velocity Out", [0.0], VVVV.PinTypes.Value);
+  var accelerationOut = this.addOutputPin("Acceleration Out", [0.0], VVVV.PinTypes.Value);
+  
+  var lastUpdate = [];
+  var currPos = [];
+  var velocity = [];
+  var deltaPos = [];
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    var pinsChanged = positionIn.pinIsChanged() || filterTimeIn.pinIsChanged();
+    
+    for (var i=0; i<maxSize; i++) {
+    
+      if (lastUpdate[i]==undefined)
+        lastUpdate[i] = new Date().getTime();
+      var dt = this.parentPatch.mainloop.deltaT; //new Date().getTime()-lastUpdate[i];
+        
+      var pos = parseFloat(positionIn.getValue(i));
+      var filterTime = parseFloat(filterTimeIn.getValue(i));
+      
+      if (currPos[i]==undefined)
+        currPos[i] = pos;
+        
+      if (filterTime>0)
+        velocity[i] = (pos-currPos[i])/(filterTime*1000);
+      else
+        velocity[i] = 0;
+      
+      if (Math.abs(velocity[i]*dt) > Math.abs(pos-currPos[i]))
+        currPos[i] = pos;
+      else
+        currPos[i] += velocity[i]*dt;
+      
+      if (deltaPos[i]!=0) {
+        positionOut.setValue(i, currPos[i]);
+        velocityOut.setValue(i, velocity[i]);
+      }
+      
+      deltaPos[i] = pos - currPos[i];
       
       lastUpdate[i] = new Date().getTime();
     }
@@ -195,7 +273,7 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
   }
 
 }
-VVVV.Nodes.LinearFilter.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Damper.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -217,11 +295,11 @@ VVVV.Nodes.Delay = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var inputIn = this.addInputPin("Input", [0.0], this);
-  var timeIn = this.addInputPin("Time", [1.0], this);
-  var insertIn = this.addInputPin("Insert", [1], this);
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
+  var timeIn = this.addInputPin("Time", [1.0], VVVV.PinTypes.Value);
+  var insertIn = this.addInputPin("Insert", [1], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
   
   var queue = [];
   var times = new Array(1024);
@@ -310,9 +388,9 @@ VVVV.Nodes.Change = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var inputIn = this.addInputPin("Input", [0.0], this);
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
   
-  var changeOut = this.addOutputPin("OnChange", [0], this);
+  var changeOut = this.addOutputPin("OnChange", [0], VVVV.PinTypes.Value);
   
   var values = [];
 
@@ -366,10 +444,10 @@ VVVV.Nodes.TogEdge = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var inputIn = this.addInputPin("Input", [0.0], this);
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
   
-  var upOut = this.addOutputPin("Up Edge", [0], this);
-  var downOut = this.addOutputPin("Down Edge", [0], this);
+  var upOut = this.addOutputPin("Up Edge", [0], VVVV.PinTypes.Value);
+  var downOut = this.addOutputPin("Down Edge", [0], VVVV.PinTypes.Value);
   
   var values = [];
 
@@ -416,11 +494,11 @@ VVVV.Nodes.FlipFlop = function(id, graph) {
     compatibility_issues: []
   };
   
-  var setIn = this.addInputPin("Set", [0], this);
-  var resetIn = this.addInputPin("Reset", [0], this);
+  var setIn = this.addInputPin("Set", [0], VVVV.PinTypes.Value);
+  var resetIn = this.addInputPin("Reset", [0], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0], this);
-  var inverseOutputOut = this.addOutputPin("Inverse Output", [1], this);
+  var outputOut = this.addOutputPin("Output", [0], VVVV.PinTypes.Value);
+  var inverseOutputOut = this.addOutputPin("Inverse Output", [1], VVVV.PinTypes.Value);
   
   var initialized = false;
   
@@ -481,10 +559,10 @@ VVVV.Nodes.SampleAndHold = function(id, graph) {
     compatibility_issues: ['different output slice count in pure VVVV, if Set pin has only one slice']
   };
   
-  var inputIn = this.addInputPin("Input", [0.0], this);
-  var setIn = this.addInputPin("Set", [0], this);
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
+  var setIn = this.addInputPin("Set", [0], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
   
 
   this.evaluate = function() {
@@ -530,11 +608,11 @@ VVVV.Nodes.FrameDelay = function(id, graph) {
   
   this.delays_output = true;
   
-  var input1In = this.addInputPin("Input 1", [0.0], this);
-  var default1In = this.addInputPin("Default 1", [0.0], this);
-  var initIn = this.addInputPin("Initialize", [0], this);
+  var input1In = this.addInputPin("Input 1", [0.0], VVVV.PinTypes.Value);
+  var default1In = this.addInputPin("Default 1", [0.0], VVVV.PinTypes.Value);
+  var initIn = this.addInputPin("Initialize", [0], VVVV.PinTypes.Value);
   
-  var output1Out = this.addOutputPin("Output 1", [0.0], this);
+  var output1Out = this.addOutputPin("Output 1", [0.0], VVVV.PinTypes.Value);
   
 
   this.evaluate = function() {
@@ -575,11 +653,11 @@ VVVV.Nodes.Toggle = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var inputIn = this.addInputPin("Input", [0], this);
-  var resetIn = this.addInputPin("Reset", [0], this);
+  var inputIn = this.addInputPin("Input", [0], VVVV.PinTypes.Value);
+  var resetIn = this.addInputPin("Reset", [0], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0], this);
-  var inverseOutputOut = this.addOutputPin("Inverse Output", [1], this);
+  var outputOut = this.addOutputPin("Output", [0], VVVV.PinTypes.Value);
+  var inverseOutputOut = this.addOutputPin("Inverse Output", [1], VVVV.PinTypes.Value);
   
   var initialized = false;
   
@@ -643,18 +721,19 @@ VVVV.Nodes.Counter = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var upIn = this.addInputPin("Up", [0], this);
-  var downIn = this.addInputPin("Down", [0], this);
-  var minIn = this.addInputPin("Minimum", [0], this);
-  var maxIn = this.addInputPin("Maximum", [15], this);
-  var incrIn = this.addInputPin("Increment", [1], this);
-  var defaultIn = this.addInputPin("Default", [0], this);
-  var resetIn = this.addInputPin("Reset", [0], this);
-  var modeIn = this.addInputPin("Mode", ['Wrap'], this);
+  var upIn = this.addInputPin("Up", [0], VVVV.PinTypes.Value);
+  var downIn = this.addInputPin("Down", [0], VVVV.PinTypes.Value);
+  var minIn = this.addInputPin("Minimum", [0], VVVV.PinTypes.Value);
+  var maxIn = this.addInputPin("Maximum", [15], VVVV.PinTypes.Value);
+  var incrIn = this.addInputPin("Increment", [1], VVVV.PinTypes.Value);
+  var defaultIn = this.addInputPin("Default", [0], VVVV.PinTypes.Value);
+  var resetIn = this.addInputPin("Reset", [0], VVVV.PinTypes.Value);
+  var modeIn = this.addInputPin("Mode", ['Wrap'], VVVV.PinTypes.Enum);
+  modeIn.enumOptions = ["Wrap", "Unlimited", "Clamp"];
   
-  var outputOut = this.addOutputPin("Output", [0.0], this);
-  var uflowOut = this.addOutputPin("Underflow", [0.0], this);
-  var oflowOut = this.addOutputPin("Overflow", [0.0], this);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+  var uflowOut = this.addOutputPin("Underflow", [0.0], VVVV.PinTypes.Value);
+  var oflowOut = this.addOutputPin("Overflow", [0.0], VVVV.PinTypes.Value);
   
   var initialized = false;
   

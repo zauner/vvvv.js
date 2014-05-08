@@ -29,6 +29,8 @@ VVVV.Core.DOMInterface = function(patch) {
       'values': [],
       'node': node
     }
+    if ($(ioboxConn.selector).length == 0)
+      return;
     if (node.getUpstreamNodes().length==0)
       inputConnectors[match[0]] = ioboxConn;
     else if (node.getDownstreamNodes().length==0)
@@ -162,7 +164,8 @@ VVVV.Core.DOMInterface = function(patch) {
       var j = i%elemCount;
       var k = i%values.length;
       var $elem = $(ioboxConn.selector).eq(j);
-      
+      if ($elem.length==0)
+        continue;
       if (ioboxConn.property_class==undefined) {
         switch ($elem[0].nodeName) {
           case "INPUT": $elem.val($(ioboxConn.selector).eq(j).val()+values[k]);

@@ -3,20 +3,75 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+/** A hash table of {@VVVV.Types.ShaderCodeResource} objects, indexed with the name/path of the shader code resource */
+VVVV.ShaderCodeResources = {};
+
+/**
+ * Stores and caches shader code, which comes from loaded .vvvvjs.fx files or a DefineEffect node 
+ * @class
+ * @constructor
+ */
+VVVV.Types.ShaderCodeResource = function() {
+  var sourceCode = '';
+  /** An array of all nodes which utilize this shader code */
+  this.relatedNodes = [];
+  /** the DefineNode node which defines this shader code; undefined if the shader code comes from a .vvvvjs.fx file */
+  this.definingNode = undefined;
+  
+  /**
+   * Sets the source code
+   * @param {String} str the shader code as string
+   */
+  this.setSourceCode = function(src) {
+    sourceCode = src;
+    for (var i=0; i<this.relatedNodes.length; i++) {
+      this.relatedNodes[i].shaderSourceUpdated(sourceCode);
+    }
+  }
+  
+  /**
+   * registers a shader node with this shader code resource
+   * @param {VVVV.Core.Node} the shader node
+   */
+  this.addRelatedNode = function(node) {
+    this.relatedNodes.push(node);
+    if (sourceCode!='')
+      node.shaderSourceUpdated(sourceCode);
+  }
+}
+
 
 var identity = mat4.identity(mat4.create());
 
+/**
+ * A data structure which contains all render state attributes that can be set in VVVV.js
+ * This is the data object which flows between WebGlRenderState pins
+ * @class
+ * @constructor
+ */
 VVVV.Types.WebGlRenderState = function() {
+  /** @member */
   this.alphaBlending = true;
+  /** @member */
   this.srcBlendMode = "SRC_ALPHA";
+  /** @member */
   this.destBlendMode = "ONE_MINUS_SRC_ALPHA";
   
+  /** @member */
   this.enableZWrite = true;
+  /** @member */
   this.depthFunc = "LEQUAL";
+  /** @member */
   this.depthOffset = 0.0;
   
+  /** @member */
   this.polygonDrawMode = "TRIANGLES";
   
+  /**
+   * Used to create a copy of a WebGlRenderState object. Heavily used by the (EX9.RenderState) nodes to create altered versions
+   * of the incoming render state
+   * @param {VVVV.Types.WebGlRenderState} other the source render state
+   */
   this.copy_attributes = function(other) {
     this.alphaBlending = other.alphaBlending;
     this.alphaFunc = other.alphaFunc;
@@ -28,6 +83,10 @@ VVVV.Types.WebGlRenderState = function() {
     this.polygonDrawMode = other.polygonDrawMode;
   }
   
+  /**
+   * makes the WebGL calls to establish the render state
+   * @param {WebGlContext} gl the WebGL context
+   */
   this.apply = function(gl) {
     if (this.alphaBlending)
       gl.enable(gl.BLEND);
@@ -40,12 +99,30 @@ VVVV.Types.WebGlRenderState = function() {
   }
 }
 
+/**
+ * The VertexBuffer class holds vertex data and provides methods to create vertex buffer objects in a given WebGL context;
+ * VVVV.Types.VertexBuffer objects mainly are used in (EX9.Geometry) nodes, and
+ * ultimately are parts of a {@link VVVV.Types.Mesh} object
+ * @class
+ * @constructor
+ * @param {WebGlContext} gl the WebGL context
+ * @param {Array} p an array of vertex positions
+ */
 VVVV.Types.VertexBuffer = function(gl, p) {
   
+  /** the WebGL Vertex Buffer Object */
   this.vbo = undefined;
+  /** @member */
   this.subBuffers = {};
+  /** total buffer length */
   this.length = 0;
   
+  /**
+   * sets sub buffer data
+   * @param {String} u the buffer usage (e.g. POSITION, NORMAL, TEXCOORD0, TEXCOORD1, ...)
+   * @param {Integer} s the sub buffer size
+   * @param {Array} d the sub buffer data
+   */
   this.setSubBuffer = function(u, s, d) {
     this.subBuffers[u] = {
       usage: u,
@@ -57,6 +134,9 @@ VVVV.Types.VertexBuffer = function(gl, p) {
   }
   this.setSubBuffer('POSITION', 3, p);
   
+  /**
+   * Creates the VBO in the WebGL context and stores the vertex data
+   */
   this.create = function() {
     this.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -69,28 +149,62 @@ VVVV.Types.VertexBuffer = function(gl, p) {
   
 }
 
+/**
+ * A Mesh consists of a {@link VVVV.Types.VertexBuffer} object and a list of indices. It creates a new index buffer
+ * in the given WebGL context. Mesh objects are usually created by (EX9.Geometry) nodes and flow into a shader node's
+ * Mesh input pin
+ * @class
+ * @constructor
+ * @param {WebGlContext} gl the WebGL context
+ * @param {VVVV.Core.VertexBuffer} the vertex data
+ * @param {Array} indices the list of indices
+ */
 VVVV.Types.Mesh = function(gl, vertexBuffer, indices) {
+  /** @member */
   this.vertexBuffer = vertexBuffer;
+  /** @member */
   this.indexBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+  /** @member */
   this.numIndices = indices.length;
 }
 
+/** 
+ * A Layer is the sum of a mesh, textures, render state, shaders and it parameters. Usually, a Layer object is the output
+ * of a shader node and flows into a Renderer (EX9) or Group (EX9) node.
+ * @class
+ * @constructor
+ */
 VVVV.Types.Layer = function() {
+  /** @member */
   this.mesh = null;
+  /** An array of WebGlTexture objects */
   this.textures = [];
+  /** @type VVVV.Types.ShaderProgram */
   this.shader = null;
+  /** @member */
   this.uniforms = {};
+  /** @member */
   this.uniformNames = []; // to help iterate through this.uniforms
+  /** @type VVVV.Types.WebGlRenderState */
   this.renderState = defaultWebGlRenderState;
   
+  /** returns "Layer" */
   this.toString = function() {
     return "Layer";
   }
   
 }
 
+/**
+ * The WebGlResource Pin Type. Its connectionChangedHandler finds a downstream Renderer (EX9) node, gets its WebGL context, and
+ * sets it to all upstream WebGL nodes' renderContext members.
+ * @mixin
+ * @property {String} typeName "WebGlResource"
+ * @property {Boolean} reset_on_disconnect true
+ * @property {Object} connectionChangedHandlers "webglresource" => function
+ */
 VVVV.PinTypes.WebGlResource = {
   typeName: "WebGlResource",
   reset_on_disconnect: true,
@@ -145,6 +259,14 @@ VVVV.PinTypes.WebGlResource = {
   }
 }
 
+/**
+ * The WebGLTexture Pin Type, has the same connectionChangedHandler as {@link VVVV.PinTypes.WebGlResource}.
+ * @mixin
+ * @property {String} typeName "WebGlTexture"
+ * @property {Boolean} reset_on_disconnect true
+ * @property {Object} connectionChangedHandlers "webglresource" => function
+ * @property {Function} defaultValue a function returning {@link VVVV.DefaultTexture}
+ */
 VVVV.PinTypes.WebGlTexture = {
   typeName: "WebGlTexture",
   reset_on_disconnect: true,
@@ -157,6 +279,13 @@ VVVV.PinTypes.WebGlTexture = {
 }
 
 var defaultWebGlRenderState = new VVVV.Types.WebGlRenderState();
+/**
+ * The WebGlRenderState Pin Type
+ * @mixin
+ * @property {String} typeName "WebGlRenderState"
+ * @property {Boolean} reset_on_disconnect true
+ * @property {Function} defaultValue a function returning the default {@link VVVV.Types.WebGlRenderState} object
+ */
 VVVV.PinTypes.WebGlRenderState = {
   typeName: "WebGlRenderState",
   reset_on_disconnect: true,
@@ -165,8 +294,16 @@ VVVV.PinTypes.WebGlRenderState = {
   }
 }
 
+/**
+ * Constant representing a WebGl context's default texture
+ * @const
+ */
 VVVV.DefaultTexture = "Empty Texture";
 
+/**
+ * The ShaderProgram class holds vertex shader and fragment shader code and provides methods to extract uniform/attribute positions
+ * and to create the shader program in the WebGl context
+ */
 VVVV.Types.ShaderProgram = function() {
 
   this.uniformSpecs = {};
@@ -184,10 +321,15 @@ VVVV.Types.ShaderProgram = function() {
   this.isSetup = false;
   
   this.shaderProgram = undefined;
+  this.log = '';
   
   var thatShader = this;
   
   this.extractSemantics = function(code) {
+    thatShader.attributeSpecs = {};
+    thatShader.attribSemanticMap = {};
+    thatShader.uniformSpecs = {};
+    thatShader.uniformSemanticMap = {};
     var pattern = /(uniform|attribute) ([a-zA-Z]+)([0-9xD]*) ([a-zA-Z0-9_]+)( : ([A-Z0-9]+))?( = \{?([^;\}]+)\}?)?;/g;
     var match;
     while ((match = pattern.exec(code))) {
@@ -200,7 +342,7 @@ VVVV.Types.ShaderProgram = function() {
         if (match[6]!=undefined)
           thatShader.attribSemanticMap[match[6]] = match[4];
       }
-      else if (!thatShader.uniformSpecs[match[4]]) {
+      else if (match[1]=='uniform' && !thatShader.uniformSpecs[match[4]]) {
         var dimension = match[3]=='' ? 1 : match[3];
         var uniformSpec = {
           varname: match[4],
@@ -228,18 +370,21 @@ VVVV.Types.ShaderProgram = function() {
   }
   
   this.setup = function(gl) {
+    this.log = '';
     vertexShader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertexShader, vertexShaderCode.replace(/((uniform|attribute) [a-zA-Z0-9]+ [a-zA-Z0-9_]+)[^;]*/g, '$1'));
     gl.compileShader(vertexShader);
     if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-      alert(gl.getShaderInfoLog(vertexShader));
+      this.log = gl.getShaderInfoLog(vertexShader);
+      console.log(this.log);
     }
     
     fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fragmentShader, fragmentShaderCode.replace(/((uniform|attribute) [a-zA-Z0-9]+ [a-zA-Z0-9_]+)[^;]*/g, '$1'));
     gl.compileShader(fragmentShader);
     if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-      alert(gl.getShaderInfoLog(fragmentShader));
+      this.log = gl.getShaderInfoLog(fragmentShader);
+      console.log(this.log);
     }
     
     this.shaderProgram = gl.createProgram();
@@ -248,7 +393,7 @@ VVVV.Types.ShaderProgram = function() {
     gl.linkProgram(this.shaderProgram);
 
     if (!gl.getProgramParameter(this.shaderProgram, gl.LINK_STATUS)) {
-      alert("Could not initialise shaders");
+      console.log("Could not initialise shaders");
     }
     
     _(this.attributeSpecs).each(function(aSpec) {
@@ -261,6 +406,7 @@ VVVV.Types.ShaderProgram = function() {
     
     this.isSetup = true;
     
+    return this.log=='';
   }
 
 }
@@ -276,6 +422,8 @@ VVVV.Types.ShaderProgram = function() {
 VVVV.Nodes.FileTexture = function(id, graph) {
   this.constructor(id, "FileTexture (EX9.Texture)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -285,8 +433,11 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   
   this.auto_evaluate = false;
 
-  var filenamePin = this.addInputPin("Filename", [""], this);
-  var outputPin = this.addOutputPin("Texture Out", [], this, VVVV.PinTypes.WebGlTexture);
+  var filenamePin = this.addInputPin("Filename", [""], VVVV.PinTypes.String);
+  var outputPin = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
+  
+  var typeIn = this.addInvisiblePin("Type", ["Texture"], VVVV.PinTypes.Enum);
+  typeIn.enumOptions = ["Texture", "Cube Texture"];
   
   var textures = [];
   
@@ -297,34 +448,85 @@ VVVV.Nodes.FileTexture = function(id, graph) {
     
     if (!gl)
       return;
+      
+    if (this.contextChanged) {
+      for (var i=0; i<textures.length; i++) {
+        textures[i].context.deleteTexture(textures[i]);
+      }
+      textures = [];
+    }
   
-    if (filenamePin.pinIsChanged() || this.contextChanged) {
+    if (filenamePin.pinIsChanged() || typeIn.pinIsChanged() || this.contextChanged) {
+      var type = typeIn.getValue(0);
       var maxSize = this.getMaxInputSliceCount();
       for (var i=0; i<maxSize; i++) {
-        var filename = filenamePin.getValue(i);
+        var filename = VVVV.Helpers.prepareFilePath(filenamePin.getValue(i), this.parentPatch);
         if (filename.indexOf('http://')===0 && VVVV.ImageProxyPrefix!==undefined)
           filename = VVVV.ImageProxyPrefix+encodeURI(filename);
         textures[i] = gl.createTexture();
-        textures[i].image = new Image();
-        textures[i].image.onload = (function(j) {
-          return function() {  // this is to create a new scope within the loop. see "javascript closure in for loops" http://www.mennovanslooten.nl/blog/post/62
-            gl.bindTexture(gl.TEXTURE_2D, textures[j]);
-            //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textures[j].image);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-            outputPin.markPinAsChanged();
-          }
-        })(i);
-        textures[i].image.src = filename;
+        textures[i].context = gl;
+        if (type=="Texture") {
+          textures[i].image = new Image();
+          textures[i].image.onload = (function(j) {
+            return function() {  // this is to create a new scope within the loop. see "javascript closure in for loops" http://www.mennovanslooten.nl/blog/post/62
+              gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+              gl.bindTexture(gl.TEXTURE_2D, textures[j]);
+              //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+              gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textures[j].image);
+              gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+              gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+              gl.bindTexture(gl.TEXTURE_2D, null);
+              outputPin.setValue(j, textures[j]);
+            }
+          })(i);
+          textures[i].image.src = filename;
+        }
+        else if (type=="Cube Texture") {
+          textures[i].image = new Image();
+          textures[i].image.onload = (function(j) {
+            return function() {
+              var faces = [
+                {face: gl.TEXTURE_CUBE_MAP_POSITIVE_X, offset: [2, 1]},
+                {face: gl.TEXTURE_CUBE_MAP_NEGATIVE_X, offset: [0, 1]},
+                {face: gl.TEXTURE_CUBE_MAP_POSITIVE_Y, offset: [1, 0]},
+                {face: gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, offset: [1, 2]},
+                {face: gl.TEXTURE_CUBE_MAP_POSITIVE_Z, offset: [1, 1]},
+                {face: gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, offset: [3, 1]}];
+              gl.bindTexture(gl.TEXTURE_CUBE_MAP, textures[j]);
+              
+              var $texcanvas = $('<canvas style="display:none" width="'+(this.width/4)+'" height="'+(this.height/3)+'"></canvas>');
+              $('body').append($texcanvas);
+              var ctx = $texcanvas.get(0).getContext("2d");
+              
+              for (var k=0; k<6; k++) {
+                ctx.save();
+                ctx.translate(-this.width/4 * faces[k].offset[0], -this.height/3 * faces[k].offset[1]);
+                ctx.drawImage(this, 0, 0);
+                gl.texImage2D(faces[k].face, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, $texcanvas.get(0));
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+                ctx.restore();
+              }
+              gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+              $texcanvas.remove();
+              outputPin.setValue(j, textures[j]);
+            }
+          })(i);
+          textures[i].image.src = filename;
+        }
       
-        outputPin.setValue(i, textures[i]);
+        outputPin.setValue(i, VVVV.defaultTexture);
       }
       outputPin.setSliceCount(maxSize);
     }
     this.contextChanged = false;
   
+  }
+  
+  this.destroy = function() {
+    for (var i=0; i<textures.length; i++) {
+      textures[i].context.deleteTexture(textures[i]);
+    }
   }
 
 }
@@ -342,6 +544,8 @@ VVVV.Nodes.FileTexture.prototype = new VVVV.Core.Node();
 VVVV.Nodes.DX9Texture = function(id, graph) {
   this.constructor(id, "DX9Texture (EX9.Texture)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -349,8 +553,8 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
     compatibility_issues: ['Using WebGL renderer as source doesnt work correctly in Chrome.']
   };
 
-  var sourceIn = this.addInputPin("Source", [], this, true);
-  var outputOut = this.addOutputPin("Texture Out", [], this, VVVV.PinTypes.WebGlTexture);
+  var sourceIn = this.addInputPin("Source", [], VVVV.PinTypes.WebGlResource);
+  var outputOut = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
   
   var texture;
   
@@ -359,6 +563,11 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
     var gl = this.renderContexts[0];
     if (!gl)
       return;
+      
+    if (this.contextChanged && texture) {
+      texture.context.deleteTexture(texture);
+      texture = undefined;
+    }
 
     if (sourceIn.isConnected()) {
       var source = sourceIn.getValue(0);
@@ -370,8 +579,10 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
         outputOut.setValue(0, source);
       }
       else {
-        if (texture==undefined)
+        if (texture==undefined) {
           texture = gl.createTexture();
+          texture.context = gl;
+        }
         gl.bindTexture(gl.TEXTURE_2D, texture);
         //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
@@ -387,7 +598,14 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
       gl.deleteTexture(texture);
       outputOut.setValue(0, undefined);
     }
+    
+    this.contextChanged = false;
   
+  }
+  
+  this.destroy = function() {
+    if (texture)
+      texture.context.deleteTexture(texture);
   }
 
 }
@@ -404,6 +622,8 @@ VVVV.Nodes.DX9Texture.prototype = new VVVV.Core.Node();
 VVVV.Nodes.VideoTexture = function(id, graph) {
   this.constructor(id, "VideoTexture (EX9.Texture VMR9)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -411,8 +631,8 @@ VVVV.Nodes.VideoTexture = function(id, graph) {
     compatibility_issues: ['Only supports power-of-2 sized videos', 'Has no output pins for meta data']
   };
 
-  var sourceIn = this.addInputPin("Video", [], this, true);
-  var outputOut = this.addOutputPin("Texture Out", [], this, VVVV.PinTypes.WebGlTexture);
+  var sourceIn = this.addInputPin("Video", [], this);
+  var outputOut = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
   
   var texture;
   
@@ -461,6 +681,8 @@ VVVV.Nodes.VideoTexture.prototype = new VVVV.Core.Node();
 VVVV.Nodes.VertexBufferJoin = function(id, graph) {
   this.constructor(id, "VertexBuffer (EX9.Geometry Join)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -468,12 +690,12 @@ VVVV.Nodes.VertexBufferJoin = function(id, graph) {
     compatibility_issues: []
   };
   
-  var posIn = this.addInputPin("Position XYZ", [0.0, 0.0, 0.0], this);
-  var normalIn = this.addInputPin("Normal XYZ", [0.0, 0.0, 0.0], this);
-  var texCoord0In = this.addInputPin("Texture Coordinate 0 XY", [0.0, 0.0], this);
-  var applyIn = this.addInputPin("Apply", [1], this);
+  var posIn = this.addInputPin("Position XYZ", [0.0, 0.0, 0.0], VVVV.PinTypes.Value);
+  var normalIn = this.addInputPin("Normal XYZ", [0.0, 0.0, 0.0], VVVV.PinTypes.Value);
+  var texCoord0In = this.addInputPin("Texture Coordinate 0 XY", [0.0, 0.0], VVVV.PinTypes.Value);
+  var applyIn = this.addInputPin("Apply", [1], VVVV.PinTypes.Value);
   
-  var vbOut = this.addOutputPin("Vertex Buffer", [], this, VVVV.PinTypes.WebGlResource);
+  var vbOut = this.addOutputPin("Vertex Buffer", [], VVVV.PinTypes.WebGlResource);
   
   var vertexBuffer = null;
   
@@ -517,6 +739,8 @@ VVVV.Nodes.VertexBufferJoin.prototype = new VVVV.Core.Node();
 VVVV.Nodes.MeshJoin = function(id, graph) {
   this.constructor(id, "Mesh (EX9.Geometry Join)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -524,11 +748,11 @@ VVVV.Nodes.MeshJoin = function(id, graph) {
     compatibility_issues: []
   };
   
-  var vbIn = this.addInputPin("Vertex Buffer", [], this);
-  var indicesIn = this.addInputPin("Indices", [0], this);
-  var applyIn = this.addInputPin("Apply", [1], this);
+  var vbIn = this.addInputPin("Vertex Buffer", [], VVVV.PinTypes.WebGlResource);
+  var indicesIn = this.addInputPin("Indices", [0], VVVV.PinTypes.Value);
+  var applyIn = this.addInputPin("Apply", [1], VVVV.PinTypes.Value);
   
-  var meshOut = this.addOutputPin("Mesh", [], this, VVVV.PinTypes.WebGlResource);
+  var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
   
   var mesh = null;
   
@@ -565,6 +789,8 @@ VVVV.Nodes.MeshJoin.prototype = new VVVV.Core.Node();
 VVVV.Nodes.Grid = function(id, graph) {
   this.constructor(id, "Grid (EX9.Geometry)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -572,10 +798,10 @@ VVVV.Nodes.Grid = function(id, graph) {
     compatibility_issues: []
   };
   
-  var xIn = this.addInputPin("Resolution X", [2], this);
-  var yIn = this.addInputPin("Resolution Y", [2], this);
+  var xIn = this.addInputPin("Resolution X", [2], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin("Resolution Y", [2], VVVV.PinTypes.Value);
   
-  var meshOut = this.addOutputPin("Mesh", [], this, VVVV.PinTypes.WebGlResource);
+  var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
   
   var mesh = null;
   
@@ -648,6 +874,8 @@ VVVV.Nodes.Grid.prototype = new VVVV.Core.Node();
 VVVV.Nodes.Sphere = function(id, graph) {
   this.constructor(id, "Sphere (EX9.Geometry)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -655,11 +883,11 @@ VVVV.Nodes.Sphere = function(id, graph) {
     compatibility_issues: []
   };
   
-  var rIn = this.addInputPin("Radius", [0.5], this);
-  var xIn = this.addInputPin("Resolution X", [15], this);
-  var yIn = this.addInputPin("Resolution Y", [15], this);
+  var rIn = this.addInputPin("Radius", [0.5], VVVV.PinTypes.Value);
+  var xIn = this.addInputPin("Resolution X", [15], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin("Resolution Y", [15], VVVV.PinTypes.Value);
   
-  var meshOut = this.addOutputPin("Mesh", [], this, VVVV.PinTypes.WebGlResource);
+  var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
   
   var mesh = null;
   
@@ -735,6 +963,8 @@ VVVV.Nodes.Sphere.prototype = new VVVV.Core.Node();
 VVVV.Nodes.Cylinder = function(id, graph) {
   this.constructor(id, "Cylinder (EX9.Geometry)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -742,15 +972,15 @@ VVVV.Nodes.Cylinder = function(id, graph) {
     compatibility_issues: []
   };
   
-  var r1In = this.addInputPin("Radius 1", [0.5], this);
-  var r2In = this.addInputPin("Radius 2", [0.5], this);
-  var lIn = this.addInputPin("Length", [1.0], this);
-  var cyclesIn = this.addInputPin("Cycles", [1.0], this);
-  var capsIn = this.addInputPin("Caps", [1], this);
-  var xIn = this.addInputPin("Resolution X", [15], this);
-  var yIn = this.addInputPin("Resolution Y", [1], this);
+  var r1In = this.addInputPin("Radius 1", [0.5], VVVV.PinTypes.Value);
+  var r2In = this.addInputPin("Radius 2", [0.5], VVVV.PinTypes.Value);
+  var lIn = this.addInputPin("Length", [1.0], VVVV.PinTypes.Value);
+  var cyclesIn = this.addInputPin("Cycles", [1.0], VVVV.PinTypes.Value);
+  var capsIn = this.addInputPin("Caps", [1], VVVV.PinTypes.Value);
+  var xIn = this.addInputPin("Resolution X", [15], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin("Resolution Y", [1], VVVV.PinTypes.Value);
   
-  var meshOut = this.addOutputPin("Mesh", [], this, VVVV.PinTypes.WebGlResource);
+  var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
   
   var mesh = null;
   
@@ -837,7 +1067,7 @@ VVVV.Nodes.Cylinder = function(id, graph) {
     // other indices ...
     for (var y=0; y<yRes; y++) {
       for (var x=0; x<xRes; x++) {
-        var refP = x+xRes*y + 2;
+        var refP = x+(xRes+1)*y + 2;
         indices.push(refP);
         indices.push(refP+1);
         indices.push(refP+xRes+2);
@@ -876,12 +1106,13 @@ VVVV.Nodes.BlendWebGLAdvanced = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.WebGlRenderState);
-  var alphaBlendingIn = this.addInputPin("Alpha Blending", [1], this);
-  var srcModeIn = this.addInputPin("Source Blend Mode", ['SrcAlpha'], this); 
-  var destModeIn = this.addInputPin("Destination Blend Mode", ['SrcAlpha'], this); 
+  var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
+  var alphaBlendingIn = this.addInputPin("Alpha Blending", [1], VVVV.PinTypes.Value);
+  var srcModeIn = this.addInputPin("Source Blend Mode", ['SrcAlpha'], VVVV.PinTypes.Enum); 
+  var destModeIn = this.addInputPin("Destination Blend Mode", ['SrcAlpha'], VVVV.PinTypes.Enum);
+  srcModeIn.enumOptions = destModeIn.enumOptions = ['One', 'Zero', 'SrcAlpha', 'InvSrcAlpha', 'DestAlpha', 'InvDestAlpha', 'SrcColor', 'InvSrcColor', 'DestColor', 'InvDestColor'];
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.WebGlRenderState);
+  var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.WebGlRenderState);
   
   var renderStates = [];
   
@@ -940,10 +1171,11 @@ VVVV.Nodes.BlendWebGL = function(id, graph) {
     compatibility_issues: ['results differ from VVVV', 'Multiply mode not supported']
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.WebGlRenderState);
-  var drawModeIn = this.addInputPin("Draw Mode", ["Blend"], this);
+  var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
+  var drawModeIn = this.addInputPin("Draw Mode", ["Blend"], VVVV.PinTypes.Enum);
+  drawModeIn.enumOptions = ['Add', 'Multiply', 'Blend', 'ColorAsAlphaAdd', 'ColorAsAlphaBlend'];
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.WebGlRenderState);
+  var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.WebGlRenderState);
   
   var renderStates = [];
   
@@ -1003,10 +1235,11 @@ VVVV.Nodes.FillWebGL = function(id, graph) {
     compatibility_issues: ['does not actually draw wireframe, because this is not supported in WebGL, but makes renderer use gl.LINE instead of gl.TRIANGLES when drawing']
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.WebGlRenderState);
-  var fillModeIn = this.addInputPin("Fill Mode", ["Blend"], this);
+  var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
+  var fillModeIn = this.addInputPin("Fill Mode", ["Solid"], VVVV.PinTypes.Enum);
+  fillModeIn.enumOptions = ['Point', 'Solid', 'WireFrame'];
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.WebGlRenderState);
+  var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.WebGlRenderState);
   
   var renderStates = [];
   
@@ -1056,12 +1289,13 @@ VVVV.Nodes.ZWriteEnableWebGL = function(id, graph) {
     compatibility_issues: []
   };
   
-  var renderStateIn = this.addInputPin("Render State In", [], this, true, VVVV.PinTypes.WebGlRenderState);
-  var enableZWriteIn = this.addInputPin("ZWrite Enable", [1], this);
-  var depthFuncIn = this.addInputPin("Compare Function", ['Always'], this); 
-  var biasIn = this.addInputPin("Depth Bias", [0.0], this); 
+  var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
+  var enableZWriteIn = this.addInputPin("ZWrite Enable", [1], VVVV.PinTypes.Value);
+  var depthFuncIn = this.addInputPin("Compare Function", ['Always'], VVVV.PinTypes.Enum); 
+  depthFuncIn.enumOptions = ['Never', 'Less', 'LessEqual', 'Equal', 'NotEqual', 'Greater', 'GreaterEqual', 'Always'];
+  var biasIn = this.addInputPin("Depth Bias", [0.0], VVVV.PinTypes.Value); 
   
-  var renderStateOut = this.addOutputPin("Render State Out", [], this, VVVV.PinTypes.WebGlRenderState);
+  var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.WebGlRenderState);
   
   var renderStates = [];
   
@@ -1111,6 +1345,8 @@ VVVV.Nodes.ZWriteEnableWebGL.prototype = new VVVV.Core.Node();
 VVVV.Nodes.GenericShader = function(id, graph) {
   this.constructor(id, "GenericShader (EX9.Effect)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -1120,17 +1356,19 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   
   this.shaderFile = '';
   
-  var renderStateIn = this.addInputPin("Render State", [], this, true, VVVV.PinTypes.WebGlRenderState);
-  var meshIn = this.addInputPin("Mesh", [], this, true);
-  var transformIn = this.addInputPin("Transform", [], this, true, VVVV.PinTypes.Transform);
-  var techniqueIn = this.addInputPin("Technique", [''], this);
+  var renderStateIn = this.addInputPin("Render State", [], VVVV.PinTypes.WebGlRenderState);
+  var meshIn = this.addInputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
+  var transformIn = this.addInputPin("Transform", [], VVVV.PinTypes.Transform);
+  var techniqueIn = this.addInputPin("Technique", [''], VVVV.PinTypes.Enum);
+  techniqueIn.enumOptions = [''];
   
-  var layerOut = this.addOutputPin("Layer", [], this, VVVV.PinTypes.WebGlResource);
+  var layerOut = this.addOutputPin("Layer", [], VVVV.PinTypes.WebGlResource);
   
   var layers = [];
   var mesh = null;
   var shader = null;
   var shaderCode;
+  var shaderCodeChanged = false;
   
   var shaderPins = [];
   
@@ -1140,47 +1378,85 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   
   this.initialize = function() {
     
-    $.ajax({
-      url: thatNode.shaderFile.replace('%VVVV%', VVVV.Root),
-      async: false,
-      dataType: 'text',
-      success: function(response) {
-        shaderCode = response;
-        shader = new VVVV.Types.ShaderProgram();
-        thatNode.addUniformPins();
-        thatNode.setupShader();
-        transformIn.markPinAsChanged(); // just set any pin as changed, so that node evaluates
-      },
-      error: function() {
-        console.log('ERROR: Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVV.Root));
-        VVVV.onNotImplemented('Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVV.Root));
+    // add the pins which have already been added (by the patch XML) to the shaderPins array
+    var defaultPins = ["Render State", "Mesh", "Transform", "Technique"];
+    _(thatNode.inputPins).each(function(p) {
+      if (defaultPins.indexOf(p.pinname)<0) {
+        p.unvalidated = true;
+        shaderPins.push(p);
       }
-    });
+    })
+    
+    if (VVVV.ShaderCodeResources[thatNode.shaderFile]==undefined) {
+      VVVV.ShaderCodeResources[thatNode.shaderFile] = new VVVV.Types.ShaderCodeResource();
+      VVVV.ShaderCodeResources[thatNode.shaderFile].addRelatedNode(thatNode);
+      $.ajax({
+        url: VVVV.Helpers.prepareFilePath(thatNode.shaderFile, thatNode.parentPatch),
+        async: false,
+        dataType: 'text',
+        success: function(response) {
+          VVVV.ShaderCodeResources[thatNode.shaderFile].setSourceCode(response);
+        },
+        error: function() {
+          console.log('ERROR: Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVV.Root));
+          VVVV.onNotImplemented('Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVV.Root));
+        }
+      });
+    }
+    else {
+      VVVV.ShaderCodeResources[thatNode.shaderFile].addRelatedNode(thatNode);
+    }
     
  
   }
   
+  this.shaderSourceUpdated = function(sc) {
+    shaderCode = sc;
+    if (!shader)
+      shader = new VVVV.Types.ShaderProgram();
+    thatNode.addUniformPins();
+    thatNode.setupShader();
+    _(thatNode.inputPins).each(function(p) {
+      p.markPinAsChanged();
+    })
+    shaderCodeChanged = true;
+    this.parentPatch.afterUpdate();
+  }
+  
   this.addUniformPins = function() {
     shader.extractSemantics(shaderCode);
-    thatNode = this;
+    
+    // delete pins which have been removed from shader code or where the type changed
+    var deletables = [];
+    for (var i=0; i<shaderPins.length; i++) {
+      if (!shader.uniformSpecs[shaderPins[i].pinname.replace(/ /g, '_')]) {
+        thatNode.removeInputPin(shaderPins[i].pinname);
+        deletables.push(i);
+      }
+    }
+    for (var i=0; i<deletables.length; i++) {
+      shaderPins.splice(deletables[i], 1);
+    }
+    
+    // add pins
     _(shader.uniformSpecs).each(function(u) {
       if (u.semantic=="VIEW" || u.semantic=="PROJECTION" || u.semantic=="WORLD")
         return;
-      var reset_on_disconnect = false;
-      var pinType = VVVV.PinTypes.Generic;
+      var pinType = VVVV.PinTypes.Value;
       var defaultValue = [];
       switch (u.type) {
         case 'mat':
           pinType = VVVV.PinTypes.Transform;
-          reset_on_disconnect = true;
           break;
+        case 'samplerCube':
         case 'sampler':
           pinType = VVVV.PinTypes.WebGlTexture;
-          reset_on_disconnect = true;
           break;
         default:
-          if (u.semantic == 'COLOR')
+          if (u.semantic == 'COLOR') {
+            pinType = VVVV.PinTypes.Color;
             defaultValue = ['1.0, 1.0, 1.0, 1.0'];
+          }
           else
             defaultValue = [0.0];
           if (u.defaultValue) {
@@ -1191,8 +1467,27 @@ VVVV.Nodes.GenericShader = function(id, graph) {
           }
           
       }
+      for (var i=0; i<shaderPins.length; i++) {
+        if (shaderPins[i].pinname==u.varname.replace(/_/g,' ')) {
+          shaderPins[i].dimensions = u.dimension;
+          if (shaderPins[i].unvalidated && !shaderPins[i].isConnected())
+            shaderPins[i].values = thatNode.defaultPinValues[shaderPins[i].pinname] ? thatNode.defaultPinValues[shaderPins[i].pinname].slice() : defaultValue;
+          if (shaderPins[i].typeName!=pinType.typeName) {
+            var values = shaderPins[i].values.slice();
+            shaderPins[i].setType(pinType);
+            if (shaderPins[i].unvalidated && (pinType.primitive || shaderPins[i].isConnected()))
+              shaderPins[i].values = values;
+            if (shaderPins[i].isConnected() && !shaderPins[i].unvalidated) {
+              shaderPins[i].connectionChanged();
+              shaderPins[i].links[0].destroy();
+            }
+          }
+          shaderPins[i].unvalidated = false;
+          return;
+        }
+      }
         
-      var pin = thatNode.addInputPin(u.varname.replace(/_/g,' '), defaultValue, thatNode, reset_on_disconnect, pinType);
+      var pin = thatNode.addInputPin(u.varname.replace(/_/g,' '), defaultValue, pinType);
       pin.dimensions = u.dimension;
       shaderPins.push(pin);
     });
@@ -1201,13 +1496,21 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   this.setupShader = function() {
     var technique = techniqueIn.getValue(0);
     technique = technique.replace(/^\s*/, '').replace(/\s*$/, '');
-    if (technique=="") {
-      var match = /(vertex_shader|fragment_shader)\{([a-zA-Z0-9]*?)[,\}]/.exec(shaderCode);
-      if (match)
-        technique = match[2];
+    var rx = new RegExp(/(vertex_shader|fragment_shader)\{([^\}]+)\}/g);
+    techniqueIn.enumOptions = [];
+    var match;
+    while ((match = rx.exec(shaderCode))!=null) {
+      techniqueIn.enumOptions = techniqueIn.enumOptions.concat(match[2].replace(/\s/g, '').split(','));
     }
-    var vsRegEx = new RegExp('vertex_shader(\{([a-zA-Z0-9]+,\s*)*'+technique+'(,\s*[a-zA-Z0-9]+)*\})?:((\r?\n|.)*?)(vertex_shader|fragment_shader)');
-    var psRegEx = new RegExp('fragment_shader(\{([a-zA-Z0-9]+,\s*)*'+technique+'(,\s*[a-zA-Z0-9]+)*\})?:((\r?\n|.)*?)(vertex_shader|fragment_shader)');
+    techniqueIn.enumOptions = techniqueIn.enumOptions.filter(function(e, index, self) { return self.indexOf(e)===index })
+    if (techniqueIn.enumOptions.length==0)
+      techniqueIn.enumOptions.push('');
+    if (technique=="" || techniqueIn.enumOptions.indexOf(technique)<0) {
+      technique = techniqueIn.enumOptions[0];
+      techniqueIn.setValue(0, technique);
+    }
+    var vsRegEx = new RegExp('vertex_shader(\\{([a-zA-Z0-9]+,\\s*)*'+technique+'(,\\s*[a-zA-Z0-9]+)*\\})?:([\\s\\S]*?)(vertex_shader|fragment_shader)');
+    var psRegEx = new RegExp('fragment_shader(\\{([a-zA-Z0-9]+,\\s*)*'+technique+'(,\\s*[a-zA-Z0-9]+)*\\})?:([\\s\\S]*?)(vertex_shader|fragment_shader)');
     
     var match;
     
@@ -1234,11 +1537,18 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   this.evaluate = function() {
     if (!this.renderContexts) return;
     var gl = this.renderContexts[0];
-    if (!gl)
+    if (!gl || !shader)
       return;
     if (!shader.isSetup || this.contextChanged || techniqueIn.pinIsChanged()) {
       this.setupShader();
-      shader.setup(gl);
+      if (shader.setup(gl)) {
+        if (VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode)
+          VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode.showStatus('success', "Successfully compiled");
+      }
+      else {
+        if (VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode)
+          VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode.showStatus('error', shader.log);
+      }
     }
 
     // find out input slice count with respect to the input pin dimension, defined by the shader code  
@@ -1256,7 +1566,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       maxSize = 0;
     
     var currentLayerCount = layers.length;
-    if (this.contextChanged)
+    if (this.contextChanged || shaderCodeChanged)
       currentLayerCount = 0;
     // shorten layers array, if input slice count decreases
     if (maxSize<currentLayerCount) {
@@ -1275,6 +1585,9 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       for (var j=0; j<maxSize; j++) {
       	layers[j].mesh = meshIn.getValue(0);
       }
+    }
+    for (var j=0; j<maxSize; j++) {
+      layers[j].shader = shader;
     }
     
     for (var i=0; i<shaderPins.length; i++) {
@@ -1321,7 +1634,13 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     }
     
     this.contextChanged = false;
+    shaderCodeChanged = false;
         
+  }
+  
+  this.openUIWindow = function() {
+    if (VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode)
+      VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode.openUIWindow();
   }
     
 
@@ -1340,6 +1659,8 @@ VVVV.Nodes.GenericShader.prototype = new VVVV.Core.Node();
 VVVV.Nodes.Quad = function(id, graph) {
   this.constructor(id, "Quad (DX9)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -1349,13 +1670,13 @@ VVVV.Nodes.Quad = function(id, graph) {
   
   this.auto_evaluate = false;
   
-  var renderStateIn = this.addInputPin("Render State", [], this, true, VVVV.PinTypes.WebGlRenderState);
-  this.addInputPin("Transform", [], this, true, VVVV.PinTypes.Transform);
-  this.addInputPin("Texture", [], this, true, VVVV.PinTypes.WebGlTexture);
-  this.addInputPin("Texture Transform", [], this, true, VVVV.PinTypes.Transform);
-  this.addInputPin("Color", ["1.0, 1.0, 1.0, 1.0"], this);
+  var renderStateIn = this.addInputPin("Render State", [], VVVV.PinTypes.WebGlRenderState);
+  this.addInputPin("Transform", [], VVVV.PinTypes.Transform);
+  this.addInputPin("Texture", [], VVVV.PinTypes.WebGlTexture);
+  this.addInputPin("Texture Transform", [], VVVV.PinTypes.Transform);
+  this.addInputPin("Color", ["1.0, 1.0, 1.0, 1.0"], VVVV.PinTypes.Color);
   
-  var layerOut = this.addOutputPin("Layer", [], this, VVVV.PinTypes.WebGlResource);
+  var layerOut = this.addOutputPin("Layer", [], VVVV.PinTypes.WebGlResource);
   
   var initialized = false;
   var layers = [];
@@ -1490,6 +1811,8 @@ VVVV.Nodes.Quad.prototype = new VVVV.Core.Node();
 VVVV.Nodes.Group = function(id, graph) {
   this.constructor(id, "Group (EX9)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
@@ -1498,17 +1821,16 @@ VVVV.Nodes.Group = function(id, graph) {
   };
   
   var layerIns = [];
-  var enableIn = this.addInputPin("Enabled", [1], this);
-  var layerCountIn = this.addInvisiblePin("Layer Template Count", [2], this);
+  var enableIn = this.addInputPin("Enabled", [1], VVVV.PinTypes.Value);
+  var layerCountIn = this.addInvisiblePin("Layer Template Count", [2], VVVV.PinTypes.Value);
   
-  var layerOut = this.addOutputPin("Layer", [], this, VVVV.PinTypes.WebGlResource);
+  var layerOut = this.addOutputPin("Layer", [], VVVV.PinTypes.WebGlResource);
   
   this.initialize = function() {
-  	var layerCount = layerCountIn.getValue(0);
-    for (var i=layerIns.length; i<layerCount; i++) {
-      layerIns[i] = this.addInputPin("Layer "+(i+1), [], this, true, VVVV.PinTypes.WebGlResource);
-    }
-    layerIns.length = layerCount;
+  	var layerCount = Math.max(2, layerCountIn.getValue(0));
+  	VVVV.Helpers.dynamicPins(this, layerIns, layerCount, function(i) {
+      return this.addInputPin("Layer "+(i+1), [], VVVV.PinTypes.WebGlResource);
+    });
   }
   
   this.evaluate = function() {
@@ -1542,26 +1864,29 @@ VVVV.Nodes.Group.prototype = new VVVV.Core.Node();
 VVVV.Nodes.RendererWebGL = function(id, graph) {
   this.constructor(id, "Renderer (EX9)", graph);
   
+  this.auto_nil = false;
+  
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['Disabling Clear doesn\'t work in Chrome', 'Backbuffer width and height defined by canvas size', 'No Fullscreen', 'No Enable Pin', 'No Aspect Ration and Viewport transform', 'No mouse output', 'No backbuffer dimesions output', 'No WebGL (EX9) Output Pin']
+    compatibility_issues: ['Disabling Clear doesn\'t work in Chrome', 'No Fullscreen', 'No Enable Pin', 'No Aspect Ration and Viewport transform', 'No mouse output']
   };
   
-  this.addInputPin("Layers", [], this, true, VVVV.PinTypes.WebGlResource);
-  var clearIn = this.addInputPin("Clear", [1], this);
-  var bgColIn = this.addInputPin("Background Color", ['0.0, 0.0, 0.0, 1.0'], this);
-  var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], this);
-  var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], this);
-  var viewIn = this.addInputPin("View", [], this, true, VVVV.PinTypes.Transform);
+  this.addInputPin("Layers", [], VVVV.PinTypes.WebGlResource);
+  var clearIn = this.addInputPin("Clear", [1], VVVV.PinTypes.Value);
+  var bgColIn = this.addInputPin("Background Color", ['0.0, 0.0, 0.0, 1.0'], VVVV.PinTypes.Color);
+  var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], VVVV.PinTypes.Value);
+  var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], VVVV.PinTypes.Value);
+  var viewIn = this.addInputPin("View", [], VVVV.PinTypes.Transform);
   var projIn = this.addInputPin("Projection", [], VVVV.PinTypes.Transform);
   
-  var enableDepthBufIn = this.addInvisiblePin("Windowed Depthbuffer Format", ['NONE'], this);
+  var enableDepthBufIn = this.addInvisiblePin("Windowed Depthbuffer Format", ['NONE'], VVVV.PinTypes.Enum);
+  enableDepthBufIn.enumOptions = ['NONE', 'DX16'];
   
-  var bufferWidthOut = this.addOutputPin("Actual Backbuffer Width", [0.0], this);
-  var bufferHeightOut = this.addOutputPin("Actual Backbuffer Height", [0.0], this);
-  var ex9Out = this.addOutputPin("EX9 Out", [], this, VVVV.PinTypes.WebGlResource);
+  var bufferWidthOut = this.addOutputPin("Actual Backbuffer Width", [0.0], VVVV.PinTypes.Value);
+  var bufferHeightOut = this.addOutputPin("Actual Backbuffer Height", [0.0], VVVV.PinTypes.Value);
+  var ex9Out = this.addOutputPin("EX9 Out", [], VVVV.PinTypes.WebGlResource);
   
   var width = 0.0;
   var height = 0.0;
@@ -1569,6 +1894,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var pMatrix;
   var vMatrix;
   
+  var canvas;
   this.ctxt = undefined;              // the renderer's active context. might be the canvas context, or the context of a connected downstream renderer
   var canvasCtxt = undefined;         // the context of the canvas which is connected to the renderer
   var gl;                             // just a convenience variable for keeping the lines short 
@@ -1576,7 +1902,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var bbufFramebuffer;
   var bbufTexture;
   
-  function attachMouseEvents(canvas) {
+  function attachMouseEvents() {
     $(canvas).detach('mousemove');
     $(canvas).detach('mousedown');
     $(canvas).detach('mouseup');
@@ -1620,7 +1946,6 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       return;
     var selector = this.invisiblePins["Descriptive Name"].getValue(0);
     var targetElement = $(selector).get(0);
-    var canvas;
     if (!targetElement || targetElement.nodeName!='CANVAS') {
       var w = parseInt(bufferWidthIn.getValue(0));
       var h = parseInt(bufferHeightIn.getValue(0));
@@ -1636,7 +1961,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     if (!canvas)
       return;
       
-    attachMouseEvents(canvas);
+    attachMouseEvents();
 
     try {
       canvasCtxt = canvas.get(0).getContext("experimental-webgl", {preserveDrawingBuffer: true});
@@ -1698,8 +2023,9 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     gl = this.ctxt;
  
     var pixels = new Uint8Array([255, 255, 255]);
-    gl.DefaultTexture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, gl.DefaultTexture);
+    gl.DefaultTexture = {};
+    gl.DefaultTexture['2D'] = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, gl.DefaultTexture['2D']);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -1708,6 +2034,21 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
     gl.bindTexture(gl.TEXTURE_2D, null);
     
+    gl.DefaultTexture['CUBE'] = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, gl.DefaultTexture['CUBE']);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+    
     // this is to ensure that all the input pins get evaluated, if the gl context has been set after the node creation
     this.inputPins["Layers"].markPinAsChanged();
     clearIn.markPinAsChanged();
@@ -1715,6 +2056,10 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     viewIn.markPinAsChanged();
     projIn.markPinAsChanged();
     
+  }
+  
+  this.destroy = function() {
+    $(canvas).remove();
   }
   
   var initialized = false;
@@ -1831,7 +2176,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         if (layer.mesh != currentMesh || layer.shader.shaderProgram != currentShaderProgram) {
           gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
           _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
-            if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]])
+            if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]] || layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position==-1)
               return;
             gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
             gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, 0, b.offset);
@@ -1858,9 +2203,18 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
             case "sampler":
               var tex = u.value;
               if (tex==VVVV.DefaultTexture)
-                tex = gl.DefaultTexture;
+                tex = gl.DefaultTexture['2D'];
               gl.activeTexture(gl['TEXTURE'+textureIdx]);
               gl.bindTexture(gl['TEXTURE_'+u.uniformSpec.dimension], tex);
+              gl.uniform1i(u.uniformSpec.position, textureIdx);
+              textureIdx++;
+              break;
+            case "samplerCube":
+              var tex = u.value;
+              if (tex==VVVV.DefaultTexture)
+                tex = gl.DefaultTexture['CUBE'];
+              gl.activeTexture(gl['TEXTURE'+textureIdx]);
+              gl.bindTexture(gl.TEXTURE_CUBE_MAP, tex);
               gl.uniform1i(u.uniformSpec.position, textureIdx);
               textureIdx++;
               break;
@@ -1876,6 +2230,9 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         currentMesh = layer.mesh;
       }
       
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+      
     }
     
     if (this.renderContexts && this.renderContexts[0]) {
@@ -1889,3 +2246,92 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
 
 }
 VVVV.Nodes.RendererWebGL.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: DefineEffect (DX9)
+ Author(s): Matthias Zauner
+ Original Node Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.DefineEffect = function(id, graph) {
+  this.constructor(id, "DefineEffect (DX9)", graph);
+  
+  this.auto_nil = false;
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['Matthias Zauner'],
+    credits: [],
+    compatibility_issues: ['Not available in classic VVVV']
+  };
+  
+  this.auto_evaluate = false;
+  
+  var nameIn = this.addInputPin("Effect Descriptor", [''], VVVV.PinTypes.String);
+  var sourceCodeIn = this.addInvisiblePin("Source Code", ['#ifdef GL_ES\nprecision highp float;\n#endif\n\nuniform mat4 tW : WORLD;\nuniform mat4 tV : VIEW;\nuniform mat4 tP : PROJECTION;\n\nuniform vec4 Color : COLOR = {1.0, 1.0, 1.0, 1.0};\nuniform sampler2D Texture;\nuniform mat4 Texture_Transform;\nuniform float Alpha = 1.0;\n\nvarying vec2 vs2psTexCd;\n\nvertex_shader:\n\nattribute vec3 PosO : POSITION;\nattribute vec2 TexCd : TEXCOORD0;\n\nvoid main(void) {\n  gl_Position = tP * tV * tW * vec4(PosO, 1.0);\n  vs2psTexCd = (Texture_Transform * vec4(TexCd, 0, 1)).xy;\n}\n\n\nfragment_shader:\n\nvoid main(void) {\n  gl_FragColor = Color * texture2D(Texture, vs2psTexCd) * vec4(1.0, 1.0, 1.0, Alpha);\n}'], VVVV.PinTypes.String);
+  
+  var currentName = '';
+  var w; // the UI window
+  
+  this.evaluate = function() {
+    if (nameIn.getValue(0)!='') {
+      if (nameIn.pinIsChanged()) {
+        var descriptor = nameIn.getValue(0);
+        if (descriptor=='')
+          return;
+        if (currentName=='') { // if is set for the first time
+          if (VVVV.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx']==undefined)
+            VVVV.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx'] = new VVVV.Types.ShaderCodeResource();
+        }
+        else
+          VVVV.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx'] = VVVV.ShaderCodeResources[currentName];
+        currentName = "./"+descriptor+'.vvvvjs.fx';
+        VVVV.ShaderCodeResources[currentName].definingNode = this;
+        VVVV.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(0));
+        if (w)
+          $('#path', w.document).text((this.parentPatch.nodename || 'root')+' / '+(currentName!='' ? currentName : 'Untitled'));
+      }
+      
+      if (sourceCodeIn.pinIsChanged()) {
+        if (VVVV.ShaderCodeResources[currentName])
+          VVVV.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(0));
+      }
+    }
+  }
+  
+  this.openUIWindow = function() {
+    w = window.open("code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
+    var thatNode = this;
+    window.setTimeout(function() {
+      w.document.title = currentName+" / VVVV.js Effect Editor";
+      var definingNodeName = thatNode.parentPatch.nodename || 'root';
+      var shaderName = currentName!='' ? currentName : 'Untitled';
+      $('#path', w.document).text(definingNodeName+' / '+shaderName);
+      $('textarea', w.document).text(sourceCodeIn.getValue(0));
+      $('#compile_button', w.document).click(function() {
+        if (currentName=='') {
+          thatNode.showStatus('error', 'Please provide a name for this shader first');
+          return;
+        }
+        sourceCodeIn.setValue(0, $('textarea', w.document).val());
+        if (VVVV.ShaderCodeResources[currentName].relatedNodes.length>0)
+          thatNode.showStatus('notice', 'Compiling ...');
+        else
+          thatNode.showStatus('notice', 'No instance of this shader found. Create a node (./'+currentName+') and connect it to a Renderer (EX9) to compile.');
+      });
+      w.focus();
+    }, 500);
+  }
+  
+  this.showStatus = function(type, message) {
+    if (w) {
+      $('#status', w.document).text(message);
+      $('#status', w.document).attr('class', type);
+    }
+  }
+
+}
+VVVV.Nodes.DefineEffect.prototype = new VVVV.Core.Node();

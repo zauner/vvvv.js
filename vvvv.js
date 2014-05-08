@@ -22,13 +22,34 @@ if(!window.console) {
 }
 
 // actual VVVV.js initialization code
+
+/** @namespace */
 VVVV = {};
-VVVV.Config = {};
-VVVV.Config.auto_undo = false;
+
+/** @namespace */
 VVVV.Nodes = {};
+
+/** @namespace */
 VVVV.PinTypes = {};
+
+VVVV.Types = {};
+
+/** All implemented nodes are registered here */
 VVVV.NodeLibrary = {};
 
+VVVV.NodeNames = [];
+
+/**
+ * This holds all created patches and their subpatches. Indices are the absolute patch file names. Patches that are loaded with the script tag are
+ * also stored in indices 0 .. n
+ */
+VVVV.Patches = {};
+VVVV.Editors = {};
+
+/**
+ * Fired when a node is being created that is not implemented
+ * @param {String} nodename the name of the node which is not implemented
+ */
 VVVV.onNotImplemented = function(nodename) {
   console.log("Warning: "+nodename+" is not implemented.");
 };
@@ -46,7 +67,7 @@ VVVV.loadScript = function(url, callback) {
 };
 
 /**
- * Adds the neccessary JavaScripts to the head, calls the callback once everything is in place.
+ * Adds the neccessary JavaScripts to the head, calls the callback once everything is in place. Also automatically loads patches specified in script tags.
  * @param {String} path_to_vvvv points to the folder of your vvvv.js. This is relative to your html-file
  * @param {String} mode. Can be either "full", "vvvviewer" or "run". Depends on what you want to do 
  * @param {Function} callback will be called once all the scripts and initialisations have been finished.
@@ -71,13 +92,12 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
     if ($('script[src*=underscore]').length==0)
       VVVV.loadScript('lib/underscore/underscore-min.js', loadMonitor);
     if ($('script[src*="d3.js"]').length==0 && (mode=='full' || mode=='vvvviewer'))
-      VVVV.loadScript('lib/d3-v1.14/d3.min.js', loadMonitor);
+      VVVV.loadScript('lib/d3-v3/d3.v3.min.js', loadMonitor);
     if ($('script[src*=glMatrix]').length==0 && (mode=='full' || mode=='run'))
       VVVV.loadScript('lib/glMatrix-0.9.5.min.js', loadMonitor);
   
     if ($('script[src*="vvvv.core.js"]').length==0) {
       VVVV.loadScript('core/vvvv.core.js', loadMonitor);
-      VVVV.loadScript('core/vvvv.core.vvvvconnector.js', loadMonitor);
       if (mode=='run' || mode=='full') {
         VVVV.loadScript('mainloop/vvvv.mainloop.js', loadMonitor);
         VVVV.loadScript('mainloop/vvvv.dominterface.js', loadMonitor);
@@ -87,6 +107,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
         VVVV.loadScript('nodes/vvvv.nodes.boolean.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.color.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.spreads.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.spectral.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.animation.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.network.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.system.js', loadMonitor);
@@ -103,9 +124,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
         VVVV.loadScript('nodes/vvvv.nodes.astronomy.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.xml.js', loadMonitor);
       }
-      if (mode=='vvvviewer' || mode=='full') {
-        VVVV.loadScript('vvvviewer/vvvv.vvvviewer.js', loadMonitor);
-      }
+      VVVV.loadScript('editors/vvvv.editors.browser_editor.js', loadMonitor);
     }
   }
 
@@ -115,19 +134,19 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
       var x = new n(0, p);
       if (VVVV_ENV=='development') console.log("Registering "+x.nodename);
       VVVV.NodeLibrary[x.nodename.toLowerCase()] = n;
+      VVVV.NodeNames.push(x.nodename);
     });
 
     if (VVVV_ENV=='development') console.log('done ...');
 
-    VVVV.Patches = [];
     VVVV.MainLoops = [];
 
-    $("script[language='VVVV']").each(function() {
+    $("script[language='VVVV']").each(function(i) {
       var p = new VVVV.Core.Patch($(this).attr('src'), function() {
         var m = new VVVV.Core.MainLoop(this);
         VVVV.MainLoops.push(m);
       });
-      VVVV.Patches.push(p);
+      VVVV.Patches[i] = p;
     });
 
     if (typeof callback === 'function') callback.call();

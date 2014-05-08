@@ -22,10 +22,10 @@ VVVV.Nodes.Abs = function(id, graph) {
     compatibility_issues: []
   };
   
-  var inputRealIn = this.addInputPin("Input Real", [0.0], this);
-  var inputImagIn = this.addInputPin("Input Imagiary", [0.0], this);
+  var inputRealIn = this.addInputPin("Input Real", [0.0], VVVV.PinTypes.Value);
+  var inputImagIn = this.addInputPin("Input Imagiary", [0.0], VVVV.PinTypes.Value);
   
-  var outputOut = this.addOutputPin("Output", [0.5], this);
+  var outputOut = this.addOutputPin("Output", [0.5], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
