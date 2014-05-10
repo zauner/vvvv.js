@@ -562,6 +562,47 @@ VVVV.Nodes.IntegralSpreads = function(id, graph) {
 }
 VVVV.Nodes.IntegralSpreads.prototype = new VVVV.Core.Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Differential (Spreads)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.DifferentialSpreads = function(id, graph) {
+  this.constructor(id, "Differential (Spreads)", graph);
+  
+  this.meta = {
+    authors: ['woei'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var inputIn = this.addInputPin('Input', [0], VVVV.PinTypes.Value);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
+  var offsetOut = this.addOutputPin('Offset', [0], VVVV.PinTypes.Value);
+
+  this.evaluate = function() {
+    var size = inputIn.getSliceCount()-1;
+    var last =  inputIn.getValue(0);
+    offsetOut.setValue(0,last);
+    for (var i=0; i<size; i++) {
+      var input = parseFloat(inputIn.getValue(i+1));
+      outputOut.setValue(i, input-last);
+      last = input
+    }
+    outputOut.setSliceCount(size);
+  }
+
+}
+VVVV.Nodes.DifferentialSpreads.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
