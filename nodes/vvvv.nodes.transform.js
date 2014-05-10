@@ -187,6 +187,76 @@ VVVV.Nodes.Scale.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Transform (Transform 2d)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Transform2d = function(id, graph) {
+  this.constructor(id, "Transform (Transform 2d)", graph);
+  
+  this.meta = {
+    authors: ['woei'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var ident = mat4.identity(mat4.create());
+  
+  this.trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
+  this.txIn = this.addInputPin("TranslateX", [0.0], VVVV.PinTypes.Value);
+  this.tyIn = this.addInputPin("TranslateY", [0.0], VVVV.PinTypes.Value);
+  this.sxIn = this.addInputPin("ScaleX", [1.0], VVVV.PinTypes.Value);
+  this.syIn = this.addInputPin("ScaleY", [1.0], VVVV.PinTypes.Value);
+  this.rIn  = this.addInputPin("Rotate", [0.0], VVVV.PinTypes.Value);
+  this.cxIn = this.addInputPin("CenterX", [0.0], VVVV.PinTypes.Value);
+  this.cyIn = this.addInputPin("CenterY", [0.0], VVVV.PinTypes.Value);
+
+  
+  this.trOut = this.addOutputPin("Transform Out", [], VVVV.PinTypes.Transform);
+
+  this.evaluate = function() {
+    
+    var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : Math.max(this.txIn.getSliceCount(),this.tyIn.getSliceCount(),
+      this.sxIn.getSliceCount(),this.syIn.getSliceCount(),
+      this.rIn.getSliceCount(),
+      this.cxIn.getSliceCount(),this.cyIn.getSliceCount());
+    
+    for (var i=0; i<maxSize; i++) {
+      var tx = parseFloat(this.inputPins["TranslateX"].getValue(i));
+      var ty = parseFloat(this.inputPins["TranslateY"].getValue(i));
+      var sx = parseFloat(this.inputPins["ScaleX"].getValue(i));
+      var sy = parseFloat(this.inputPins["ScaleY"].getValue(i));
+      var r  = parseFloat(this.inputPins["Rotate"].getValue(i));
+      var cx = parseFloat(this.inputPins["CenterX"].getValue(i));
+      var cy = parseFloat(this.inputPins["CenterY"].getValue(i));
+
+      var t = mat4.create();
+      mat4.identity(t);
+      
+      mat4.translate(t, [tx, ty, 0]);
+      mat4.rotate(t, r*Math.PI*2, [0, 0, 1]);
+      mat4.scale(t, [sx, sy, 1]);
+      mat4.translate(t, [-cx, -cy, 0]);
+  
+      if (this.inputPins["Transform In"].isConnected())
+      {
+        var transformin = this.inputPins["Transform In"].getValue(i);
+        mat4.multiply(transformin, t, t);
+      }
+      
+      this.trOut.setValue(i, t);
+    }
+    this.trOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.Transform2d.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Perspective (Transform)
  Author(s): Matthias Zauner
  Original Node Author(s): VVVV Group
