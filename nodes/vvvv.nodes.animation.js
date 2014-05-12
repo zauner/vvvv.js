@@ -540,6 +540,79 @@ VVVV.Nodes.FlipFlop = function(id, graph) {
 }
 VVVV.Nodes.FlipFlop.prototype = new VVVV.Core.Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: MonoFlop (Animation)
+ Author(s): woei
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.MonoFlop = function(id, graph) {
+  this.constructor(id, "MonoFlop (Animation)", graph);
+  
+  this.meta = {
+    authors: ['woei'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  this.auto_evaluate = true;
+  
+  var setIn = this.addInputPin("Set", [0], VVVV.PinTypes.Value);
+  var resetIn = this.addInputPin("Reset", [0], VVVV.PinTypes.Value);
+  var timeIn = this.addInputPin("Time", [0], VVVV.PinTypes.Value);
+  var retrigIn = this.addInputPin("Retriggerable", [0], VVVV.PinTypes.Value);
+  
+  var outputOut = this.addOutputPin("Output", [0], VVVV.PinTypes.Value);
+  var inverseOutputOut = this.addOutputPin("Inverse Output", [1], VVVV.PinTypes.Value);
+  
+  var buffer = [];
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    var currSize = outputOut.getSliceCount();
+    if (maxSize>currSize) {
+      for (var i=currSize; i<maxSize; i++) {
+        outputOut.setValue(i, 0);
+        inverseOutputOut.setValue(i, 1);
+      }
+    }
+    
+    for (var i = 0; i < maxSize; i++) {
+      if (buffer[i] == undefined)
+        buffer[i] = 0.0;
+      if (outputOut.getValue(i) == undefined)
+        outputOut.setValue(i,0);
+
+      if (outputOut.getValue(i) == 1) {
+        buffer[i] += this.parentPatch.mainloop.deltaT/1000.0;
+        
+        if ((setIn.getValue(i) == 1) && (retrigIn.getValue(i) == 1)) {
+          buffer[i] = 0;
+        }
+        
+        if (buffer[i] >= parseFloat(timeIn.getValue(i)) || (resetIn.getValue(i) == 1)) {
+          buffer[i] = 0.0;
+          outputOut.setValue(i, 0);
+          inverseOutputOut.setValue(i, 1);
+        }
+      }
+      else if (setIn.getValue(i) == 1) {
+        outputOut.setValue(i, 1);
+        inverseOutputOut.setValue(i, 0);
+      }
+    }
+    outputOut.setSliceCount(maxSize);
+    inverseOutputOut.setSliceCount(maxSize);
+    buffer.splice(maxSize);
+  }
+
+}
+VVVV.Nodes.MonoFlop.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
