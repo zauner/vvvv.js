@@ -1155,7 +1155,7 @@ VVVV.Nodes.BlendWebGLAdvanced.prototype = new VVVV.Core.Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Blend (EX9.RenderState)
- Author(s): Matthias Zauner
+ Author(s): Matthias Zauner, woei
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -1164,15 +1164,15 @@ VVVV.Nodes.BlendWebGL = function(id, graph) {
   this.constructor(id, "Blend (EX9.RenderState)", graph);
   
   this.meta = {
-    authors: ['Matthias Zauner'],
+    authors: ['Matthias Zauner, woei'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['results differ from VVVV', 'Multiply mode not supported']
+    compatibility_issues: []
   };
   
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
   var drawModeIn = this.addInputPin("Draw Mode", ["Blend"], VVVV.PinTypes.Enum);
-  drawModeIn.enumOptions = ['Add', 'Multiply', 'Blend', 'ColorAsAlphaAdd', 'ColorAsAlphaBlend'];
+  drawModeIn.enumOptions = ['Add', 'Blend', 'ColorAsAlphaAdd', 'ColorAsAlphaBlend', 'Multiply'];
   
   var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.WebGlRenderState);
   
@@ -1191,8 +1191,6 @@ VVVV.Nodes.BlendWebGL = function(id, graph) {
           renderStates[i].srcBlendMode = "SRC_ALPHA";
           renderStates[i].destBlendMode = "ONE";
           break;
-        case "Multiply":
-          console.log("Multiply Blend Mode not supported (or we just missed it)");
         case "Blend":
           renderStates[i].srcBlendMode = "SRC_ALPHA";
           renderStates[i].destBlendMode = "ONE_MINUS_SRC_ALPHA";
@@ -1204,6 +1202,10 @@ VVVV.Nodes.BlendWebGL = function(id, graph) {
         case "ColorAsAlphaBlend":
           renderStates[i].srcBlendMode = "SRC_COLOR";
           renderStates[i].destBlendMode = "ONE_MINUS_SRC_COLOR";
+          break;
+        case "Multiply":
+          renderStates[i].srcBlendMode = "ZERO";
+          renderStates[i].destBlendMode = "SRC_COLOR";
           break;
       }
       renderStateOut.setValue(i, renderStates[i]);
