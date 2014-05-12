@@ -187,6 +187,62 @@ VVVV.Nodes.Scale.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Trapeze (Transform)
+ Author(s): woei
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Trapeze = function(id, graph) {
+  this.constructor(id, "Trapeze (Transform)", graph);
+  
+  this.meta = {
+    authors: ['woei'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var ident = mat4.identity(mat4.create());
+  
+  this.trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
+  this.xIn = this.addInputPin("X", [0.0], VVVV.PinTypes.Value);
+  this.yIn = this.addInputPin("Y", [0.0], VVVV.PinTypes.Value);
+  this.zIn = this.addInputPin("Z", [0.0], VVVV.PinTypes.Value);
+  
+  this.trOut = this.addOutputPin("Transform Out", [], VVVV.PinTypes.Transform);
+
+  this.evaluate = function() {
+    
+    var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : Math.max(this.xIn.getSliceCount(),this.yIn.getSliceCount(),this.zIn.getSliceCount());
+    
+    for (var i=0; i<maxSize; i++) {
+      var x = 2.0 * parseFloat(this.inputPins["X"].getValue(i));
+      var y = 2.0 * parseFloat(this.inputPins["Y"].getValue(i));
+      var z = 2.0 * parseFloat(this.inputPins["Z"].getValue(i));
+      
+      var mat = [ 1.0,0.0,0.0,x,
+                  0.0,1.0,0.0,y,
+                  0.0,0.0,1.0,z,
+                  0.0,0.0,0.0,1.0];
+
+      var t = mat4.create(mat);
+     
+      if (this.inputPins["Transform In"].isConnected())
+      {
+        var transformin = this.inputPins["Transform In"].getValue(i);
+        mat4.multiply(transformin, t, t);
+      }
+      this.trOut.setValue(i, t);
+    }
+    this.trOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.Trapeze.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Transform (Transform 2d)
  Author(s): woei
  Original Node Author(s): VVVV Group
