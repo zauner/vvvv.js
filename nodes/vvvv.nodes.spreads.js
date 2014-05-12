@@ -394,7 +394,6 @@ VVVV.Nodes.I = function(id, graph) {
   var phaseIn = this.addInputPin("Phase", [0.0], VVVV.PinTypes.Value);
   
   var outputOut = this.addOutputPin("Output", [0], VVVV.PinTypes.Value);
-  console.log(2%-4);
   this.evaluate = function() {
     
     var maxSize = this.getMaxInputSliceCount();
