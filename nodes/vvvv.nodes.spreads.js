@@ -255,35 +255,37 @@ VVVV.Nodes.LinearSpread = function(id, graph) {
 
   this.evaluate = function() {
     
-    var count = parseInt(countIn.getValue(0));
-    var width = parseFloat(widthIn.getValue(0));
-    var phase = parseFloat(phaseIn.getValue(0));
-    var input = parseFloat(inputIn.getValue(0));
-    var alignment = alignmentIn.getValue(0);
-    if (alignment=='')
-      alignment = 'Centered';
-    var stepSize = width/count;
-    if (alignment=='Block')
-      stepSize = width/(count-1);
-    var shift = stepSize/2;
-    if (alignment=='Block' || alignment=='LeftJustified')
-      shift = 0;
-    if (alignment=='RightJustified')
-      shift = stepSize;
-    var result;
-    for (var i=0; i<count; i++) {
-      result = i*stepSize + shift;
-      if (alignment!='Block') {
-        if (width!=0)
-          result = (result + phase*width) % width;
+    var maxSize = this.getMaxInputSliceCount();
+    var idx = 0;
+    for (var l=0; l<maxSize; l++) {
+      var count = parseInt(countIn.getValue(l));
+      var width = parseFloat(widthIn.getValue(l));
+      var phase = parseFloat(phaseIn.getValue(l));
+      var input = parseFloat(inputIn.getValue(l));
+      var alignment = alignmentIn.getValue(l);
+      if (alignment=='')
+        alignment = 'Centered';
+      var stepSize = width/count;
+      if (alignment=='Block')
+        stepSize = width/(count-1);
+      var shift = stepSize/2;
+      if (alignment=='Block' || alignment=='LeftJustified')
+        shift = 0;
+      if (alignment=='RightJustified')
+        shift = stepSize;
+      var result;
+      for (var i=0; i<count; i++) {
+        result = i*stepSize + shift;
+        if (alignment!='Block') {
+          if (width!=0)
+            result = (result + phase*width) % width;
+        }
+        result = input-width/2 + result;
+        outputOut.setValue(idx, result.toFixed(4));
+        idx++;
       }
-      result = input-width/2 + result;
-      outputOut.setValue(i, result.toFixed(4));
     }
-    
-    outputOut.setSliceCount(count);
-    
-
+    outputOut.setSliceCount(idx);
   }
 
 }
