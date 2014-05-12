@@ -600,22 +600,51 @@ VVVV.Nodes.DifferentialSpreads = function(id, graph) {
   this.auto_evaluate = false;
   
   // input pins
-  var inputIn = this.addInputPin('Input', [0], VVVV.PinTypes.Value);
+  var inputIn = this.addInputPin('Input', [0.0], VVVV.PinTypes.Value);
+  var binIn = this.addInputPin('Input Bin Size', [-1], VVVV.PinTypes.Value);
 
   // output pins
   var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
+  var binOut = this.addOutputPin('Output Bin Size', [0], VVVV.PinTypes.Value);
   var offsetOut = this.addOutputPin('Offset', [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
-    var size = inputIn.getSliceCount()-1;
-    var last =  inputIn.getValue(0);
-    offsetOut.setValue(0,last);
-    for (var i=0; i<size; i++) {
-      var input = parseFloat(inputIn.getValue(i+1));
-      outputOut.setValue(i, input-last);
-      last = input
+    var cIn = inputIn.getSliceCount();
+    var cBin = binIn.getSliceCount();
+    var binC = 0;
+    var sliceMax = 0;
+    var bins = [];
+    if (cBin > 0) {
+      while (binC < cBin || sliceMax < cIn) {
+        var bin = parseInt(binIn.getValue(binC));
+        if (bin<0)
+          bin = parseInt(Math.round(cIn/parseFloat(Math.abs(bin))));
+        sliceMax += bin;
+        bins[binC] = bin;
+        binC++;
+      }
     }
-    outputOut.setSliceCount(size);
+    bins.splice(binC);
+
+    var inId = 0;
+    var outId = 0;
+    for (var b=0; b<binC; b++) {
+      var size = bins[b]-1;
+      var last =  inputIn.getValue(inId);
+      binOut.setValue(b,size);
+      offsetOut.setValue(b,last);
+      for (var i=0; i<size; i++) {
+        var input = parseFloat(inputIn.getValue(inId + i+1));
+        outputOut.setValue(outId, input-last);
+        last = input;
+        outId++;
+      }
+      inId += size+1;
+    }
+        
+    outputOut.setSliceCount(outId);
+    binOut.setSliceCount(binC);
+    offsetOut.setSliceCount(binC);
   }
 
 }
