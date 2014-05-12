@@ -372,7 +372,7 @@ VVVV.Nodes.SwapDim.prototype = new VVVV.Core.Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: I (Spreads)
- Author(s): David Mórász (micro.D)
+ Author(s): woei
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -381,34 +381,53 @@ VVVV.Nodes.I = function(id, graph) {
   this.constructor(id, "I (Spreads)", graph);
   
   this.meta = {
-    authors: ['Mórász Dávid (micro.D)'],
+    authors: ['woei'],
     original_authors: ['VVVV Group'],
-    credits: ['Matthias Zauner'],
-    compatibility_issues: ['This has no phase pin.','Smaller "from" than "to" isn\'t working yet']
+    credits: ['Matthias Zauner, Mórász Dávid (micro.D)'],
+    compatibility_issues: []
   };
   
   var fromIn = this.addInputPin("[ From ..", [0], VVVV.PinTypes.Value);
   var toIn = this.addInputPin(".. To [", [1], VVVV.PinTypes.Value);
+  var phaseIn = this.addInputPin("Phase", [0.0], VVVV.PinTypes.Value);
   
   var outputOut = this.addOutputPin("Output", [0], VVVV.PinTypes.Value);
-
+  console.log(2%-4);
   this.evaluate = function() {
     
-    var from = Math.round(fromIn.getValue(0));
-    var to = Math.round(toIn.getValue(0));
+    var maxSize = this.getMaxInputSliceCount();
     var idx = 0;
-    if (from<=to) {
-      for (var i=from; i < to; i++, idx++ ) {
-        outputOut.setValue(idx, i);
+    for (var s=0; s<maxSize; s++) {
+      var from = Math.round(fromIn.getValue(s));
+      var to = Math.round(toIn.getValue(s));
+      var phase = parseFloat(phaseIn.getValue(s));
+      var range = to-from;
+      var aRange = Math.abs(range);
+      if (from<=to) {
+        for (var i=0; i < aRange; i++, idx++ ) {
+          var o = parseFloat(i)-(aRange*phase);
+          o = Math.round(o) % range;
+          if (o<0)
+            o = range+o;
+          o += from;
+          outputOut.setValue(idx, o);
+        }
       }
-      outputOut.setSliceCount(to-from);
-    }
-    else {
-      for (var i=from; i > to; i--, idx++ ) {
-        outputOut.setValue(idx, i);
+      else {
+        for (var i=aRange; i > 0; i--, idx++ ) {
+          var o = parseFloat(i)-(aRange*phase);
+          o = Math.round(o) % range;
+          if (range<0)
+            o*=-1;
+          if (o<0)
+            o = range-o;
+          o += from;
+          outputOut.setValue(idx, o);
+        }
+        
       }
-      outputOut.setSliceCount(from-to);
     }
+    outputOut.setSliceCount(idx);
   }
 }
 VVVV.Nodes.I.prototype = new VVVV.Core.Node();
