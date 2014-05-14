@@ -708,3 +708,57 @@ VVVV.Nodes.MultiplyTransform = function(id, graph) {
 
 }
 VVVV.Nodes.MultiplyTransform.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: ApplyTransform (Transform)
+ Author(s): 'woei'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.ApplyTransform = function(id, graph) {
+  this.constructor(id, "ApplyTransform (Transform)", graph);
+  
+  this.meta = {
+    authors: ['woei'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
+  var xIn = this.addInputPin('X UnTransformed', [0.0], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin('Y UnTransformed', [0.0], VVVV.PinTypes.Value);
+  var zIn = this.addInputPin('Z UnTransformed', [0.0], VVVV.PinTypes.Value);
+
+  // output pins
+  var xOut = this.addOutputPin('X Transformed', [0.0], VVVV.PinTypes.Value);
+  var yOut = this.addOutputPin('Y Transformed', [0.0], VVVV.PinTypes.Value);
+  var zOut = this.addOutputPin('Z Transformed', [0.0], VVVV.PinTypes.Value);
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+    	var t = transformIn.getValue(i);
+     	var xyz = [];
+	 	xyz[0] = xIn.getValue(i);
+	 	xyz[1] = yIn.getValue(i);
+	 	xyz[2] = zIn.getValue(i);
+	  
+		mat4.multiplyVec3(t, xyz);
+		xOut.setValue(i, xyz[0]);
+		yOut.setValue(i, xyz[1]);
+		zOut.setValue(i, xyz[2]);
+    }
+    xOut.setSliceCount(maxSize);
+    yOut.setSliceCount(maxSize);
+    zOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.ApplyTransform.prototype = new VVVV.Core.Node();
