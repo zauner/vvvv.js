@@ -6,7 +6,7 @@
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: LFO (Animation)
- Author(s): Matthias Zauner, sebl
+ Author(s): Matthias Zauner, sebl, woei
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -15,7 +15,7 @@ VVVV.Nodes.LFO = function(id, graph) {
   this.constructor(id, "LFO (Animation)", graph);
   
   this.meta = {
-    authors: ['Matthias Zauner, sebl'],
+    authors: ['Matthias Zauner, sebl, woei'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: ['Not spreadable yet']
@@ -30,6 +30,7 @@ VVVV.Nodes.LFO = function(id, graph) {
   var PhaseIn = this.addInputPin("Phase", [0.0], VVVV.PinTypes.Value);
   
   var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+  var changeOut = this.addOutputPin("Change", [0], VVVV.PinTypes.Value);
   var CyclesOut = this.addOutputPin("Cycles", [0], VVVV.PinTypes.Value);
   
   var current = [];
@@ -52,6 +53,8 @@ VVVV.Nodes.LFO = function(id, graph) {
       var reset = ResetIn.getValue(i % ResetIn.values.length);
       var phase = PhaseIn.getValue(i % PhaseIn.values.length);
 
+      var change = 0;
+
       if (current[i]==undefined) current[i] = 0.0;
       if (cycles[i]==undefined) cycles[i] = 0.0;
 
@@ -68,10 +71,12 @@ VVVV.Nodes.LFO = function(id, graph) {
         if (current[i]<0) {
           cycles[i] -= Math.ceil(-current[i]);
           current[i] = 1.0 + current[i];
+          change = 1;
         }
 
         if (current[i]>1){
           cycles[i] += Math.floor(current[i]);
+          change = 1;
         }
       }
 
@@ -80,16 +85,19 @@ VVVV.Nodes.LFO = function(id, graph) {
       if (reset>=0.5){
         current[i] = 0.0;
         cycles[i] = 0;
+        change = 1;
       }
 
       if (paused<0.5 || reset>=0.5) { 
         outputOut.setValue(i, (current[i]+phase)%1);
+        changeOut.setValue(i, change);
         CyclesOut.setValue(i, cycles[i]);
       }
 
       current[i] = current[i] %1;
     }
     outputOut.setSliceCount(maxSize);
+    changeOut.setSliceCount(maxSize);
     CyclesOut.setSliceCount(maxSize);
     current.splice(maxSize);
     cycles.splice(maxSize);
