@@ -600,3 +600,73 @@ VVVV.Nodes.LookAtTransform = function(id, graph) {
 
 }
 VVVV.Nodes.LookAtTransform.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: MultiplyTransform (Transform)
+ Author(s): woei
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.MultiplyTransform = function(id, graph) {
+  this.constructor(id, "Multiply (Transform)", graph);
+  
+  this.meta = {
+    authors: ['woei'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var t = mat4.create();
+  var inputCount = 2;
+
+  this.trOut = this.addOutputPin("Transform Out", [], VVVV.PinTypes.Transform);
+
+  // invisible pins
+  var inputcountIn = this.addInvisiblePin('Transform In Count', [2], VVVV.PinTypes.Value);
+
+  var inputPins = [];
+  
+  this.initialize = function() {
+   	inputCount = Math.max(2, inputcountIn.getValue(0));
+    VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
+      return this.addInputPin('Transform In '+(i+1), [], VVVV.PinTypes.Transform);
+    })
+  }
+
+  this.evaluate = function() {
+  	if (inputcountIn.pinIsChanged())
+      this.initialize();
+
+	var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+    	
+    	t = mat4.identity(t);
+    	for (var p=inputCount-1; p>=0; p--) {
+    		if (inputPins[p].isConnected()) {
+    			var tm = inputPins[p].getValue(i);
+    			mat4.multiply(t,tm,t);
+    		}
+    	}
+
+  //     var tm1 = this.inputPins["Transform In 1"].getValue(i);
+  //     var tm2 = this.inputPins["Transform In 2"].getValue(i);
+
+  //     if (this.trIn1.isConnected() && this.trIn2.isConnected()) {
+  //       mat4.multiply(tm2, tm1, t);
+  //     } else if (!this.trIn1.isConnected()) {
+  //     	t = tm2;
+  //     } else if (!this.trIn2.isConnected()) {
+		// t = tm1;
+	 //  }
+      
+      this.trOut.setValue(i, t);
+    }
+    this.trOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.MultiplyTransform.prototype = new VVVV.Core.Node();
