@@ -539,7 +539,7 @@ VVVV.Nodes.ReverseSpreads.prototype = new VVVV.Core.Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Integral (Spreads)
- Author(s): 'Matthias Zauner'
+ Author(s): 'Matthias Zauner, woei'
  Original Node Author(s): 'VVVV Group'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -548,7 +548,7 @@ VVVV.Nodes.IntegralSpreads = function(id, graph) {
   this.constructor(id, "Integral (Spreads)", graph);
   
   this.meta = {
-    authors: ['Matthias Zauner'],
+    authors: ['Matthias Zauner, woei'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
@@ -558,21 +558,50 @@ VVVV.Nodes.IntegralSpreads = function(id, graph) {
   
   // input pins
   var inputIn = this.addInputPin('Input', [0], VVVV.PinTypes.Value);
+  var binIn = this.addInputPin('Input Bin Size', [-1], VVVV.PinTypes.Value);
   var offsetIn = this.addInputPin('Offset', [0], VVVV.PinTypes.Value);
 
   // output pins
   var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
+  var binOut = this.addOutputPin('Output Bin Size', [2], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
-    var inSize = inputIn.getSliceCount();
-    var integral = parseFloat(offsetIn.getValue(0));
-    outputOut.setValue(0, integral);
-    for (var i=0; i<inSize; i++) {
-      var input = parseFloat(inputIn.getValue(i));
-      integral += input;
-      outputOut.setValue(i+1, integral);
+  	var cIn = inputIn.getSliceCount();
+    var cBin = Math.max(binIn.getSliceCount(),offsetIn.getSliceCount());
+    var binC = 0;
+    var sliceMax = 0;
+    var bins = [];
+    if (cBin > 0) {
+      while (binC < cBin || sliceMax < cIn) {
+        var bin = parseInt(binIn.getValue(binC));
+        if (bin<0)
+          bin = parseInt(Math.round(cIn/parseFloat(Math.abs(bin))));
+        sliceMax += bin;
+        bins[binC] = bin;
+        binC++;
+      }
     }
-    outputOut.setSliceCount(inSize + 1);
+    bins.splice(binC);
+
+    var inId = 0;
+    var outId = 0;
+    for (var b=0; b<binC; b++) {
+      var inSize = bins[b];
+      binOut.setValue(b,inSize+1);
+
+      var integral = parseFloat(offsetIn.getValue(b));
+      for (var i=0; i<inSize; i++) {
+      	outputOut.setValue(outId, integral);
+        outId++;
+        integral += parseFloat(inputIn.getValue(inId + i));
+      }
+      inId += inSize;
+      outputOut.setValue(outId, integral);
+      outId++;
+    }
+
+    outputOut.setSliceCount(outId);
+    binOut.setSliceCount(binC);
   }
 
 }
