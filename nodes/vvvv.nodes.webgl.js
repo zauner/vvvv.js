@@ -862,7 +862,6 @@ VVVV.Nodes.Grid = function(id, graph) {
 }
 VVVV.Nodes.Grid.prototype = new VVVV.Core.Node();
 
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Sphere (EX9.Geometry)
@@ -1156,7 +1155,7 @@ VVVV.Nodes.BlendWebGLAdvanced.prototype = new VVVV.Core.Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Blend (EX9.RenderState)
- Author(s): Matthias Zauner
+ Author(s): Matthias Zauner, woei
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -1165,15 +1164,15 @@ VVVV.Nodes.BlendWebGL = function(id, graph) {
   this.constructor(id, "Blend (EX9.RenderState)", graph);
   
   this.meta = {
-    authors: ['Matthias Zauner'],
+    authors: ['Matthias Zauner, woei'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['results differ from VVVV', 'Multiply mode not supported']
+    compatibility_issues: []
   };
   
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
   var drawModeIn = this.addInputPin("Draw Mode", ["Blend"], VVVV.PinTypes.Enum);
-  drawModeIn.enumOptions = ['Add', 'Multiply', 'Blend', 'ColorAsAlphaAdd', 'ColorAsAlphaBlend'];
+  drawModeIn.enumOptions = ['Add', 'Blend', 'ColorAsAlphaAdd', 'ColorAsAlphaBlend', 'Multiply'];
   
   var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.WebGlRenderState);
   
@@ -1192,8 +1191,6 @@ VVVV.Nodes.BlendWebGL = function(id, graph) {
           renderStates[i].srcBlendMode = "SRC_ALPHA";
           renderStates[i].destBlendMode = "ONE";
           break;
-        case "Multiply":
-          console.log("Multiply Blend Mode not supported (or we just missed it)");
         case "Blend":
           renderStates[i].srcBlendMode = "SRC_ALPHA";
           renderStates[i].destBlendMode = "ONE_MINUS_SRC_ALPHA";
@@ -1205,6 +1202,10 @@ VVVV.Nodes.BlendWebGL = function(id, graph) {
         case "ColorAsAlphaBlend":
           renderStates[i].srcBlendMode = "SRC_COLOR";
           renderStates[i].destBlendMode = "ONE_MINUS_SRC_COLOR";
+          break;
+        case "Multiply":
+          renderStates[i].srcBlendMode = "ZERO";
+          renderStates[i].destBlendMode = "SRC_COLOR";
           break;
       }
       renderStateOut.setValue(i, renderStates[i]);
@@ -1799,6 +1800,196 @@ VVVV.Nodes.Quad = function(id, graph) {
 
 }
 VVVV.Nodes.Quad.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: GridSegment (DX9)
+ Author(s): woei
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.GridSegment = function(id, graph) {
+  this.constructor(id, "GridSegment (DX9)", graph);
+  
+  this.auto_nil = false;
+  
+  this.meta = {
+    authors: ['woei'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var renderStateIn = this.addInputPin("Render State", [], VVVV.PinTypes.WebGlRenderState);
+  this.addInputPin("Transform", [], VVVV.PinTypes.Transform);
+  this.addInputPin("Texture", [], VVVV.PinTypes.WebGlTexture);
+  this.addInputPin("Texture Transform", [], VVVV.PinTypes.Transform);
+  this.addInputPin("Color", ["1.0, 1.0, 1.0, 1.0"], VVVV.PinTypes.Color);
+
+  var cyclesIn = this.addInputPin("Cycles", [1], VVVV.PinTypes.Value);
+  var radiusIn = this.addInputPin("Inner Radius", [0], VVVV.PinTypes.Value);
+
+  var xIn = this.addInputPin("Resolution X", [6], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin("Resolution Y", [2], VVVV.PinTypes.Value);
+  
+  var layerOut = this.addOutputPin("Layer", [], VVVV.PinTypes.WebGlResource);
+  
+  var initialized = false;
+  var layers = [];
+  var shader = null;
+  
+  this.evaluate = function() {
+
+    if (!this.renderContexts) return;
+    var gl = this.renderContexts[0];
+
+    if (!gl)
+      return;
+      
+    if (this.contextChanged) { 
+	    var fragmentShaderCode = "#ifdef GL_ES\n";
+	    fragmentShaderCode += "precision highp float;\n";
+	    fragmentShaderCode += "#endif\n";
+	    fragmentShaderCode += "uniform vec4 col : COLOR = {1.0, 1.0, 1.0, 1.0}; varying vec2 vs2psTexCd; uniform sampler2D Samp0; void main(void) { gl_FragColor = col*texture2D(Samp0, vs2psTexCd); if (gl_FragColor.a==0.0) discard;  }";
+	    var vertexShaderCode = "attribute vec3 PosO : POSITION; attribute vec2 TexCd : TEXCOORD0; uniform mat4 tW : WORLD; uniform mat4 tV : VIEW; uniform mat4 tP : PROJECTION; uniform mat4 tTex; varying vec2 vs2psTexCd; void main(void) { gl_Position = tP * tV * tW * vec4(PosO, 1.0); vs2psTexCd = (tTex * vec4(TexCd.xy-.5, 0.0, 1.0)).xy+.5; }";
+	    
+	    shader = new VVVV.Types.ShaderProgram();
+	    shader.extractSemantics(fragmentShaderCode + vertexShaderCode);
+	    shader.setFragmentShader(fragmentShaderCode);
+	    shader.setVertexShader(vertexShaderCode);
+	    shader.setup(gl);
+	}
+    
+    var maxSize = this.getMaxInputSliceCount();
+    var currentLayerCount = layers.length;
+    if (this.contextChanged || xIn.pinIsChanged() || yIn.pinIsChanged() || cyclesIn.pinIsChanged() || radiusIn.pinIsChanged())
+      currentLayerCount = 0;
+    // shorten layers array, if input slice count decreases
+    if (maxSize<currentLayerCount) {
+      layers.splice(maxSize, currentLayerCount-maxSize);
+    }
+
+    for (var j=currentLayerCount; j<maxSize; j++) {
+      layers[j] = new VVVV.Types.Layer();
+
+      //create mesh here
+      var xRes = parseInt(xIn.getValue(j));
+      var yRes = parseInt(yIn.getValue(j));
+      var cycles = cyclesIn.getValue(j);
+      var radius = radiusIn.getValue(j);
+        
+      var vertices = [];
+      var normals = [];
+      var texCoords = [];
+      var index = 0;
+      for (var y=0; y<yRes; y++) {
+        for (var x=0; x<xRes; x++) {
+          var phi = parseFloat(x)/(xRes-1);
+          phi = 0.25 - phi*cycles;
+          phi = phi * 2 * 3.14159265359;
+
+          var r = parseFloat(y)/(yRes-1);
+          r = radius*(1.0-r)+r;
+
+          vertices.push(Math.sin(phi)*r*0.5);
+          vertices.push(Math.cos(phi)*r*0.5);
+          // vertices.push(phi);
+          // vertices.push(r);
+          vertices.push(0.0);
+          index++;
+          
+          normals.push(0);
+          normals.push(0);
+          normals.push(1);
+          
+          texCoords.push(parseFloat(x)/(xRes-1));
+          texCoords.push(parseFloat(y)/(yRes-1));
+        }
+      }
+      
+      var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+      vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
+      vertexBuffer.setSubBuffer('NORMAL', 3, normals);
+      vertexBuffer.create();
+      
+      var indices = [];
+      for (var y=0; y<yRes-1; y++) {
+        for (var x=0; x<xRes-1; x++) {
+          var refP = x+xRes*y;
+          indices.push(refP);
+          indices.push(refP+1);
+          indices.push(refP+xRes+1);
+          
+          indices.push(refP+xRes+1);
+          indices.push(refP+xRes);
+          indices.push(refP);
+        }
+      }
+
+      layers[j].mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
+      layers[j].shader = shader;
+      
+      _(shader.uniformSpecs).each(function(u) {
+        layers[j].uniformNames.push(u.varname);
+        layers[j].uniforms[u.varname] = { uniformSpec: u, value: undefined };
+      });
+    }
+    
+    var colorChanged = this.inputPins["Color"].pinIsChanged();
+    var transformChanged = this.inputPins["Transform"].pinIsChanged();
+    var textureChanged = this.inputPins["Texture"].pinIsChanged();
+    var textureTransformChanged = this.inputPins["Texture Transform"].pinIsChanged();
+    
+    if (colorChanged || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        var color = this.inputPins["Color"].getValue(i);
+        var rgba = _(color.split(',')).map(function(x) { return parseFloat(x) });
+        layers[i].uniforms['col'].value = new Float32Array(rgba);
+      }
+    }
+    
+    if (renderStateIn.pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        if (renderStateIn.isConnected())
+          layers[i].renderState = renderStateIn.getValue(i);
+        else
+          layers[i].renderState = VVVV.DefaultRenderState;
+      }
+    }
+    
+    if (transformChanged || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        var transform = this.inputPins["Transform"].getValue(i);
+        layers[i].uniforms[layers[i].shader.uniformSemanticMap['WORLD']].value = transform;
+      }
+    }
+    
+    if (textureChanged || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["Samp0"].value = this.inputPins["Texture"].getValue(i);
+      }
+    }
+    
+    if (textureTransformChanged || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        var transform = this.inputPins["Texture Transform"].getValue(i);
+        layers[i].uniforms["tTex"].value = transform;
+      }
+    }
+    
+    this.outputPins["Layer"].setSliceCount(maxSize);
+    for (var i=0; i<maxSize; i++) {
+      this.outputPins["Layer"].setValue(i, layers[i]);
+    }
+    
+    this.contextChanged = false;
+
+  }
+
+}
+VVVV.Nodes.GridSegment.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

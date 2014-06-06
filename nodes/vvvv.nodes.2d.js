@@ -364,3 +364,60 @@ VVVV.Nodes.Attractor2d = function(id, graph) {
 
 }
 VVVV.Nodes.Attractor2d.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: ConnectAll (2d)
+ Author(s): 'woei'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.ConnectAll2d = function(id, graph) {
+  this.constructor(id, "ConnectAll (2d)", graph);
+  
+  this.meta = {
+    authors: ['woei'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var xinIn = this.addInputPin('X In', [0], VVVV.PinTypes.Value);
+  var yinIn = this.addInputPin('Y In', [0], VVVV.PinTypes.Value);
+
+  // output pins
+  var x1outOut = this.addOutputPin('X1 Out', [0], VVVV.PinTypes.Value);
+  var y1outOut = this.addOutputPin('Y1 Out', [0], VVVV.PinTypes.Value);
+  var x2outOut = this.addOutputPin('X2 Out', [0], VVVV.PinTypes.Value);
+  var y2outOut = this.addOutputPin('Y2 Out', [0], VVVV.PinTypes.Value);
+
+  // evaluate() will be called each frame
+  // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+
+    var idx = 0;
+    for (var i=0; i<maxSize; i++) {
+      for (var j=i+1; j<maxSize; j++) {
+        x1outOut.setValue(idx, xinIn.getValue(i));
+        y1outOut.setValue(idx, yinIn.getValue(i));
+        x2outOut.setValue(idx, xinIn.getValue(j));
+        y2outOut.setValue(idx, yinIn.getValue(j));
+        idx++;
+      }
+    }
+
+    x1outOut.setSliceCount(idx);
+    y1outOut.setSliceCount(idx);
+    x2outOut.setSliceCount(idx);
+    y2outOut.setSliceCount(idx);
+  }
+
+}
+VVVV.Nodes.ConnectAll2d.prototype = new VVVV.Core.Node();
