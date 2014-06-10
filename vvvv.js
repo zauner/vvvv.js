@@ -113,6 +113,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
         VVVV.loadScript('nodes/vvvv.nodes.system.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.canvas.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.html5.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.audio.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.transform.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.vectors.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.webgl.js', loadMonitor);
@@ -123,6 +124,8 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
         VVVV.loadScript('nodes/vvvv.nodes.node.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.astronomy.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.xml.js', loadMonitor);
+        
+        VVVV.loadScript('lib/beatdetektor.js', loadMonitor);
       }
       VVVV.loadScript('editors/vvvv.editors.browser_editor.js', loadMonitor);
     }
