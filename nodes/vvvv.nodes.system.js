@@ -24,12 +24,12 @@ VVVV.Nodes.MouseGlobal = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var xOut = this.addOutputPin("X", [0], this);
-  var yOut = this.addOutputPin("Y", [0], this);
-  var wheelOut = this.addOutputPin("Mouse Wheel", [0], this);
-  var lbOut = this.addOutputPin("Left Button", [0], this);
-  var mbOut = this.addOutputPin("Middle Button", [0], this);
-  var rbOut = this.addOutputPin("Right Button", [0], this);
+  var xOut = this.addOutputPin("X", [0], VVVV.PinTypes.Value);
+  var yOut = this.addOutputPin("Y", [0], VVVV.PinTypes.Value);
+  var wheelOut = this.addOutputPin("Mouse Wheel", [0], VVVV.PinTypes.Value);
+  var lbOut = this.addOutputPin("Left Button", [0], VVVV.PinTypes.Value);
+  var mbOut = this.addOutputPin("Middle Button", [0], VVVV.PinTypes.Value);
+  var rbOut = this.addOutputPin("Right Button", [0], VVVV.PinTypes.Value);
   
   var x = 0;
   var y = 0;
@@ -106,12 +106,12 @@ VVVV.Nodes.MouseWindow = function(id, graph) {
   
   this.auto_evaluate = true;
   
-  var xOut = this.addOutputPin("X", [0], this);
-  var yOut = this.addOutputPin("Y", [0], this);
-  var wheelOut = this.addOutputPin("Mouse Wheel", [0], this);
-  var lbOut = this.addOutputPin("Left Button", [0], this);
-  var mbOut = this.addOutputPin("Middle Button", [0], this);
-  var rbOut = this.addOutputPin("Right Button", [0], this);
+  var xOut = this.addOutputPin("X", [0], VVVV.PinTypes.Value);
+  var yOut = this.addOutputPin("Y", [0], VVVV.PinTypes.Value);
+  var wheelOut = this.addOutputPin("Mouse Wheel", [0], VVVV.PinTypes.Value);
+  var lbOut = this.addOutputPin("Left Button", [0], VVVV.PinTypes.Value);
+  var mbOut = this.addOutputPin("Middle Button", [0], VVVV.PinTypes.Value);
+  var rbOut = this.addOutputPin("Right Button", [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     
@@ -151,10 +151,10 @@ VVVV.Nodes.ShellExecute = function(id, graph) {
     compatibility_issues: ['This actually does something completely different from the original node: the origin node executes a shell command, this node evals javascript code']
   };
   
-  var fileIn = this.addInputPin("File", [0], this);
-  var doExecuteIn = this.addInputPin("Do Execute", [0], this);
+  var fileIn = this.addInputPin("File", [0], VVVV.PinTypes.String);
+  var doExecuteIn = this.addInputPin("Do Execute", [0], VVVV.PinTypes.Value);
   
-  var resultOut = this.addOutputPin("Result", [''], this);
+  var resultOut = this.addOutputPin("Result", [''], VVVV.PinTypes.String);
 
   this.evaluate = function() {
     
@@ -193,9 +193,9 @@ VVVV.Nodes.ScreenInfo = function(id, graph) {
     compatibility_issues: ['Outputs the window size (ResolutionXY) and the document size (Working AreaXY) only','no Bits per pixel']
   };
   
-  
-  var windowResOut = this.addOutputPin("ResolutionXY", [0], this);
-  var docResOut = this.addOutputPin("Working AreaXY", [0], this);
+  var windowResOut = this.addOutputPin("ResolutionXY", [0], VVVV.PinTypes.Value);
+  var docResOut = this.addOutputPin("Working AreaXY", [0], VVVV.PinTypes.Value);
+  var ScreenInfo = this;
   
   var wx = 0;
   var wy = 0;
@@ -207,6 +207,7 @@ VVVV.Nodes.ScreenInfo = function(id, graph) {
     wx = $(window).width();
     dy = $(document).height();
     dx = $(document).width();
+	ScreenInfo.evaluate();
   });
   
   $(window).resize(function() {
@@ -214,7 +215,10 @@ VVVV.Nodes.ScreenInfo = function(id, graph) {
     wx = $(window).width();
     dy = $(document).height();
     dx = $(document).width();
+	ScreenInfo.evaluate();
   });
+  
+
 
   this.evaluate = function() {
     

@@ -101,7 +101,7 @@ VVVV.Nodes.IOBoxNode.prototype = new VVVV.Core.Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Switch (Node Input)
- Author(s): Matthias Zauner
+ Author(s): Matthias Zauner, David Gann
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -110,21 +110,19 @@ VVVV.Nodes.SwitchNodeInput = function(id, graph) {
   this.constructor(id, "Switch (Node Input)", graph);
   
   this.meta = {
-    authors: ['Matthias Zauner'],
+    authors: ['Matthias Zauner, David Gann'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['No dynamic pin count yet']
+    compatibility_issues: ['Dynamic Input works only after copy and paste node']
   };
   
   
   var switchIn = this.addInputPin("Switch", [0], VVVV.PinTypes.Value);
-  var inputcountIn = this.addInvisiblePin("Input Count", [2], VVVV.PinTypes.Value);
-  var inputIn = []
-  
-  var outputOut = this.addOutputPin("Output", [], VVVV.PinTypes.Node);
-  
+  var inputCountIn = this.addInvisiblePin("Input Count", [2], VVVV.PinTypes.Value);
+  var inputIn = [];
+   
     this.initialize = function() {
-    var inputCount = Math.max(2, inputcountIn.getValue(0));
+    var inputCount = Math.max(2, inputCountIn.getValue(0));
 	VVVV.Helpers.dynamicPins(this, inputIn, inputCount, function(i) {
      return this.addInputPin('Input '+(i+1), [], VVVV.PinTypes.Node);
    })
@@ -132,20 +130,20 @@ VVVV.Nodes.SwitchNodeInput = function(id, graph) {
  
  /*
   this.initialize = function() {
-    var inputCount = inputcountIn.getValue(0);
+    var inputCount = inputCountIn.getValue(0);
     for (var i=inputIn.length; i<inputCount; i++) {
       inputIn[i] = this.addInputPin("Input "+(i+1), [], VVVV.PinTypes.Node);
     }
     inputIn.length = inputCount;
   }
   */
-
+  var outputOut = this.addOutputPin("Output", [], VVVV.PinTypes.Node);
+  
   this.evaluate = function() {
-    
-    if (inputcountIn.pinIsChanged())
+    if(inputCountIn.pinIsChanged())
       this.initialize();
 	var maxSize = this.getMaxInputSliceCount();
-  
+ 
     for (var i=0; i<maxSize; i++) {
       outputOut.setValue(i, inputIn[Math.round(Math.abs(switchIn.getValue(i)))%inputIn.length].getValue(i));
     }
