@@ -949,3 +949,38 @@ VVVV.Nodes.Reader = function(id, graph) {
 }
 VVVV.Nodes.Reader.prototype = new VVVV.Core.Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Subtract (String)
+ Author(s): Gleb Storozhik
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.SubtractString = function(id, graph) {
+  this.constructor(id, "Subtract (String)", graph);
+
+  this.meta = {
+    authors: ['Gleb Storozhik'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var operand1 = this.addInputPin('Operand 1', [''], VVVV.PinTypes.String);
+  var operand2 = this.addInputPin('Operand 2', [''], VVVV.PinTypes.String);
+
+  var result = this.addOutputPin('Result', ['0'], VVVV.PinTypes.String);
+
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+
+    for (var i=0; i<maxSize; i++) {
+      var res =operand1.getValue(i).replace(operand2.getValue(i), "");
+      result.setValue(i, res);
+    }
+    result.setSliceCount(maxSize);
+  }
+}
+VVVV.Nodes.SubtractString.prototype = new VVVV.Core.Node();
