@@ -844,7 +844,7 @@ VVVV.Nodes.CDR = function(id, graph) {
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
 
-    lastSlice.setValue(0, inputIn.getValue(maxSize));
+    lastSlice.setValue(0, inputIn.getValue(maxSize-1));
 
     for (var i=0; i<maxSize-1; i++) {
       remainder.setValue(i, inputIn.getValue(i+1));
@@ -855,3 +855,42 @@ VVVV.Nodes.CDR = function(id, graph) {
   }
 }
 VVVV.Nodes.CDR.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: DeleteSlice (String)
+ Author(s): 'Storozhik Gleb'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.DeleteSlice = function(id, graph) {
+  this.constructor(id, "DeleteSlice (String)", graph);
+
+  this.meta = {
+    authors: ['Gleb Storozhik'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['without bin(size)']
+  };
+
+  var inputIn = this.addInputPin("Input", [''], VVVV.PinTypes.String);
+  var index = this.addInputPin("Index", [''], VVVV.PinTypes.Value);
+
+  var outputOut = this.addOutputPin('Output', ['0'], VVVV.PinTypes.String);
+
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+
+    for (var i=0; i<maxSize-1; i++) {
+      if (i<index.getValue(0))
+        outputOut.setValue(i, inputIn.getValue(i));
+      else
+        outputOut.setValue(i, inputIn.getValue(i+1));
+    }
+
+    outputOut.setSliceCount(maxSize-1);
+  }
+}
+VVVV.Nodes.DeleteSlice.prototype = new VVVV.Core.Node();
