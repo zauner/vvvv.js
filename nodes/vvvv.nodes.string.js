@@ -894,3 +894,58 @@ VVVV.Nodes.DeleteSlice = function(id, graph) {
   }
 }
 VVVV.Nodes.DeleteSlice.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Reader (String)
+ Author(s): 'Storozhik Gleb'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Reader = function(id, graph) {
+  this.constructor(id, "Reader (String)", graph);
+
+  this.meta = {
+    authors: ['Gleb Storozhik'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var filename = this.addInputPin("Filename", ['file.txt'], VVVV.PinTypes.String);
+  var read = this.addInputPin("Read", ['0'], VVVV.PinTypes.Value);
+
+  var content = this.addOutputPin('Content', ['0'], VVVV.PinTypes.String);
+
+
+  this.evaluate = function() {
+
+    var maxSize = this.getMaxInputSliceCount();
+
+    if(read.getValue(0) == '1'){
+
+      for (var i=0; i<maxSize; i++) {
+
+        var rawFile = new XMLHttpRequest();
+        rawFile.open("GET", filename.getValue(i), false);
+
+        rawFile.onreadystatechange = function ()
+        {
+            if(rawFile.readyState === 4)
+            {
+                if(rawFile.status === 200 || rawFile.status == 0)
+                {
+                    content.setValue(i, rawFile.responseText);
+                    alert(allText);
+                }
+            }
+        }
+        rawFile.send(null);
+        }
+    content.setSliceCount(maxSize);
+    }
+  }
+}
+VVVV.Nodes.Reader.prototype = new VVVV.Core.Node();
+
