@@ -59,37 +59,37 @@ VVVV.PinTypes.Color = {
 
 VVVV.Nodes.RGBJoin = function(id, graph) {
   this.constructor(id, "RGB (Color Join)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var redPin = this.addInputPin("Red", [1.0], VVVV.PinTypes.Value);
   var greenPin = this.addInputPin("Green", [1.0], VVVV.PinTypes.Value);
   var bluePin = this.addInputPin("Blue", [1.0], VVVV.PinTypes.Value);
   var alphaPin = this.addInputPin("Alpha", [1.0], VVVV.PinTypes.Value);
-  
+
   var outPin = this.addOutputPin("Output", ["1.0,1.0,1.0,1.0"], VVVV.PinTypes.Color);
 
   this.evaluate = function() {
     if (redPin.pinIsChanged() || greenPin.pinIsChanged || bluePin.pinIsChanged() || alphaPin.pinIsChanged()) {
       var maxSize = this.getMaxInputSliceCount();
-      
+
       for (var i=0; i<maxSize; i++) {
         var r = redPin.getValue(i) || 0.0;
         var g = greenPin.getValue(i) || 0.0;
         var b = bluePin.getValue(i) || 0.0;
         var a = alphaPin.getValue(i) || 0.0;
-        
+
         outPin.setValue(i, r+","+g+","+b+","+a);
       }
       outPin.setSliceCount(maxSize);
-      
+
     }
-   
+
   }
 
 }
@@ -107,37 +107,37 @@ VVVV.Nodes.RGBJoin.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.HSVJoin = function(id, graph) {
   this.constructor(id, "HSV (Color Join)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var huePin = this.addInputPin("Hue", [0.33], VVVV.PinTypes.Value);
   var saturationPin = this.addInputPin("Saturation", [0.0], VVVV.PinTypes.Value);
   var valuePin = this.addInputPin("Value", [1.0], VVVV.PinTypes.Value);
   var alphaPin = this.addInputPin("Alpha", [1.0], VVVV.PinTypes.Value);
-  
+
   var outPin = this.addOutputPin("Output", ["1.0,1.0,1.0,1.0"], VVVV.PinTypes.Color);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
-    
+
     for (var i=0; i<maxSize; i++) {
       var h = huePin.getValue(i);
       var s = saturationPin.getValue(i);
       var v = valuePin.getValue(i);
       var a = alphaPin.getValue(i);
-      
+
       var rgb = VVVV.PinTypes.Color.hsvToRgb(h, s, v);
-      
+
       outPin.setValue(i, rgb[0]+","+rgb[1]+","+rgb[2]+","+a);
     }
     outPin.setSliceCount(maxSize);
-      
-   
+
+
   }
 
 }
@@ -154,16 +154,16 @@ VVVV.Nodes.HSVJoin.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.IOBoxColor = function(id, graph) {
   this.constructor(id, "IOBox (Color)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+
   // input pins
   var colorinputIn = this.addInputPin('Color Input', ['0.0, 1.0, 0.0, 1.0'], VVVV.PinTypes.Color);
 
@@ -172,15 +172,15 @@ VVVV.Nodes.IOBoxColor = function(id, graph) {
 
   // invisible pins
   var rowsIn = this.addInvisiblePin('Rows', [1], VVVV.PinTypes.Value);
-  
+
   this.evaluate = function() {
-    
+
     var maxSize = this.getMaxInputSliceCount();
-    
+
     for (var i=0; i<maxSize; i++) {
       coloroutputOut.setValue(i, colorinputIn.getValue(i));
     }
-    
+
     // you also might want to do stuff like this:
     coloroutputOut.setSliceCount(maxSize);
   }
@@ -199,16 +199,16 @@ VVVV.Nodes.IOBoxColor.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.SetAlphaColor = function(id, graph) {
   this.constructor(id, "SetAlpha (Color)", graph);
-  
+
   this.meta = {
     authors: ['Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+
   // input pins
   var inputIn = this.addInputPin('Input', ['0.0, 0.0, 0.0, 0.0'], VVVV.PinTypes.Color);
   var alphaIn = this.addInputPin('Alpha', [1.0], VVVV.PinTypes.Value);
@@ -217,16 +217,16 @@ VVVV.Nodes.SetAlphaColor = function(id, graph) {
   var outputOut = this.addOutputPin('Output', ['0.0, 0.0, 0.0, 1.0'], VVVV.PinTypes.Color);
 
   this.evaluate = function() {
-    
+
     var maxSize = this.getMaxInputSliceCount();
-    
+
     for (var i=0; i<maxSize; i++) {
       var input = inputIn.getValue(i);
       var alpha = alphaIn.getValue(i);
-      
+
       outputOut.setValue(i, input.replace(/[^, ]+$/, alpha));
     }
-    
+
     outputOut.setSliceCount(maxSize);
   }
 
@@ -244,16 +244,16 @@ VVVV.Nodes.SetAlphaColor.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.SwitchColorInput = function(id, graph) {
   this.constructor(id, "Switch (Color Input)", graph);
-  
+
   this.meta = {
     authors: ['Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+
   // input pins
   var switchIn = this.addInputPin('Switch', [0], VVVV.PinTypes.Value);
   var inputIn = [];
@@ -268,7 +268,7 @@ VVVV.Nodes.SwitchColorInput = function(id, graph) {
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
-    
+
     if (this.hasNilInputs()) {
       outputOut.setSliceCount(0);
       return;
@@ -281,3 +281,37 @@ VVVV.Nodes.SwitchColorInput = function(id, graph) {
 
 }
 VVVV.Nodes.SwitchColorInput.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: GetSlice (Color)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.GetSliceColor = function(id, graph) {
+  this.constructor(id, "GetSlice (Color)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Bin Size not implemented']
+  };
+
+  var inputIn = this.addInputPin("Input", ['1.0, 1.0, 1.0, 1.0'], VVVV.PinTypes.Color);
+  var binSizeIn = this.addInputPin("Bin Size", [1], VVVV.PinTypes.Value);
+  var indexIn = this.addInputPin("Index", [0], VVVV.PinTypes.Value);
+
+  var outputOut = this.addOutputPin("Output", ['1.0, 1.0, 1.0, 1.0'], VVVV.PinTypes.Color);
+
+  this.evaluate = function() {
+      for (var i=0; i<indexIn.values.length; i++) {
+        outputOut.setValue(i, inputIn.getValue(Math.round((indexIn.getValue(i)))));
+      }
+      outputOut.setSliceCount(indexIn.getSliceCount());
+  }
+
+}
+VVVV.Nodes.GetSliceColor.prototype = new VVVV.Core.Node();
