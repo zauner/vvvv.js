@@ -1015,26 +1015,27 @@ VVVV.Nodes.GetSpreadStringAdvanced = function(id, graph) {
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
 
-    var arrays = [];
-    var inputArr = inputIn.values.slice(0);
     var result = [];
     var offset = offsetIn.getValue(0);
 
+    var startIndex = 0;
+    var binsCount = inputIn.values.length / binSizeIn.getValue(0);
 
-    while (inputArr.length>0)
-      arrays.push(inputArr.splice(offset, binSizeIn.getValue(0)));
+    for (var i = 0; i < binsCount; i++) {
+      var bin = inputIn.values.slice(startIndex, binSizeIn.getValue(0) - 1);
+      startIndex += binSizeIn.getValue(0);
 
-    for (var i = 0; i < arrays.length; i++)
-    {
-      result = result.concat(arrays[i].slice(0, count.getValue(0)));
+      result = result.concat(bin.slice(offset), offset + count.getValue(0));
     }
 
-    outputOut.values = result;
-    outputOut.links[0].toPin.values = result;
+    for(i = 0; i < result.length; i++) {
+      outputOut.setValue(i, result[i]);
+    }
 
-    outputOut.setSliceCount(arrays.length);
-  }
-}
+    outputOut.setSliceCount(result.length);
+  };
+};
+
 VVVV.Nodes.GetSpreadStringAdvanced.prototype = new VVVV.Core.Node();
 
 
@@ -1063,19 +1064,19 @@ VVVV.Nodes.SetSliceString = function(id, graph) {
 
   var outputOut = this.addOutputPin('Output', [''], VVVV.PinTypes.String);
 
-
   this.evaluate = function() {
 
     var maxSize = this.getMaxInputSliceCount();
-    var val = spreadIn.values.slice(0);
+    var values = spreadIn.values.slice(0);
+
+    for (var i = 0; i < indexIn.getSliceCount(); i++)
+      values[indexIn.getValue(i)] = inputIn.getValue(0);
+
+    for (i = 0; i < maxSize; i++) {
+      outputOut.setValue(i, values[i]);
+    }
 
     outputOut.setSliceCount(maxSize);
-    outputOut.values = val;
-    outputOut.links[0].toPin.values = val;
-
-    for (var i=0; i<indexIn.getSliceCount(); i++)
-      outputOut.setValue(indexIn.getValue(i), inputIn.getValue(0));
-
-  }
-}
+  };
+};
 VVVV.Nodes.SetSliceString.prototype = new VVVV.Core.Node();
