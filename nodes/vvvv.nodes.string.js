@@ -1016,16 +1016,18 @@ VVVV.Nodes.GetSpreadStringAdvanced = function(id, graph) {
     var maxSize = this.getMaxInputSliceCount();
 
     var result = [];
-    var offset = offsetIn.getValue(0);
+
+    var offset = Number(offsetIn.getValue(0));
+    var binsize = Number(binSizeIn.getValue(0));
 
     var startIndex = 0;
-    var binsCount = inputIn.values.length / binSizeIn.getValue(0);
+    var binsCount = inputIn.values.length / binsize;
 
     for (var i = 0; i < binsCount; i++) {
-      var bin = inputIn.values.slice(startIndex, binSizeIn.getValue(0) - 1);
-      startIndex += binSizeIn.getValue(0);
+      var bin = inputIn.values.slice(startIndex, startIndex + binsize);
+      startIndex += binsize;
 
-      result = result.concat(bin.slice(offset), offset + count.getValue(0));
+      result = result.concat(bin.slice(offset, offset + count.getValue(0)));
     }
 
     for(i = 0; i < result.length; i++) {
