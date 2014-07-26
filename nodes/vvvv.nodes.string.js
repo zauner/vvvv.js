@@ -1019,6 +1019,7 @@ VVVV.Nodes.GetSpreadStringAdvanced = function(id, graph) {
 
     var offset = Number(offsetIn.getValue(0));
     var binsize = Number(binSizeIn.getValue(0));
+    var counts = Number(count.getValue(0));
 
     var startIndex = 0;
     var binsCount = inputIn.values.length / binsize;
@@ -1027,7 +1028,7 @@ VVVV.Nodes.GetSpreadStringAdvanced = function(id, graph) {
       var bin = inputIn.values.slice(startIndex, startIndex + binsize);
       startIndex += binsize;
 
-      result = result.concat(bin.slice(offset, offset + count.getValue(0)));
+      result = result.concat(bin.slice(offset, offset + counts));
     }
 
     for(i = 0; i < result.length; i++) {
