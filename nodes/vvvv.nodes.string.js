@@ -1071,9 +1071,15 @@ VVVV.Nodes.SetSliceString = function(id, graph) {
 
     var maxSize = this.getMaxInputSliceCount();
     var values = spreadIn.values.slice(0);
+    var inputcount = 0;
 
     for (var i = 0; i < indexIn.getSliceCount(); i++)
-      values[indexIn.getValue(i)] = inputIn.getValue(0);
+    {
+      values[indexIn.getValue(i)] = inputIn.getValue(inputcount);
+      inputcount++;
+      if (inputcount === inputIn.values.length)
+        inputcount = 0;
+    }
 
     for (i = 0; i < maxSize; i++) {
       outputOut.setValue(i, values[i]);
