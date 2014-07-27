@@ -36,7 +36,7 @@ VVVV.Nodes.IOBoxString = function(id, graph) {
     }
   }
 
-}
+};
 VVVV.Nodes.IOBoxString.prototype = new VVVV.Core.Node();
 
 /*
@@ -60,7 +60,7 @@ VVVV.Nodes.SwitchStringInput = function(id, graph) {
   var inputCountIn = this.addInvisiblePin("Input Count", [2], VVVV.PinTypes.Value);
 
   var switchIn = this.addInputPin("Switch", [0], VVVV.PinTypes.Value);
-  var inputIn = []
+  var inputIn = [];
 
   var outputOut = this.addOutputPin("Output", ["text"], VVVV.PinTypes.String);
 
@@ -69,7 +69,7 @@ VVVV.Nodes.SwitchStringInput = function(id, graph) {
     VVVV.Helpers.dynamicPins(this, inputIn, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), ['text'], VVVV.PinTypes.String);
     })
-  }
+  };
 
   this.evaluate = function() {
     if (inputCountIn.pinIsChanged())
@@ -490,7 +490,7 @@ VVVV.Nodes.SeparateString = function(id, graph) {
     formerindexOut.setSliceCount(outSlice);
   }
 
-}
+};
 VVVV.Nodes.SeparateString.prototype = new VVVV.Core.Node();
 
 
@@ -541,7 +541,7 @@ VVVV.Nodes.EQString = function(id, graph) {
     inverseoutputOut.setSliceCount(maxSize);
   }
 
-}
+};
 VVVV.Nodes.EQString.prototype = new VVVV.Core.Node();
 
 
@@ -586,7 +586,7 @@ VVVV.Nodes.SelectString = function(id, graph) {
     formerSliceOut.setSliceCount(outputIndex);
   }
 
-}
+};
 VVVV.Nodes.SelectString.prototype = new VVVV.Core.Node();
 
 
@@ -624,7 +624,7 @@ VVVV.Nodes.CountString = function(id, graph) {
     }
   }
 
-}
+};
 VVVV.Nodes.CountString.prototype = new VVVV.Core.Node();
 
 
@@ -667,7 +667,7 @@ VVVV.Nodes.CleanString = function(id, graph) {
     outputOut.setSliceCount(maxSize);
   }
 
-}
+};
 VVVV.Nodes.CleanString.prototype = new VVVV.Core.Node();
 
 
@@ -711,7 +711,7 @@ VVVV.Nodes.AvoidNilString = function(id, graph) {
 
   }
 
-}
+};
 VVVV.Nodes.AvoidNilString.prototype = new VVVV.Core.Node();
 
 
@@ -777,7 +777,7 @@ VVVV.Nodes.FormatValueString = function(id, graph) {
     outputOut.setSliceCount(maxSize);
   }
 
-}
+};
 VVVV.Nodes.FormatValueString.prototype = new VVVV.Core.Node();
 
 /*
@@ -815,7 +815,7 @@ VVVV.Nodes.CARString = function(id, graph) {
     firstSlice.setSliceCount(1);
     remainder.setSliceCount(maxSize-1);
   }
-}
+};
 VVVV.Nodes.CARString.prototype = new VVVV.Core.Node();
 
 /*
@@ -853,7 +853,7 @@ VVVV.Nodes.CDRString = function(id, graph) {
     firstSlice.setSliceCount(1);
     remainder.setSliceCount(maxSize-1);
   }
-}
+};
 VVVV.Nodes.CDRString.prototype = new VVVV.Core.Node();
 
 /*
@@ -892,7 +892,7 @@ VVVV.Nodes.DeleteSliceString = function(id, graph) {
 
     outputOut.setSliceCount(maxSize-1);
   }
-}
+};
 VVVV.Nodes.DeleteSliceString.prototype = new VVVV.Core.Node();
 
 /*
@@ -940,13 +940,13 @@ VVVV.Nodes.Reader = function(id, graph) {
                     alert(allText);
                 }
             }
-        }
+        };
         rawFile.send(null);
         }
     content.setSliceCount(maxSize);
     }
   }
-}
+};
 VVVV.Nodes.Reader.prototype = new VVVV.Core.Node();
 
 /*
@@ -982,7 +982,7 @@ VVVV.Nodes.SubtractString = function(id, graph) {
     }
     result.setSliceCount(maxSize);
   }
-}
+};
 VVVV.Nodes.SubtractString.prototype = new VVVV.Core.Node();
 
 
@@ -1083,3 +1083,81 @@ VVVV.Nodes.SetSliceString = function(id, graph) {
   };
 };
 VVVV.Nodes.SetSliceString.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Occurrence (String)
+ Author(s): 'Vadim Smakhtin'
+ Original Node Author(s): 'woei'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+VVVV.Nodes.OccurrenceString = function(id, graph) {
+  this.constructor(id, "Occurence (String)", graph);
+
+  this.meta = {
+    authors: ['Vadim Smakhtin'],
+    original_authors: ['woei'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var input = this.addInputPin("Input", [""], VVVV.PinTypes.String);
+  var binSizeIn = this.addInputPin("Input Bin Size", [-1], VVVV.PinTypes.Value);
+
+  var countOut = this.addOutputPin("Count", [1], VVVV.PinTypes.Value);
+  var firstOccurrenceOut = this.addOutputPin("First Occurrence", [0], VVVV.PinTypes.Value);
+  var uniqueOut = this.addOutputPin("Unique", [""], VVVV.PinTypes.String);
+  var binSizeOut = this.addOutputPin("Bin Size", [1], VVVV.PinTypes.Value);
+
+  this.evaluate = function(){
+    var pCount = 0;
+    var arrays = [];
+    for(var i = 0; i < binSizeIn.values.length; i++) {
+      var count = binSizeIn.getValue(i);
+
+      var bin = input.values.slice(pCount, pCount + count - 1);
+      arrays.push(bin);
+
+      pCount += count;
+    }
+
+    var duplicatesCount = [];
+    for(i = 0; i < arrays.length; i++) {
+      var occurrences = {};
+
+      arrays[i].forEach(function (x) {
+        occurrences[x] = (occurrences[x] || 0) + 1;
+      });
+
+      duplicatesCount.push(occurrences);
+    }
+
+    var sliceIndex = 0;
+    var binIndex = 0;
+
+
+
+    duplicatesCount.forEach(function (obj) {
+      obj.forEach(function (key) {
+        countOut.setValue(sliceIndex, obj[key]);
+        uniqueOut.setValue(sliceIndex, key);
+
+        firstOccurrenceOut.setValue(sliceIndex, arrays[binIndex].indexOf(key));
+
+        sliceIndex++;
+      });
+
+      binIndex++;
+    });
+
+    binSizeOut.setSliceCount(binIndex);
+
+    countOut.setSliceCount(sliceIndex);
+    firstOccurrenceOut.setSliceCount(sliceIndex);
+    uniqueOut.setSliceCount(sliceIndex);
+  };
+
+  this.auto_evaluate = false;
+};
+
+VVVV.Nodes.OccurrenceString.prototype = new VVVV.Core.Node();
