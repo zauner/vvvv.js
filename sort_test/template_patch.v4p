@@ -1,0 +1,155 @@
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta32.1.dtd" >
+   <PATCH nodename="D:\Dropbox\Mathrioshka Code\vvvv.js\sort_test\template_patch.v4p">
+   <BOUNDS type="Window" width="13725" height="9870" left="5055" top="1440">
+   </BOUNDS>
+   <NODE id="88" nodename="Renderer (EX9)" systemname="Renderer (EX9)" componentmode="Hidden">
+   <BOUNDS type="Node" left="1200" top="4035" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Layers" visible="1">
+   </PIN>
+   <PIN pinname="Clear" visible="1" slicecount="1" values="1">
+   </PIN>
+   <PIN pinname="Background Color" visible="1" slicecount="1" values="|0.00000,0.00000,0.00000,1.00000|">
+   </PIN>
+   <PIN pinname="Backbuffer Width" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Backbuffer Height" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="View" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Projection" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Windowed Depthbuffer Format" visible="0" slicecount="1" values="NONE">
+   </PIN>
+   <PIN pinname="Descriptive Name" visible="0" slicecount="1" values="#renderer">
+   </PIN>
+   </NODE>
+   <NODE id="90" nodename="Quad (DX9)" systemname="Quad (DX9)" componentmode="Hidden">
+   <BOUNDS type="Node" left="1200" top="3375" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Render State" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Transform" visible="1">
+   </PIN>
+   <PIN pinname="Texture" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Texture Transform" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Color" visible="1" slicecount="1" values="|1.00000,1.00000,1.00000,1.00000|">
+   </PIN>
+   <PIN pinname="Descriptive Name" visible="0" slicecount="1" values="||">
+   </PIN>
+   </NODE>
+   <NODE id="93" nodename="LFO (Animation)" systemname="LFO (Animation)" componentmode="Hidden">
+   <BOUNDS type="Node" left="1950" top="2145" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Period" visible="1" slicecount="1" values="5">
+   </PIN>
+   <PIN pinname="Pause" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Reverse" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Reset" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Phase" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Descriptive Name" visible="0" slicecount="1" values="||">
+   </PIN>
+   </NODE>
+   <NODE id="94" nodename="Rotate (Transform)" systemname="Rotate (Transform)" componentmode="Hidden">
+   <BOUNDS type="Node" left="1365" top="2760" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Transform In" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="X" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Y" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Z" visible="1">
+   </PIN>
+   <PIN pinname="Descriptive Name" visible="0" slicecount="1" values="||">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="90" srcpinname="Layer" dstnodeid="88" dstpinname="Layers">
+   </LINK>
+   <LINK srcnodeid="93" srcpinname="Output" dstnodeid="94" dstpinname="Z">
+   </LINK>
+   <LINK srcnodeid="94" srcpinname="Transform Out" dstnodeid="90" dstpinname="Transform">
+   </LINK>
+   <PACK Name="addonpack" Version="31.9.0">
+   </PACK>
+   <NODE systemname="Sort (String Advanced)" filename="%VVVV%\addonpack\lib\nodes\plugins\VVVV.Nodes.SortAdvanced.dll" nodename="Sort (String Advanced)" componentmode="Hidden" id="105">
+   <BOUNDS type="Node" left="8685" top="5490" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Input" visible="1">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   <PIN pinname="Former Slice" visible="1">
+   </PIN>
+   <PIN pinname="Input Bin Size" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="IOBox (String)" nodename="IOBox (String)" componentmode="InABox" id="106">
+   <BOUNDS type="Node" left="8670" top="1260" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="8670" top="1260" width="2100" height="3870">
+   </BOUNDS>
+   <PIN pinname="Input String" slicecount="6" values="Abla,Xona,Cabra,Jabra,Cadabra,Bizona">
+   </PIN>
+   <PIN pinname="Rows" slicecount="1" values="6">
+   </PIN>
+   <PIN pinname="SliceCount Mode" slicecount="1" values="ColsRowsPages">
+   </PIN>
+   <PIN pinname="Output String" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="106" srcpinname="Output String" dstnodeid="105" dstpinname="Input">
+   </LINK>
+   <NODE systemname="IOBox (String)" nodename="IOBox (String)" componentmode="InABox" id="107">
+   <BOUNDS type="Node" left="6795" top="6330" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="6795" top="6330" width="2100" height="3870">
+   </BOUNDS>
+   <PIN pinname="Input String" slicecount="6" visible="1" values="Abla,Xona,Cabra,Jabra,Cadabra,Bizona">
+   </PIN>
+   <PIN pinname="Rows" slicecount="1" values="6">
+   </PIN>
+   <PIN pinname="SliceCount Mode" slicecount="1" values="ColsRowsPages">
+   </PIN>
+   <PIN pinname="Output String" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="105" srcpinname="Output" dstnodeid="107" dstpinname="Input String">
+   </LINK>
+   <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="108">
+   <BOUNDS type="Node" left="9150" top="6765" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="9150" top="6765" width="1155" height="2880">
+   </BOUNDS>
+   <PIN pinname="Rows" slicecount="1" values="6">
+   </PIN>
+   <PIN pinname="Y Input Value" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="105" srcpinname="Former Slice" dstnodeid="108" dstpinname="Y Input Value">
+   </LINK>
+   <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="109">
+   <BOUNDS type="Node" left="12240" top="3375" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="12240" top="3375" width="795" height="480">
+   </BOUNDS>
+   <PIN pinname="Rows" slicecount="1" values="2">
+   </PIN>
+   <PIN pinname="Y Input Value" slicecount="2" values="2,4">
+   </PIN>
+   <PIN pinname="Vector Size" slicecount="1" values="2">
+   </PIN>
+   <PIN pinname="Default" slicecount="1" values="|0, 0|">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="109" srcpinname="Y Output Value" dstnodeid="105" dstpinname="Input Bin Size">
+   </LINK>
+   </PATCH>
