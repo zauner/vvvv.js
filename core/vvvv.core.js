@@ -203,7 +203,7 @@ VVVV.Core = {
      * @param {Boolean} [stopPropagation] default is false; if true, the function does not update slavePins to avoid infinite loops; this parameter should not be used in node implementations
      */
     this.setValue = function(i, v, stopPropagation) {
-      stopPropagation = stopPropagation || false
+      stopPropagation = stopPropagation || false;
       this.values[i] = v;
       this.changed = true;
       this.node.dirty = true;
