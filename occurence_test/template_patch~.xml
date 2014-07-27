@@ -1,0 +1,177 @@
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta32.1.dtd" >
+   <PATCH nodename="D:\Dropbox\Mathrioshka Code\vvvv.js\template\template_patch.v4p">
+   <BOUNDS type="Window" width="13725" height="9870">
+   </BOUNDS>
+   <NODE id="88" nodename="Renderer (EX9)" systemname="Renderer (EX9)" componentmode="Hidden">
+   <BOUNDS type="Node" left="1200" top="4035" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Layers" visible="1">
+   </PIN>
+   <PIN pinname="Clear" visible="1" slicecount="1" values="1">
+   </PIN>
+   <PIN pinname="Background Color" visible="1" slicecount="1" values="|0.00000,0.00000,0.00000,1.00000|">
+   </PIN>
+   <PIN pinname="Backbuffer Width" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Backbuffer Height" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="View" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Projection" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Windowed Depthbuffer Format" visible="0" slicecount="1" values="NONE">
+   </PIN>
+   <PIN pinname="Descriptive Name" visible="0" slicecount="1" values="#renderer">
+   </PIN>
+   </NODE>
+   <NODE id="90" nodename="Quad (DX9)" systemname="Quad (DX9)" componentmode="Hidden">
+   <BOUNDS type="Node" left="1200" top="3375" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Render State" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Transform" visible="1">
+   </PIN>
+   <PIN pinname="Texture" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Texture Transform" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Color" visible="1" slicecount="1" values="|1.00000,1.00000,1.00000,1.00000|">
+   </PIN>
+   <PIN pinname="Descriptive Name" visible="0" slicecount="1" values="||">
+   </PIN>
+   </NODE>
+   <NODE id="93" nodename="LFO (Animation)" systemname="LFO (Animation)" componentmode="Hidden">
+   <BOUNDS type="Node" left="1950" top="2145" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Period" visible="1" slicecount="1" values="5">
+   </PIN>
+   <PIN pinname="Pause" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Reverse" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Reset" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Phase" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Descriptive Name" visible="0" slicecount="1" values="||">
+   </PIN>
+   </NODE>
+   <NODE id="94" nodename="Rotate (Transform)" systemname="Rotate (Transform)" componentmode="Hidden">
+   <BOUNDS type="Node" left="1365" top="2760" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Transform In" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="X" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Y" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Z" visible="1">
+   </PIN>
+   <PIN pinname="Descriptive Name" visible="0" slicecount="1" values="||">
+   </PIN>
+   </NODE>
+   <NODE id="97" nodename="IOBox (String)" systemname="IOBox (String)" componentmode="InABox">
+   <BOUNDS type="Box" left="3765" top="660" width="1440" height="2790">
+   </BOUNDS>
+   <PIN pinname="SliceOffset" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input String" visible="1" slicecount="10" values="a,f,a,f,a,g,b,g,d,b">
+   </PIN>
+   <PIN pinname="Rows" visible="0" slicecount="1" values="10">
+   </PIN>
+   <PIN pinname="Descriptive Name" visible="0" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="SliceCount Mode" slicecount="1" values="ColsRowsPages">
+   </PIN>
+   </NODE>
+   <NODE id="98" nodename="IOBox (Value Advanced)" systemname="IOBox (Value Advanced)" componentmode="InABox">
+   <BOUNDS type="Box" left="6990" top="1785" width="2385" height="1290">
+   </BOUNDS>
+   <PIN pinname="Y Input Value" visible="1" slicecount="2" values="5,5">
+   </PIN>
+   <PIN pinname="Rows" visible="0" slicecount="1" values="2">
+   </PIN>
+   <PIN pinname="Descriptive Name" visible="0" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="SliceCount Mode" slicecount="1" values="ColsRowsPages">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="90" srcpinname="Layer" dstnodeid="88" dstpinname="Layers">
+   </LINK>
+   <LINK srcnodeid="93" srcpinname="Output" dstnodeid="94" dstpinname="Z">
+   </LINK>
+   <LINK srcnodeid="94" srcpinname="Transform Out" dstnodeid="90" dstpinname="Transform">
+   </LINK>
+   <NODE id="95" nodename="Occurrence (String)" systemname="Occurrence (String)" componentmode="Hidden" filename="%VVVV%\addonpack\lib\nodes\plugins\Occurrence.dll">
+   <BOUNDS type="Node" left="6555" top="4395" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Input" visible="1">
+   </PIN>
+   <PIN pinname="Input Bin Size" visible="1">
+   </PIN>
+   <PIN pinname="Descriptive Name" visible="0" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Count" visible="1">
+   </PIN>
+   <PIN pinname="First Occurrence" visible="1">
+   </PIN>
+   <PIN pinname="Unique" visible="1">
+   </PIN>
+   <PIN pinname="Bin Size" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="97" srcpinname="Output String" dstnodeid="95" dstpinname="Input">
+   </LINK>
+   <LINK srcnodeid="98" srcpinname="Y Output Value" dstnodeid="95" dstpinname="Input Bin Size">
+   </LINK>
+   <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="100">
+   <BOUNDS type="Node" left="6570" top="5880" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="6570" top="5880" width="600" height="2175">
+   </BOUNDS>
+   <PIN pinname="Y Input Value" visible="1">
+   </PIN>
+   <PIN pinname="Rows" slicecount="1" values="10">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="95" srcpinname="Count" dstnodeid="100" dstpinname="Y Input Value">
+   </LINK>
+   <PACK Name="addonpack" Version="31.9.0">
+   </PACK>
+   <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="101">
+   <BOUNDS type="Node" left="7290" top="5880" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="7290" top="5880" width="735" height="2505">
+   </BOUNDS>
+   <PIN pinname="Y Input Value" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Rows" slicecount="1" values="10">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="95" srcpinname="First Occurrence" dstnodeid="101" dstpinname="Y Input Value">
+   </LINK>
+   <NODE systemname="IOBox (String)" nodename="IOBox (String)" componentmode="InABox" id="103">
+   <BOUNDS type="Node" left="8265" top="5880" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="8265" top="5880" width="855" height="1740">
+   </BOUNDS>
+   <PIN pinname="Rows" slicecount="1" values="10">
+   </PIN>
+   <PIN pinname="Input String" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="95" srcpinname="Unique" dstnodeid="103" dstpinname="Input String">
+   </LINK>
+   <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="104">
+   <BOUNDS type="Node" left="9330" top="5880" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="9330" top="5880" width="735" height="2505">
+   </BOUNDS>
+   <PIN pinname="Y Input Value" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Rows" slicecount="1" values="10">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="95" srcpinname="Bin Size" dstnodeid="104" dstpinname="Y Input Value">
+   </LINK>
+   </PATCH>

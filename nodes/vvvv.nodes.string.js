@@ -1098,7 +1098,7 @@ VVVV.Nodes.SetSliceString.prototype = new VVVV.Core.Node();
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 VVVV.Nodes.OccurrenceString = function(id, graph) {
-  this.constructor(id, "Occurence (String)", graph);
+  this.constructor(id, "Occurrence (String)", graph);
 
   this.meta = {
     authors: ['Vadim Smakhtin'],
@@ -1121,7 +1121,7 @@ VVVV.Nodes.OccurrenceString = function(id, graph) {
     for(var i = 0; i < binSizeIn.values.length; i++) {
       var count = binSizeIn.getValue(i);
 
-      var bin = input.values.slice(pCount, pCount + count - 1);
+      var bin = input.values.slice(pCount, pCount + count);
       arrays.push(bin);
 
       pCount += count;
@@ -1140,19 +1140,21 @@ VVVV.Nodes.OccurrenceString = function(id, graph) {
 
     var sliceIndex = 0;
     var binIndex = 0;
-
-
-
     duplicatesCount.forEach(function (obj) {
-      obj.forEach(function (key) {
+      var propCount = 0;
+
+      for(var key in obj) {
+        propCount++;
+
         countOut.setValue(sliceIndex, obj[key]);
         uniqueOut.setValue(sliceIndex, key);
 
         firstOccurrenceOut.setValue(sliceIndex, arrays[binIndex].indexOf(key));
 
         sliceIndex++;
-      });
+      }
 
+      binSizeOut.setValue(binIndex, propCount);
       binIndex++;
     });
 
