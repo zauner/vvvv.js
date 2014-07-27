@@ -788,7 +788,7 @@ VVVV.Nodes.FormatValueString.prototype = new VVVV.Core.Node();
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-VVVV.Nodes.CAR = function(id, graph) {
+VVVV.Nodes.CARString = function(id, graph) {
   this.constructor(id, "CAR (String)", graph);
 
   this.meta = {
@@ -816,7 +816,7 @@ VVVV.Nodes.CAR = function(id, graph) {
     remainder.setSliceCount(maxSize-1);
   }
 }
-VVVV.Nodes.CAR.prototype = new VVVV.Core.Node();
+VVVV.Nodes.CARString.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -864,14 +864,14 @@ VVVV.Nodes.CDRString.prototype = new VVVV.Core.Node();
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-VVVV.Nodes.DeleteSlice = function(id, graph) {
+VVVV.Nodes.DeleteSliceString = function(id, graph) {
   this.constructor(id, "DeleteSlice (String)", graph);
 
   this.meta = {
     authors: ['Gleb Storozhik'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['without bin(size)']
+    compatibility_issues: ['not implemented bin size']
   };
 
   var inputIn = this.addInputPin("Input", [''], VVVV.PinTypes.String);
@@ -893,7 +893,7 @@ VVVV.Nodes.DeleteSlice = function(id, graph) {
     outputOut.setSliceCount(maxSize-1);
   }
 }
-VVVV.Nodes.DeleteSlice.prototype = new VVVV.Core.Node();
+VVVV.Nodes.DeleteSliceString.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -964,7 +964,7 @@ VVVV.Nodes.SubtractString = function(id, graph) {
     authors: ['Gleb Storozhik'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: []
+    compatibility_issues: ['not implemented substract types']
   };
 
   var operand1 = this.addInputPin('Operand 1', [''], VVVV.PinTypes.String);
@@ -1001,7 +1001,7 @@ VVVV.Nodes.GetSpreadStringAdvanced = function(id, graph) {
     authors: ['Gleb Storozhik'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: []
+    compatibility_issues: ['not implemented bin size']
   };
 
   var inputIn = this.addInputPin('Input', [''], VVVV.PinTypes.String);
@@ -1016,16 +1016,19 @@ VVVV.Nodes.GetSpreadStringAdvanced = function(id, graph) {
     var maxSize = this.getMaxInputSliceCount();
 
     var result = [];
-    var offset = offsetIn.getValue(0);
+
+    var offset = Number(offsetIn.getValue(0));
+    var binsize = Number(binSizeIn.getValue(0));
+    var counts = Number(count.getValue(0));
 
     var startIndex = 0;
-    var binsCount = inputIn.values.length / binSizeIn.getValue(0);
+    var binsCount = inputIn.values.length / binsize;
 
     for (var i = 0; i < binsCount; i++) {
-      var bin = inputIn.values.slice(startIndex, binSizeIn.getValue(0) - 1);
-      startIndex += binSizeIn.getValue(0);
+      var bin = inputIn.values.slice(startIndex, startIndex + binsize);
+      startIndex += binsize;
 
-      result = result.concat(bin.slice(offset), offset + count.getValue(0));
+      result = result.concat(bin.slice(offset, offset + counts));
     }
 
     for(i = 0; i < result.length; i++) {

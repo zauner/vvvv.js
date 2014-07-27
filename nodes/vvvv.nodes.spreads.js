@@ -865,14 +865,14 @@ VVVV.Nodes.QueueSpreads.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: CDR (Spread)
+ NODE: CAR (Spreads)
  Author(s): 'Storozhik Gleb'
  Original Node Author(s): 'VVVV Group'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-VVVV.Nodes.CDRSpread = function(id, graph) {
-  this.constructor(id, "CDR (Spread)", graph);
+VVVV.Nodes.CARSpreads = function(id, graph) {
+  this.constructor(id, "CAR (Spreads)", graph);
 
   this.meta = {
     authors: ['Gleb Storozhik'],
@@ -883,8 +883,46 @@ VVVV.Nodes.CDRSpread = function(id, graph) {
 
   var inputIn = this.addInputPin("Input", [0], VVVV.PinTypes.Value);
 
+  var firstSlice = this.addOutputPin('First Slice', [0], VVVV.PinTypes.Value);
   var remainder = this.addOutputPin('Remainder', [0], VVVV.PinTypes.Value);
-  var lastSlice = this.addOutputPin('Last Slice', [0], VVVV.PinTypes.Value);
+
+  this.evaluate = function() {
+    firstSlice.setValue(0, inputIn.getValue(0));
+
+    var maxSize = this.getMaxInputSliceCount();
+
+    for (var i=1; i<maxSize; i++) {
+      remainder.setValue(i-1, inputIn.getValue(i));
+    }
+
+    firstSlice.setSliceCount(1);
+    remainder.setSliceCount(maxSize-1);
+  }
+}
+VVVV.Nodes.CARSpreads.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: CDR (Spreads)
+ Author(s): 'Storozhik Gleb'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.CDRSpreads = function(id, graph) {
+  this.constructor(id, "CDR (Spreads)", graph);
+
+  this.meta = {
+    authors: ['Gleb Storozhik'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var inputIn = this.addInputPin("Input", [''], VVVV.PinTypes.Value);
+
+  var remainder = this.addOutputPin('Remainder', ['0'], VVVV.PinTypes.Value);
+  var lastSlice = this.addOutputPin('Last Slice', ['0'], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
@@ -899,4 +937,98 @@ VVVV.Nodes.CDRSpread = function(id, graph) {
     remainder.setSliceCount(maxSize-1);
   }
 }
-VVVV.Nodes.CDRSpread.prototype = new VVVV.Core.Node();
+VVVV.Nodes.CDRSpreads.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: DeleteSlice (Spreads)
+ Author(s): 'Storozhik Gleb'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.DeleteSliceSpreads = function(id, graph) {
+  this.constructor(id, "DeleteSlice (Spreads)", graph);
+
+  this.meta = {
+    authors: ['Gleb Storozhik'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['not implemented bin size']
+  };
+
+  var inputIn = this.addInputPin("Input", [''], VVVV.PinTypes.Value);
+  var index = this.addInputPin("Index", [''], VVVV.PinTypes.Value);
+
+  var outputOut = this.addOutputPin('Output', ['0'], VVVV.PinTypes.Value);
+
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+
+    for (var i=0; i<maxSize-1; i++) {
+      if (i<index.getValue(0))
+        outputOut.setValue(i, inputIn.getValue(i));
+      else
+        outputOut.setValue(i, inputIn.getValue(i+1));
+    }
+
+    outputOut.setSliceCount(maxSize-1);
+  }
+}
+VVVV.Nodes.DeleteSliceSpreads.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: GetSpread (Spreads Advanced)
+ Author(s): Gleb Storozhik
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.GetSpreadsSpreadAdvanced = function(id, graph) {
+  this.constructor(id, "GetSpread (Spreads Advanced)", graph);
+
+  this.meta = {
+    authors: ['Gleb Storozhik'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['not implemented bin size']
+  };
+
+  var inputIn = this.addInputPin('Input', [''], VVVV.PinTypes.Value);
+  var binSizeIn = this.addInputPin('Input Bin Size', [1], VVVV.PinTypes.Value);
+  var offsetIn = this.addInputPin('Offset', [0], VVVV.PinTypes.Value);
+  var count =this.addInputPin('Count', [0], VVVV.PinTypes.Value);
+
+  var outputOut = this.addOutputPin('Output', [''], VVVV.PinTypes.Value);
+
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+
+    var result = [];
+
+    var offset = Number(offsetIn.getValue(0));
+    var binsize = Number(binSizeIn.getValue(0));
+    var counts = Number(count.getValue(0));
+
+    var startIndex = 0;
+    var binsCount = inputIn.values.length / binsize;
+
+    for (var i = 0; i < binsCount; i++) {
+      var bin = inputIn.values.slice(startIndex, startIndex + binsize);
+      startIndex += binsize;
+
+      result = result.concat(bin.slice(offset, offset + counts));
+    }
+
+    for(i = 0; i < result.length; i++) {
+      outputOut.setValue(i, result[i]);
+    }
+
+    outputOut.setSliceCount(result.length);
+  };
+};
+
+VVVV.Nodes.GetSpreadsSpreadAdvanced.prototype = new VVVV.Core.Node();
