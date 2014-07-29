@@ -1114,7 +1114,6 @@ VVVV.Nodes.OccurrenceString = function(id, graph) {
   var firstOccurrenceOut = this.addOutputPin("First Occurrence", [0], VVVV.PinTypes.Value);
   var uniqueOut = this.addOutputPin("Unique", [""], VVVV.PinTypes.String);
   var binSizeOut = this.addOutputPin("Bin Size", [1], VVVV.PinTypes.Value);
-  var formerIndexBinSize = this.addOutputPin("Former Index Bin Size", [0], VVVV.PinTypes.Value);
 
   this.evaluate = function(){
     var pCount = 0;
@@ -1160,10 +1159,6 @@ VVVV.Nodes.OccurrenceString = function(id, graph) {
       binSizeOut.setValue(binIndex, propCount);
       binIndex++;
     });
-
-    for (i = 0; i<firstOccurrenceOut.values.length; i++)
-        formerIndexBinSize.setValue(i, (firstOccurrenceOut.values[i+1]-firstOccurrenceOut.values[i]));
-
 
     formerIndexBinSize.setSliceCount(firstOccurrenceOut.length);
 
@@ -1217,7 +1212,7 @@ VVVV.Nodes.SortStringAdvanced = function(id, graph) {
       bin.sort(function (a, b) {
         return a[0] < b[0] ? -1 : 1;
       });
-      
+
       arrays.push(bin);
 
       pCount += count;
@@ -1239,3 +1234,55 @@ VVVV.Nodes.SortStringAdvanced = function(id, graph) {
 };
 
 VVVV.Nodes.SortStringAdvanced.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+NODE: Unzip (String)
+Author(s): Gleb Storozhik
+Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+VVVV.Nodes.UnzipString = function(id, graph) {
+  this.constructor(id, "Unzip (String)", graph);
+  this.meta = {
+    authors: ['Gleb Storozhik'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  var inputPin = this.addInputPin("Input", [''], VVVV.PinTypes.String);
+  var cntCfg = this.addInvisiblePin("Output Count",[2],VVVV.PinTypes.Value);
+  var outputPins = [];
+
+
+  this.initialize = function() {
+    var outputCount = Math.max(2, cntCfg.getValue(0));
+    VVVV.Helpers.dynamicPins(this, outputPins, outputCount, function(i) {
+      return this.addOutputPin('Output '+(i+1), [0.0], VVVV.PinTypes.String);
+    })
+  }
+
+  this.evaluate = function()
+  {
+    var outsize = 0;
+    var maxSize = this.getMaxInputSliceCount();
+    var pinCount = cntCfg.getValue(0);
+
+    if (cntCfg.pinIsChanged())
+      this.initialize();
+
+    for (var i=0; i<maxSize; i+=pinCount)
+    {
+      for(var j=0; j<cntCfg.values[0]; j++)
+        outputPins[j].setValue(outsize,inputPin.getValue(i+j));
+      outsize++;
+    }
+    for (i=0; i<pinCount; i++)
+      outputPins[i].setSliceCount(outsize);
+
+
+  }
+}
+VVVV.Nodes.UnzipString.prototype = new VVVV.Core.Node();
+
+
