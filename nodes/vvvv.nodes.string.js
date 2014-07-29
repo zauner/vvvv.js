@@ -1114,6 +1114,7 @@ VVVV.Nodes.OccurrenceString = function(id, graph) {
   var firstOccurrenceOut = this.addOutputPin("First Occurrence", [0], VVVV.PinTypes.Value);
   var uniqueOut = this.addOutputPin("Unique", [""], VVVV.PinTypes.String);
   var binSizeOut = this.addOutputPin("Bin Size", [1], VVVV.PinTypes.Value);
+  var formerIndexBinSize = this.addOutputPin("Former Index Bin Size", [0], VVVV.PinTypes.Value);
 
   this.evaluate = function(){
     var pCount = 0;
@@ -1159,6 +1160,12 @@ VVVV.Nodes.OccurrenceString = function(id, graph) {
       binSizeOut.setValue(binIndex, propCount);
       binIndex++;
     });
+
+    for (i = 0; i<firstOccurrenceOut.values.length; i++)
+        formerIndexBinSize.setValue(i, (firstOccurrenceOut.values[i+1]-firstOccurrenceOut.values[i]));
+
+
+    formerIndexBinSize.setSliceCount(firstOccurrenceOut.length);
 
     binSizeOut.setSliceCount(binIndex);
 
