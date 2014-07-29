@@ -933,7 +933,7 @@ VVVV.Nodes.CDRSpreads = function(id, graph) {
       remainder.setValue(i, inputIn.getValue(i+1));
     }
 
-    firstSlice.setSliceCount(1);
+    lastSlice.setSliceCount(1);
     remainder.setSliceCount(maxSize-1);
   }
 }
@@ -1032,3 +1032,64 @@ VVVV.Nodes.GetSpreadsSpreadAdvanced = function(id, graph) {
 };
 
 VVVV.Nodes.GetSpreadsSpreadAdvanced.prototype = new VVVV.Core.Node();
+
+/*
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Sort (Spread Advanced)
+ Author(s): 'Vadim Smakhtin'
+ Original Node Author(s): 'woei'
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ */
+VVVV.Nodes.SortSpreadAdvanced = function(id, graph) {
+  this.constructor(id, "Sort (Spread Advanced)", graph);
+
+  this.meta = {
+    authors: ['Vadim Smakhtin'],
+    original_authors: ['woei'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var input = this.addInputPin("Input", [0], VVVV.PinTypes.Value);
+  var binSizeIn = this.addInputPin("Input Bin Size", [-1], VVVV.PinTypes.Value);
+
+  var output = this.addOutputPin("Output", [0],VVVV.PinTypes.Value);
+  var formerSliceOut = this.addOutputPin("Former Slice", [0], VVVV.PinTypes.Value);
+
+  this.evaluate = function() {
+    var indexedInput = [];
+    for(var i = 0; i < input.values.length; i++) {
+      indexedInput.push([input.getValue(i), i]);
+    }
+
+    var pCount = 0;
+    var arrays = [];
+    for(i = 0; i < binSizeIn.values.length; i++) {
+      var count = binSizeIn.getValue(i);
+
+      var bin = indexedInput.slice(pCount, pCount + count);
+      bin.sort(function (a, b) {
+        return a[0] < b[0] ? -1 : 1;
+      });
+
+      arrays.push(bin);
+
+      pCount += count;
+    }
+
+    var index = 0;
+    arrays.forEach(function (array) {
+      array.forEach(function (pair) {
+        output.setValue(index, pair[0]);
+        formerSliceOut.setValue(index, pair[1]);
+
+        index++;
+      })
+    });
+
+    output.setSliceCount = index;
+    formerSliceOut.setSliceCount = index;
+  }
+};
+
+VVVV.Nodes.SortSpreadAdvanced.prototype = new VVVV.Core.Node();

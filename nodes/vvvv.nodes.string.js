@@ -850,7 +850,7 @@ VVVV.Nodes.CDRString = function(id, graph) {
       remainder.setValue(i, inputIn.getValue(i+1));
     }
 
-    firstSlice.setSliceCount(1);
+    lastSlice.setSliceCount(1);
     remainder.setSliceCount(maxSize-1);
   }
 };
@@ -937,7 +937,6 @@ VVVV.Nodes.Reader = function(id, graph) {
                 if(rawFile.status === 200 || rawFile.status == 0)
                 {
                     content.setValue(i, rawFile.responseText);
-                    alert(allText);
                 }
             }
         };
@@ -1160,8 +1159,6 @@ VVVV.Nodes.OccurrenceString = function(id, graph) {
       binIndex++;
     });
 
-    formerIndexBinSize.setSliceCount(firstOccurrenceOut.length);
-
     binSizeOut.setSliceCount(binIndex);
 
     countOut.setSliceCount(sliceIndex);
@@ -1266,7 +1263,7 @@ VVVV.Nodes.UnzipString = function(id, graph) {
   {
     var outsize = 0;
     var maxSize = this.getMaxInputSliceCount();
-    var pinCount = cntCfg.getValue(0);
+    var pinCount = Number(cntCfg.getValue(0));
 
     if (cntCfg.pinIsChanged())
       this.initialize();
@@ -1285,4 +1282,48 @@ VVVV.Nodes.UnzipString = function(id, graph) {
 }
 VVVV.Nodes.UnzipString.prototype = new VVVV.Core.Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: S+H (String)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
+VVVV.Nodes.StringSampleAndHold = function(id, graph) {
+  this.constructor(id, "S+H (String)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['different output slice count in pure VVVV, if Set pin has only one slice']
+  };
+
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.String);
+  var setIn = this.addInputPin("Set", [0], VVVV.PinTypes.Value);
+
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.String);
+
+
+  this.evaluate = function() {
+
+    var maxSize = this.getMaxInputSliceCount();
+
+    if (setIn.pinIsChanged() || inputIn.pinIsChanged()) {
+      for (var i=0; i<maxSize; i++) {
+        if (outputOut.values[i]==undefined) {
+          outputOut.setValue(i, 0.0);
+        }
+        if (Math.round(setIn.getValue(i))>=1) {
+          outputOut.setValue(i, inputIn.getValue(i));
+        }
+      }
+      outputOut.setSliceCount(maxSize);
+    }
+
+
+  }
+
+}
+VVVV.Nodes.StringSampleAndHold.prototype = new VVVV.Core.Node();
