@@ -1327,3 +1327,39 @@ VVVV.Nodes.StringSampleAndHold = function(id, graph) {
 
 }
 VVVV.Nodes.StringSampleAndHold.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: GetSlice (String)
+ Author(s): Gleb Storozhik
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.GetSliceString = function(id, graph) {
+  this.constructor(id, "GetSlice (String)", graph);
+
+  this.meta = {
+    authors: ['Gleb Storozhik'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var inputIn = this.addInputPin("Input", [''], VVVV.PinTypes.String);
+  var indexIn = this.addInputPin("Index", [0], VVVV.PinTypes.Value);
+
+  var outputOut = this.addOutputPin("Output", [''], VVVV.PinTypes.String);
+
+  this.evaluate = function() {
+
+    for (var i = 0; i<indexIn.getSliceCount(); i++)
+    {
+      outputOut.setValue(i, inputIn.getValue(indexIn.getValue(i)));
+    }
+
+    outputOut.setSliceCount(indexIn.getSliceCount());
+  }
+
+}
+VVVV.Nodes.GetSliceString.prototype = new VVVV.Core.Node();
