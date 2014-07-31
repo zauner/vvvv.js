@@ -69,7 +69,7 @@ VVVV.loadScript = function(url, callback) {
 /**
  * Adds the neccessary JavaScripts to the head, calls the callback once everything is in place. Also automatically loads patches specified in script tags.
  * @param {String} path_to_vvvv points to the folder of your vvvv.js. This is relative to your html-file
- * @param {String} mode. Can be either "full", "vvvviewer" or "run". Depends on what you want to do 
+ * @param {String} mode. Can be either "full", "vvvviewer" or "run". Depends on what you want to do
  * @param {Function} callback will be called once all the scripts and initialisations have been finished.
  */
 VVVV.init = function (path_to_vvvv, mode, callback) {
@@ -79,14 +79,14 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
 
   if (VVVV_ENV=='development') {
     var head = document.getElementsByTagName('head')[0];
-  
+
     function loadMonitor(event) {
       event.target.removeEventListener('load', loadMonitor);
       if (--VVVV.loadCounter <= 0) {
         initialisationComplete();
       };
     }
-    
+
     if ($('script[src*=thirdparty]').length==0)
       VVVV.loadScript('thirdparty.js', loadMonitor);
     if ($('script[src*=underscore]').length==0)
@@ -95,13 +95,13 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
       VVVV.loadScript('lib/d3-v3/d3.v3.min.js', loadMonitor);
     if ($('script[src*=glMatrix]').length==0 && (mode=='full' || mode=='run'))
       VVVV.loadScript('lib/glMatrix-0.9.5.min.js', loadMonitor);
-  
+
     if ($('script[src*="vvvv.core.js"]').length==0) {
       VVVV.loadScript('core/vvvv.core.js', loadMonitor);
       if (mode=='run' || mode=='full') {
         VVVV.loadScript('mainloop/vvvv.mainloop.js', loadMonitor);
         VVVV.loadScript('mainloop/vvvv.dominterface.js', loadMonitor);
-  
+
         VVVV.loadScript('nodes/vvvv.nodes.value.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.string.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.boolean.js', loadMonitor);
@@ -124,6 +124,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
         VVVV.loadScript('nodes/vvvv.nodes.astronomy.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.xml.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.differential.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.debug.js', loadMonitor);
       }
       VVVV.loadScript('editors/vvvv.editors.browser_editor.js', loadMonitor);
     }
@@ -152,7 +153,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
 
     if (typeof callback === 'function') callback.call();
   }
-  
+
   if (VVVV_ENV=='production')
     initialisationComplete();
 };
