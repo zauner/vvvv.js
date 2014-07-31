@@ -1281,3 +1281,39 @@ VVVV.Nodes.Sift = function(id, graph) {
 }
 VVVV.Nodes.Sift.prototype = new VVVV.Core.Node();
 
+
+/*
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: querySelector (Value)
+ Author(s): Gleb Storozhik
+ Original Node Author(s): VVVV Group
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ */
+
+VVVV.Nodes.QuerySelectorValue = function(id, graph) {
+  this.constructor(id, "Query Selector (Value)", graph);
+
+  this.meta = {
+    authors: ['Gleb Storozhik'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var idIn = this.addInputPin('ID', [''], VVVV.PinTypes.String);
+  var selectedType = this.addInputPin('Selected Type', [''], VVVV.PinTypes.String);
+  var refresh = this.addInputPin('Refresh', [0], VVVV.PinTypes.Value);
+
+  var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
+
+
+  this.evaluate = function() {
+    if (refresh.getValue(0) === 1) {
+      var selector = document.querySelector(idIn.getValue(0));
+      outputOut.setSliceCount(1);
+      outputOut.setValue(0, selector[selectedType.getValue(0)]);
+    }
+  };
+};
+
+VVVV.Nodes.QuerySelectorValue.prototype = new VVVV.Core.Node();
