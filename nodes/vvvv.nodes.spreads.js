@@ -1093,3 +1093,53 @@ VVVV.Nodes.SortSpreadAdvanced = function(id, graph) {
 };
 
 VVVV.Nodes.SortSpreadAdvanced.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+NODE: Unzip (Spreads)
+Author(s): Gleb Storozhik
+Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+VVVV.Nodes.UnzipSpreads = function(id, graph) {
+  this.constructor(id, "Unzip (Spreads)", graph);
+  this.meta = {
+    authors: ['Gleb Storozhik'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  var inputPin = this.addInputPin("Input", [0], VVVV.PinTypes.Value);
+  var cntCfg = this.addInvisiblePin("Output Count",[2],VVVV.PinTypes.Value);
+  var outputPins = [];
+
+
+  this.initialize = function() {
+    var outputCount = Math.max(2, cntCfg.getValue(0));
+    VVVV.Helpers.dynamicPins(this, outputPins, outputCount, function(i) {
+      return this.addOutputPin('Output '+(i+1), [0], VVVV.PinTypes.Value);
+    })
+  }
+
+  this.evaluate = function()
+  {
+    var outsize = 0;
+    var maxSize = this.getMaxInputSliceCount();
+    var pinCount = Number(cntCfg.getValue(0));
+
+    if (cntCfg.pinIsChanged())
+      this.initialize();
+
+    for (var i=0; i<maxSize; i+=pinCount)
+    {
+      for(var j=0; j<cntCfg.values[0]; j++)
+        outputPins[j].setValue(outsize,inputPin.getValue(i+j));
+      outsize++;
+    }
+    for (i=0; i<pinCount; i++)
+      outputPins[i].setSliceCount(outsize);
+
+
+  }
+}
+VVVV.Nodes.UnzipSpreads.prototype = new VVVV.Core.Node();
