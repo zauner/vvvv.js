@@ -1113,6 +1113,7 @@ VVVV.Nodes.OccurrenceString = function(id, graph) {
   var firstOccurrenceOut = this.addOutputPin("First Occurrence", [0], VVVV.PinTypes.Value);
   var uniqueOut = this.addOutputPin("Unique", [""], VVVV.PinTypes.String);
   var binSizeOut = this.addOutputPin("Bin Size", [1], VVVV.PinTypes.Value);
+  var uniqueIndexOut = this.addOutputPin("Unique Index", [0], VVVV.PinTypes.Value);
 
   this.evaluate = function(){
     var pCount = 0;
@@ -1127,15 +1128,15 @@ VVVV.Nodes.OccurrenceString = function(id, graph) {
     }
 
     var duplicatesCount = [];
-    for(i = 0; i < arrays.length; i++) {
+    arrays.forEach(function (array) {
       var occurrences = {};
 
-      arrays[i].forEach(function (x) {
+      array.forEach(function (x) {
         occurrences[x] = (occurrences[x] || 0) + 1;
       });
 
       duplicatesCount.push(occurrences);
-    }
+    });
 
     var sliceIndex = 0;
     var binIndex = 0;
@@ -1143,16 +1144,16 @@ VVVV.Nodes.OccurrenceString = function(id, graph) {
       var propCount = 0;
 
       for(var key in obj) {
-        if(!obj.hasOwnProperty(key)) continue;
+        if(obj.hasOwnProperty(key)) {
+          propCount++;
 
-        propCount++;
+          countOut.setValue(sliceIndex, obj[key]);
+          uniqueOut.setValue(sliceIndex, key);
 
-        countOut.setValue(sliceIndex, obj[key]);
-        uniqueOut.setValue(sliceIndex, key);
+          firstOccurrenceOut.setValue(sliceIndex, arrays[binIndex].indexOf(key));
 
-        firstOccurrenceOut.setValue(sliceIndex, arrays[binIndex].indexOf(key));
-
-        sliceIndex++;
+          sliceIndex++;  
+        }
       }
 
       binSizeOut.setValue(binIndex, propCount);
