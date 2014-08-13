@@ -1364,3 +1364,82 @@ VVVV.Nodes.GetSliceString = function(id, graph) {
 
 }
 VVVV.Nodes.GetSliceString.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: IndexOf (String)
+ Author(s): Gleb Storozhik
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.IndexOfString = function(id, graph) {
+  this.constructor(id, "IndexOf (String)", graph);
+
+  this.meta = {
+    authors: ['Gleb Storozhik'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var inputIn = this.addInputPin("Input", [''], VVVV.PinTypes.String);
+  var fromIn = this.addInputPin("From", [''], VVVV.PinTypes.String);
+
+  var outOut = this.addOutputPin("Output String", [''], VVVV.PinTypes.String);
+
+  this.evaluate = function() {
+
+  	var maxSize = this.getMaxInputSliceCount();
+  	var from = fromIn.values;
+  	for (var i = 0; i<maxSize; i++)
+  	{
+  	  outOut.setValue(i, from.indexOf(inputIn.getValue(i)));
+  	}
+
+  	outOut.setSliceCount(maxSize);
+    }
+  };
+VVVV.Nodes.IndexOfString.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: DeleteNull (String)
+ Author(s): Gleb Storozhik
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.DeleteNullString = function(id, graph) {
+  this.constructor(id, "DeleteNull (String)", graph);
+
+  this.meta = {
+    authors: ['Gleb Storozhik'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var inputIn = this.addInputPin("Input", [''], VVVV.PinTypes.String);
+
+  var outOut = this.addOutputPin("Output", [''], VVVV.PinTypes.String);
+
+  this.evaluate = function() {
+
+    var maxSize = this.getMaxInputSliceCount();
+    var outLength = 0;
+    for (var i = 0; i<maxSize; i++)
+    {
+      if (inputIn.getValue(i)==='')
+       console.log('test');
+      if (inputIn.getValue(i)!='')
+      {
+        outOut.setValue(outLength, inputIn.getValue(i));
+        outLength++;
+      }
+    }
+
+    outOut.setSliceCount(outLength);
+    }
+  };
+VVVV.Nodes.DeleteNullString.prototype = new VVVV.Core.Node();
