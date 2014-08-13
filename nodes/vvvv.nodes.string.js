@@ -1121,6 +1121,8 @@ VVVV.Nodes.OccurrenceString = function(id, graph) {
     for(var i = 0; i < binSizeIn.values.length; i++) {
       var count = binSizeIn.getValue(i);
 
+      if(count === -1) count = this.getMaxInputSliceCount();
+
       var bin = input.values.slice(pCount, pCount + count);
       arrays.push(bin);
 
