@@ -930,7 +930,7 @@ VVVV.Nodes.CDRSpreads = function(id, graph) {
     lastSlice.setValue(0, inputIn.getValue(maxSize-1));
 
     for (var i=0; i<maxSize-1; i++) {
-      remainder.setValue(i, inputIn.getValue(i+1));
+      remainder.setValue(i, inputIn.getValue(i));
     }
 
     lastSlice.setSliceCount(1);

@@ -847,12 +847,12 @@ VVVV.Nodes.CDRString = function(id, graph) {
     lastSlice.setValue(0, inputIn.getValue(maxSize-1));
 
     for (var i=0; i<maxSize-1; i++) {
-      remainder.setValue(i, inputIn.getValue(i+1));
+      remainder.setValue(i, inputIn.getValue(i));
     }
 
     lastSlice.setSliceCount(1);
     remainder.setSliceCount(maxSize-1);
-  }
+  };
 };
 VVVV.Nodes.CDRString.prototype = new VVVV.Core.Node();
 
@@ -1154,7 +1154,7 @@ VVVV.Nodes.OccurrenceString = function(id, graph) {
 
           firstOccurrenceOut.setValue(sliceIndex, arrays[binIndex].indexOf(key));
 
-          sliceIndex++;  
+          sliceIndex++;
         }
       }
 
