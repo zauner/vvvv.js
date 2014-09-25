@@ -974,19 +974,21 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
       VVVV.MousePositions[canvas.id].wheel += delta;
       VVVV.MousePositions['_all'].wheel += delta;
     })
+    function mouseup(e) {
+      switch (e.which) {
+        case 1: VVVV.MousePositions['_all'].lb = 0; VVVV.MousePositions[canvas.id].lb = 0; break;
+        case 2: VVVV.MousePositions['_all'].mb = 0; VVVV.MousePositions[canvas.id].mb = 0; break;
+        case 3: VVVV.MousePositions['_all'].rb = 0; VVVV.MousePositions[canvas.id].rb = 0; break;
+      }
+    }
     $(canvas).mousedown(function(e) {
       switch (e.which) {
         case 1: VVVV.MousePositions['_all'].lb = 1; VVVV.MousePositions[canvas.id].lb = 1; break;
         case 2: VVVV.MousePositions['_all'].mb = 1; VVVV.MousePositions[canvas.id].mb = 1; break;
         case 3: VVVV.MousePositions['_all'].rb = 1; VVVV.MousePositions[canvas.id].rb = 1; break;
       }
-    });
-    $(canvas).mouseup(function(e) {
-      switch (e.which) {
-        case 1: VVVV.MousePositions['_all'].lb = 0; VVVV.MousePositions[canvas.id].lb = 0; break;
-        case 2: VVVV.MousePositions['_all'].mb = 0; VVVV.MousePositions[canvas.id].mb = 0; break;
-        case 3: VVVV.MousePositions['_all'].rb = 0; VVVV.MousePositions[canvas.id].rb = 0; break;
-      }
+      $(document).unbind('mouseup', mouseup);
+      $(document).mouseup(mouseup);
     });
   }
   
