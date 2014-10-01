@@ -688,24 +688,30 @@ VVVV.Nodes.FrameDelay = function(id, graph) {
   };
   
   this.delays_output = true;
+  this.auto_evaluate = true;
   
   var input1In = this.addInputPin("Input 1", [0.0], VVVV.PinTypes.Value);
   var default1In = this.addInputPin("Default 1", [0.0], VVVV.PinTypes.Value);
   var initIn = this.addInputPin("Initialize", [0], VVVV.PinTypes.Value);
   
   var output1Out = this.addOutputPin("Output 1", [0.0], VVVV.PinTypes.Value);
-  
+  var buf = [];
 
   this.evaluate = function() {
     
     var maxSize = this.getMaxInputSliceCount();
     
     for (var i=0; i<maxSize; i++) {
-      if (initIn.getValue(i)>0.5)
+      if (initIn.getValue(i)>0.5 || buf[i]==undefined)
         output1Out.setValue(i, default1In.getValue(i));
       else
-        output1Out.setValue(i, input1In.getValue(i));
+        output1Out.setValue(i, buf[i]);
     }
+    
+    for (var i=0; i<maxSize; i++) {
+      buf[i] = input1In.getValue(i);
+    }
+    
     output1Out.setSliceCount(maxSize);
     
   }

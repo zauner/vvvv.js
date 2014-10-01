@@ -980,6 +980,8 @@ VVVV.Core = {
     this.nodeList = [];
     /** an array containing all links inside a patch */
     this.linkList = [];
+    /** the flattened node graph, in the correct evaluation order. Should not be written manually, but only updated using {@link VVVV.Core.Patch.updateEvaluationRecipe} */
+    this.evaluationRecipe = [];
     
     /** The {@link VVVV.MainLoop} Object running this patch */
     this.mainloop = undefined;
@@ -1187,6 +1189,7 @@ VVVV.Core = {
                   }
                   this.setMainloop(thisPatch.mainloop);
                   thisPatch.afterUpdate();
+                  thisPatch.updateEvaluationRecipe();
                   if (thisPatch.resourcesPending<=0 && ready_callback) {
                     ready_callback();
                     ready_callback = undefined;
@@ -1198,6 +1201,7 @@ VVVV.Core = {
                   VVVV.onNotImplemented(nodename);
                   updateLinks(xml);
                   thisPatch.afterUpdate();
+                  thisPatch.updateEvaluationRecipe();
                   if (thisPatch.resourcesPending<=0 && ready_callback) {
                     ready_callback();
                     ready_callback = undefined;
@@ -1443,11 +1447,11 @@ VVVV.Core = {
         }
       }
       
+      this.updateEvaluationRecipe();
       if (this.resourcesPending<=0 && ready_callback) {
         ready_callback();
         ready_callback = undefined;
       }
-      
     }
     
     /**
@@ -1531,6 +1535,40 @@ VVVV.Core = {
     }
     
     /**
+     * Updates the {@link VVVV.Core.Patch.evaluationRecipe} cache. This method is invoked automatically each time the patch has been changed.
+     */
+    this.updateEvaluationRecipe = function() {
+      this.evaluationRecipe = [];
+      var addedNodes = {};
+      var nodeStack = [];
+      
+      var recipe = this.evaluationRecipe;
+      function addSubGraphToRecipe(node) {
+        if (nodeStack.indexOf(node.id)<0) {
+          nodeStack.push(node.id);
+          var upstreamNodes = node.getUpstreamNodes();
+          _(upstreamNodes).each(function(upnode) {
+            if (addedNodes[upnode.id]==undefined) {
+              addSubGraphToRecipe(upnode);
+            }
+          });
+          nodeStack.pop();
+        }
+        if (nodeStack.indexOf(node.id)<0 || node.delays_output) {
+          recipe.push(node);
+          addedNodes[node.id] = node;
+        }
+      }
+      
+      for (var i=0; i<this.nodeList.length; i++) {
+        if (this.nodeList[i].getDownstreamNodes().length==0 || this.nodeList[i].auto_evaluate || this.nodeList[i].delays_output) {
+          if (addedNodes[this.nodeList[i].id]==undefined)
+            addSubGraphToRecipe(this.nodeList[i]);
+        }
+      }
+    }
+    
+    /**
      * Evaluates the patch once. Is called by the patch's {@link VVVV.Core.MainLoop} each frame, and should not be called directly
      */
     this.evaluate = function() {
@@ -1541,27 +1579,11 @@ VVVV.Core = {
         var start = new Date().getTime();
         var elapsed = 0;
       }
-      var invalidNodes = {};
-      var terminalNodes = {}
-      for (var i=0; i<this.nodeList.length; i++) {
-        if (this.nodeList[i].getDownstreamNodes().length==0 || this.nodeList[i].auto_evaluate || this.nodeList[i].delays_output) {
-          terminalNodes[this.nodeList[i].id] = this.nodeList[i];
-        }
-        invalidNodes[this.nodeList[i].id] = this.nodeList[i];
-      }
-      if (print_timing)
-        console.log('building node maps: '+(new Date().getTime() - start)+'ms')
       
-      
-      function evaluateSubGraph(node) {
-        //console.log("starting with "+node.nodename+" ("+node.id+")");
-        var upstreamNodes = node.getUpstreamNodes();
-        _(upstreamNodes).each(function(upnode) {
-          if (invalidNodes[upnode.id]!=undefined && !upnode.delays_output) {
-            evaluateSubGraph(upnode);
-          }
-        });
-        
+      for (var i=0; i<this.evaluationRecipe.length; i++) {
+        var node = this.evaluationRecipe[i];
+        if (print_timing)
+          console.log(node.nodename);
         if (node.dirty || node.auto_evaluate || node.isSubpatch) {
           if (print_timing)
             var start = new Date().getTime();
@@ -1592,16 +1614,7 @@ VVVV.Core = {
             console.log(node.nodename+' / '+node.id+': '+elapsed+'ms')
           }
         }
-        delete invalidNodes[node.id];
-        
-        return true;
       }
-      
-      _(terminalNodes).each(function(n, id, index) {
-        //console.log('starting anew '+n.nodename);
-        if (invalidNodes[n.id]!=undefined)
-          evaluateSubGraph(n);
-      });
       
       if (print_timing) {
         _(nodeProfiles).each(function(p, nodename) {
