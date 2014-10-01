@@ -205,8 +205,8 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
   var pageURL = VVVV.Root+'/patch.html';
   var modKeyPressed = {CTRL: false, SHIFT: false, ALT: false};
   var selectionBB = {x1: 0, y1: 0, x2: 0, y2: 0};
-  if (p.isSubpatch)
-    pageURL = "patch.html";
+  //if (p.isSubpatch)
+  //  pageURL = "patch.html";
   
   if (!selector)
     this.window = window.open(pageURL, p.nodename, "location=no, width="+p.windowWidth+", height="+p.windowHeight+", toolbar=no" );
