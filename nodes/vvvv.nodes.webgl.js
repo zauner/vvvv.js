@@ -1473,10 +1473,11 @@ VVVV.Nodes.GenericShader = function(id, graph) {
           shaderPins[i].dimensions = u.dimension;
           if (shaderPins[i].unvalidated && !shaderPins[i].isConnected())
             shaderPins[i].values = thatNode.defaultPinValues[shaderPins[i].pinname] ? thatNode.defaultPinValues[shaderPins[i].pinname].slice() : defaultValue;
+          // pin type change
           if (shaderPins[i].typeName!=pinType.typeName) {
             var values = shaderPins[i].values.slice();
             shaderPins[i].setType(pinType);
-            if (shaderPins[i].unvalidated && (pinType.primitive || shaderPins[i].isConnected()))
+            if (shaderPins[i].unvalidated && pinType.primitive && !shaderPins[i].isConnected())
               shaderPins[i].values = values;
             if (shaderPins[i].isConnected() && !shaderPins[i].unvalidated) {
               shaderPins[i].connectionChanged();

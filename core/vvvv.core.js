@@ -203,23 +203,27 @@ VVVV.Core = {
      * @param {Boolean} [stopPropagation] default is false; if true, the function does not update slavePins to avoid infinite loops; this parameter should not be used in node implementations
      */
     this.setValue = function(i, v, stopPropagation) {
-      stopPropagation = stopPropagation || false
-      this.values[i] = v;
-      this.changed = true;
-      this.node.dirty = true;
-      var that = this;
-      if (this.direction==PinDirection.Output) {
-        var linkCount = this.links.length;
-        for (var j=0; j<linkCount; j++) {
-          this.links[j].toPin.setValue(i, v);
+      if (this.direction==PinDirection.Output || this.links.length==0) {
+      
+        stopPropagation = stopPropagation || false
+        this.values[i] = v;
+        if (this.direction==PinDirection.Output) {
+          var linkCount = this.links.length;
+          for (var j=0; j<linkCount; j++) {
+            this.links[j].toPin.setValue(i, v);
+          }
         }
       }
+      
+      this.changed = true;
+      this.node.dirty = true;
+      
       if (this.slavePin && !stopPropagation) {
         this.slavePin.setValue(i, v);
       }
       if (this.direction==PinDirection.Input && this.masterPin && !this.isConnected())
         this.masterPin.setValue(i, v, true);
-        
+      
       if (this.node.isIOBox && this.pinname=='Descriptive Name') {
         if (this.node.parentPatch.domInterface)
           this.node.parentPatch.domInterface.connect(this.node);
@@ -256,6 +260,15 @@ VVVV.Core = {
       return ret;
     }
     
+    this.connect = function(other_pin) {
+      this.values = other_pin.values;
+      this.markPinAsChanged();
+    }
+    
+    this.disconnect = function() {
+      this.values = this.values.slice(0);
+    }
+    
     /**
      * used do find out if a pin is connected
      * @return true, if there are incoming or outgoing links to or from this pin (and its masterPin, if preset)
@@ -276,19 +289,21 @@ VVVV.Core = {
 	   * @param {Integer} len the slice count
 	   */
     this.setSliceCount = function(len) {
-      if (this.values.length==len)
-        return;
-      this.values.length = len;
-      this.changed = true;	  
-      this.node.dirty = true;
-      if (this.direction==PinDirection.Output) {
-  	    var linkCount = this.links.length;
-        for (var i=0; i<linkCount; i++) {
-          this.links[i].toPin.setSliceCount(len);
-        }
-      }
       if (this.slavePin) {
         this.slavePin.setSliceCount(len);
+      }
+      if (this.values.length==len)
+        return;
+      this.changed = true;    
+      this.node.dirty = true;
+      if (this.direction==PinDirection.Output || this.links.length==0) {
+        this.values.length = len;
+        if (this.direction==PinDirection.Output) {
+    	    var linkCount = this.links.length;
+          for (var i=0; i<linkCount; i++) {
+            this.links[i].toPin.setSliceCount(len);
+          }
+        }
       }
     }
     
@@ -308,7 +323,7 @@ VVVV.Core = {
       this.typeName = newType.typeName;
       this.defaultValue = newType.defaultValue;
       
-      if (this.direction == PinDirection.Input && this.defaultValue) {
+      if (this.direction == PinDirection.Input && this.defaultValue && !this.isConnected()) {
         this.setValue(0, this.defaultValue());
         this.setSliceCount(1);
       }
@@ -327,6 +342,7 @@ VVVV.Core = {
       this.values = init_values.slice(0); // use slice(0) to create a copy of the array
     
     this.reset = function() {
+      this.values = [];
       if (this.defaultValue) {
         this.setValue(0, this.defaultValue());
         this.setSliceCount(1);
@@ -780,10 +796,10 @@ VVVV.Core = {
                 
                 var savedValues = pin.values.slice();
                 pin.setType(VVVV.PinTypes[that.IOBoxInputPin().typeName]);
-                if ((pin.unvalidated && VVVV.PinTypes[pin.typeName].primitive) || pin.isConnected()) {
+                if ((pin.unvalidated && VVVV.PinTypes[pin.typeName].primitive) && !pin.isConnected()) {
                   pin.values = savedValues;
-                  pin.unvalidated = false;
                 }
+                pin.unvalidated = false;
                 
                 pin.slavePin = that.IOBoxInputPin();
                 that.IOBoxInputPin().masterPin = pin;
@@ -928,13 +944,16 @@ VVVV.Core = {
      * deletes resources associated with a link
      */
     this.destroy = function() {
-      if (this.toPin.reset_on_disconnect)
-        this.toPin.reset();
-      else
-        this.toPin.node.defaultPinValues[this.toPin.pinname] = this.toPin.values.slice(0);
       this.fromPin.links.splice(this.fromPin.links.indexOf(this), 1);
       this.toPin.links.splice(this.toPin.links.indexOf(this), 1);
       this.fromPin.node.parentPatch.linkList.splice(this.fromPin.node.parentPatch.linkList.indexOf(this),1);
+      
+      if (this.toPin.reset_on_disconnect)
+        this.toPin.reset();
+      else {
+        this.toPin.disconnect();
+        this.toPin.node.defaultPinValues[this.toPin.pinname] = this.toPin.values.slice(0);
+      }
     }
     
     /**
@@ -1415,10 +1434,7 @@ VVVV.Core = {
               srcPin.connectionChanged();
               dstPin.connectionChanged();
               thisPatch.linkList.push(link);
-              for (var i=0; i<srcPin.values.length; i++) {
-                dstPin.setValue(i, srcPin.getValue(i));
-              }
-              dstPin.setSliceCount(srcPin.getSliceCount());
+              dstPin.connect(srcPin);
             }
               
             if (syncmode=='complete')
