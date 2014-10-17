@@ -9,7 +9,8 @@
  * @property {String} typeName "Node"
  */
 VVVV.PinTypes.Node = {
-  typeName: "Node"
+  typeName: "Node",
+  reset_on_disconnect: true
 }
 
 /*
@@ -116,11 +117,13 @@ VVVV.Nodes.SwitchNodeInput = function(id, graph) {
     compatibility_issues: ['No dynamic pin count yet']
   };
   
+  this.auto_nil = false;
+  
   var switchIn = this.addInputPin("Switch", [0], VVVV.PinTypes.Value);
   var inputcountIn = this.addInvisiblePin("Input Count", [2], VVVV.PinTypes.Value);
   var inputIn = []
   
-  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Node);
+  var outputOut = this.addOutputPin("Output", [], VVVV.PinTypes.Node);
   
   this.initialize = function() {
     var inputCount = inputcountIn.getValue(0);
