@@ -165,10 +165,10 @@ VVVV.Core = {
     this.links = [];
     /** @member */
     this.values = [];
+    this.values.changed = true;
     /** @member */
     this.node = node;
     /** @member */
-    this.changed = true;
     this.active = false;
     this.reset_on_disconnect = false;
     /** if the pin is a subpatch's input pin, the slavePin is the corresponding IOBox input pin INSIDE the subpatch */ 
@@ -220,7 +220,7 @@ VVVV.Core = {
      * used to mark a pin as changed without actually using {@link VVVV.Core.Pin#setValue}
      */
     this.markPinAsChanged = function() {
-      this.changed = true;
+      this.values.changed = true;
       this.node.dirty = true;
       if (this.direction==PinDirection.Output) {
         var linkCount = this.links.length;
@@ -238,8 +238,7 @@ VVVV.Core = {
      * @return {Boolean} true if changed, false if not changed
      */
     this.pinIsChanged = function() {
-      var ret = this.changed;
-      this.changed = false;
+      var ret = this.values.changed;
       return ret;
     }
     
@@ -319,8 +318,10 @@ VVVV.Core = {
     }
     this.setType(type);
     
-    if (init_values && init_values.length>0) // override PinType's default value with values from constructor, if it isn't []
+    if (init_values && init_values.length>0) { // override PinType's default value with values from constructor, if it isn't []
       this.values = init_values.slice(0); // use slice(0) to create a copy of the array
+      this.values.changed = true;
+    }
     
     this.reset = function() {
       this.values = [];
@@ -483,6 +484,7 @@ VVVV.Core = {
       this.parentPatch.pinMap[this.id+'_inv_'+pinname] = pin;
       if (this.defaultPinValues[pinname] != undefined) {
         pin.values = this.defaultPinValues[pinname];
+        pin.values.changed = true;
       }
       return pin;
     }
@@ -776,6 +778,7 @@ VVVV.Core = {
                 pin.setType(VVVV.PinTypes[that.IOBoxInputPin().typeName]);
                 if ((pin.unvalidated && VVVV.PinTypes[pin.typeName].primitive) && !pin.isConnected()) {
                   pin.values = savedValues;
+                  pin.values.changed = true;
                 }
                 pin.unvalidated = false;
                 
@@ -978,6 +981,8 @@ VVVV.Core = {
     this.nodeList = [];
     /** an array containing all links inside a patch */
     this.linkList = [];
+    /** an array containing all pins (except connected input pins) **/
+    this.pinList = [];
     /** the flattened node graph, in the correct evaluation order. Should not be written manually, but only updated using {@link VVVV.Core.Patch.updateEvaluationRecipe} */
     this.evaluationRecipe = [];
     
@@ -1534,10 +1539,12 @@ VVVV.Core = {
      */
     this.updateEvaluationRecipe = function() {
       this.evaluationRecipe = [];
+      this.pinList = [];
       var addedNodes = {};
       var nodeStack = [];
       
       var recipe = this.evaluationRecipe;
+      var pinList = this.pinList;
       function addSubGraphToRecipe(node) {
         if (nodeStack.indexOf(node.id)<0) {
           nodeStack.push(node.id);
@@ -1551,6 +1558,16 @@ VVVV.Core = {
         }
         if (nodeStack.indexOf(node.id)<0 || node.delays_output) {
           recipe.push(node);
+          for (var pinname in node.inputPins) {
+            if (node.inputPins[pinname].links.length==0)
+              pinList.push(node.inputPins[pinname]);
+          }
+          for (var pinname in node.invisiblePins) {
+            pinList.push(node.invisiblePins[pinname]);
+          }
+          for (var pinname in node.outputPins) {
+            pinList.push(node.outputPins[pinname]);
+          }
           addedNodes[node.id] = node;
         }
       }
@@ -1595,10 +1612,6 @@ VVVV.Core = {
               console.log('VVVV.Js / Error evaluating '+node.nodename+': '+e.message);
             }
             node.dirty = false;
-            
-            _(node.inputPins).each(function(inPin) {
-              inPin.changed = false;
-            });
           }
           if (print_timing) {
             if (!nodeProfiles[node.nodename])
@@ -1622,6 +1635,16 @@ VVVV.Core = {
         console.log('patch rendering: '+(new Date().getTime() - start)+'ms')
       
       print_timing = false;
+    }
+    
+    /**
+     * sets the 'changed' flag of all pins to false; no need to call this method directly, it will be called by {@link VVVV.Core.MainLoop} when the time is right.
+     */
+    this.clearChangedFlags = function() {
+      var i=this.pinList.length;
+      while (i--) {
+        this.pinList[i].values.changed = false;
+      }
     }
     
     $(window).keydown(function(e) {

@@ -41,6 +41,7 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
       dom.populateInputConnectors();
       patch.evaluate();
       dom.processOutputConnectors();
+      patch.clearChangedFlags();
       var elapsed = new Date().getTime()-start;
       if (framecount%10 == 0) {
         if (print_framerate) {
