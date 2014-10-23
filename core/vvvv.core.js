@@ -221,16 +221,6 @@ VVVV.Core = {
      */
     this.markPinAsChanged = function() {
       this.values.changed = true;
-      this.node.dirty = true;
-      if (this.direction==PinDirection.Output) {
-        var linkCount = this.links.length;
-        for (var i=0; i<linkCount; i++) {
-          this.links[i].toPin.markPinAsChanged();
-        }
-      }
-      if (this.slavePin) {
-        this.slavePin.markPinAsChanged();
-      }
     }
     
     /**
@@ -674,6 +664,24 @@ VVVV.Core = {
           result = true;
       });
       return result;
+    }
+    
+    /**
+     * Returns true if any of the input (or invisible) pins is changed
+     */
+    this.isDirty = function() {
+      if (this.dirty)
+        return true;
+      var pinname;
+      for (pinname in this.inputPins) {
+        if (this.inputPins[pinname].values.changed)
+          return true;
+      }
+      for (pinname in this.invisiblePins) {
+        if (this.invisiblePins[pinname].values.changed)
+          return true;
+      }
+      return false;
     }
     
     /**
@@ -1596,7 +1604,7 @@ VVVV.Core = {
         var node = this.evaluationRecipe[i];
         if (print_timing)
           console.log(node.nodename);
-        if (node.dirty || node.auto_evaluate || node.isSubpatch) {
+        if (node.isDirty() || node.auto_evaluate || node.isSubpatch) {
           if (print_timing)
             var start = new Date().getTime();
           if (node.auto_nil && !node.isSubpatch && node.hasNilInputs()) {
