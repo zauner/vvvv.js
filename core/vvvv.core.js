@@ -204,8 +204,9 @@ VVVV.Core = {
      */
     this.setValue = function(i, v) {
       if (this.direction==PinDirection.Output || !this.isConnected()) {
+        if (!this.primitive || this.values[i]!=v)
+          this.markPinAsChanged();
         this.values[i] = v;
-        this.markPinAsChanged();
       }
       
       if (this.node.isIOBox && this.pinname=='Descriptive Name') {
