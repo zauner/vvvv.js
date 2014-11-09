@@ -1551,6 +1551,7 @@ VVVV.Core = {
       this.pinList = [];
       var addedNodes = {};
       var nodeStack = [];
+      var lostLoopRoots = [];
       
       var recipe = this.evaluationRecipe;
       var pinList = this.pinList;
@@ -1558,14 +1559,19 @@ VVVV.Core = {
         if (nodeStack.indexOf(node.id)<0) {
           nodeStack.push(node.id);
           var upstreamNodes = node.getUpstreamNodes();
+          var loop_detected = false;
           _(upstreamNodes).each(function(upnode) {
             if (addedNodes[upnode.id]==undefined) {
-              addSubGraphToRecipe(upnode);
+              loop_detected = loop_detected || addSubGraphToRecipe(upnode);
             }
           });
           nodeStack.pop();
         }
-        if (nodeStack.indexOf(node.id)<0 || node.delays_output) {
+        
+        if (loop_detected && node.delays_output)
+          lostLoopRoots.push(node);
+        
+        if ((!loop_detected && nodeStack.indexOf(node.id)<0) || node.delays_output) {
           recipe.push(node);
           for (var pinname in node.inputPins) {
             if (node.inputPins[pinname].links.length==0)
@@ -1578,7 +1584,9 @@ VVVV.Core = {
             pinList.push(node.outputPins[pinname]);
           }
           addedNodes[node.id] = node;
+          return false;
         }
+        return true;
       }
       
       for (var i=0; i<this.nodeList.length; i++) {
@@ -1586,6 +1594,10 @@ VVVV.Core = {
           if (addedNodes[this.nodeList[i].id]==undefined)
             addSubGraphToRecipe(this.nodeList[i]);
         }
+      }
+      
+      for (var i=0; i<lostLoopRoots.length; i++) {
+        addSubGraphToRecipe(lostLoopRoots[i]);
       }
     }
     
