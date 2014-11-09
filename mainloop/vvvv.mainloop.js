@@ -16,6 +16,7 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
   var dom = new VVVV.Core.DOMInterface(patch);
   var run = true;
   var start = undefined;
+  var animFrameRequested = false;
   
   var measureStart = 0;
   var print_framerate = false;
@@ -52,7 +53,9 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
       }
     }
     if (run) // && framecount<1)
-      window.setTimeout(update, Math.max(0, Math.round(1000/VVVV.fps-elapsed)));
+      window.setTimeout(function() {
+        window.requestAnimationFrame(update);
+      }, Math.max(0, Math.round(1000/VVVV.fps-elapsed)));
     
   }
   
