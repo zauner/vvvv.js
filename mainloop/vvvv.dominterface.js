@@ -70,7 +70,10 @@ VVVV.Core.DOMInterface = function(patch) {
 
   this.populateInputConnectors= function() {
     var that = this;
-    _(inputConnectors).each(function(ioboxConn) {
+    var connectorName;
+    var ioboxConn;
+    for (connectorName in inputConnectors) {
+      ioboxConn = inputConnectors[connectorName];
       switch (ioboxConn.property_class) {
         case "event":
           if (ioboxConn.values.length!=ioboxConn.node.IOBoxInputPin().values.length)
@@ -91,32 +94,33 @@ VVVV.Core.DOMInterface = function(patch) {
             }
           }
       }
-    });
+    }
   }
   
   this.processOutputConnectors= function() {
     var that = this;
-    _(outputConnectors).each(function(ioboxConn) {
-      switch (ioboxConn.property_class) {
+    var connectorName;
+    for (connectorName in outputConnectors) {
+      switch (outputConnectors[connectorName].property_class) {
         //case "event":
         //  for (var i=0; i<ioboxConn.values.length; i++) {
         //    ioboxConn.node.IOBoxInputPin().setValue(i, ioboxConn.values[i]);
         //  }
         //  break;
         default:
-          that.setDOMByIOBox(ioboxConn);
+          that.setDOMByIOBox(outputConnectors[connectorName]);
       }
-    });
+    }
     
     // reset event ioboxConnes
     
-    _(inputConnectors).each(function(ioboxConn) {
-      if (ioboxConn.property_class=="event") {
-        for (var i=0; i<ioboxConn.values.length; i++) {
-          ioboxConn.values[i] = 0;
+    for (connectorName in inputConnectors) {
+      if (inputConnectors[connectorName].property_class=="event") {
+        for (var i=0; i<inputConnectors[connectorName].values.length; i++) {
+          inputConnectors[connectorName].values[i] = 0;
         }
       }
-    });
+    }
   }
   
   

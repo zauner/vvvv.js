@@ -691,10 +691,11 @@ VVVV.Core = {
      */
     this.getMaxInputSliceCount = function() {
       var ret = 0;
-      _(this.inputPins).each(function(p) {
-        if (p.getSliceCount()>ret)
-          ret = p.values.length;
-      });
+      var pinname;
+      for (pinname in this.inputPins) {
+        if (this.inputPins[pinname].getSliceCount()>ret)
+          ret = this.inputPins[pinname].values.length;
+      }
       return ret;
     }
     
@@ -1613,6 +1614,7 @@ VVVV.Core = {
         var elapsed = 0;
       }
       
+      var pinname;
       for (var i=0; i<this.evaluationRecipe.length; i++) {
         var node = this.evaluationRecipe[i];
         if (print_timing)
@@ -1621,9 +1623,9 @@ VVVV.Core = {
           if (print_timing)
             var start = new Date().getTime();
           if (node.auto_nil && !node.isSubpatch && node.hasNilInputs()) {
-            _(node.outputPins).each(function(outPin) {
-              outPin.setSliceCount(0);
-            });
+            for(pinname in node.outputPins) {
+              node.outputPins[pinname].setSliceCount(0);
+            }
           }
           else {
             try {
