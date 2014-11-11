@@ -2302,15 +2302,16 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
     
-    if (true) {//bgColIn.pinIsChanged()) {
+    if (bgColIn.pinIsChanged()) {
       var col = _(bgColIn.getValue(0).split(',')).map(function(e) {
         return parseFloat(e);
       });
       gl.clearColor(col[0], col[1], col[2], col[3]);
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     }
     
-    if (true) {//enableDepthBufIn.pinIsChanged()) {
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    
+    if (true) {
       if (enableDepthBufIn.getValue(0)=='NONE')
         gl.disable(gl.DEPTH_TEST);
       else
