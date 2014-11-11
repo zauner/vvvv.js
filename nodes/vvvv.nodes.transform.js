@@ -36,7 +36,7 @@ VVVV.Nodes.Rotate = function(id, graph) {
     compatibility_issues: []
   };
   
-  var ident = mat4.identity(mat4.create());
+  var transforms = [];
   
   this.trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
   this.xIn = this.addInputPin("X", [0.0], VVVV.PinTypes.Value);
@@ -49,6 +49,16 @@ VVVV.Nodes.Rotate = function(id, graph) {
   { 
 		
 	  var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : Math.max(this.xIn.getSliceCount(),this.yIn.getSliceCount(),this.zIn.getSliceCount());
+	  
+	  if (maxSize>transforms.length) {
+	    var i=transforms.length;
+	    while (i++<maxSize) {
+	      transforms.push(mat4.create());
+	    }
+	  }
+	  else if (maxSize<transforms.length) {
+	    transforms.length = maxSize;
+	  }
     
     for (var i=0; i<maxSize; i++) {
     
@@ -57,17 +67,11 @@ VVVV.Nodes.Rotate = function(id, graph) {
       var y = parseFloat(this.inputPins["Y"].getValue(i));
       var z = parseFloat(this.inputPins["Z"].getValue(i));
       
-      var t = mat4.create();
-      mat4.identity(t);
+      mat4.rotate(transformin, y*Math.PI*2, [0, 1, 0], transforms[i]);
+      mat4.rotate(transforms[i], x*Math.PI*2, [1, 0, 0]);
+      mat4.rotate(transforms[i], z*Math.PI*2, [0, 0, 1]);
       
-      mat4.rotate(t, y*Math.PI*2, [0, 1, 0]);
-      mat4.rotate(t, x*Math.PI*2, [1, 0, 0]);
-      mat4.rotate(t, z*Math.PI*2, [0, 0, 1]);
-      
-      if (this.trIn.isConnected())
-        mat4.multiply(transformin, t, t);
-      
-      this.trOut.setValue(i, t);
+      this.trOut.setValue(i, transforms[i]);
     }
     this.trOut.setSliceCount(maxSize);
   }
@@ -93,7 +97,7 @@ VVVV.Nodes.Translate = function(id, graph) {
     compatibility_issues: []
   };
   
-  var ident = mat4.identity(mat4.create());
+  var transforms = [];
   
   this.trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
   this.xIn = this.addInputPin("X", [0.0], VVVV.PinTypes.Value);
@@ -106,23 +110,25 @@ VVVV.Nodes.Translate = function(id, graph) {
 		
 	  var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : Math.max(this.xIn.getSliceCount(),this.yIn.getSliceCount(),this.zIn.getSliceCount());
 	  
+	  if (maxSize>transforms.length) {
+      var i=transforms.length;
+      while (i++<maxSize) {
+        transforms.push(mat4.create());
+      }
+    }
+    else if (maxSize<transforms.length) {
+      transforms.length = maxSize;
+    }
+	  
 	  for (var i=0; i<maxSize; i++) {
 		
 		  var x = parseFloat(this.xIn.getValue(i));
 			var y = parseFloat(this.yIn.getValue(i));
 			var z = parseFloat(this.zIn.getValue(i));
 			
-			var t = mat4.create();
-			mat4.identity(t);
+			mat4.translate(this.trIn.getValue(i), [x, y, z], transforms[i]);
 			
-			mat4.translate(t, [x, y, z]);
-			if (this.trIn.isConnected())
-			{
-				var transformin = this.trIn.getValue(i);
-				mat4.multiply(transformin, t, t);
-			}
-			
-			this.trOut.setValue(i, t);
+			this.trOut.setValue(i, transforms[i]);
 	  }
 	  this.trOut.setSliceCount(maxSize);
   }
@@ -148,7 +154,7 @@ VVVV.Nodes.Scale = function(id, graph) {
     compatibility_issues: []
   };
   
-  var ident = mat4.identity(mat4.create());
+  var transforms = [];
   
   this.trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
   this.xIn = this.addInputPin("X", [1.0], VVVV.PinTypes.Value);
@@ -160,24 +166,25 @@ VVVV.Nodes.Scale = function(id, graph) {
   this.evaluate = function() {
 		
 		var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : Math.max(this.xIn.getSliceCount(),this.yIn.getSliceCount(),this.zIn.getSliceCount());
+		
+		if (maxSize>transforms.length) {
+      var i=transforms.length;
+      while (i++<maxSize) {
+        transforms.push(mat4.create());
+      }
+    }
+    else if (maxSize<transforms.length) {
+      transforms.length = maxSize;
+    }
     
     for (var i=0; i<maxSize; i++) {
       var x = parseFloat(this.inputPins["X"].getValue(i));
       var y = parseFloat(this.inputPins["Y"].getValue(i));
       var z = parseFloat(this.inputPins["Z"].getValue(i));
       
-      var t = mat4.create();
-      mat4.identity(t);
-      
-      mat4.scale(t, [x, y, z]);
-	
-  		if (this.inputPins["Transform In"].isConnected())
-  		{
-  			var transformin = this.inputPins["Transform In"].getValue(i);
-  			mat4.multiply(transformin, t, t);
-  		}
+      mat4.scale(this.trIn.getValue(i), [x, y, z], transforms[i]);
 	    
-      this.trOut.setValue(i, t);
+      this.trOut.setValue(i, transforms[i]);
     }
     this.trOut.setSliceCount(maxSize);
   }
@@ -203,7 +210,7 @@ VVVV.Nodes.UniformScale = function(id, graph) {
     compatibility_issues: []
   };
   
-  var ident = mat4.identity(mat4.create());
+  var transforms = [];
   
   this.trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
   this.xyzIn = this.addInputPin("XYZ", [1.0], VVVV.PinTypes.Value);
@@ -211,24 +218,24 @@ VVVV.Nodes.UniformScale = function(id, graph) {
   this.trOut = this.addOutputPin("Transform Out", [], VVVV.PinTypes.Transform);
 
   this.evaluate = function() {
-		
-	var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : this.xyzIn.getSliceCount();
+		var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : this.xyzIn.getSliceCount();
+    
+    if (maxSize>transforms.length) {
+      var i=transforms.length;
+      while (i++<maxSize) {
+        transforms.push(mat4.create());
+      }
+    }
+    else if (maxSize<transforms.length) {
+      transforms.length = maxSize;
+    }
     
     for (var i=0; i<maxSize; i++) {
       var u = parseFloat(this.inputPins["XYZ"].getValue(i));
       
-      var t = mat4.create();
-      mat4.identity(t);
-      
-      mat4.scale(t, [u,u,u]);
-	
-  		if (this.inputPins["Transform In"].isConnected())
-  		{
-  			var transformin = this.inputPins["Transform In"].getValue(i);
-  			mat4.multiply(transformin, t, t);
-  		}
+      mat4.scale(this.trIn.getValue(i), [u,u,u], transforms[i]);
 	    
-      this.trOut.setValue(i, t);
+      this.trOut.setValue(i, transforms[i]);
     }
     this.trOut.setSliceCount(maxSize);
   }
@@ -254,7 +261,11 @@ VVVV.Nodes.Trapeze = function(id, graph) {
     compatibility_issues: []
   };
   
-  var ident = mat4.identity(mat4.create());
+  var transforms = [];
+  var mat = [ 1.0,0.0,0.0,0.0,
+              0.0,1.0,0.0,0.0,
+              0.0,0.0,1.0,0.0,
+              0.0,0.0,0.0,1.0];
   
   this.trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
   this.xIn = this.addInputPin("X", [0.0], VVVV.PinTypes.Value);
@@ -267,24 +278,27 @@ VVVV.Nodes.Trapeze = function(id, graph) {
     
     var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : Math.max(this.xIn.getSliceCount(),this.yIn.getSliceCount(),this.zIn.getSliceCount());
     
+    if (maxSize>transforms.length) {
+      var i=transforms.length;
+      while (i++<maxSize) {
+        transforms.push(mat4.create());
+      }
+    }
+    else if (maxSize<transforms.length) {
+      transforms.length = maxSize;
+    }
+    
     for (var i=0; i<maxSize; i++) {
       var x = 2.0 * parseFloat(this.inputPins["X"].getValue(i));
       var y = 2.0 * parseFloat(this.inputPins["Y"].getValue(i));
       var z = 2.0 * parseFloat(this.inputPins["Z"].getValue(i));
-      
-      var mat = [ 1.0,0.0,0.0,x,
-                  0.0,1.0,0.0,y,
-                  0.0,0.0,1.0,z,
-                  0.0,0.0,0.0,1.0];
 
-      var t = mat4.create(mat);
+      mat[3] = x;
+      mat[7] = y;
+      mat[11] = z;
+      mat4.multiply(this.inputPins["Transform In"].getValue(i), mat, transforms[i]);
      
-      if (this.inputPins["Transform In"].isConnected())
-      {
-        var transformin = this.inputPins["Transform In"].getValue(i);
-        mat4.multiply(transformin, t, t);
-      }
-      this.trOut.setValue(i, t);
+      this.trOut.setValue(i, transforms[i]);
     }
     this.trOut.setSliceCount(maxSize);
   }
@@ -310,7 +324,7 @@ VVVV.Nodes.Transform2d = function(id, graph) {
     compatibility_issues: []
   };
   
-  var ident = mat4.identity(mat4.create());
+  var transforms = [];
   
   this.trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
   this.txIn = this.addInputPin("TranslateX", [0.0], VVVV.PinTypes.Value);
@@ -326,10 +340,17 @@ VVVV.Nodes.Transform2d = function(id, graph) {
 
   this.evaluate = function() {
     
-    var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : Math.max(this.txIn.getSliceCount(),this.tyIn.getSliceCount(),
-      this.sxIn.getSliceCount(),this.syIn.getSliceCount(),
-      this.rIn.getSliceCount(),
-      this.cxIn.getSliceCount(),this.cyIn.getSliceCount());
+    var maxSize = this.getMaxInputSliceCount();
+    
+    if (maxSize>transforms.length) {
+      var i=transforms.length;
+      while (i++<maxSize) {
+        transforms.push(mat4.create());
+      }
+    }
+    else if (maxSize<transforms.length) {
+      transforms.length = maxSize;
+    }
     
     for (var i=0; i<maxSize; i++) {
       var tx = parseFloat(this.inputPins["TranslateX"].getValue(i));
@@ -339,22 +360,13 @@ VVVV.Nodes.Transform2d = function(id, graph) {
       var r  = parseFloat(this.inputPins["Rotate"].getValue(i));
       var cx = parseFloat(this.inputPins["CenterX"].getValue(i));
       var cy = parseFloat(this.inputPins["CenterY"].getValue(i));
-
-      var t = mat4.create();
-      mat4.identity(t);
       
-      mat4.translate(t, [tx, ty, 0]);
-      mat4.rotate(t, r*Math.PI*2, [0, 0, 1]);
-      mat4.scale(t, [sx, sy, 1]);
-      mat4.translate(t, [-cx, -cy, 0]);
-  
-      if (this.inputPins["Transform In"].isConnected())
-      {
-        var transformin = this.inputPins["Transform In"].getValue(i);
-        mat4.multiply(transformin, t, t);
-      }
+      mat4.translate(this.inputPins["Transform In"].getValue(i), [tx, ty, 0], transforms[i]);
+      mat4.rotate(transforms[i], r*Math.PI*2, [0, 0, 1]);
+      mat4.scale(transforms[i], [sx, sy, 1]);
+      mat4.translate(transforms[i], [-cx, -cy, 0]);
       
-      this.trOut.setValue(i, t);
+      this.trOut.setValue(i, transforms[i]);
     }
     this.trOut.setSliceCount(maxSize);
   }
@@ -380,7 +392,7 @@ VVVV.Nodes.AspectRatio = function(id, graph) {
     compatibility_issues: []
   };
   
-  var ident = mat4.identity(mat4.create());
+  var transforms = [];
   
   this.trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
   this.wIn = this.addInputPin("Aspect Width", [1.0], VVVV.PinTypes.Value);
@@ -394,6 +406,16 @@ VVVV.Nodes.AspectRatio = function(id, graph) {
   this.evaluate = function() {
     
     var maxSize = this.trIn.isConnected() ? this.getMaxInputSliceCount() : Math.max(this.wIn.getSliceCount(),this.hIn.getSliceCount(),this.sIn.getSliceCount(),this.alignmentIn.getSliceCount());
+    
+    if (maxSize>transforms.length) {
+      var i=transforms.length;
+      while (i++<maxSize) {
+        transforms.push(mat4.create());
+      }
+    }
+    else if (maxSize<transforms.length) {
+      transforms.length = maxSize;
+    }
     
     for (var i=0; i<maxSize; i++) {
       var w = parseFloat(this.inputPins["Aspect Width"].getValue(i));
@@ -422,18 +444,10 @@ VVVV.Nodes.AspectRatio = function(id, graph) {
           else
             x *= w/h;
       }
-      var t = mat4.create();
-      mat4.identity(t);
       
-      mat4.scale(t, [x, y, s]);
-  
-      if (this.inputPins["Transform In"].isConnected())
-      {
-        var transformin = this.inputPins["Transform In"].getValue(i);
-        mat4.multiply(transformin, t, t);
-      }
+      mat4.scale(this.inputPins["Transform In"].getValue(i), [x, y, s], transforms[i]);
       
-      this.trOut.setValue(i, t);
+      this.trOut.setValue(i, transforms[i]);
     }
     this.trOut.setSliceCount(maxSize);
   }
@@ -510,6 +524,8 @@ VVVV.Nodes.InverseTransform = function(id, graph) {
     compatibility_issues: []
   };
   
+  var transforms = [];
+  
   var trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
   var sourceIn = this.addInputPin("Source", [], VVVV.PinTypes.Transform);
   
@@ -518,11 +534,20 @@ VVVV.Nodes.InverseTransform = function(id, graph) {
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
     
+    if (maxSize>transforms.length) {
+      var i=transforms.length;
+      while (i++<maxSize) {
+        transforms.push(mat4.create());
+      }
+    }
+    else if (maxSize<transforms.length) {
+      transforms.length = maxSize;
+    }
+    
     for (var i=0; i<maxSize; i++) {
-      var s = mat4.create();
-      mat4.set(sourceIn.getValue(i), s);
-      mat4.multiply(trIn.getValue(i), mat4.inverse(s, s), s);
-      trOut.setValue(i, s);
+      mat4.set(sourceIn.getValue(i), transforms[i]);
+      mat4.multiply(trIn.getValue(i), mat4.inverse(transforms[i], transforms[i]), transforms[i]);
+      trOut.setValue(i, transforms[i]);
     }
     trOut.setSliceCount(maxSize);
   }
@@ -561,27 +586,37 @@ VVVV.Nodes.LookAtTransformVector = function(id, graph) {
   var mirror = mat4.create();
   mat4.identity(mirror);
   mat4.scale(mirror, [-1, 1, -1]);
+  
+  var transforms = [];
 
   this.evaluate = function() {
     var spreadCount = Math.max(transformIn.getSliceCount(), Math.max(positionxyzIn.getSliceCount()/3, Math.max(lookatxyzIn.getSliceCount()/3, upvectorxyzIn.getSliceCount()/3)));
     spreadCount = Math.ceil(spreadCount);
+    
+    if (spreadCount>transforms.length) {
+      var i=transforms.length;
+      while (i++<spreadCount) {
+        transforms.push(mat4.create());
+      }
+    }
+    else if (spreadCount<transforms.length) {
+      transforms.length = spreadCount;
+    }
     
     for (var i=0; i<spreadCount; i++) {
       var pos = positionxyzIn.getValue(i, 3);
       var lookat = lookatxyzIn.getValue(i, 3);
       var up = upvectorxyzIn.getValue(i, 3);
 
-      var t = mat4.create();
-      mat4.identity(t);   
-      mat4.lookAt(vec3.create(pos), vec3.create(lookat), vec3.create(up), t);
-      mat4.multiply(mirror, t, t);
+      mat4.lookAt(pos, lookat, up, transforms[i]);
+      mat4.multiply(mirror, transforms[i], transforms[i]);
     
       if (transformIn.isConnected())
       {
-        mat4.multiply(transformIn.getValue(i), t, t);
+        mat4.multiply(transformIn.getValue(i), transforms[i], transforms[i]);
       }
       
-      transformoutOut.setValue(i, t);
+      transformoutOut.setValue(i, transforms[i]);
     }
     
     transformoutOut.setSliceCount(spreadCount);
@@ -628,22 +663,43 @@ VVVV.Nodes.LookAtTransform = function(id, graph) {
   var mirror = mat4.create();
   mat4.identity(mirror);
   mat4.scale(mirror, [-1, 1, -1]);
+  var transforms = [];
+  var pos = vec3.create();
+  var lookat = vec3.create();
+  var up = vec3.create();
 
   this.evaluate = function() {
     var spreadCount = this.getMaxInputSliceCount();
     
+    if (spreadCount>transforms.length) {
+      var i=transforms.length;
+      while (i++<spreadCount) {
+        transforms.push(mat4.create());
+      }
+    }
+    else if (spreadCount<transforms.length) {
+      transforms.length = spreadCount;
+    }
+    
     for (var i=0; i<spreadCount; i++) {
-      var t = mat4.create();
-      mat4.identity(t);
-      mat4.lookAt(vec3.create([positionxIn.getValue(i), positionyIn.getValue(i), positionzIn.getValue(i)]), vec3.create([lookatxIn.getValue(i), lookatyIn.getValue(i), lookatzIn.getValue(i)]), vec3.create([upvectorxIn.getValue(i), upvectoryIn.getValue(i), upvectorzIn.getValue(i)]), t);
-      mat4.multiply(mirror, t, t);
+      pos[0] = positionxIn.getValue(i);
+      pos[1] = positionyIn.getValue(i);
+      pos[2] = positionzIn.getValue(i);
+      lookat[0] = lookatxIn.getValue(i);
+      lookat[1] = lookatyIn.getValue(i);
+      lookat[2] = lookatzIn.getValue(i);
+      up[0] = upvectorxIn.getValue(i);
+      up[1] = upvectoryIn.getValue(i);
+      up[2] = upvectorzIn.getValue(i);
+      mat4.lookAt(pos, lookat, up, transforms[i]);
+      mat4.multiply(mirror, transforms[i], transforms[i]);
     
       if (transformIn.isConnected())
       {
-        mat4.multiply(transformIn.getValue(i), t, t);
+        mat4.multiply(transformIn.getValue(i), transforms[i], transforms[i]);
       }
       
-      transformoutOut.setValue(i, t);
+      transformoutOut.setValue(i, transforms[i]);
     }
     
     transformoutOut.setSliceCount(spreadCount);
@@ -670,7 +726,7 @@ VVVV.Nodes.MultiplyTransform = function(id, graph) {
     compatibility_issues: []
   };
   
-  var t = mat4.create();
+  var transforms = [];
   var inputCount = 2;
 
   this.trOut = this.addOutputPin("Transform Out", [], VVVV.PinTypes.Transform);
@@ -691,17 +747,27 @@ VVVV.Nodes.MultiplyTransform = function(id, graph) {
   	if (inputcountIn.pinIsChanged())
       this.initialize();
 
-	var maxSize = this.getMaxInputSliceCount();
+	  var maxSize = this.getMaxInputSliceCount();
+	  
+	  if (maxSize>transforms.length) {
+      var i=transforms.length;
+      while (i++<maxSize) {
+        transforms.push(mat4.create());
+      }
+    }
+    else if (maxSize<transforms.length) {
+      transforms.length = maxSize;
+    }
     
     for (var i=0; i<maxSize; i++) {
-    	t = mat4.identity(t);
+    	mat4.identity(transforms[i]);
     	for (var p=inputCount-1; p>=0; p--) {
     		if (inputPins[p].isConnected()) {
     			var tm = inputPins[p].getValue(i);
-    			mat4.multiply(t,tm,t);
+    			mat4.multiply(transforms[i],tm,transforms[i]);
     		}
     	}
-    	this.trOut.setValue(i, t);
+    	this.trOut.setValue(i, transforms[i]);
     }
     this.trOut.setSliceCount(maxSize);
   }
