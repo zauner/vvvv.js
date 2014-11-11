@@ -360,12 +360,12 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
     this.drawSegment = false;
   
     this.draw = function(ctx, invisible) {
-      ctx.save();
       if (this.clippingLayer) {
+        ctx.save();
         this.clippingLayer.draw(ctx, true);
         ctx.clip();
       }
-      ctx.save();
+      ctx.restoreView();
       if (this.transform)
         ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
       ctx.beginPath();
@@ -386,8 +386,8 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
         ctx.fill();
       if (this.renderState.strokeColor[3]>0)
         ctx.stroke();
-      ctx.restore();
-      ctx.restore();
+      if (this.clippingLayer)
+        ctx.restore();
     }
   }
   
@@ -456,13 +456,13 @@ VVVV.Nodes.RectangleCanvas = function(id, graph) {
     this.clippingLayer = undefined;
   
     this.draw = function(ctx, invisible) {
-      ctx.save();
       if (this.clippingLayer) {
+        ctx.save();
         this.clippingLayer.draw(ctx, true);
         ctx.clip();
       }
       
-      ctx.save();
+      ctx.restoreView();
       if (this.transform)
         ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
       ctx.beginPath();
@@ -492,8 +492,8 @@ VVVV.Nodes.RectangleCanvas = function(id, graph) {
         ctx.fill();
       if (this.renderState.strokeColor[3]>0)
         ctx.stroke();
-      ctx.restore();
-      ctx.restore();
+      if (this.clippingLayer)
+        ctx.restore();
       
     }
   }
@@ -569,12 +569,13 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
     this.clippingLayer = undefined;
   
     this.draw = function(ctx, invisible) {
-      ctx.save();
       if (this.clippingLayer) {
+        ctx.save();
         this.clippingLayer.draw(ctx, true);
         ctx.clip();
       }
       
+      ctx.restoreView();
       ctx.save();
       if (this.transform)
         ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
@@ -591,7 +592,8 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
       if (this.renderState.strokeColor[3]>0)
         ctx.strokeText(this.text, 0, 0);
       ctx.restore();
-      ctx.restore();
+      if (this.clippingLayer)
+        ctx.restore();
     }
   }
   
@@ -672,8 +674,8 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
       if (this.x.length<1)
         return;
       
-      ctx.save();
       if (this.clippingLayer) {
+        ctx.save();
         this.clippingLayer.draw(ctx, true);
         ctx.clip();
       }  
@@ -683,7 +685,7 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
       else
         invisibleRenderState.apply(ctx);
       
-      ctx.save();
+      ctx.restoreView();
       if (this.transform)
         ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
       
@@ -703,8 +705,9 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
         ctx.fill();
       if (this.renderState.strokeColor[3]>0)
         ctx.stroke();
-      ctx.restore();
-      ctx.restore();
+        
+      if (this.clippingLayer)
+        ctx.restore();
     }
   }
   
@@ -805,13 +808,13 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
     this.color = [1.0, 1.0, 1.0, 1.0];
   
     this.draw = function(ctx, invisible) {
-      ctx.save();
       if (this.clippingLayer) {
+        ctx.save();
         this.clippingLayer.draw(ctx, true);
         ctx.clip();
       }
       
-      ctx.save();
+      ctx.restoreView();
       if (this.transform)
         ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
         
@@ -836,8 +839,8 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
         ctx.fillRect(-.5, -.5, 1, 1);
       }
       
-      ctx.restore();
-      ctx.restore();
+      if (this.clippingLayer)
+        ctx.restore();
     }
   }
   
@@ -949,6 +952,8 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   var bgColor = [0.0, 0.0, 0.0, 1.0];
   var clear = 1;
   var canvas;
+  var viewT = mat4.create();
+  var projT;
   
   // this is actually some code duplication, because the very same exists in Renderer (EX9)
   function attachMouseEvents(canvas) {
@@ -1020,6 +1025,10 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
     ctx = canvas.getContext('2d');
     canvas.ctx = ctx;
     
+    ctx.restoreView = function() {
+      ctx.setTransform(viewT[0], viewT[1], viewT[4], viewT[5], viewT[12], viewT[13]);
+    }
+    
   }
   
   this.destroy = function() {
@@ -1037,19 +1046,19 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
     if (!ctx)
       return;
       
-    if (bufferWidthIn.pinIsChanged()) {
+    if (bufferWidthIn.pinIsChanged() || bufferHeightIn.pinIsChanged()) {
       var w = parseInt(bufferWidthIn.getValue(0));
+      var h = parseInt(bufferHeightIn.getValue(0));
       if (w>0) {
         canvasWidth = w;
         $(canvas).attr('width', canvasWidth);
       }
-    }
-    if (bufferHeightIn.pinIsChanged()) {
-      var h = parseInt(bufferHeightIn.getValue(0));
       if (h>0) {
         canvasHeight = h;
         $(canvas).attr('height', canvasHeight);
       }
+      projT = mat4.create([canvasWidth/2, 0, 0, 0, 0, -canvasHeight/2, 0, 0, 0, 0, 1, 0, canvasWidth/2, canvasHeight/2, 0, 1]);
+      mat4.multiply(projT, viewIn.getValue(0), viewT);
     }
       
     if (bgColorIn.pinIsChanged()) {
@@ -1063,32 +1072,25 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
     
       defaultRenderState.apply(ctx);
       
-      if (true)
-        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       
-      ctx.save();
-      ctx.translate(canvasWidth/2, canvasHeight/2);
-      ctx.scale(canvasWidth/2, -canvasHeight/2);
-      //ctx.scale(1, canvasWidth/canvasHeight);
-      
-      if (viewIn.isConnected()) {
-        var view = viewIn.getValue(0);
-        ctx.transform(view[0], view[1], view[4], view[5], view[12], view[13]);
+      if (true) {//clearIn.getValue(0)>0.5) {
+        if (bgColor[3]<1.0)
+          ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        ctx.fillStyle = 'rgba('+bgColor[0]+','+bgColor[1]+','+bgColor[2]+','+bgColor[3]+')';
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
       }
+      
+      if (viewIn.pinIsChanged()) {
+        mat4.multiply(projT, viewIn.getValue(0), viewT);
+      }
+      
+      ctx.restoreView();
       
       if (layersIn.isConnected()) {
         for (var i=0; i<layersIn.values.length; i++) {
           layersIn.getValue(i).draw(ctx);
         }
-      }
-      ctx.restore();
-      
-      defaultRenderState.apply(ctx);
-      ctx.globalCompositeOperation = 'destination-over';
-      
-      if (true) {//clearIn.getValue(0)>0.5) {
-        ctx.fillStyle = 'rgba('+bgColor[0]+','+bgColor[1]+','+bgColor[2]+','+bgColor[3]+')';
-        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
       }
       
       canvasOut.setValue(0, canvas);
