@@ -3,6 +3,7 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
 
 VVVV.MousePositions = {'_all': {'x': 0.0, 'y': 0.0, 'wheel': 0.0, 'lb': 0.0, 'mb': 0.0, 'rb': 0.0}}
 
@@ -12,7 +13,7 @@ VVVV.MousePositions = {'_all': {'x': 0.0, 'y': 0.0, 'wheel': 0.0, 'lb': 0.0, 'mb
  * @property {Integer} Output 1
  * @property {Integer} Configuration 2
  */
-var PinDirection = { Input : 0,Output : 1,Configuration : 2 };
+VVVV.PinDirection = { Input : 0,Output : 1,Configuration : 2 };
 
 /**
  * The default pin type, used if no further specified
@@ -151,13 +152,13 @@ VVVV.Core = {
    * @class
    * @constructor
    * @param {String} pinname Pin Name
-   * @param {String} direction see {@link PinDirection}
+   * @param {String} direction see {@link VVVV.PinDirection}
    * @param {Array} init_values the array of initial values
    * @param {VVVV.Core.Node} node the node this pin is attached to
    * @param {Object} [type] the PinType, default is {@link VVVV.PinTypes.Generic), see {@link VVVV.PinTypes}
    */
   Pin: function(pinname,direction, init_values, node, type) {
-    /** see {@link PinDirection} */
+    /** see {@link VVVV.PinDirection} */
     this.direction = direction;
     /** @member */
     this.pinname = pinname;
@@ -203,7 +204,7 @@ VVVV.Core = {
      * @param {Boolean} [stopPropagation] default is false; if true, the function does not update slavePins to avoid infinite loops; this parameter should not be used in node implementations
      */
     this.setValue = function(i, v) {
-      if (this.direction==PinDirection.Output || !this.isConnected()) {
+      if (this.direction==VVVV.PinDirection.Output || !this.isConnected()) {
         if (!this.primitive || this.values[i]!=v)
           this.markPinAsChanged();
         this.values[i] = v;
@@ -235,7 +236,7 @@ VVVV.Core = {
     
     this.connect = function(other_pin) {
       this.values = other_pin.values;
-      if (this.direction==PinDirection.Output) { // this is the case when a subpatch output pin gets connected to the interface pin in the subpatch
+      if (this.direction==VVVV.PinDirection.Output) { // this is the case when a subpatch output pin gets connected to the interface pin in the subpatch
         var linkCount = this.links.length;
         for (var i=0; i<linkCount; i++) {
           this.links[i].toPin.values = this.values;
@@ -272,7 +273,7 @@ VVVV.Core = {
     this.setSliceCount = function(len) {
       if (this.values.length==len)
         return;
-      if (this.direction==PinDirection.Output || !this.isConnected()) {
+      if (this.direction==VVVV.PinDirection.Output || !this.isConnected()) {
         this.values.length = len;
       }
       this.markPinAsChanged();
@@ -294,7 +295,7 @@ VVVV.Core = {
       this.typeName = newType.typeName;
       this.defaultValue = newType.defaultValue;
       
-      if (this.direction == PinDirection.Input && this.defaultValue && !this.isConnected()) {
+      if (this.direction == VVVV.PinDirection.Input && this.defaultValue && !this.isConnected()) {
         this.setValue(0, this.defaultValue());
         this.setSliceCount(1);
       }
@@ -407,7 +408,7 @@ VVVV.Core = {
      * @return {VVVV.Core.Pin} the new {@link VVVV.Core.Pin}
      */
     this.addInputPin = function(pinname, value, type) {
-      var pin = new VVVV.Core.Pin(pinname,PinDirection.Input, value, this, type);
+      var pin = new VVVV.Core.Pin(pinname,VVVV.PinDirection.Input, value, this, type);
       this.inputPins[pinname] = pin;
       if (this.parentPatch)
         this.parentPatch.pinMap[this.id+'_in_'+pinname] = pin;
@@ -423,7 +424,7 @@ VVVV.Core = {
      * @return {VVVV.Core.Pin} the new {@link VVVV.Core.Pin}
      */
     this.addOutputPin = function(pinname, value, type) {
-      var pin = new VVVV.Core.Pin(pinname,PinDirection.Output, value, this, type);
+      var pin = new VVVV.Core.Pin(pinname,VVVV.PinDirection.Output, value, this, type);
       this.outputPins[pinname] = pin;
       if (this.parentPatch)
         this.parentPatch.pinMap[this.id+'_out_'+pinname] = pin;
@@ -470,7 +471,7 @@ VVVV.Core = {
      * @return {VVVV.Core.Pin} the new {@link VVVV.Core.Pin}
      */
     this.addInvisiblePin = function(pinname, value, type) {
-      var pin = new VVVV.Core.Pin(pinname,PinDirection.Configuration, value, this, type);
+      var pin = new VVVV.Core.Pin(pinname,VVVV.PinDirection.Configuration, value, this, type);
       this.invisiblePins[pinname] = pin;
       this.parentPatch.pinMap[this.id+'_inv_'+pinname] = pin;
       if (this.defaultPinValues[pinname] != undefined) {
@@ -1742,3 +1743,5 @@ VVVV.Core = {
   
 }
 VVVV.Core.Patch.prototype = new VVVV.Core.Node();
+
+}(vvvvjs_jquery));

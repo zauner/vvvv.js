@@ -3,6 +3,8 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -779,3 +781,5 @@ VVVV.Nodes.FormatValueString = function(id, graph) {
 
 }
 VVVV.Nodes.FormatValueString.prototype = new VVVV.Core.Node();
+
+}(vvvvjs_jquery));

@@ -3,6 +3,8 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: LFO (Animation)
@@ -902,3 +904,5 @@ VVVV.Nodes.Counter = function(id, graph) {
   }
 }
 VVVV.Nodes.Counter.prototype = new VVVV.Core.Node();
+
+}(vvvvjs_jquery));

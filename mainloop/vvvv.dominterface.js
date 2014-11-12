@@ -1,4 +1,5 @@
 
+(function($) {
 
 VVVV.Core.DOMInterface = function(patch) {
 
@@ -190,3 +191,5 @@ VVVV.Core.DOMInterface = function(patch) {
   }
 
 }
+
+}(vvvvjs_jquery));

@@ -6,6 +6,10 @@
 /** @define {string} */
 var VVVV_ENV = 'development';
 
+var vvvvjs_jquery = $.noConflict();
+$ = vvvvjs_jquery;
+
+(function($) {
 
 // some prerequisites ...
 $.ajaxPrefilter(function( options, originalOptions, jqXHR ) {
@@ -156,6 +160,8 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
   if (VVVV_ENV=='production')
     initialisationComplete();
 };
+
+}(vvvvjs_jquery));
 
 
 

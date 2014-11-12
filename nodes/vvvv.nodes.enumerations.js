@@ -3,6 +3,8 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -36,3 +38,5 @@ VVVV.Nodes.String2Enum = function(id, graph) {
 
 }
 VVVV.Nodes.String2Enum.prototype = new VVVV.Core.Node();
+
+}(vvvvjs_jquery));

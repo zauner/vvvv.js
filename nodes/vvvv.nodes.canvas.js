@@ -3,6 +3,8 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 VVVV.Types.CanvasTexture = { imageObject: undefined, loaded: false };
 
 VVVV.Types.CanvasRenderState = function() {
@@ -1104,3 +1106,5 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
 
 }
 VVVV.Nodes.RendererCanvas.prototype = new VVVV.Core.Node();
+
+}(vvvvjs_jquery));

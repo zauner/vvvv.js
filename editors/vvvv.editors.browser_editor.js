@@ -1,4 +1,6 @@
 
+(function($) {
+
 var UIState = {
   'Idle': 0,
   'Connecting': 1,
@@ -1279,3 +1281,5 @@ VVVV.VVVViewer = function(patch, selector) {
 }
 
 VVVV.Editors["edit"] = VVVV.Editors.BrowserEditor.Interface;
+
+}(vvvvjs_jquery));

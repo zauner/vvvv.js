@@ -1,4 +1,6 @@
 
+(function($) {
+
 /** The frames per second VVVV.js should run, defaults to 60fps */
 VVVV.fps = 60;
 
@@ -93,3 +95,5 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
   
 
 }
+
+}(vvvvjs_jquery));

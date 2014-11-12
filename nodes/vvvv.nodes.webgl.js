@@ -3,6 +3,8 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 /** A hash table of {@VVVV.Types.ShaderCodeResource} objects, indexed with the name/path of the shader code resource */
 VVVV.ShaderCodeResources = {};
 
@@ -210,7 +212,7 @@ VVVV.PinTypes.WebGlResource = {
   reset_on_disconnect: true,
   connectionChangedHandlers: {
     "webglresource": function() {
-      if (this.direction==PinDirection.Input)
+      if (this.direction==VVVV.PinDirection.Input)
         return;
       var that = this.node
       var renderers = that.findDownstreamNodes('Renderer (EX9)');
@@ -2530,3 +2532,5 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
 
 }
 VVVV.Nodes.DefineEffect.prototype = new VVVV.Core.Node();
+
+}(vvvvjs_jquery));

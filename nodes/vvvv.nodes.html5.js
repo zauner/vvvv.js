@@ -3,6 +3,8 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 /**
  * The HTML5Texture Pin Type
  * @mixin
@@ -261,3 +263,4 @@ VVVV.Nodes.AudioOutHTML5 = function(id, graph) {
 }
 VVVV.Nodes.AudioOutHTML5.prototype = new VVVV.Core.Node();
 
+}(vvvvjs_jquery));

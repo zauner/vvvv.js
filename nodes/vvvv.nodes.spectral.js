@@ -3,6 +3,8 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 
 
 /*
@@ -79,3 +81,5 @@ VVVV.Nodes.BoundsSpectral = function(id, graph) {
 
 }
 VVVV.Nodes.BoundsSpectral.prototype = new VVVV.Core.Node();
+
+}(vvvvjs_jquery));
