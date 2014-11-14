@@ -929,7 +929,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             .attr('x2', d.x + d.node.x + 2 + .5)
             .attr('y2', d.y + d.node.y + 2 + .5)
           
-          if (linkStart.direction==PinDirection.Output)  
+          if (linkStart.direction==VVVV.PinDirection.Output)  
             var targetDir = 'input';
           else
             var targetDir = 'output';
@@ -947,11 +947,11 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
               .attr('width', 4)
               .attr('height', 3)
               .attr('fill', 'rgba(0,0,0,1)')
-              .attr('y', function(d) { return d.direction==PinDirection.Input ? -3 : 3})
+              .attr('y', function(d) { return d.direction==VVVV.PinDirection.Input ? -3 : 3})
         }
         else {
           
-          if (linkStart.direction==PinDirection.Input) {
+          if (linkStart.direction==VVVV.PinDirection.Input) {
             var srcPin = d;
             var dstPin = linkStart;
           }
@@ -1066,7 +1066,7 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
       return false;
     })
     
-    if (VVVV.PinTypes[p.typeName].openInputBox && p.direction!=PinDirection.Output && !p.isConnected() && p.getValue(0)!=undefined) {
+    if (VVVV.PinTypes[p.typeName].openInputBox && p.direction!=VVVV.PinDirection.Output && !p.isConnected() && p.getValue(0)!=undefined) {
       var $iobox = $('<div class="row value"><div style="height:100%">'+p.getValue(0)+'</div></div>');
       $iobox.find('div').click(function() {
         VVVV.PinTypes[p.typeName].openInputBox(that.win, $(this), p, 0);
@@ -1086,7 +1086,7 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
     
     var sliceCount = p.getSliceCount();
     var $sliceCountBox = $('<div class="row heading"><input type="text" value="'+sliceCount+'"/ size="3"/> Slices</div>');
-    if (p.direction!=PinDirection.Input)
+    if (p.direction!=VVVV.PinDirection.Input)
       $sliceCountBox.find('input').attr('disabled', true);
     var e = $(that.win.document).find('#values .row').first();
     if (e.length>0)
@@ -1110,7 +1110,7 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
       var $currentElement = $(that.win.document).find('#values .row').eq(i+1);
       if (!pinChanged && $currentElement.children().first().hasClass('pininputbox')) // leave open iobox alone ...
         continue;
-      if (VVVV.PinTypes[p.typeName].openInputBox && p.direction!=PinDirection.Output && !p.isConnected() && p.getValue(0)!=undefined) {
+      if (VVVV.PinTypes[p.typeName].openInputBox && p.direction!=VVVV.PinDirection.Output && !p.isConnected() && p.getValue(0)!=undefined) {
         var $iobox = $('<div class="row value"><div style="height:100%">'+p.getValue(i)+'</div></div>');
         (function(sliceIdx) {
           $iobox.find('div').click(function() {
