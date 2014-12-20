@@ -195,6 +195,8 @@ VVVV.Nodes.ScreenInfo = function(id, graph) {
     compatibility_issues: ['Outputs the window size (ResolutionXY) and the document size (Working AreaXY) only','no Bits per pixel']
   };
   
+  this.auto_evaluate = true;
+  
   
   var windowResOut = this.addOutputPin("ResolutionXY", [0], VVVV.PinTypes.Value);
   var docResOut = this.addOutputPin("Working AreaXY", [0], VVVV.PinTypes.Value);
@@ -205,15 +207,15 @@ VVVV.Nodes.ScreenInfo = function(id, graph) {
   var dy = 0;
   
   $(document).ready(function() {
-    wy = $(window).height();
-    wx = $(window).width();
+    wy = $(window).innerHeight();
+    wx = $(window).innerWidth();
     dy = $(document).height();
     dx = $(document).width();
   });
   
   $(window).resize(function() {
-    wy = $(window).height();
-    wx = $(window).width();
+    wy = $(window).innerHeight();
+    wx = $(window).innerWidth();
     dy = $(document).height();
     dx = $(document).width();
   });
