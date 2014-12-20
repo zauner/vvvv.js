@@ -65,9 +65,9 @@ VVVV.Nodes.Rotate = function(id, graph) {
     for (var i=0; i<maxSize; i++) {
     
       var transformin = this.inputPins["Transform In"].getValue(i);
-      var x = parseFloat(this.inputPins["X"].getValue(i));
-      var y = parseFloat(this.inputPins["Y"].getValue(i));
-      var z = parseFloat(this.inputPins["Z"].getValue(i));
+      var x = this.inputPins["X"].getValue(i);
+      var y = this.inputPins["Y"].getValue(i);
+      var z = this.inputPins["Z"].getValue(i);
       
       mat4.rotate(transformin, y*Math.PI*2, [0, 1, 0], transforms[i]);
       mat4.rotate(transforms[i], x*Math.PI*2, [1, 0, 0]);
@@ -124,9 +124,9 @@ VVVV.Nodes.Translate = function(id, graph) {
 	  
 	  for (var i=0; i<maxSize; i++) {
 		
-		  var x = parseFloat(this.xIn.getValue(i));
-			var y = parseFloat(this.yIn.getValue(i));
-			var z = parseFloat(this.zIn.getValue(i));
+		  var x = this.xIn.getValue(i);
+			var y = this.yIn.getValue(i);
+			var z = this.zIn.getValue(i);
 			
 			mat4.translate(this.trIn.getValue(i), [x, y, z], transforms[i]);
 			
@@ -180,9 +180,9 @@ VVVV.Nodes.Scale = function(id, graph) {
     }
     
     for (var i=0; i<maxSize; i++) {
-      var x = parseFloat(this.inputPins["X"].getValue(i));
-      var y = parseFloat(this.inputPins["Y"].getValue(i));
-      var z = parseFloat(this.inputPins["Z"].getValue(i));
+      var x = this.inputPins["X"].getValue(i);
+      var y = this.inputPins["Y"].getValue(i);
+      var z = this.inputPins["Z"].getValue(i);
       
       mat4.scale(this.trIn.getValue(i), [x, y, z], transforms[i]);
 	    
@@ -233,7 +233,7 @@ VVVV.Nodes.UniformScale = function(id, graph) {
     }
     
     for (var i=0; i<maxSize; i++) {
-      var u = parseFloat(this.inputPins["XYZ"].getValue(i));
+      var u = this.inputPins["XYZ"].getValue(i);
       
       mat4.scale(this.trIn.getValue(i), [u,u,u], transforms[i]);
 	    
@@ -291,9 +291,9 @@ VVVV.Nodes.Trapeze = function(id, graph) {
     }
     
     for (var i=0; i<maxSize; i++) {
-      var x = 2.0 * parseFloat(this.inputPins["X"].getValue(i));
-      var y = 2.0 * parseFloat(this.inputPins["Y"].getValue(i));
-      var z = 2.0 * parseFloat(this.inputPins["Z"].getValue(i));
+      var x = 2.0 * this.inputPins["X"].getValue(i);
+      var y = 2.0 * this.inputPins["Y"].getValue(i);
+      var z = 2.0 * this.inputPins["Z"].getValue(i);
 
       mat[3] = x;
       mat[7] = y;
@@ -355,13 +355,13 @@ VVVV.Nodes.Transform2d = function(id, graph) {
     }
     
     for (var i=0; i<maxSize; i++) {
-      var tx = parseFloat(this.inputPins["TranslateX"].getValue(i));
-      var ty = parseFloat(this.inputPins["TranslateY"].getValue(i));
-      var sx = parseFloat(this.inputPins["ScaleX"].getValue(i));
-      var sy = parseFloat(this.inputPins["ScaleY"].getValue(i));
-      var r  = parseFloat(this.inputPins["Rotate"].getValue(i));
-      var cx = parseFloat(this.inputPins["CenterX"].getValue(i));
-      var cy = parseFloat(this.inputPins["CenterY"].getValue(i));
+      var tx = this.inputPins["TranslateX"].getValue(i);
+      var ty = this.inputPins["TranslateY"].getValue(i);
+      var sx = this.inputPins["ScaleX"].getValue(i);
+      var sy = this.inputPins["ScaleY"].getValue(i);
+      var r  = this.inputPins["Rotate"].getValue(i);
+      var cx = this.inputPins["CenterX"].getValue(i);
+      var cy = this.inputPins["CenterY"].getValue(i);
       
       mat4.translate(this.inputPins["Transform In"].getValue(i), [tx, ty, 0], transforms[i]);
       mat4.rotate(transforms[i], r*Math.PI*2, [0, 0, 1]);
@@ -420,9 +420,9 @@ VVVV.Nodes.AspectRatio = function(id, graph) {
     }
     
     for (var i=0; i<maxSize; i++) {
-      var w = parseFloat(this.inputPins["Aspect Width"].getValue(i));
-      var h = parseFloat(this.inputPins["Aspect Height"].getValue(i));
-      var s = parseFloat(this.inputPins["Uniform Scale"].getValue(i));
+      var w = this.inputPins["Aspect Width"].getValue(i);
+      var h = this.inputPins["Aspect Height"].getValue(i);
+      var s = this.inputPins["Uniform Scale"].getValue(i);
       
       var x = s;
       var y = s;
@@ -436,9 +436,11 @@ VVVV.Nodes.AspectRatio = function(id, graph) {
           break;
         case 'FitWidth':
           y *= h/w;
+          x *= h/w;
           break;
         case 'FitHeight':
           x *= w/h;
+          y *= w/h;
           break;
         case 'FitOut':
           if (w<h) 
@@ -487,9 +489,9 @@ VVVV.Nodes.Perspective = function(id, graph) {
 
   this.evaluate = function() {
     
-    var fov = parseFloat(this.inputPins["FOV"].getValue(0));
-    var near = parseFloat(this.inputPins["Near Plane"].getValue(0));
-    var far = parseFloat(this.inputPins["Far Plane"].getValue(0));
+    var fov = this.inputPins["FOV"].getValue(0);
+    var near = this.inputPins["Near Plane"].getValue(0);
+    var far = this.inputPins["Far Plane"].getValue(0);
     
     var t = mat4.create();
     mat4.identity(t);   

@@ -1,6 +1,4 @@
-#ifdef GL_ES
-precision highp float;
-#endif
+precision lowp float;
 
 uniform mat4 tW : WORLD;
 uniform mat4 tV : VIEW;

@@ -199,10 +199,10 @@ VVVV.Nodes.Points2Vector2d = function(id, graph) {
     var maxSize = this.getMaxInputSliceCount();
     
     for (var i=0; i<maxSize; i++) {
-      var x1 = parseFloat(x1In.getValue(i));
-      var y1 = parseFloat(y1In.getValue(i));
-      var x2 = parseFloat(x2In.getValue(i));
-      var y2 = parseFloat(y2In.getValue(i));
+      var x1 = x1In.getValue(i);
+      var y1 = y1In.getValue(i);
+      var x2 = x2In.getValue(i);
+      var y2 = y2In.getValue(i);
       
       var x = x2 - x1;
       var y = y2 - y1;
@@ -260,10 +260,10 @@ VVVV.Nodes.Vector2Points2d = function(id, graph) {
     var maxSize = this.getMaxInputSliceCount();
     
     for (var i=0; i<maxSize; i++) {
-      var x = parseFloat(xIn.getValue(i));
-      var y = parseFloat(yIn.getValue(i));
-      var length = parseFloat(lengthIn.getValue(i));
-      var angle = parseFloat(angleIn.getValue(i) - .25) * 2 * Math.PI;
+      var x = xIn.getValue(i);
+      var y = yIn.getValue(i);
+      var length = lengthIn.getValue(i);
+      var angle = angleIn.getValue(i) - .25 * 2 * Math.PI;
 
       var dx = length/2 * Math.sin(angle);
       var dy = -length/2 * Math.cos(angle);
@@ -331,15 +331,15 @@ VVVV.Nodes.Attractor2d = function(id, graph) {
     var dx, dy;
     
     for (var i=0; i<posSize; i++) {
-      x = parseFloat(xIn.getValue(i));
-      y = parseFloat(yIn.getValue(i));
+      x = xIn.getValue(i);
+      y = yIn.getValue(i);
       
       for (var j=0; j<attrSize; j++) {
-        attractorx = parseFloat(attractorxIn.getValue(j));
-        attractory = parseFloat(attractoryIn.getValue(j));
-        attractorstrength = parseFloat(attractorstrengthIn.getValue(j));
-        attractorpower = parseFloat(attractorpowerIn.getValue(j));
-        attractorradius = parseFloat(attractorradiusIn.getValue(j));
+        attractorx = attractorxIn.getValue(j);
+        attractory = attractoryIn.getValue(j);
+        attractorstrength = attractorstrengthIn.getValue(j);
+        attractorpower = attractorpowerIn.getValue(j);
+        attractorradius = attractorradiusIn.getValue(j);
   
         dx = x - attractorx;
         dy = y - attractory;

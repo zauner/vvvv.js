@@ -67,6 +67,9 @@ VVVV.Types.WebGlRenderState = function() {
   this.depthOffset = 0.0;
   
   /** @member */
+  this.cullFace = undefined;
+  
+  /** @member */
   this.polygonDrawMode = "TRIANGLES";
   
   /**
@@ -82,6 +85,7 @@ VVVV.Types.WebGlRenderState = function() {
     this.enableZwrite = other.enableZWrite;
     this.depthFunc = other.depthFunc;
     this.depthOffset = other.depthOffset;
+    this.cullFace = other.cullFace;
     this.polygonDrawMode = other.polygonDrawMode;
   }
   
@@ -95,6 +99,14 @@ VVVV.Types.WebGlRenderState = function() {
     else
       gl.disable(gl.BLEND);
     gl.blendFunc(gl[this.srcBlendMode], gl[this.destBlendMode]);
+    
+    if (this.cullFace!==undefined) {
+      gl.enable(gl.CULL_FACE);
+      gl.frontFace(gl[this.cullFace]);
+      gl.cullFace(gl.BACK);
+    }
+    else
+      gl.disable(gl.CULL_FACE);
     
     gl.depthMask(this.enableZWrite);
     //gl.depthFunc(gl[this.depthFunc]);
@@ -134,15 +146,23 @@ VVVV.Types.VertexBuffer = function(gl, p) {
     };
     this.length += this.subBuffers[u].data.byteLength;
   }
-  this.setSubBuffer('POSITION', 3, p);
+  
+  //this.setSubBuffer('POSITION', 3, p);
+  
+  this.updateSubBuffer = function(u,d) {
+    this.subBuffers[u].data = new Float32Array(d);
+  }
   
   /**
    * Creates the VBO in the WebGL context and stores the vertex data
    */
   this.create = function() {
     this.vbo = gl.createBuffer();
+  }
+  
+  this.update = function() {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-    gl.bufferData(gl.ARRAY_BUFFER, this.length, gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, this.length, gl.DYNAMIC_DRAW);
     
     _(this.subBuffers).each(function(b) {
       gl.bufferSubData(gl.ARRAY_BUFFER, b.offset, b.data);
@@ -166,10 +186,13 @@ VVVV.Types.Mesh = function(gl, vertexBuffer, indices) {
   this.vertexBuffer = vertexBuffer;
   /** @member */
   this.indexBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-  /** @member */
-  this.numIndices = indices.length;
+  
+  this.update =function(indices) {
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.DYNAMIC_DRAW);
+    /** @member */
+    this.numIndices = indices.length;
+  }
 }
 
 /** 
@@ -475,8 +498,9 @@ VVVV.Nodes.FileTexture = function(id, graph) {
               gl.bindTexture(gl.TEXTURE_2D, textures[j]);
               //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
               gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textures[j].image);
-              gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-              gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+              gl.generateMipmap(gl.TEXTURE_2D);
+              gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+              gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
               gl.bindTexture(gl.TEXTURE_2D, null);
               outputPin.setValue(j, textures[j]);
             }
@@ -701,6 +725,11 @@ VVVV.Nodes.VertexBufferJoin = function(id, graph) {
   
   var vertexBuffer = null;
   
+  var positions = [];
+  var texCoords0 = [];
+  var normals = [];
+  var n;
+  
   this.evaluate = function() {
   
     var gl = this.renderContexts[0];
@@ -708,18 +737,21 @@ VVVV.Nodes.VertexBufferJoin = function(id, graph) {
       return;
     
     if (applyIn.getValue(0)>=.5) {
-      var positions = [];
-      var texCoords0 = [];
-      var normals = [];
-      for (var i=0; i<this.getMaxInputSliceCount(); i++) { // this is most likely wrong, because texcoord only has 2 elements, which might cause some shift glitch
-        positions[i] = parseFloat(posIn.getValue(i));
-        texCoords0[i] = parseFloat(texCoord0In.getValue(i));
-        normals[i] = parseFloat(normalIn.getValue(i));
+      n = this.getMaxInputSliceCount();
+      for (var i=0; i<n; i++) { // this is most likely wrong, because texcoord only has 2 elements, which might cause some shift glitch
+        positions[i] = posIn.getValue(i);
+        texCoords0[i] = texCoord0In.getValue(i);
+        normals[i] = normalIn.getValue(i);
       }
-      vertexBuffer = new VVVV.Types.VertexBuffer(gl, positions);
+      positions.length = texCoords0.length = normals.length = n;
+      if (!vertexBuffer) {
+        vertexBuffer = new VVVV.Types.VertexBuffer(gl, positions);
+        vertexBuffer.create();
+      }
+      vertexBuffer.setSubBuffer('POSITION', 3, positions);
       vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords0);
       vertexBuffer.setSubBuffer('NORMAL', 3, normals);
-      vertexBuffer.create();
+      vertexBuffer.update();
       
       vbOut.setValue(0, vertexBuffer);
     }
@@ -766,14 +798,20 @@ VVVV.Nodes.MeshJoin = function(id, graph) {
     
     if (applyIn.getValue(0)>=.5) {
       if (vbIn.isConnected()) {
-        mesh = new VVVV.Types.Mesh(gl, vbIn.getValue(0), indicesIn.values);
-        meshOut.setValue(0, mesh);
+        if (!mesh)
+          mesh = new VVVV.Types.Mesh(gl, vbIn.getValue(0), indicesIn.values);
+        if (indicesIn.pinIsChanged() || this.contextChanged)
+          mesh.update(indicesIn.values);
+        if (indicesIn.pinIsChanged() || vbIn.pinIsChanged() || this.contextChanged)
+          meshOut.setValue(0, mesh);
       }
       else {
         meshOut.setValue(0, undefined);
         delete mesh;
       }
     }
+    
+    this.contextChanged = false;
     
   }
 
@@ -838,9 +876,11 @@ VVVV.Nodes.Grid = function(id, graph) {
     }
     
     var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+    vertexBuffer.create();
+    vertexBuffer.setSubBuffer('POSITION', 3, vertices);
     vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
     vertexBuffer.setSubBuffer('NORMAL', 3, normals);
-    vertexBuffer.create();
+    vertexBuffer.update();
     
     var indices = [];
     for (var y=0; y<yRes-1; y++) {
@@ -856,6 +896,7 @@ VVVV.Nodes.Grid = function(id, graph) {
       }
     }
     mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
+    mesh.update(indices);
       
     meshOut.setValue(0, mesh);
     
@@ -901,7 +942,7 @@ VVVV.Nodes.Sphere = function(id, graph) {
   
     var xRes = parseInt(xIn.getValue(0));
     var yRes = parseInt(yIn.getValue(0));
-    var radius = parseFloat(rIn.getValue(0));
+    var radius = rIn.getValue(0);
       
     var vertices = [];
     var normals = [];
@@ -925,9 +966,11 @@ VVVV.Nodes.Sphere = function(id, graph) {
     }
     
     var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+    vertexBuffer.create();
+    vertexBuffer.setSubBuffer('POSITION', 3, vertices);
     vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
     vertexBuffer.setSubBuffer('NORMAL', 3, normals);
-    vertexBuffer.create();
+    vertexBuffer.update();
     
     var indices = [];
     for (var y=0; y<yRes; y++) {
@@ -944,6 +987,7 @@ VVVV.Nodes.Sphere = function(id, graph) {
       }
     }
     mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
+    mesh.update(indices);
       
     meshOut.setValue(0, mesh);
     
@@ -994,10 +1038,10 @@ VVVV.Nodes.Cylinder = function(id, graph) {
   
     var xRes = parseInt(xIn.getValue(0));
     var yRes = parseInt(yIn.getValue(0));
-    var radius1 = parseFloat(r1In.getValue(0));
-    var radius2 = parseFloat(r2In.getValue(0));
-    var length = parseFloat(lIn.getValue(0));
-    var cycles = parseFloat(cyclesIn.getValue(0));
+    var radius1 = r1In.getValue(0);
+    var radius2 = r2In.getValue(0);
+    var length = lIn.getValue(0);
+    var cycles = cyclesIn.getValue(0);
       
     var vertices = [];
     var normals = [];
@@ -1048,9 +1092,11 @@ VVVV.Nodes.Cylinder = function(id, graph) {
     }
     
     var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+    vertexBuffer.create();
+    vertexBuffer.setSubBuffer('POSITION', 3, vertices);
     vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
     vertexBuffer.setSubBuffer('NORMAL', 3, normals);
-    vertexBuffer.create();
+    vertexBuffer.update();
     
     var indices = [];
     
@@ -1080,6 +1126,7 @@ VVVV.Nodes.Cylinder = function(id, graph) {
     }
     
     mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
+    mesh.update(indices);
       
     meshOut.setValue(0, mesh);
     
@@ -1141,7 +1188,7 @@ VVVV.Nodes.BlendWebGLAdvanced = function(id, graph) {
         renderStates[i] = new VVVV.Types.WebGlRenderState();
       }
       renderStates[i].copy_attributes(renderStateIn.getValue(i));
-      renderStates[i].alphaBlending = parseFloat(alphaBlendingIn.getValue(i))>.5;
+      renderStates[i].alphaBlending = alphaBlendingIn.getValue(i)>.5;
       renderStates[i].srcBlendMode = convertToWebGLBlendFactor(srcModeIn.getValue(i));
       renderStates[i].destBlendMode = convertToWebGLBlendFactor(destModeIn.getValue(i));
       renderStateOut.setValue(i, renderStates[i]);
@@ -1324,9 +1371,9 @@ VVVV.Nodes.ZWriteEnableWebGL = function(id, graph) {
         renderStates[i] = new VVVV.Types.WebGlRenderState();
       }
       renderStates[i].copy_attributes(renderStateIn.getValue(i));
-      renderStates[i].enableZWrite = parseFloat(enableZWriteIn.getValue(i))>.5;
+      renderStates[i].enableZWrite = enableZWriteIn.getValue(i)>.5;
       renderStates[i].depthFunc = convertToWebGLDepthFunc(depthFuncIn.getValue(i));
-      renderStates[i].depthOffset = parseFloat(biasIn.getValue(0));
+      renderStates[i].depthOffset = biasIn.getValue(0);
       renderStateOut.setValue(i, renderStates[i]);
     }
     renderStateOut.setSliceCount(maxSpreadSize);
@@ -1335,6 +1382,56 @@ VVVV.Nodes.ZWriteEnableWebGL = function(id, graph) {
 
 }
 VVVV.Nodes.ZWriteEnableWebGL.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Cull (EX9.RenderState)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.CullWebGL = function(id, graph) {
+  this.constructor(id, "Cull (EX9.RenderState)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
+  var cullingIn = this.addInputPin("Culling", ["None"], VVVV.PinTypes.Enum);
+  cullingIn.enumOptions = ["None", "Clockwise", "Counterclockwise"];
+  
+  var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.WebGlRenderState);
+  
+  var renderStates = [];
+  
+  this.evaluate = function() {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+  
+    for (var i=0; i<maxSpreadSize; i++) {
+      if (renderStates[i]==undefined) {
+        renderStates[i] = new VVVV.Types.WebGlRenderState();
+      }
+      renderStates[i].copy_attributes(renderStateIn.getValue(i));
+      if (cullingIn.getValue(i)=="Clockwise")
+        renderStates[i].cullFace = 'CW';
+      else if (cullingIn.getValue(i)=="Counterclockwise")
+        renderStates[i].cullFace = 'CCW';
+      else
+        renderStates[i].cullFace = undefined;
+      renderStateOut.setValue(i, renderStates[i]);
+    }
+    renderStateOut.setSliceCount(maxSpreadSize);
+    
+  }
+
+}
+VVVV.Nodes.CullWebGL.prototype = new VVVV.Core.Node();
 
 
 /*
@@ -1423,6 +1520,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       p.markPinAsChanged();
     })
     shaderCodeChanged = true;
+    shader.isSetup = false;
     this.parentPatch.afterUpdate();
   }
   
@@ -1443,7 +1541,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     
     // add pins
     _(shader.uniformSpecs).each(function(u) {
-      if (u.semantic=="VIEW" || u.semantic=="PROJECTION" || u.semantic=="WORLD")
+      if (u.semantic=="VIEW" || u.semantic=="PROJECTION" || u.semantic=="WORLD" || u.semantic=="VIEWPROJECTION" || u.semantic=="WORLDVIEW" || u.semantic=="WORLDVIEWPROJECTION")
         return;
       var pinType = VVVV.PinTypes.Value;
       var defaultValue = [];
@@ -1458,7 +1556,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
         default:
           if (u.semantic == 'COLOR') {
             pinType = VVVV.PinTypes.Color;
-            defaultValue = ['1.0, 1.0, 1.0, 1.0'];
+            defaultValue = [new VVVV.Types.Color('1.0, 1.0, 1.0, 1.0')];
           }
           else
             defaultValue = [0.0];
@@ -1466,7 +1564,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
             if (u.semantic != 'COLOR')
               defaultValue = _(u.defaultValue.split(',')).map(function(e) { return parseFloat(e); });
             else
-              defaultValue = [u.defaultValue];
+              defaultValue = [new VVVV.Types.Color(u.defaultValue)];
           }
           
       }
@@ -1474,13 +1572,20 @@ VVVV.Nodes.GenericShader = function(id, graph) {
         if (shaderPins[i].pinname==u.varname.replace(/_/g,' ')) {
           shaderPins[i].dimensions = u.dimension;
           if (shaderPins[i].unvalidated && !shaderPins[i].isConnected())
-            shaderPins[i].values = thatNode.defaultPinValues[shaderPins[i].pinname] ? thatNode.defaultPinValues[shaderPins[i].pinname].slice() : defaultValue;
+            if (pinType.typeName=='Color')
+              shaderPins[i].values = thatNode.defaultPinValues[shaderPins[i].pinname] ? _(thatNode.defaultPinValues[shaderPins[i].pinname]).map(function(v) { return new VVVV.Types.Color(v) }) : defaultValue;
+            else
+              shaderPins[i].values = thatNode.defaultPinValues[shaderPins[i].pinname] ? thatNode.defaultPinValues[shaderPins[i].pinname].slice() : defaultValue;
           // pin type change
           if (shaderPins[i].typeName!=pinType.typeName) {
             var values = shaderPins[i].values.slice();
+            var sliceCount = shaderPins[i].getSliceCount();
             shaderPins[i].setType(pinType);
-            if (shaderPins[i].unvalidated && pinType.primitive && !shaderPins[i].isConnected())
+            // restore values, as setType reset it to default
+            if (shaderPins[i].unvalidated && pinType.primitive && !shaderPins[i].isConnected()) {
               shaderPins[i].values = values;
+              shaderPins[i].setSliceCount(sliceCount);
+            }
             if (shaderPins[i].isConnected() && !shaderPins[i].unvalidated) {
               shaderPins[i].connectionChanged();
               shaderPins[i].links[0].destroy();
@@ -1600,8 +1705,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
         for (var j=0; j<maxSize; j++) {
           if (shader.uniformSpecs[pinname].type=='vec') {
             if (shader.uniformSpecs[pinname].semantic=='COLOR') {
-              var rgba = _(shaderPins[i].getValue(j).split(',')).map(function(x) { return parseFloat(x) });
-              layers[j].uniforms[pinname].value = new Float32Array(rgba);
+              layers[j].uniforms[pinname].value = shaderPins[i].getValue(j).rgba;
             }
             else {
               var arr = shaderPins[i].getValue(j, shaderPins[i].dimensions);
@@ -1678,7 +1782,7 @@ VVVV.Nodes.Quad = function(id, graph) {
   this.addInputPin("Transform", [], VVVV.PinTypes.Transform);
   this.addInputPin("Texture", [], VVVV.PinTypes.WebGlTexture);
   this.addInputPin("Texture Transform", [], VVVV.PinTypes.Transform);
-  this.addInputPin("Color", ["1.0, 1.0, 1.0, 1.0"], VVVV.PinTypes.Color);
+  this.addInputPin("Color", [], VVVV.PinTypes.Color);
   
   var layerOut = this.addOutputPin("Layer", [], VVVV.PinTypes.WebGlResource);
   
@@ -1711,9 +1815,12 @@ VVVV.Nodes.Quad = function(id, graph) {
       ];
       
       var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
-      vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
       vertexBuffer.create();
+      vertexBuffer.setSubBuffer('POSITION', 3, vertices);
+      vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
+      vertexBuffer.update();
       mesh = new VVVV.Types.Mesh(gl, vertexBuffer, [ 0, 1, 2, 1, 3, 2 ]);
+      mesh.update([ 0, 1, 2, 1, 3, 2 ]);
       
       // shaders
   
@@ -1758,8 +1865,8 @@ VVVV.Nodes.Quad = function(id, graph) {
     if (colorChanged || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
         var color = this.inputPins["Color"].getValue(i);
-        var rgba = _(color.split(',')).map(function(x) { return parseFloat(x) });
-        layers[i].uniforms['col'].value = new Float32Array(rgba);
+        //var rgba = _(color.split(',')).map(function(x) { return parseFloat(x) });
+        layers[i].uniforms['col'].value = color.rgba;
       }
     }
     
@@ -1829,7 +1936,7 @@ VVVV.Nodes.GridSegment = function(id, graph) {
   this.addInputPin("Transform", [], VVVV.PinTypes.Transform);
   this.addInputPin("Texture", [], VVVV.PinTypes.WebGlTexture);
   this.addInputPin("Texture Transform", [], VVVV.PinTypes.Transform);
-  this.addInputPin("Color", ["1.0, 1.0, 1.0, 1.0"], VVVV.PinTypes.Color);
+  this.addInputPin("Color", [], VVVV.PinTypes.Color);
 
   var cyclesIn = this.addInputPin("Cycles", [1], VVVV.PinTypes.Value);
   var radiusIn = this.addInputPin("Inner Radius", [0], VVVV.PinTypes.Value);
@@ -1913,6 +2020,8 @@ VVVV.Nodes.GridSegment = function(id, graph) {
       }
       
       var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+      vertexBuffer.create();
+      vertexBuffer.setSubBuffer('POSITION', 3, vertices);
       vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
       vertexBuffer.setSubBuffer('NORMAL', 3, normals);
       vertexBuffer.create();
@@ -1932,6 +2041,7 @@ VVVV.Nodes.GridSegment = function(id, graph) {
       }
 
       layers[j].mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
+      layers[j].mesh.update(indices);
       layers[j].shader = shader;
       
       _(shader.uniformSpecs).each(function(u) {
@@ -1948,8 +2058,7 @@ VVVV.Nodes.GridSegment = function(id, graph) {
     if (colorChanged || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
         var color = this.inputPins["Color"].getValue(i);
-        var rgba = _(color.split(',')).map(function(x) { return parseFloat(x) });
-        layers[i].uniforms['col'].value = new Float32Array(rgba);
+        layers[i].uniforms['col'].value = color.rgba;
       }
     }
     
@@ -2069,7 +2178,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   
   this.addInputPin("Layers", [], VVVV.PinTypes.WebGlResource);
   var clearIn = this.addInputPin("Clear", [1], VVVV.PinTypes.Value);
-  var bgColIn = this.addInputPin("Background Color", ['0.0, 0.0, 0.0, 1.0'], VVVV.PinTypes.Color);
+  var bgColIn = this.addInputPin("Background Color", [new VVVV.Types.Color("0.0, 0.0, 0.0, 1.0")], VVVV.PinTypes.Color);
   var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], VVVV.PinTypes.Value);
   var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], VVVV.PinTypes.Value);
   var viewIn = this.addInputPin("View", [], VVVV.PinTypes.Transform);
@@ -2087,6 +2196,9 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   
   var pMatrix;
   var vMatrix;
+  var vpMatrix;
+  var wvMatrix = mat4.create();
+  var wvpMatrix = mat4.create();
   
   var canvas;
   this.ctxt = undefined;              // the renderer's active context. might be the canvas context, or the context of a connected downstream renderer
@@ -2184,7 +2296,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
 
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, bbufFramebuffer.width, bbufFramebuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, bbufFramebuffer.width, bbufFramebuffer.height, 0, gl.RGBA, gl.UNSIGNED_SHORT_4_4_4_4, null);
       gl.generateMipmap(gl.TEXTURE_2D);
 
       var renderbuffer = gl.createRenderbuffer();
@@ -2304,16 +2416,14 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
     
-    if (bgColIn.pinIsChanged()) {
-      var col = _(bgColIn.getValue(0).split(',')).map(function(e) {
-        return parseFloat(e);
-      });
-      gl.clearColor(col[0], col[1], col[2], col[3]);
+    if (this.contextChanged || bgColIn.pinIsChanged()) {
+      var col = bgColIn.getValue(0);
+      gl.clearColor(col.rgba[0], col.rgba[1], col.rgba[2], col.rgba[3]);
     }
     
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
-    if (true) {
+    if (this.contextChanged || enableDepthBufIn.pinIsChanged()) {
       if (enableDepthBufIn.getValue(0)=='NONE')
         gl.disable(gl.DEPTH_TEST);
       else
@@ -2333,9 +2443,13 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       }
       if (this.renderContexts && this.renderContexts[0]) // flip the output texture, if connected to downstream renderer
         mat4.scale(pMatrix, [1, -1, 1]);
+      vpMatrix = mat4.create();
     }
     if (viewIn.pinIsChanged()) {
       vMatrix = viewIn.getValue(0);
+    }
+    if (viewIn.pinIsChanged() || projIn.pinIsChanged()) {
+      mat4.multiply(pMatrix, vMatrix, vpMatrix);
     }
     
     if (this.contextChanged) { // don't render anything, if the context changed in this frame. will only give warnings...
@@ -2361,7 +2475,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
           gl.useProgram(layer.shader.shaderProgram);
           gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["PROJECTION"]].position, false, pMatrix);
           gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEW"]].position, false, vMatrix);
-          
+          if (layer.shader.uniformSemanticMap["VIEWPROJECTION"])
+            gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEWPROJECTION"]].position, false, vpMatrix);
         }
         
         var renderState = layer.renderState;
@@ -2381,6 +2496,11 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
           
           gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
         }
+        
+        /*if (layer.shader.uniformSemanticMap["WORLDVIEWPROJECTION"]) {
+          mat4.multiply(vpMatrix, layer.uniforms[layer.shader.uniformSemanticMap["WORLDVIEWPROJECTION"]].value, wvpMatrix);
+          gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["WORLDVIEWPROJECTION"]].position, false, wvpMatrix);
+        } */ 
         
         var uniformCount = layer.uniformNames.length;
         var textureIdx = 0;
@@ -2439,6 +2559,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     }
     
     ex9Out.setValue(0, bbufTexture);
+    
+    this.contextChanged = false;
   }
 
 }
@@ -2500,7 +2622,7 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
   }
   
   this.openUIWindow = function() {
-    w = window.open("code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
+    w = window.open(VVVV.Root+"/code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
     var thatNode = this;
     window.setTimeout(function() {
       w.document.title = currentName+" / VVVV.js Effect Editor";

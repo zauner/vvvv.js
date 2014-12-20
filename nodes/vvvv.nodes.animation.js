@@ -49,11 +49,11 @@ VVVV.Nodes.LFO = function(id, graph) {
 
     for (var i=0; i<maxSize; i++) {
 
-      var period = PeriodIn.getValue(i % PeriodIn.values.length);
-      var paused = PauseIn.getValue(i % PauseIn.values.length);
-      var reverse = ReverseIn.getValue(i % ReverseIn.values.length);
-      var reset = ResetIn.getValue(i % ResetIn.values.length);
-      var phase = PhaseIn.getValue(i % PhaseIn.values.length);
+      var period = PeriodIn.getValue(i);
+      var paused = PauseIn.getValue(i);
+      var reverse = ReverseIn.getValue(i);
+      var reset = ResetIn.getValue(i);
+      var phase = PhaseIn.getValue(i);
 
       var change = 0;
 
@@ -155,8 +155,8 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
         lastUpdate[i] = new Date().getTime();
       var dt = this.parentPatch.mainloop.deltaT; //new Date().getTime()-lastUpdate[i];
         
-      var pos = parseFloat(positionIn.getValue(i));
-      var filterTime = parseFloat(filterTimeIn.getValue(i));
+      var pos = positionIn.getValue(i);
+      var filterTime = filterTimeIn.getValue(i);
       
       if (currPos[i]==undefined)
         currPos[i] = pos;
@@ -246,8 +246,8 @@ VVVV.Nodes.Damper = function(id, graph) {
         lastUpdate[i] = new Date().getTime();
       var dt = this.parentPatch.mainloop.deltaT; //new Date().getTime()-lastUpdate[i];
         
-      var pos = parseFloat(positionIn.getValue(i));
-      var filterTime = parseFloat(filterTimeIn.getValue(i));
+      var pos = positionIn.getValue(i);
+      var filterTime = filterTimeIn.getValue(i);
       
       if (currPos[i]==undefined)
         currPos[i] = pos;
@@ -605,7 +605,7 @@ VVVV.Nodes.MonoFlop = function(id, graph) {
           buffer[i] = 0;
         }
         
-        if (buffer[i] >= parseFloat(timeIn.getValue(i)) || (resetIn.getValue(i) == 1)) {
+        if (buffer[i] >= timeIn.getValue(i) || (resetIn.getValue(i) == 1)) {
           buffer[i] = 0.0;
           outputOut.setValue(i, 0);
           inverseOutputOut.setValue(i, 1);
@@ -768,7 +768,7 @@ VVVV.Nodes.Toggle = function(id, graph) {
       if (Math.round(resetIn.getValue(i))>=1)
         result = 0;
       if (Math.round(inputIn.getValue(i))>=1)
-        result = 1 - parseFloat(outputOut.getValue(i));
+        result = 1 - outputOut.getValue(i);
       if (result!=undefined && outputOut.getValue(i)!=result) {
         outputOut.setValue(i, result);
         inverseOutputOut.setValue(i, 1-result);
@@ -843,10 +843,10 @@ VVVV.Nodes.Counter = function(id, graph) {
     if(doCount)
     {
       for(var i=0; i<maxSize; i++) {
-        var incr = parseFloat(incrIn.getValue(i));
-        var output = i>=outputOut.getSliceCount() ? 0.0 : parseFloat(outputOut.getValue(i));
-        var max = parseFloat(maxIn.getValue(i));
-        var min = parseFloat(minIn.getValue(i));
+        var incr = incrIn.getValue(i);
+        var output = i>=outputOut.getSliceCount() ? 0.0 : outputOut.getValue(i);
+        var max = maxIn.getValue(i);
+        var min = minIn.getValue(i);
       
         var mode = 0;
         if(modeIn.getValue(i)=='Unlimited') mode=1;

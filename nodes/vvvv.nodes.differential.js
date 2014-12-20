@@ -41,7 +41,7 @@ VVVV.Nodes.Integrate = function(id, graph) {
 
       if (current[i]==undefined) current[i] = 0.0;
 
-      var pos = parseFloat(posIn.getValue(i));
+      var pos = posIn.getValue(i);
       current[i] += pos*dt;
       
       var reset = resetIn.getValue(i);

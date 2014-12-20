@@ -157,9 +157,10 @@ VVVV.Core.DOMInterface = function(patch) {
   }
   
   this.setDOMByIOBox= function(ioboxConn) {
-    if (!ioboxConn.node.IOBoxOutputPin().pinIsChanged())
+    var pin = ioboxConn.node.IOBoxOutputPin();
+    if (!pin.pinIsChanged())
       return;
-    var values = ioboxConn.node.IOBoxInputPin().values;
+    var values = pin.getValue(0, pin.getSliceCount());
     var elemCount = $(ioboxConn.selector).length;
     if (ioboxConn.property_class==undefined) {
       $(ioboxConn.selector).empty();

@@ -38,12 +38,12 @@ VVVV.Nodes.GetSliceSpreads = function(id, graph) {
       res = inputIn.getValue(Math.round(indexIn.getValue(i)), binSize);
       if (binSize>1) {
         for (var j=0; j<res.length; j++) {
-          outputOut.setValue(outIdx, parseFloat(res[j]));
+          outputOut.setValue(outIdx, res[j]);
           outIdx++;
         }
       }
       else {
-        outputOut.setValue(i, parseFloat(res));
+        outputOut.setValue(i, res);
         outIdx++;
       }
     }
@@ -172,8 +172,8 @@ VVVV.Nodes.RandomSpread = function(id, graph) {
 
   this.evaluate = function() {
     var count = parseInt(this.inputPins["Spread Count"].getValue(0));
-    var input = parseFloat(this.inputPins["Input"].getValue(0));
-    var width = parseFloat(this.inputPins["Width"].getValue(0));
+    var input = this.inputPins["Input"].getValue(0);
+    var width = this.inputPins["Width"].getValue(0);
     var randomseed = parseInt(this.inputPins["Random Seed"].getValue(0));
     
     rng = new Rc4Random(randomseed.toString());
@@ -261,9 +261,9 @@ VVVV.Nodes.LinearSpread = function(id, graph) {
     var idx = 0;
     for (var l=0; l<maxSize; l++) {
       var count = parseInt(countIn.getValue(l));
-      var width = parseFloat(widthIn.getValue(l));
-      var phase = parseFloat(phaseIn.getValue(l));
-      var input = parseFloat(inputIn.getValue(l));
+      var width = widthIn.getValue(l);
+      var phase = phaseIn.getValue(l);
+      var input = inputIn.getValue(l);
       var alignment = alignmentIn.getValue(l);
       if (alignment=='')
         alignment = 'Centered';
@@ -321,7 +321,7 @@ VVVV.Nodes.AvoidNil = function(id, graph) {
   this.evaluate = function() {
     if (inputIn.pinIsChanged() || defaultIn.pinIsChanged()) {
       var source = inputIn;
-      if (inputIn.values[0]==undefined) {
+      if (inputIn.getSliceCount()==0) {
         source = defaultIn;
       }
       for (var i=0; i<source.values.length; i++) {
@@ -403,7 +403,7 @@ VVVV.Nodes.I = function(id, graph) {
     for (var s=0; s<maxSize; s++) {
       var from = Math.round(fromIn.getValue(s));
       var to = Math.round(toIn.getValue(s));
-      var phase = parseFloat(phaseIn.getValue(s));
+      var phase = phaseIn.getValue(s);
       var range = to-from;
       var aRange = Math.abs(range);
       if (from<=to) {
@@ -472,13 +472,13 @@ VVVV.Nodes.CircularSpread = function (id, graph) {
     var pCount = 0;
 
     for (var c = 0; c < this.getMaxInputSliceCount(); c++) {
-      var cxi = parseFloat(this.xIn.getValue(c));
-      var cyi = parseFloat(this.yIn.getValue(c));
+      var cxi = this.xIn.getValue(c);
+      var cyi = this.yIn.getValue(c);
 
-      var cw = parseFloat(this.widthIn.getValue(c)) * 0.5;
-      var ch = parseFloat(this.heightIn.getValue(c)) * 0.5;
-      var cf = parseFloat(this.factorIn.getValue(c));
-      var cph = parseFloat(this.phaseIn.getValue(c)) *pi2;
+      var cw = this.widthIn.getValue(c) * 0.5;
+      var ch = this.heightIn.getValue(c) * 0.5;
+      var cf = this.factorIn.getValue(c);
+      var cph = this.phaseIn.getValue(c) *pi2;
 
       var spc = parseInt(this.sprcntIn.getValue(c));
 
@@ -591,11 +591,11 @@ VVVV.Nodes.IntegralSpreads = function(id, graph) {
       var inSize = bins[b];
       binOut.setValue(b,inSize+1);
 
-      var integral = parseFloat(offsetIn.getValue(b));
+      var integral = offsetIn.getValue(b);
       for (var i=0; i<inSize; i++) {
       	outputOut.setValue(outId, integral);
         outId++;
-        integral += parseFloat(inputIn.getValue(inId + i));
+        integral += inputIn.getValue(inId + i);
       }
       inId += inSize;
       outputOut.setValue(outId, integral);
@@ -664,7 +664,7 @@ VVVV.Nodes.DifferentialSpreads = function(id, graph) {
       binOut.setValue(b,size);
       offsetOut.setValue(b,last);
       for (var i=0; i<size; i++) {
-        var input = parseFloat(inputIn.getValue(inId + i+1));
+        var input = inputIn.getValue(inId + i+1);
         outputOut.setValue(outId, input-last);
         last = input;
         outId++;
@@ -819,6 +819,9 @@ VVVV.Nodes.QueueSpreads = function(id, graph) {
 
   var outputOut = this.addOutputPin('Output', [], VVVV.PinTypes.Value);
   var outputbinsizeOut = this.addOutputPin('Output Bin Size', [], VVVV.PinTypes.Value);
+  
+  var output = [];
+  var binsizes = [];
 
   this.evaluate = function() {
     var insert = insertIn.getValue(0);
@@ -829,30 +832,33 @@ VVVV.Nodes.QueueSpreads = function(id, graph) {
     if (insert>=0.5 && reset<0.5) {
       var newSize = inputIn.getSliceCount();
       for (var i=newSize-1; i>=0; i--) {
-        outputOut.values.unshift(inputIn.getValue(i));
+        output.unshift(inputIn.getValue(i));
       }
-      outputbinsizeOut.values.unshift(newSize);
+      binsizes.unshift(newSize);
       
       changed = true;
     }
     
     if (framecountIn.pinIsChanged() || changed) {
-      currFrameCount = outputbinsizeOut.values.length;
+      currFrameCount = binsizes.length;
       for (var i=currFrameCount; i>framecount; i--) {
-        outputOut.values.splice(-outputbinsizeOut.values[i-1])
+        output.splice(-binsizes[i-1])
       }
-      outputbinsizeOut.values.splice(framecount);
+      binsizes.splice(framecount);
       
       changed = true;
     }
     
     if (changed) {
-      for (var i=0; i<outputOut.values.length; i++) {
-        outputOut.setValue(i, outputOut.values[i]);
+      for (var i=0; i<output.length; i++) {
+        outputOut.setValue(i, output[i]);
       }
-      for (var i=0; i<outputbinsizeOut.values.length; i++) {
-        outputbinsizeOut.setValue(i, outputbinsizeOut.values[i]);
-      } 
+      for (var i=0; i<binsizes.length; i++) {
+        outputbinsizeOut.setValue(i, binsizes[i]);
+      }
+      
+      outputOut.setSliceCount(output.length);
+      outputOut.setSliceCount(binsizes.length);
     }
     
     if (reset>=0.5) {

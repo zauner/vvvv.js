@@ -205,12 +205,15 @@ VVVV.Core = {
      */
     this.setValue = function(i, v) {
       if (this.direction==VVVV.PinDirection.Output || !this.isConnected()) {
+        if (this.typeName[0]=='V')
+          this.values[i] = parseFloat(v);
+        else
+          this.values[i] = v;
         if (!this.primitive || this.values[i]!=v)
           this.markPinAsChanged();
-        this.values[i] = v;
       }
       
-      if (this.node.isIOBox && this.pinname=='Descriptive Name') {
+      if (this.node.isIOBox && this.pinname=='Descriptive Name' && this.node.invisiblePins["Descriptive Name"]) {
         if (this.node.parentPatch.domInterface)
           this.node.parentPatch.domInterface.connect(this.node);
         else if (this.node.parentPatch.parentPatch)
@@ -249,6 +252,7 @@ VVVV.Core = {
     
     this.disconnect = function() {
       this.values = this.values.slice(0);
+      this.markPinAsChanged();
     }
     
     /**
@@ -311,8 +315,10 @@ VVVV.Core = {
     this.setType(type);
     
     if (init_values && init_values.length>0) { // override PinType's default value with values from constructor, if it isn't []
-      this.values = init_values.slice(0); // use slice(0) to create a copy of the array
-      this.values.changed = true;
+      var i = init_values.length;
+      while (i--) {
+        this.setValue(i, init_values[i]);
+      }
     }
     
     this.reset = function() {
@@ -322,8 +328,10 @@ VVVV.Core = {
         this.setValue(0, this.defaultValue());
         this.setSliceCount(1);
       }
-      else
+      else {
         this.values = init_values.slice(0);
+        this.values.changed = true;
+      }
       this.markPinAsChanged();
     }
     
@@ -408,6 +416,7 @@ VVVV.Core = {
      * @return {VVVV.Core.Pin} the new {@link VVVV.Core.Pin}
      */
     this.addInputPin = function(pinname, value, type) {
+      type = type || VVVV.PinTypes.Generic;
       var pin = new VVVV.Core.Pin(pinname,VVVV.PinDirection.Input, value, this, type);
       this.inputPins[pinname] = pin;
       if (this.parentPatch)
@@ -424,6 +433,7 @@ VVVV.Core = {
      * @return {VVVV.Core.Pin} the new {@link VVVV.Core.Pin}
      */
     this.addOutputPin = function(pinname, value, type) {
+      type = type || VVVV.PinTypes.Generic;
       var pin = new VVVV.Core.Pin(pinname,VVVV.PinDirection.Output, value, this, type);
       this.outputPins[pinname] = pin;
       if (this.parentPatch)
@@ -471,6 +481,7 @@ VVVV.Core = {
      * @return {VVVV.Core.Pin} the new {@link VVVV.Core.Pin}
      */
     this.addInvisiblePin = function(pinname, value, type) {
+      type = type || VVVV.PinTypes.Generic;
       var pin = new VVVV.Core.Pin(pinname,VVVV.PinDirection.Configuration, value, this, type);
       this.invisiblePins[pinname] = pin;
       this.parentPatch.pinMap[this.id+'_inv_'+pinname] = pin;
@@ -714,8 +725,14 @@ VVVV.Core = {
         // this should not override the default value set by the node with ""
         if (!pin.reset_on_disconnect || values.length>1 || values[0]!="") {
           for (var i=0; i<values.length; i++) {
-            if (pin.values[i]!=values[i])
-              pin.setValue(i, values[i]);
+            if (pin.values[i]!=values[i]) {
+              if (pin.typeName=="Color")
+                pin.setValue(i, new VVVV.Types.Color(values[i]));
+              else if(pin.typeName=="Value")
+                pin.setValue(i, parseFloat(values[i]));
+              else
+                pin.setValue(i, values[i]);
+            }
           }
           pin.setSliceCount(values.length);
         }
@@ -941,11 +958,15 @@ VVVV.Core = {
       this.toPin.links.splice(this.toPin.links.indexOf(this), 1);
       this.fromPin.node.parentPatch.linkList.splice(this.fromPin.node.parentPatch.linkList.indexOf(this),1);
       
+      this.toPin.disconnect();
       if (this.toPin.reset_on_disconnect)
         this.toPin.reset();
       else {
-        this.toPin.disconnect();
-        this.toPin.node.defaultPinValues[this.toPin.pinname] = this.toPin.values.slice(0);
+        this.toPin.node.defaultPinValues[this.toPin.pinname] = [];
+        var i = this.toPin.getSliceCount();
+        while (i--) {
+          this.toPin.node.defaultPinValues[this.toPin.pinname][i] = this.toPin.values[i];
+        }
       }
     }
     
@@ -1173,6 +1194,7 @@ VVVV.Core = {
                 if (VVVV.LoadedLibs[libname]===undefined)
                   VVVV.loadScript(VVVV.ThirdPartyLibs[libname], function() {
                     thisPatch.resourcesPending--; // resume patch evaluation
+                    VVVV.LoadedLibs[libname]=VVVV.ThirdPartyLibs[libname];
                   });
               });
             }

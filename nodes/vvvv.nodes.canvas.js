@@ -8,8 +8,8 @@
 VVVV.Types.CanvasTexture = { imageObject: undefined, loaded: false };
 
 VVVV.Types.CanvasRenderState = function() {
-  this.fillColor = [1.0, 1.0, 1.0, 1.0];
-  this.strokeColor = [0.0, 0.0, 0.0, 0.0];
+  this.fillColor = new VVVV.Types.Color("1,1,1,1");
+  this.strokeColor = new VVVV.Types.Color("0,0,0,0");
   this.lineWidth = 1.0;
   this.capStyle = 'butt';
   this.joinStyle = 'miter';
@@ -17,12 +17,12 @@ VVVV.Types.CanvasRenderState = function() {
   this.shadowOffsetX = 0.0;
   this.shadowOffsetY = 0.0;
   this.shadowBlur = 0.0;
-  this.shadowColor = [0.0, 0.0, 0.0, 1.0];
+  this.shadowColor = new VVVV.Types.Color("0,0,0,1");
   this.blendMode = 'source-over';
   
   this.copy_attributes = function(other) {
-    this.fillColor = other.fillColor;
-    this.strokeColor = other.strokeColor;
+    other.fillColor.copy_to(this.fillColor);
+    other.strokeColor.copy_to(this.strokeColor);
     this.lineWidth = other.lineWidth;
     this.capStyle = other.capStyle;
     this.joinStyle = other.joinStyle;
@@ -30,7 +30,7 @@ VVVV.Types.CanvasRenderState = function() {
     this.shadowOffsetX = other.shadowOffsetX;
     this.shadowOffsetY = other.shadowOffsetY;
     this.shadowBlur = other.shadowBlur;
-    this.shadowColor = other.shadowColor;
+    other.shadowColor.copy_to(this.shadowColor);
     this.blendMode = other.blendMode;
   }
   
@@ -42,21 +42,21 @@ VVVV.Types.CanvasRenderState = function() {
       var numStops = Math.max(this.gradient.colors.length, this.gradient.colorPositions.length);
       for (var i=0; i<numStops; i++) {
         var color = this.gradient.colors[i];
-        g.addColorStop(this.gradient.colorPositions[i], 'rgba('+parseInt(color[0]*255)+','+parseInt(color[1]*255)+','+parseInt(color[2]*255)+','+color[3]+')');
+        g.addColorStop(this.gradient.colorPositions[i], 'rgba('+parseInt(color.rgba[0]*255)+','+parseInt(color.rgba[1]*255)+','+parseInt(color.rgba[2]*255)+','+color.rgba[3]+')');
       }
       ctx.fillStyle = g;
     }
     else
-      ctx.fillStyle = 'rgba('+parseInt(this.fillColor[0]*255)+','+parseInt(this.fillColor[1]*255)+','+parseInt(this.fillColor[2]*255)+','+this.fillColor[3]+')';
+      ctx.fillStyle = 'rgba('+parseInt(this.fillColor.rgba[0]*255)+','+parseInt(this.fillColor.rgba[1]*255)+','+parseInt(this.fillColor.rgba[2]*255)+','+this.fillColor.rgba[3]+')';
      
-    ctx.strokeStyle = 'rgba('+parseInt(this.strokeColor[0]*255)+','+parseInt(this.strokeColor[1]*255)+','+parseInt(this.strokeColor[2]*255)+','+this.strokeColor[3]+')';
+    ctx.strokeStyle = 'rgba('+parseInt(this.strokeColor.rgba[0]*255)+','+parseInt(this.strokeColor.rgba[1]*255)+','+parseInt(this.strokeColor.rgba[2]*255)+','+this.strokeColor.rgba[3]+')';
     ctx.lineWidth = this.lineWidth/ctx.canvas.height;
     ctx.lineCap = this.capStyle;
     ctx.lineJoin = this.joinStyle;
     ctx.shadowOffsetX = this.shadowOffsetX;
     ctx.shadowOffsetY = this.shadowOffsetY;
     ctx.shadowBlur = this.shadowBlur;
-    ctx.shadowColor = 'rgba('+parseInt(this.shadowColor[0]*255)+','+parseInt(this.shadowColor[1]*255)+','+parseInt(this.shadowColor[2]*255)+','+this.shadowColor[3]+')';
+    ctx.shadowColor = 'rgba('+parseInt(this.shadowColor.rgba[0]*255)+','+parseInt(this.shadowColor[1]*255)+','+parseInt(this.shadowColor[2]*255)+','+this.shadowColor[3]+')';
     ctx.globalCompositeOperation = this.blendMode;
   }
 }
@@ -99,7 +99,7 @@ VVVV.Nodes.FillCanvas = function(id, graph) {
   };
   
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
-  var colorIn = this.addInputPin("Color", ['1.0, 1.0, 1.0, 1.0'], VVVV.PinTypes.Color);
+  var colorIn = this.addInputPin("Color", [new VVVV.Types.Color('1.0, 1.0, 1.0, 1.0')], VVVV.PinTypes.Color);
   
   var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.CanvasRenderState);
   
@@ -113,7 +113,7 @@ VVVV.Nodes.FillCanvas = function(id, graph) {
         renderStates[i] = new VVVV.Types.CanvasRenderState();
       }
       renderStates[i].copy_attributes(renderStateIn.getValue(i));
-      renderStates[i].fillColor = colorIn.getValue(i).split(',');
+      colorIn.getValue(i).copy_to(renderStates[i].fillColor);
       renderStateOut.setValue(i, renderStates[i]);
     }
     renderStateOut.setSliceCount(maxSpreadSize);
@@ -140,7 +140,7 @@ VVVV.Nodes.StrokeCanvas = function(id, graph) {
   };
   
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
-  var colorIn = this.addInputPin("Color", ['1.0, 1.0, 1.0, 1.0'], VVVV.PinTypes.Color);
+  var colorIn = this.addInputPin("Color", [new VVVV.Types.Color('1.0, 1.0, 1.0, 1.0')], VVVV.PinTypes.Color);
   var lineWidthIn = this.addInputPin("Width", [1.0], VVVV.PinTypes.Value);
   var capStyleIn = this.addInputPin("Cap Style", ['butt'], VVVV.PinTypes.Enum);
   capStyleIn.enumOptions = ['butt', 'round', 'square'];
@@ -160,7 +160,7 @@ VVVV.Nodes.StrokeCanvas = function(id, graph) {
       }
       renderStates[i].copy_attributes(renderStateIn.getValue(i));
 
-      renderStates[i].strokeColor = colorIn.getValue(i).split(',');
+      colorIn.getValue(i).copy_to(renderStates[i].strokeColor);
       renderStates[i].lineWidth = lineWidthIn.getValue(i);
       renderStates[i].capStyle = capStyleIn.getValue(i);
       renderStates[i].joinStyle = joinStyleIn.getValue(i);
@@ -190,7 +190,7 @@ VVVV.Nodes.ShadowCanvas = function(id, graph) {
   };
   
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
-  var colorIn = this.addInputPin("Color", ['0.0, 0.0, 0.0, 1.0'], VVVV.PinTypes.Color);
+  var colorIn = this.addInputPin("Color", [new VVVV.Types.Color('0.0, 0.0, 0.0, 1.0')], VVVV.PinTypes.Color);
   var xOffsetIn = this.addInputPin("Offset X", [0.0], VVVV.PinTypes.Value);
   var yOffsetIn = this.addInputPin("Offset Y", [0.0], VVVV.PinTypes.Value);
   var blurIn = this.addInputPin("Blur", [0.0], VVVV.PinTypes.Value);
@@ -210,7 +210,7 @@ VVVV.Nodes.ShadowCanvas = function(id, graph) {
       renderStates[i].shadowOffsetX = xOffsetIn.getValue(i);
       renderStates[i].shadowOffsetY = yOffsetIn.getValue(i);
       renderStates[i].shadowBlur = blurIn.getValue(i);
-      renderStates[i].shadowColor = colorIn.getValue(i).split(',');
+      colorIn.getValue(i).copy_to(renderStates[i].shadowColor);
       renderStateOut.setValue(i, renderStates[i]);
     }
     renderStateOut.setSliceCount(maxSpreadSize);
@@ -283,7 +283,7 @@ VVVV.Nodes.LinearGradientCanvas = function(id, graph) {
   var startYIn = this.addInputPin("Start Y", [0.0], VVVV.PinTypes.Value);
   var endXIn = this.addInputPin("End X", [0.0], VVVV.PinTypes.Value);
   var endYIn = this.addInputPin("End Y", [0.0], VVVV.PinTypes.Value);
-  var colorsIn = this.addInputPin("Colors", ['1.0, 1.0, 1.0, 1.0', '0.0, 0.0, 0.0, 1.0'], VVVV.PinTypes.Color);
+  var colorsIn = this.addInputPin("Colors", [new VVVV.Types.Color('1.0, 1.0, 1.0, 1.0'), new VVVV.Types.Color('0.0, 0.0, 0.0, 1.0')], VVVV.PinTypes.Color);
   var colorPositionsIn = this.addInputPin("Color Positions", [0.0, 1.0], VVVV.PinTypes.Value);
   
   var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.CanvasRenderState);
@@ -291,10 +291,10 @@ VVVV.Nodes.LinearGradientCanvas = function(id, graph) {
   var renderStates = [];
   
   this.evaluate = function() {
-    var maxSpreadSize = Math.max(renderStateIn.values.length, startXIn.values.length);
-    maxSpreadSize = Math.max(maxSpreadSize, startYIn.values.length);
-    maxSpreadSize = Math.max(maxSpreadSize, endXIn.values.length);
-    maxSpreadSize = Math.max(maxSpreadSize, endYIn.values.length);
+    var maxSpreadSize = Math.max(renderStateIn.getSliceCount(), startXIn.getSliceCount());
+    maxSpreadSize = Math.max(maxSpreadSize, startYIn.getSliceCount());
+    maxSpreadSize = Math.max(maxSpreadSize, endXIn.getSliceCount());
+    maxSpreadSize = Math.max(maxSpreadSize, endYIn.getSliceCount());
       
     for (var i=0; i<maxSpreadSize; i++) {
       if (renderStates[i]==undefined) {
@@ -308,9 +308,9 @@ VVVV.Nodes.LinearGradientCanvas = function(id, graph) {
       renderStates[i].gradient.endY = endYIn.getValue(i);
       renderStates[i].gradient.colors = [];
       renderStates[i].gradient.colorPositions = [];
-      var numStops = Math.max(colorsIn.values.length, colorPositionsIn.values.length);
+      var numStops = Math.max(colorsIn.getSliceCount(), colorPositionsIn.getSliceCount());
       for (var j=0; j<numStops; j++) {
-        renderStates[i].gradient.colors.push(colorsIn.getValue(j).split(','));
+        renderStates[i].gradient.colors.push(colorsIn.getValue(j));
         renderStates[i].gradient.colorPositions.push(colorPositionsIn.getValue(j));
       }
       renderStateOut.setValue(i, renderStates[i]);
@@ -384,9 +384,9 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
         ctx.moveTo(Math.cos(this.endAngle) * this.radius, Math.sin(this.endAngle) * this.radius);
         ctx.lineTo(0, 0);
       }
-      if (this.renderState.fillColor[3]>0)
+      if (this.renderState.fillColor.rgba[3]>0)
         ctx.fill();
-      if (this.renderState.strokeColor[3]>0)
+      if (this.renderState.strokeColor.rgba[3]>0)
         ctx.stroke();
       if (this.clippingLayer)
         ctx.restore();
@@ -402,9 +402,9 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
         if (layers[i]==undefined)
           layers[i] = new Arc();
         layers[i].transform = transformIn.getValue(i);
-        layers[i].radius = parseFloat(radiusIn.getValue(i));
-        layers[i].startAngle = parseFloat(startAngleIn.getValue(i))*Math.PI*2;
-        layers[i].endAngle = parseFloat(endAngleIn.getValue(i))*Math.PI*2;
+        layers[i].radius = radiusIn.getValue(i);
+        layers[i].startAngle = startAngleIn.getValue(i)*Math.PI*2;
+        layers[i].endAngle = endAngleIn.getValue(i)*Math.PI*2;
         layers[i].renderState = renderStateIn.getValue(i);
         layers[i].drawSegment = segmentIn.getValue(i)==1;
         if (clippingLayerIn.isConnected())
@@ -490,9 +490,9 @@ VVVV.Nodes.RectangleCanvas = function(id, graph) {
       ctx.lineTo(outer_left, inner_bottom);
       ctx.arc(inner_left, inner_bottom, this.cornerRadius, Math.PI, 1.5 * Math.PI, false);
       ctx.closePath();
-      if (this.renderState.fillColor[3]>0)
+      if (this.renderState.fillColor.rgba[3]>0)
         ctx.fill();
-      if (this.renderState.strokeColor[3]>0)
+      if (this.renderState.strokeColor.rgba[3]>0)
         ctx.stroke();
       if (this.clippingLayer)
         ctx.restore();
@@ -589,9 +589,9 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
         this.renderState.apply(ctx);
       else
         invisibleRenderState.apply(ctx);
-      if (this.renderState.fillColor[3]>0)
+      if (this.renderState.fillColor.rgba[3]>0)
         ctx.fillText(this.text, 0, 0);
-      if (this.renderState.strokeColor[3]>0)
+      if (this.renderState.strokeColor.rgba[3]>0)
         ctx.strokeText(this.text, 0, 0);
       ctx.restore();
       if (this.clippingLayer)
@@ -703,9 +703,9 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
           this.y[i]
         );
       }
-      if (this.renderState.fillColor[3]>0)
+      if (this.renderState.fillColor.rgba[3]>0)
         ctx.fill();
-      if (this.renderState.strokeColor[3]>0)
+      if (this.renderState.strokeColor.rgba[3]>0)
         ctx.stroke();
         
       if (this.clippingLayer)
@@ -740,12 +740,12 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
           if (clippingLayerIn.isConnected())
             layers[binNum].clippingLayer = clippingLayerIn.getValue(binNum);
         }
-        layers[binNum].x[subIndex] = parseFloat(xIn.getValue(j));
-        layers[binNum].y[subIndex] = parseFloat(yIn.getValue(j));
-        layers[binNum].c1x[subIndex] = parseFloat(control1XIn.getValue(j));
-        layers[binNum].c1y[subIndex] = parseFloat(control1YIn.getValue(j));
-        layers[binNum].c2x[subIndex] = parseFloat(control2XIn.getValue(j));
-        layers[binNum].c2y[subIndex] = parseFloat(control2YIn.getValue(j));
+        layers[binNum].x[subIndex] = xIn.getValue(j);
+        layers[binNum].y[subIndex] = yIn.getValue(j);
+        layers[binNum].c1x[subIndex] = control1XIn.getValue(j);
+        layers[binNum].c1y[subIndex] = control1YIn.getValue(j);
+        layers[binNum].c2x[subIndex] = control2XIn.getValue(j);
+        layers[binNum].c2y[subIndex] = control2YIn.getValue(j);
         
         subIndex++;
         if (binSizeIn.getValue(0)>0 && subIndex>=binSizeIn.getValue(binNum)) {
@@ -796,7 +796,7 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
   var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
   var clippingLayerIn = this.addInputPin('Clipping Layer', [], VVVV.PinTypes.CanvasLayer);
   var textureIn = this.addInputPin('Texture', [], VVVV.PinTypes.HTML5Texture);
-  var colorIn = this.addInputPin('Color', ['1.0, 1.0, 1.0, 1.0'], VVVV.PinTypes.Color);
+  var colorIn = this.addInputPin('Color', [new VVVV.Types.Color('1.0, 1.0, 1.0, 1.0')], VVVV.PinTypes.Color);
   
   var layersOut = this.addOutputPin('Layer', [], VVVV.PinTypes.CanvasLayer);
   
@@ -837,7 +837,7 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
         }
       }
       else {
-        ctx.fillStyle = 'rgba('+parseInt(this.color[0]*255)+', '+parseInt(this.color[1]*255)+', '+parseInt(this.color[2]*255)+', '+this.color[3]+')';
+        ctx.fillStyle = 'rgba('+parseInt(this.color.rgba[0]*255)+', '+parseInt(this.color.rgba[1]*255)+', '+parseInt(this.color.rgba[2]*255)+', '+this.color.rgba[3]+')';
         ctx.fillRect(-.5, -.5, 1, 1);
       }
       
@@ -855,7 +855,7 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
         layers[i] = new Quad();
       layers[i].transform = transformIn.getValue(i);
       layers[i].texture = textureIn.getValue(i);
-      layers[i].color = colorIn.getValue(i).split(',');
+      layers[i].color = colorIn.getValue(i);
       if (clippingLayerIn.isConnected())
         layers[i].clippingLayer = clippingLayerIn.getValue(i);
     }
@@ -941,12 +941,12 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   
   var layersIn = this.addInputPin("Layers", [], VVVV.PinTypes.CanvasLayer);
   var clearIn = this.addInputPin("Clear", [1], VVVV.PinTypes.Value);
-  var bgColorIn = this.addInputPin("Background Color", ["0.0, 0.0, 0.0, 1.0"], VVVV.PinTypes.Color);
+  var bgColorIn = this.addInputPin("Background Color", [new VVVV.Types.Color("0.0, 0.0, 0.0, 1.0")], VVVV.PinTypes.Color);
   var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], VVVV.PinTypes.Value);
   var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], VVVV.PinTypes.Value);
   var viewIn = this.addInputPin("View", [], VVVV.PinTypes.Transform);
   
-  var canvasOut = this.addOutputPin("Canvas Out", [], this);
+  var canvasOut = this.addOutputPin("Canvas Out", []);
   
   var ctx;
   var canvasWidth;
@@ -1064,10 +1064,11 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
     }
       
     if (bgColorIn.pinIsChanged()) {
-      bgColor = bgColorIn.getValue(0).split(',');
-      bgColor[0] = parseInt(bgColor[0]*255);
-      bgColor[1] = parseInt(bgColor[1]*255);
-      bgColor[2] = parseInt(bgColor[2]*255);
+      var col = bgColorIn.getValue(0);
+      bgColor[0] = parseInt(col.rgba[0]*255);
+      bgColor[1] = parseInt(col.rgba[1]*255);
+      bgColor[2] = parseInt(col.rgba[2]*255);
+      bgColor[3] = col.rgba[3];
     }
       
     if (true) { //layersIn.pinIsChanged() || bgColorIn.pinIsChanged() || clearIn.pinIsChanged() || viewIn.pinIsChanged()) {
@@ -1090,7 +1091,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
       ctx.restoreView();
       
       if (layersIn.isConnected()) {
-        for (var i=0; i<layersIn.values.length; i++) {
+        for (var i=0; i<layersIn.getSliceCount(); i++) {
           layersIn.getValue(i).draw(ctx);
         }
       }

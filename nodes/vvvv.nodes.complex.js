@@ -34,8 +34,8 @@ VVVV.Nodes.Abs = function(id, graph) {
     for (var i=0; i<maxSize; i++) {
       outputOut.setValue(i,
         Math.sqrt(
-          Math.pow(parseFloat(inputRealIn.getValue(i)), 2) +
-          Math.pow(parseFloat(inputImagIn.getValue(i)), 2)
+          Math.pow(inputRealIn.getValue(i), 2) +
+          Math.pow(inputImagIn.getValue(i), 2)
         )
       );
     }

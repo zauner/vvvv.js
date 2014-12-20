@@ -44,7 +44,7 @@ VVVV.Nodes.BoundsSpectral = function(id, graph) {
     var subIndex = 0;
     var input, minimum, maximum;
     
-    for (var i=0; i<maxSpreadSize || (binSizeIn.getValue(0)>0 && (subIndex>0 || binNum%binSizeIn.values.length!=0)); i++) {
+    for (var i=0; i<maxSpreadSize || (binSizeIn.getValue(0)>0 && (subIndex>0 || binNum%binSizeIn.getSliceCount()!=0)); i++) {
       input = inputIn.getValue(i);
       if (subIndex == 0) {
         center = minimum = maximum = input;

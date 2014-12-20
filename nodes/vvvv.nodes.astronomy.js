@@ -105,30 +105,22 @@ VVVV.Nodes.GregorianAstronomySplit = function(id, graph) {
       var timestamp = (timeIn.getValue(i)-jsVVVVOffset)*24*60*60*1000;
       var d = new Date(timestamp);
       
-      x = d.getMilliseconds();
-      if (x!=millisecondOut.values[i])
-        millisecondOut.setValue(i, x);
+      var x = d.getMilliseconds();
+      millisecondOut.setValue(i, x);
       x = d.getSeconds();
-      if (x!=secondOut.values[i])
-        secondOut.setValue(i, x);
+      secondOut.setValue(i, x);
       x = d.getMinutes();
-      if (x!=minuteOut.values[i])
-        minuteOut.setValue(i, x);
+      minuteOut.setValue(i, x);
       x = d.getHours();
-      if (x!=hourOut.values[i])
-        hourOut.setValue(i, x);
+      hourOut.setValue(i, x);
       x = d.getDay();
-      if (x!=dayofweekOut.values[i])
-        dayofweekOut.setValue(i, x);
+      dayofweekOut.setValue(i, x);
       x = d.getDate();
-      if (x!=dayOut.values[i])
-        dayOut.setValue(i, x);
+      dayOut.setValue(i, x);
       x = d.getMonth()+1;
-      if (x!=monthOut.values[i])
-        monthOut.setValue(i, x);
+      monthOut.setValue(i, x);
       x = d.getYear()+1900;
-      if (x!=yearOut.values[i])
-        yearOut.setValue(i, x);
+      yearOut.setValue(i, x);
     }
     
     millisecondOut.setSliceCount(maxSize);

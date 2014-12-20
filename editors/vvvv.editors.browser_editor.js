@@ -41,7 +41,9 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
   
   $inputbox.change(function() {
     pin.setValue(sliceIdx, $(this).val());
-    pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+_(pin.values).map(function(v) { return '|'+v.toString().replace(/\|/g, "||")+'|'}).join(',')+"'/></NODE>");
+    var valstr = _(pin.values).map(function(v) { return '|'+v.toString().replace(/\|/g, "||")+'|'});
+    valstr.length = pin.getSliceCount();
+    pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+valstr.join(',')+"'/></NODE>");
     //pin.node.parentPatch.afterUpdate();
   });
   $inputbox.keydown(function(e) {
@@ -103,8 +105,10 @@ VVVV.PinTypes.Enum.openInputBox = function(win, $element, pin, sliceIdx) {
   
   $inputbox.change(function() {
     //pin.node.parentPatch.doLoad("<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+$(this).val()+"'/></NODE>");
-    pin.setValue(sliceIdx, $(this).val());
-    pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+_(pin.values).map(function(v) { return '|'+v+'|'}).join(',')+"'/></NODE>");
+    pin.setValue(sliceIdx, parseFloat($(this).val()));
+    var valstr = _(pin.values).map(function(v) { return '|'+v+'|'});
+    valstr.length = pin.getSliceCount();
+    pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+valstr.join(',')+"'/></NODE>");
     //pin.node.parentPatch.afterUpdate();
   });
 }
@@ -121,11 +125,12 @@ VVVV.PinTypes.Color.makeLabel = function(element, node) {
         .attr('width', node.getWidth())
         .attr('y', i * 12 + 4)
         .attr('fill', function(d) {
-          var col = node.IOBoxInputPin().getValue(i).split(',');
-          for (var j=0; j<col.length; j++) {
-            col[j] = parseInt(col[j]*256);
+          var col = node.IOBoxInputPin().getValue(i);
+          var svgcol = [];
+          for (var j=0; j<col.rgba.length; j++) {
+            svgcol[j] = parseInt(col.rgba[j]*256);
           }
-          return 'rgba('+col.join(',')+')';
+          return 'rgba('+svgcol.join(',')+')';
       })
    }
 }
@@ -154,28 +159,31 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
   $inputbox.css('height', $element.css('height'));
   $inputbox.css('left', $element.css('left'));
   $inputbox.css('top', ($element.offset().top-8)+'px');
-  var col = pin.getValue(sliceIdx).split(',');
-  for (var i=0; i<col.length; i++) {
-    col[i] = parseInt(col[i]*256);
+  var col = pin.getValue(sliceIdx);
+  var svgcol = [];
+  for (var i=0; i<col.rgba.length; i++) {
+    svgcol[i] = parseInt(col.rgba[i]*256);
   }
-  $inputbox.css('background-color', 'rgba('+col.join(',')+')');
+  $inputbox.css('background-color', 'rgba('+svgcol.join(',')+')');
   $element.replaceWith($inputbox);
   
   function scroll(delta) {
-    var col = pin.getValue(sliceIdx).split(',');
-    var hsv = VVVV.PinTypes.Color.rgbToHsv(col[0], col[1], col[2]);
-    hsv[3] = parseFloat(col[3]);
+    var col = pin.getValue(sliceIdx);
+    var hsv = col.getHSV();
+    hsv[3] = parseFloat(col.rgba[3]);
     var incr = delta * 0.01;
     hsv[modulatedComp] += incr;
     if (modulatedComp!=0)
     hsv[modulatedComp] = Math.min(1.0, Math.max(0.0, hsv[modulatedComp]));
-    col = VVVV.PinTypes.Color.hsvToRgb(hsv[0], hsv[1], hsv[2]);
-    col[3] = hsv[3];
-    $inputbox.css('background-color', 'rgba('+_(col).map(function(c) { return parseInt(c*255) }).join(',')+')');
+    col.setHSV(hsv[0], hsv[1], hsv[2]);
+    col.rgba[3] = hsv[3];
+    $inputbox.css('background-color', 'rgba('+_(col.rgba).map(function(c) { return parseInt(c*255) }).join(',')+')');
     ibx = $inputbox;
-    var cmd = "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='|"+col.join(',')+"|'/></NODE></PATCH>";
-    pin.setValue(sliceIdx, col.join(','));
-    pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+_(pin.values).map(function(v) { return '|'+v+'|'}).join(',')+"'/></NODE>");
+    //var cmd = "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='|"+col.toString()+"|'/></NODE></PATCH>";
+    pin.setValue(sliceIdx, col);
+    var valstr = _(pin.values).map(function(v) { return '|'+v.toString()+'|'});
+    valstr.length = pin.getSliceCount();
+    pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+valstr.join(',')+"'/></NODE>");
   }
   
   $inputbox.on('mousewheel', function(e) {
@@ -1075,7 +1083,7 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
     else
       var $iobox = $('<div class="row value readonlyvalue"><div style="height:100%">'+p.getValue(0)+'</div></div>');
     if (p.typeName=="Color") {
-      $iobox.find('div').css('background-color', 'rgba('+_(p.getValue(0).split(',')).map(function(c) { return parseInt(c*255) }).join(',')+')'); 
+      $iobox.find('div').css('background-color', 'rgba('+_(p.getValue(0).rgba).map(function(c) { return parseInt(c*255) }).join(',')+')'); 
     }
     $(that.win.document).find('#values').append($iobox);
   }
@@ -1127,7 +1135,7 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
         $(that.win.document).find('#values').append($iobox);
       }
       if (p.typeName=="Color") {
-        $iobox.find('div').css('background-color', 'rgba('+_(p.getValue(i).split(',')).map(function(c) { return parseInt(c*255) }).join(',')+')'); 
+        $iobox.find('div').css('background-color', 'rgba('+_(p.getValue(i).rgba).map(function(c) { return parseInt(c*255) }).join(',')+')'); 
       }
     }
     i++;

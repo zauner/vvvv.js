@@ -106,6 +106,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
         VVVV.loadScript('mainloop/vvvv.mainloop.js', loadMonitor);
         VVVV.loadScript('mainloop/vvvv.dominterface.js', loadMonitor);
   
+        VVVV.loadScript('types/vvvv.shared_types.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.value.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.string.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.boolean.js', loadMonitor);
