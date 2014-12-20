@@ -105,11 +105,12 @@ VVVV.PinTypes.Enum.openInputBox = function(win, $element, pin, sliceIdx) {
   
   $inputbox.change(function() {
     //pin.node.parentPatch.doLoad("<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+$(this).val()+"'/></NODE>");
-    pin.setValue(sliceIdx, parseFloat($(this).val()));
+    pin.setValue(sliceIdx, $(this).val());
     var valstr = _(pin.values).map(function(v) { return '|'+v+'|'});
     valstr.length = pin.getSliceCount();
     pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+valstr.join(',')+"'/></NODE>");
     //pin.node.parentPatch.afterUpdate();
+    $(this).remove();
   });
 }
 
