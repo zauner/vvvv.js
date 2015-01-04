@@ -1273,7 +1273,7 @@ VVVV.Core = {
           
         if ($(this).attr('deleteme')=='pronto') {
           if (VVVV_ENV=='development') console.log('removing node '+n.id);
-          if (n.isSubpatch) {
+          if (n.isSubpatch && !n.not_implemented) {
             if (n.editor) n.editor.removePatch(n);
             var subpatches = n.getSubPatches();
             subpatches.push(n);
