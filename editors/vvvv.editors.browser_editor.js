@@ -942,7 +942,21 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             var targetDir = 'input';
           else
             var targetDir = 'output';
-          var upnodes = linkStart.node.getUpstreamNodes();
+          
+          var upnodes = [];
+          function getAllUpstreamNodes(node) {
+            var u = node.getUpstreamNodes();
+            for (var j=0; j<u.length; j++) {
+              if (u[j]!=linkStart.node && !u[j].delays_output) {
+                upnodes.push(u[j]);
+                getAllUpstreamNodes(u[j]);
+              }
+            }
+            
+            return false;
+          }
+          if (!linkStart.node.delays_output)
+            getAllUpstreamNodes(linkStart.node);
           chart.selectAll('g.vvvv-'+targetDir+'-pin')
             .filter(function(d) {
               if (d.typeName!=linkStart.typeName && (linkStart.typeName!="Node" || VVVV.PinTypes[d.typeName].primitive && (d.typeName!="Node" || VVVV.PinTypes[linkStart.typeName].primitive)))
@@ -969,7 +983,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             var dstPin = d;
           }
           
-          if ((srcPin.typeName == dstPin.typeName && srcPin.direction!=dstPin.direction) || (srcPin.typeName=="Node" && !VVVV.PinTypes[dstPin.typeName].primitive) || (dstPin.typeName=="Node" && !VVVV.PinTypes[srcPin.typeName].primitive)) {
+          if ($(this).find('.vvvv-connection-highlight').length==1) {
             var cmd = "<PATCH>";
             _(dstPin.links).each(function(l) {
               cmd += "<LINK deleteme='pronto' srcnodeid='"+l.fromPin.node.id+"' srcpinname='"+l.fromPin.pinname+"' dstnodeid='"+l.toPin.node.id+"' dstpinname='"+l.toPin.pinname+"'/>";
@@ -982,8 +996,8 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             chart.select('.vvvv-link.current-link').remove();
             chart.select('.vvvv-connection-highlight').remove();
             thatWin.state = UIState.Idle;
+            patch.afterUpdate();
           }
-          patch.afterUpdate();
         }
         d3.event.stopPropagation();
       })
