@@ -147,8 +147,13 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
 
     VVVV.MainLoops = [];
 
-    $("script[language='VVVV']").each(function(i) {
-      var p = new VVVV.Core.Patch($(this).attr('src'), function() {
+    $("link[rel='VVVV'], script[language='VVVV']").each(function(i) {
+      var href_attribute = 'href';
+      if ($(this).get(0).tagName=='SCRIPT') {
+        if (VVVV_ENV=='development') console.warn('DEPRECATED: loading patches via <script language="VVVV" src="..."> tag is deprecated. Use <link rel="VVVV" href="..."> instead.');
+        href_attribute = 'src';
+      }
+      var p = new VVVV.Core.Patch($(this).attr(href_attribute), function() {
         var m = new VVVV.Core.MainLoop(this);
         VVVV.MainLoops.push(m);
       });
