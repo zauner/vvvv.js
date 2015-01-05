@@ -51,7 +51,7 @@ index.html:
     ...
     <script language="JavaScript" src="javascripts/vvvv_js/lib/jquery/jquery-1.8.2.min.js"></script> 
     <script language="JavaScript" src="javascripts/vvvv_js/vvvv.js"></script>
-    <script language="VVVV" src="mypatch.v4p"></script>
+    <link rel="VVVV" href="mypatch.v4p"/>
     <script language="JavaScript">
       $(document).ready(function() {
         VVVV.init("javascripts/vvvv_js/", 'full', function() {
