@@ -54,6 +54,17 @@ VVVV.Nodes.AddValue = function(id, graph) {
       outPin.setValue(i,o);
     }  
   }
+  
+  this.getCode = function() {
+    if (cntCfg.pinIsChanged())
+      this.initialize();
+    
+    var pinnames = [];
+    for (var i=0; i<inputPins.length; i++) {
+      pinnames.push("{Input "+(i+1)+"}")
+    }
+    return pinnames.join(" + ");
+  }
 
 }
 VVVV.Nodes.AddValue.prototype = new VVVV.Core.Node();
@@ -105,6 +116,17 @@ VVVV.Nodes.SubtractValue = function(id, graph) {
   		}
       outPin.setValue(i,o);
     }  
+  }
+  
+  this.getCode = function() {
+    if (cntCfg.pinIsChanged())
+      this.initialize();
+    
+    var pinnames = [];
+    for (var i=0; i<inputPins.length; i++) {
+      pinnames.push("{Input "+(i+1)+"}")
+    }
+    return pinnames.join(" - ");
   }
 
 }
@@ -188,6 +210,10 @@ VVVV.Nodes.GtValue = function(id, graph) {
     }
     outputOut.setSliceCount(maxSize);
   }
+  
+  this.getCode = function() {
+    return "{Input 1} > {Input 2} ? 1 : 0";
+  }
 
 }
 VVVV.Nodes.GtValue.prototype = new VVVV.Core.Node();
@@ -225,6 +251,10 @@ VVVV.Nodes.LtValue = function(id, graph) {
       outputOut.setValue(i, result);
     }
     outputOut.setSliceCount(maxSize);
+  }
+  
+  this.getCode = function() {
+    return "{Input 1} < {Input 2} ? 1 : 0";
   }
 
 }
@@ -278,6 +308,17 @@ VVVV.Nodes.MultiplyValue = function(id, graph) {
       outPin.setValue(i,o);
     } 
   }
+  
+  this.getCode = function() {
+    if (cntCfg.pinIsChanged())
+      this.initialize();
+    
+    var pinnames = [];
+    for (var i=0; i<inputPins.length; i++) {
+      pinnames.push("{Input "+(i+1)+"}")
+    }
+    return pinnames.join(" * ");
+  }
 
 }
 VVVV.Nodes.MultiplyValue.prototype = new VVVV.Core.Node();
@@ -323,6 +364,10 @@ VVVV.Nodes.DivideValue = function(id, graph) {
       outputOut.setValue(i, input1In.getValue(i)/input2In.getValue(i));
     }
     outputOut.setSliceCount(maxSize);
+  }
+  
+  this.getCode = function() {
+    return "{Input} / {Input 2}"
   }
 
 }

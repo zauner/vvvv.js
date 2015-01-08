@@ -860,6 +860,20 @@ VVVV.Core = {
     }
     
     /**
+     * sets all output pin values to nil, if at least one input pin value is nil, and the node is acting auto_nil
+     * @return true, if the output pins were set to nil, false otherwise
+     */
+    this.dealWithNilInput = function() {
+      if (this.auto_nil && !this.isSubpatch && this.hasNilInputs()) {
+        for(pinname in this.outputPins) {
+          this.outputPins[pinname].setSliceCount(0);
+        }
+        return true;
+      }
+      return false;
+    }
+    
+    /**
      * Method called when a node is being deleted. Should be overwritten by any Node implementation to free resources and gracefully
      * shut itself down
      * @abstract
@@ -1015,8 +1029,8 @@ VVVV.Core = {
     this.linkList = [];
     /** an array containing all pins (except connected input pins) **/
     this.pinList = [];
-    /** the flattened node graph, in the correct evaluation order. Should not be written manually, but only updated using {@link VVVV.Core.Patch.updateEvaluationRecipe} */
-    this.evaluationRecipe = [];
+    /** the flattened, compiled function calling all nodes in the correct order. Should not be written manually, but only updated using {@link VVVV.Core.Patch.compile} */
+    this.compiledFunc = undefined;
     
     /** The {@link VVVV.MainLoop} Object running this patch */
     this.mainloop = undefined;
@@ -1225,7 +1239,7 @@ VVVV.Core = {
                   }
                   this.setMainloop(thisPatch.mainloop);
                   thisPatch.afterUpdate();
-                  thisPatch.updateEvaluationRecipe();
+                  thisPatch.compile();
                   if (thisPatch.resourcesPending<=0 && ready_callback) {
                     ready_callback();
                     ready_callback = undefined;
@@ -1237,7 +1251,7 @@ VVVV.Core = {
                   VVVV.onNotImplemented(nodename);
                   updateLinks(xml);
                   thisPatch.afterUpdate();
-                  thisPatch.updateEvaluationRecipe();
+                  thisPatch.compile();
                   if (thisPatch.resourcesPending<=0 && ready_callback) {
                     ready_callback();
                     ready_callback = undefined;
@@ -1480,7 +1494,7 @@ VVVV.Core = {
         }
       }
       
-      this.updateEvaluationRecipe();
+      this.compile();
       if (this.resourcesPending<=0 && ready_callback) {
         ready_callback();
         ready_callback = undefined;
@@ -1570,7 +1584,7 @@ VVVV.Core = {
     /**
      * Updates the {@link VVVV.Core.Patch.evaluationRecipe} cache. This method is invoked automatically each time the patch has been changed.
      */
-    this.updateEvaluationRecipe = function() {
+    this.compile = function() {
       this.evaluationRecipe = [];
       this.pinList = [];
       var addedNodes = {};
@@ -1579,6 +1593,11 @@ VVVV.Core = {
       
       var recipe = this.evaluationRecipe;
       var pinList = this.pinList;
+      var regex = new RegExp(/\{([^\}]+)\}/g);
+      var thisPatch = this;
+      
+      var compiledCode = "";
+      
       function addSubGraphToRecipe(node) {
         if (nodeStack.indexOf(node.id)<0) {
           nodeStack.push(node.id);
@@ -1596,7 +1615,56 @@ VVVV.Core = {
           lostLoopRoots.push(node);
         
         if ((!loop_detected && nodeStack.indexOf(node.id)<0) || node.delays_output) {
-          recipe.push(node);
+          if (node.getCode) {
+            node.outputPins["Output"].values.incomingPins = [];
+            var nodecode = "("+node.getCode()+")";
+            var code = nodecode;
+            var match;
+            while (match = regex.exec(nodecode)) {
+              var v;
+              if (node.inputPins[match[1]].values.code) {
+                v = node.inputPins[match[1]].values.code;
+                node.outputPins['Output'].values.incomingPins = node.outputPins['Output'].values.incomingPins.concat(node.inputPins[match[1]].values.incomingPins)
+              }
+              else {
+                if (!node.inputPins[match[1]].isConnected() && node.inputPins[match[1]].getSliceCount()==1)
+                  v = node.inputPins[match[1]].getValue(0);
+                else
+                  v = "patch.nodeMap["+node.id+"].inputPins['"+match[1]+"'].getValue(iii)";
+                node.outputPins['Output'].values.incomingPins.push(node.inputPins[match[1]]);
+              }
+              code = code.replace("{"+match[1]+"}", v);
+            }
+            node.outputPins["Output"].values.code = code;
+            for (var i=0; i<node.outputPins["Output"].links.length; i++) {
+              if (!node.outputPins["Output"].links[i].toPin.node.getCode) {
+                var code = "  var iii = ";
+                var subcode = "";
+                for (var j=0; j<node.outputPins["Output"].values.incomingPins.length; j++) {
+                  var pin = node.outputPins["Output"].values.incomingPins[j];
+                  subcode = "Math.max(patch.nodeMap["+pin.node.id+"].inputPins['"+pin.pinname+"'].getSliceCount(), "+subcode;
+                }
+                subcode += "0)";
+                for (var j=0; j<node.outputPins["Output"].values.incomingPins.length-1; j++) {
+                  subcode += ")"; 
+                }
+                subcode += ";\n";
+                code += subcode;
+                code += "  while (iii--) {\n";
+                code += "    patch.nodeMap["+node.id+"].outputPins['Output'].setValue(iii, "+node.outputPins["Output"].values.code+");\n";
+                code += "  }\n";
+                compiledCode += code;
+                break;
+              }
+            }
+          }
+          else {
+            if (!node.not_implemented) {
+              recipe.push(node);
+              compiledCode += "var n = patch.nodeMap["+node.id+"];";
+              compiledCode += "if ((n.isDirty() || n.auto_evaluate || n.isSubpatch) && !n.dealWithNilInput()) { n.evaluate(); n.dirty = false; }\n";
+            }
+          }
           for (var pinname in node.inputPins) {
             if (node.inputPins[pinname].links.length==0)
               pinList.push(node.inputPins[pinname]);
@@ -1623,6 +1691,9 @@ VVVV.Core = {
       for (var i=0; i<lostLoopRoots.length; i++) {
         addSubGraphToRecipe(lostLoopRoots[i]);
       }
+      
+      this.compiledFunc = new Function('patch', compiledCode);
+      //console.log(this.compiledFunc.toString());
     }
     
     /**
@@ -1637,7 +1708,9 @@ VVVV.Core = {
         var elapsed = 0;
       }
       
-      var pinname;
+      this.compiledFunc(this);
+      
+      /*var pinname;
       for (var i=0; i<this.evaluationRecipe.length; i++) {
         var node = this.evaluationRecipe[i];
         if (print_timing)
@@ -1668,7 +1741,7 @@ VVVV.Core = {
             console.log(node.nodename+' / '+node.id+': '+elapsed+'ms')
           }
         }
-      }
+      }*/
       
       if (print_timing) {
         _(nodeProfiles).each(function(p, nodename) {
