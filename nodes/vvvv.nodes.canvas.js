@@ -63,7 +63,7 @@ VVVV.Types.CanvasRenderState = function() {
 
 var defaultRenderState = new VVVV.Types.CanvasRenderState();
 var invisibleRenderState = new VVVV.Types.CanvasRenderState();
-invisibleRenderState.fillColor = [0, 0, 0, 0];
+invisibleRenderState.fillColor = new VVVV.Types.Color("0.0, 0.0, 0.0, 0.0");
 VVVV.PinTypes.CanvasRenderState = {
   typeName: "CanvasRenderState",
   reset_on_disconnect: true,
