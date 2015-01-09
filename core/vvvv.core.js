@@ -1650,6 +1650,7 @@ VVVV.Core = {
                 }
                 subcode += ";\n";
                 code += subcode;
+                code += "  patch.nodeMap["+node.id+"].outputPins['Output'].setSliceCount(iii);";
                 code += "  while (iii--) {\n";
                 code += "    patch.nodeMap["+node.id+"].outputPins['Output'].setValue(iii, "+node.outputPins["Output"].values.code+");\n";
                 code += "  }\n";
