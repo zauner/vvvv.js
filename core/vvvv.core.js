@@ -234,7 +234,9 @@ VVVV.Core = {
      * @return {Boolean} true if changed, false if not changed
      */
     this.pinIsChanged = function() {
-      return (this.values.changedAt == this.node.parentPatch.mainloop.frameNum);
+      if (this.node.parentPatch.mainloop)
+        return (this.values.changedAt == this.node.parentPatch.mainloop.frameNum);
+      return true;
     }
     
     this.connect = function(other_pin) {
