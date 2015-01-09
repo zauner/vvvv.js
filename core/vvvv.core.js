@@ -308,10 +308,10 @@ VVVV.Core = {
         this.reset_on_disconnect = newType.reset_on_disconnect;
     }
     
-    if (type==undefined) {
+    if (type==undefined)
       type = VVVV.PinTypes.Generic;
+    if (type == VVVV.PinTypes.Generic)
       this.unvalidated = true;
-    }
     this.setType(type);
     
     if (init_values && init_values.length>0) { // override PinType's default value with values from constructor, if it isn't []
