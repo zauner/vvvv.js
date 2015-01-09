@@ -205,10 +205,7 @@ VVVV.Core = {
      */
     this.setValue = function(i, v) {
       if (this.direction==VVVV.PinDirection.Output || !this.isConnected()) {
-        if (this.typeName[0]=='V')
-          this.values[i] = parseFloat(v);
-        else
-          this.values[i] = v;
+        this.values[i] = v;
         if (!this.primitive || this.values[i]!=v)
           this.markPinAsChanged();
       }
@@ -807,7 +804,13 @@ VVVV.Core = {
                 var savedValues = pin.values.slice();
                 pin.setType(VVVV.PinTypes[that.IOBoxInputPin().typeName]);
                 if ((pin.unvalidated && VVVV.PinTypes[pin.typeName].primitive) && !pin.isConnected()) {
-                  pin.values = savedValues;
+                  if (pin.typeName[0]=='V') {
+                    for (var i=0; i<savedValues.length; i++) {
+                      pin.values[i] = parseFloat(savedValues[i]);
+                    }
+                  }
+                  else
+                    pin.values = savedValues;
                   pin.markPinAsChanged();
                 }
                 pin.unvalidated = false;
