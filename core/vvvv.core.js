@@ -166,7 +166,7 @@ VVVV.Core = {
     this.links = [];
     /** @member */
     this.values = [];
-    this.values.changed = true;
+    this.values.changedAt = 0;
     /** @member */
     this.node = node;
     /** @member */
@@ -225,7 +225,8 @@ VVVV.Core = {
      * used to mark a pin as changed without actually using {@link VVVV.Core.Pin#setValue}
      */
     this.markPinAsChanged = function() {
-      this.values.changed = true;
+      if (this.node.parentPatch.mainloop)
+        this.values.changedAt = this.node.parentPatch.mainloop.frameNum;
     }
     
     /**
@@ -233,8 +234,7 @@ VVVV.Core = {
      * @return {Boolean} true if changed, false if not changed
      */
     this.pinIsChanged = function() {
-      var ret = this.values.changed;
-      return ret;
+      return (this.values.changedAt == this.node.parentPatch.mainloop.frameNum);
     }
     
     this.connect = function(other_pin) {
@@ -330,7 +330,7 @@ VVVV.Core = {
       }
       else {
         this.values = init_values.slice(0);
-        this.values.changed = true;
+        this.markPinAsChanged();
       }
       this.markPinAsChanged();
     }
@@ -487,7 +487,7 @@ VVVV.Core = {
       this.parentPatch.pinMap[this.id+'_inv_'+pinname] = pin;
       if (this.defaultPinValues[pinname] != undefined) {
         pin.values = this.defaultPinValues[pinname];
-        pin.values.changed = true;
+        pin.markPinAsChanged();
       }
       return pin;
     }
@@ -687,11 +687,11 @@ VVVV.Core = {
         return true;
       var pinname;
       for (pinname in this.inputPins) {
-        if (this.inputPins[pinname].values.changed)
+        if (this.inputPins[pinname].pinIsChanged())
           return true;
       }
       for (pinname in this.invisiblePins) {
-        if (this.invisiblePins[pinname].values.changed)
+        if (this.invisiblePins[pinname].pinIsChanged())
           return true;
       }
       return false;
@@ -806,7 +806,7 @@ VVVV.Core = {
                 pin.setType(VVVV.PinTypes[that.IOBoxInputPin().typeName]);
                 if ((pin.unvalidated && VVVV.PinTypes[pin.typeName].primitive) && !pin.isConnected()) {
                   pin.values = savedValues;
-                  pin.values.changed = true;
+                  pin.markPinAsChanged();
                 }
                 pin.unvalidated = false;
                 
@@ -1681,16 +1681,6 @@ VVVV.Core = {
         console.log('patch rendering: '+(new Date().getTime() - start)+'ms')
       
       print_timing = false;
-    }
-    
-    /**
-     * sets the 'changed' flag of all pins to false; no need to call this method directly, it will be called by {@link VVVV.Core.MainLoop} when the time is right.
-     */
-    this.clearChangedFlags = function() {
-      var i=this.pinList.length;
-      while (i--) {
-        this.pinList[i].values.changed = false;
-      }
     }
     
     $(window).keydown(function(e) {

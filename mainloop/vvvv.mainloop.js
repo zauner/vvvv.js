@@ -26,6 +26,9 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
   /** the time in ms elapsed since the last evaluation cycle */
   this.deltaT = 1000/VVVV.fps;
   
+  /** the frame number */
+  this.frameNum = 0;
+  
   patch.setMainloop(this);
 
   var that = this;  
@@ -44,7 +47,6 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
       dom.populateInputConnectors();
       patch.evaluate();
       dom.processOutputConnectors();
-      patch.clearChangedFlags();
       var elapsed = new Date().getTime()-start;
       if (framecount%10 == 0) {
         if (print_framerate) {
@@ -53,6 +55,7 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
         }
         measureStart = start;
       }
+      that.frameNum++;
     }
     if (run) // && framecount<1)
       window.setTimeout(function() {
