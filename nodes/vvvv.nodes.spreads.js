@@ -283,7 +283,7 @@ VVVV.Nodes.LinearSpread = function(id, graph) {
             result = (result + phase*width) % width;
         }
         result = input-width/2 + result;
-        outputOut.setValue(idx, result.toFixed(4));
+        outputOut.setValue(idx, result);
         idx++;
       }
     }
