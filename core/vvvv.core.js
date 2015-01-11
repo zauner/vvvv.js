@@ -1587,7 +1587,7 @@ VVVV.Core = {
     }
     
     /**
-     * Updates the {@link VVVV.Core.Patch.evaluationRecipe} cache. This method is invoked automatically each time the patch has been changed.
+     * Assemples the {@link VVVV.Core.Patch.compiledFunc} function, which is called each frame, and subsequently calls all nodes in the correct order. This method is invoked automatically each time the patch has been changed.
      */
     this.compile = function() {
       this.evaluationRecipe = [];
@@ -1643,22 +1643,27 @@ VVVV.Core = {
             node.outputPins["Output"].values.code = code;
             for (var i=0; i<node.outputPins["Output"].links.length; i++) {
               if (!node.outputPins["Output"].links[i].toPin.node.getCode) {
-                var code = "  var iii = ";
                 var subcode = "";
+                var dirtycode = "if (";
                 for (var j=0; j<node.outputPins["Output"].values.incomingPins.length; j++) {
                   var pin = node.outputPins["Output"].values.incomingPins[j];
+                  dirtycode += "patch.nodeMap["+pin.node.id+"].inputPins['"+pin.pinname+"'].pinIsChanged() || ";
                   subcode = "Math.max(patch.nodeMap["+pin.node.id+"].inputPins['"+pin.pinname+"'].getSliceCount(), "+subcode;
                 }
+                dirtycode += "false) {\n";
                 subcode += "0)";
                 for (var j=0; j<node.outputPins["Output"].values.incomingPins.length-1; j++) {
                   subcode += ")"; 
                 }
                 subcode += ";\n";
+                var code = dirtycode;
+                code += "  var iii = ";
                 code += subcode;
                 code += "  patch.nodeMap["+node.id+"].outputPins['Output'].setSliceCount(iii);";
                 code += "  while (iii--) {\n";
                 code += "    patch.nodeMap["+node.id+"].outputPins['Output'].setValue(iii, "+node.outputPins["Output"].values.code+");\n";
                 code += "  }\n";
+                code += "}\n";
                 compiledCode += code;
                 break;
               }
