@@ -876,6 +876,11 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             .attr('height', 4)
             .attr('fill', 'rgba(0,0,0,1)')
             .attr('y', -4)
+          
+          if (d.values.code) {
+            var f = new Function("patch", d.generateStaticCode(false));
+            f(d.node.parentPatch);
+          }
             
           d3.select(this).append('svg:text')
             .text(function(d) {
