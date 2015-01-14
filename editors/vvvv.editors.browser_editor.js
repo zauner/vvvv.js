@@ -156,26 +156,49 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
   
   $inputbox = $('<div class="pininputbox color resettable"></div>');
   $inputbox.css('position', $element.css('position'));
-  $inputbox.css('width', $element.css('width'));
-  $inputbox.css('height', $element.css('height'));
+  $inputbox.css('width', "120px");
+  $inputbox.css('height', "90px");
   $inputbox.css('left', $element.css('left'));
-  $inputbox.css('top', ($element.offset().top-8)+'px');
+  $inputbox.css('top', ($element.offset().top-85)+'px');
   var col = pin.getValue(sliceIdx);
   var svgcol = [];
   for (var i=0; i<col.rgba.length; i++) {
     svgcol[i] = parseInt(col.rgba[i]*256);
   }
+  svgcol[3] = 255; // ignore alpha here ...
   $inputbox.css('background-color', 'rgba('+svgcol.join(',')+')');
+  
   $element.replaceWith($inputbox);
   
+  var hsv = col.getHSV();
+  hsv[3] = col.rgba[3];
+  
+  var labels = "HSVA";
+  for (var i=0; i<4; i++) {
+    $slider = $('<input type="range" name="hsv[]" min="0" max="1" step="0.001" value="'+hsv[i]+'"/>');
+    $inputbox.append('<span class="color-component">'+labels[i]+":</div>");
+    $inputbox.append($slider);
+    
+    (function(j) {
+      $slider.on('input', function() {
+        hsv[j] = parseFloat($(this).val());
+        setPin();
+      });
+    }(i));
+  }
+  
   function scroll(delta) {
-    var col = pin.getValue(sliceIdx);
-    var hsv = col.getHSV();
-    hsv[3] = parseFloat(col.rgba[3]);
     var incr = delta * 0.01;
     hsv[modulatedComp] += incr;
     if (modulatedComp!=0)
     hsv[modulatedComp] = Math.min(1.0, Math.max(0.0, hsv[modulatedComp]));
+    setPin();
+    $inputbox.find("input[type='range']").each(function(i) {
+      $(this).val(hsv[i]);
+    });
+  }
+  
+  function setPin() {
     col.setHSV(hsv[0], hsv[1], hsv[2]);
     col.rgba[3] = hsv[3];
     $inputbox.css('background-color', 'rgba('+_(col.rgba).map(function(c) { return parseInt(c*255) }).join(',')+')');
