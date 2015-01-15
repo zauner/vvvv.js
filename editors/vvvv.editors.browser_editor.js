@@ -7,7 +7,8 @@ var UIState = {
   'Moving': 2,
   'Creating': 3,
   'Changing': 4,
-  'AreaSelecting': 5
+  'AreaSelecting': 5,
+  'PinDragging': 6
 }
 
 VVVV.PinTypes.Value.makeLabel = VVVV.PinTypes.String.makeLabel = function(element, node) {
@@ -77,6 +78,44 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
       scroll(this, delta, e);
       e.preventDefault();
       return false;
+    })
+    
+    win.window.document.addEventListener('pointerlockerror', function(e) {
+      console.log('POINTER LOCK ERROR');
+      /*alert("It seems Pointer Lock is not allowed yet. Click somewhere in the browser window (not the patch window) to request Pointer Lock");
+      var addPointerLockRequest = function()  {
+        this.requestPointerLock();
+      }
+      $('body').bind('click', addPointerLockRequest);
+      
+      $(document).on('pointerlockchange', function() {
+        if (document.pointerLockElement) {
+          alert('ok, you should be good now.');
+        }
+        $('body').unbind("click", addPointerLockRequest);
+      })*/
+    })
+    
+    $inputbox.mousedown(function(e) {
+      if (e.which==3) {
+        this.requestPointerLock();
+      }
+    })
+    
+    $inputbox.mouseup(function(e) {
+      if (e.which==3) {
+        win.window.document.exitPointerLock();
+        window.setTimeout(function() { $inputbox.remove(); }, 100); // has to be delayed, because Chrome crashes otherwise ..
+        win.state = UIState.Idle;
+      }
+    })
+    
+    $inputbox.mousemove(function(e) {
+      if (win.window.document.pointerLockElement) {
+        win.state = UIState.PinDragging;
+        if (Math.abs(e.originalEvent.movementY)<50) // for some reason, movementY is some large number at the beginning
+          scroll(this, Math.floor(e.originalEvent.movementY*-0.5), e);
+      }
     })
   }
   
@@ -1035,7 +1074,8 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
       
       chart.selectAll('g.vvvv-link')
         .on("contextmenu", function(d) {
-          editor.update(patch, "<PATCH><LINK deleteme='pronto' srcnodeid='"+d.fromPin.node.id+"' srcpinname='"+d.fromPin.pinname+"' dstnodeid='"+d.toPin.node.id+"' dstpinname='"+d.toPin.pinname+"'/></PATCH>")
+          if (thatWin.state == UIState.Idle)
+            editor.update(patch, "<PATCH><LINK deleteme='pronto' srcnodeid='"+d.fromPin.node.id+"' srcpinname='"+d.fromPin.pinname+"' dstnodeid='"+d.toPin.node.id+"' dstpinname='"+d.toPin.pinname+"'/></PATCH>")
           
           d3.event.preventDefault();
         })
@@ -1071,6 +1111,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           return false;
         })
     }
+    
   }
   
 }
