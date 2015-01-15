@@ -41,7 +41,10 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
   $inputbox.get(0).select();
   
   $inputbox.change(function() {
-    pin.setValue(sliceIdx, parseFloat($(this).val()));
+    if (this.typeName=="Value")
+      pin.setValue(sliceIdx, parseFloat($(this).val()));
+    else
+      pin.setValue(sliceIdx, $(this).val());
     var valstr = _(pin.values).map(function(v) { return '|'+v.toString().replace(/\|/g, "||")+'|'});
     valstr.length = pin.getSliceCount();
     pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+valstr.join(',')+"'/></NODE>");
