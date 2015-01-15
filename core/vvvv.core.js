@@ -274,6 +274,7 @@ VVVV.Core = {
 	   * @param {Integer} len the slice count
 	   */
     this.setSliceCount = function(len) {
+      if (len<0) len = 0;
       if (this.values.length==len)
         return;
       if (this.direction==VVVV.PinDirection.Output || !this.isConnected()) {
