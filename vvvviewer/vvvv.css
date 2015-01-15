@@ -21,7 +21,7 @@ h1{
 }
 
 .pininputbox.color{
-  padding-left:20px;
+  padding-left:6px;
   border:1px solid #555;
 }
 
@@ -32,18 +32,19 @@ h1{
 
 .pininputbox.color input[type=range]::-webkit-slider-runnable-track {
     width: 110px;
-    height: 16px;
-    background: transparent;
-    border: 1px solid #EFEFEF;
+    height: 2px;
+    background: #555;
+    border: none;
 }
 
 .pininputbox.color input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
     border: none;
-    height: 14px;
+    height: 5px;
     width: 12px;
     background: #555;
-    margin-top: 0px;
+    margin-top: -5px;
+    border-radius: 2px 2px 0px 0px;
 }
 
 .pininputbox.color .color-component{

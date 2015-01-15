@@ -157,9 +157,9 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
   $inputbox = $('<div class="pininputbox color resettable"></div>');
   $inputbox.css('position', $element.css('position'));
   $inputbox.css('width', "120px");
-  $inputbox.css('height', "90px");
+  $inputbox.css('height', "66px");
   $inputbox.css('left', $element.css('left'));
-  $inputbox.css('top', ($element.offset().top-85)+'px');
+  $inputbox.css('top', ($element.offset().top-60)+'px');
   var col = pin.getValue(sliceIdx);
   var svgcol = [];
   for (var i=0; i<col.rgba.length; i++) {
