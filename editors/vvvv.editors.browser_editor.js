@@ -467,6 +467,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
       .on('contextmenu', function() {
         if (thatWin.state==UIState.Connecting) {
           chart.select('.vvvv-link.current-link').remove();
+          $('.resettable', thatWin.window.document).remove();
           thatWin.state = UIState.Idle;
         }
         d3.event.stopPropagation();
