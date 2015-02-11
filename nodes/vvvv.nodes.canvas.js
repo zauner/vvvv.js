@@ -19,7 +19,7 @@ VVVV.Types.CanvasRenderState = function() {
   this.shadowBlur = 0.0;
   this.shadowColor = new VVVV.Types.Color("0,0,0,1");
   this.blendMode = 'source-over';
-  
+
   this.copy_attributes = function(other) {
     other.fillColor.copy_to(this.fillColor);
     other.strokeColor.copy_to(this.strokeColor);
@@ -33,12 +33,12 @@ VVVV.Types.CanvasRenderState = function() {
     other.shadowColor.copy_to(this.shadowColor);
     this.blendMode = other.blendMode;
   }
-  
+
   this.apply = function(ctx) {
     if (this.gradient.type!='none') {
       if (this.gradient.type=='linear')
         var g = ctx.createLinearGradient(this.gradient.startX,this.gradient.startY,this.gradient.endX, this.gradient.endY);
-      
+
       var numStops = Math.max(this.gradient.colors.length, this.gradient.colorPositions.length);
       for (var i=0; i<numStops; i++) {
         var color = this.gradient.colors[i];
@@ -48,7 +48,7 @@ VVVV.Types.CanvasRenderState = function() {
     }
     else
       ctx.fillStyle = 'rgba('+parseInt(this.fillColor.rgba[0]*255)+','+parseInt(this.fillColor.rgba[1]*255)+','+parseInt(this.fillColor.rgba[2]*255)+','+this.fillColor.rgba[3]+')';
-     
+
     ctx.strokeStyle = 'rgba('+parseInt(this.strokeColor.rgba[0]*255)+','+parseInt(this.strokeColor.rgba[1]*255)+','+parseInt(this.strokeColor.rgba[2]*255)+','+this.strokeColor.rgba[3]+')';
     ctx.lineWidth = this.lineWidth/ctx.canvas.height;
     ctx.lineCap = this.capStyle;
@@ -90,24 +90,24 @@ VVVV.PinTypes.CanvasLayer = {
 
 VVVV.Nodes.FillCanvas = function(id, graph) {
   this.constructor(id, "Fill (Canvas VVVVjs RenderState)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
   var colorIn = this.addInputPin("Color", [new VVVV.Types.Color('1.0, 1.0, 1.0, 1.0')], VVVV.PinTypes.Color);
-  
+
   var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.CanvasRenderState);
-  
+
   var renderStates = [];
-  
+
   this.evaluate = function() {
     var maxSpreadSize = this.getMaxInputSliceCount();
-      
+
     for (var i=0; i<maxSpreadSize; i++) {
       if (renderStates[i]==undefined) {
         renderStates[i] = new VVVV.Types.CanvasRenderState();
@@ -117,7 +117,7 @@ VVVV.Nodes.FillCanvas = function(id, graph) {
       renderStateOut.setValue(i, renderStates[i]);
     }
     renderStateOut.setSliceCount(maxSpreadSize);
-    
+
   }
 }
 VVVV.Nodes.FillCanvas.prototype = new VVVV.Core.Node();
@@ -131,14 +131,14 @@ VVVV.Nodes.FillCanvas.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.StrokeCanvas = function(id, graph) {
   this.constructor(id, "Stroke (Canvas VVVVjs RenderState)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
   var colorIn = this.addInputPin("Color", [new VVVV.Types.Color('1.0, 1.0, 1.0, 1.0')], VVVV.PinTypes.Color);
   var lineWidthIn = this.addInputPin("Width", [1.0], VVVV.PinTypes.Value);
@@ -146,14 +146,14 @@ VVVV.Nodes.StrokeCanvas = function(id, graph) {
   capStyleIn.enumOptions = ['butt', 'round', 'square'];
   var joinStyleIn = this.addInputPin("Join Style", ['miter'], VVVV.PinTypes.Enum);
   joinStyleIn.enumOptions = ['miter', 'round', 'bevel'];
-  
+
   var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.CanvasRenderState);
-  
+
   var renderStates = [];
-  
+
   this.evaluate = function() {
     var maxSpreadSize = this.getMaxInputSliceCount();
-      
+
     for (var i=0; i<maxSpreadSize; i++) {
       if (renderStates[i]==undefined) {
         renderStates[i] = new VVVV.Types.CanvasRenderState();
@@ -167,7 +167,7 @@ VVVV.Nodes.StrokeCanvas = function(id, graph) {
       renderStateOut.setValue(i, renderStates[i]);
     }
     renderStateOut.setSliceCount(maxSpreadSize);
-    
+
   }
 }
 VVVV.Nodes.StrokeCanvas.prototype = new VVVV.Core.Node();
@@ -181,27 +181,27 @@ VVVV.Nodes.StrokeCanvas.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.ShadowCanvas = function(id, graph) {
   this.constructor(id, "Shadow (Canvas VVVVjs RenderState)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
   var colorIn = this.addInputPin("Color", [new VVVV.Types.Color('0.0, 0.0, 0.0, 1.0')], VVVV.PinTypes.Color);
   var xOffsetIn = this.addInputPin("Offset X", [0.0], VVVV.PinTypes.Value);
   var yOffsetIn = this.addInputPin("Offset Y", [0.0], VVVV.PinTypes.Value);
   var blurIn = this.addInputPin("Blur", [0.0], VVVV.PinTypes.Value);
-  
+
   var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.CanvasRenderState);
-  
+
   var renderStates = [];
-  
+
   this.evaluate = function() {
     var maxSpreadSize = this.getMaxInputSliceCount();
-      
+
     for (var i=0; i<maxSpreadSize; i++) {
       if (renderStates[i]==undefined) {
         renderStates[i] = new VVVV.Types.CanvasRenderState();
@@ -214,7 +214,7 @@ VVVV.Nodes.ShadowCanvas = function(id, graph) {
       renderStateOut.setValue(i, renderStates[i]);
     }
     renderStateOut.setSliceCount(maxSpreadSize);
-    
+
   }
 }
 VVVV.Nodes.ShadowCanvas.prototype = new VVVV.Core.Node();
@@ -228,25 +228,25 @@ VVVV.Nodes.ShadowCanvas.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.BlendCanvas = function(id, graph) {
   this.constructor(id, "Blend (Canvas VVVVjs RenderState)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
   var modeIn = this.addInputPin("Mode", ['source-over'], VVVV.PinTypes.Enum);
   modeIn.enumOptions = ['source-over', 'source-out', 'source-in', 'source-atop', 'destination-over', 'destination-out', 'destination-in', 'destination-atop', 'copy', 'lighter', 'xor'];
-  
+
   var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.CanvasRenderState);
-  
+
   var renderStates = [];
-  
+
   this.evaluate = function() {
     var maxSpreadSize = this.getMaxInputSliceCount();
-      
+
     for (var i=0; i<maxSpreadSize; i++) {
       if (renderStates[i]==undefined) {
         renderStates[i] = new VVVV.Types.CanvasRenderState();
@@ -256,7 +256,7 @@ VVVV.Nodes.BlendCanvas = function(id, graph) {
       renderStateOut.setValue(i, renderStates[i]);
     }
     renderStateOut.setSliceCount(maxSpreadSize);
-    
+
   }
 }
 VVVV.Nodes.BlendCanvas.prototype = new VVVV.Core.Node();
@@ -270,14 +270,14 @@ VVVV.Nodes.BlendCanvas.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.LinearGradientCanvas = function(id, graph) {
   this.constructor(id, "LinearGradient (Canvas VVVVjs RenderState)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
   var startXIn = this.addInputPin("Start X", [0.0], VVVV.PinTypes.Value);
   var startYIn = this.addInputPin("Start Y", [0.0], VVVV.PinTypes.Value);
@@ -285,17 +285,17 @@ VVVV.Nodes.LinearGradientCanvas = function(id, graph) {
   var endYIn = this.addInputPin("End Y", [0.0], VVVV.PinTypes.Value);
   var colorsIn = this.addInputPin("Colors", [new VVVV.Types.Color('1.0, 1.0, 1.0, 1.0'), new VVVV.Types.Color('0.0, 0.0, 0.0, 1.0')], VVVV.PinTypes.Color);
   var colorPositionsIn = this.addInputPin("Color Positions", [0.0, 1.0], VVVV.PinTypes.Value);
-  
+
   var renderStateOut = this.addOutputPin("Render State Out", [], VVVV.PinTypes.CanvasRenderState);
-  
+
   var renderStates = [];
-  
+
   this.evaluate = function() {
     var maxSpreadSize = Math.max(renderStateIn.getSliceCount(), startXIn.getSliceCount());
     maxSpreadSize = Math.max(maxSpreadSize, startYIn.getSliceCount());
     maxSpreadSize = Math.max(maxSpreadSize, endXIn.getSliceCount());
     maxSpreadSize = Math.max(maxSpreadSize, endYIn.getSliceCount());
-      
+
     for (var i=0; i<maxSpreadSize; i++) {
       if (renderStates[i]==undefined) {
         renderStates[i] = new VVVV.Types.CanvasRenderState();
@@ -316,7 +316,7 @@ VVVV.Nodes.LinearGradientCanvas = function(id, graph) {
       renderStateOut.setValue(i, renderStates[i]);
     }
     renderStateOut.setSliceCount(maxSpreadSize);
-    
+
   }
 }
 VVVV.Nodes.LinearGradientCanvas.prototype = new VVVV.Core.Node();
@@ -330,14 +330,14 @@ VVVV.Nodes.LinearGradientCanvas.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.ArcCanvas = function(id, graph) {
   this.constructor(id, "Arc (Canvas VVVVjs)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var renderStateIn = this.addInputPin('Render State', [], VVVV.PinTypes.CanvasRenderState);
   var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
   var clippingLayerIn = this.addInputPin('Clipping Layer', [], VVVV.PinTypes.CanvasLayer);
@@ -345,11 +345,11 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
   var startAngleIn = this.addInputPin('Start Angle', [0.0], VVVV.PinTypes.Value);
   var endAngleIn = this.addInputPin('End Angle', [0.5], VVVV.PinTypes.Value);
   var segmentIn = this.addInputPin('Draw Segment', [0], VVVV.PinTypes.Value);
-  
+
   var layersOut = this.addOutputPin('Layer', [], VVVV.PinTypes.CanvasLayer);
-  
+
   var layers = [];
-  
+
   var Arc = function() {
     this.transform = mat4.create();
     mat4.identity(this.transform);
@@ -360,7 +360,7 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
     this.renderState = defaultRenderState;
     this.clippingLayer = undefined;
     this.drawSegment = false;
-  
+
     this.draw = function(ctx, invisible) {
       if (this.clippingLayer) {
         ctx.save();
@@ -392,12 +392,12 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
         ctx.restore();
     }
   }
-  
+
   this.evaluate = function() {
-  
+
     //if (xIn.pinIsChanged() || yIn.pinIsChanged() || rIn.pinIsChanged() || strokeColorIn.pinIsChanged() || startAngleIn.pinIsChanged() || endAngleIn.pinIsChanged() || lineWidthIn.pinIsChanged() || fillColorIn.pinIsChanged()) {
       var maxSpreadSize = this.getMaxInputSliceCount();
-      
+
       for (var i=0; i<maxSpreadSize; i++) {
         if (layers[i]==undefined)
           layers[i] = new Arc();
@@ -410,14 +410,14 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
         if (clippingLayerIn.isConnected())
           layers[i].clippingLayer = clippingLayerIn.getValue(i);
       }
-      
+
       for (var i=0; i<layers.length; i++) {
         layersOut.setValue(i, layers[i]);
       }
-      
+
       layersOut.setSliceCount(maxSpreadSize);
     //}
-    
+
   }
 }
 VVVV.Nodes.ArcCanvas.prototype = new VVVV.Core.Node();
@@ -432,38 +432,38 @@ VVVV.Nodes.ArcCanvas.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.RectangleCanvas = function(id, graph) {
   this.constructor(id, "Rectangle (Canvas VVVVjs)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var renderStateIn = this.addInputPin('Render State', [], VVVV.PinTypes.CanvasRenderState);
   var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
   var clippingLayerIn = this.addInputPin('Clipping Layer', [], VVVV.PinTypes.CanvasLayer);
   var widthIn = this.addInputPin('Width', [1.0], VVVV.PinTypes.Value);
   var heightIn = this.addInputPin('Height', [1.0], VVVV.PinTypes.Value);
   var cornerRadiusIn = this.addInputPin('Corner Radius', [0.0], VVVV.PinTypes.Value);
-  
+
   var layersOut = this.addOutputPin('Layer', [], VVVV.PinTypes.CanvasLayer);
-  
+
   var layers = [];
-  
+
   var Rectangle = function() {
     this.transform = mat4.create();
     mat4.identity(this.transform);
     this.renderState = defaultRenderState;
     this.clippingLayer = undefined;
-  
+
     this.draw = function(ctx, invisible) {
       if (this.clippingLayer) {
         ctx.save();
         this.clippingLayer.draw(ctx, true);
         ctx.clip();
       }
-      
+
       ctx.restoreView();
       if (this.transform)
         ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
@@ -496,15 +496,15 @@ VVVV.Nodes.RectangleCanvas = function(id, graph) {
         ctx.stroke();
       if (this.clippingLayer)
         ctx.restore();
-      
+
     }
   }
-  
+
   this.evaluate = function() {
-  
+
     //if (xIn.pinIsChanged() || yIn.pinIsChanged() || rIn.pinIsChanged() || strokeColorIn.pinIsChanged() || startAngleIn.pinIsChanged() || endAngleIn.pinIsChanged() || lineWidthIn.pinIsChanged() || fillColorIn.pinIsChanged()) {
       var maxSpreadSize = this.getMaxInputSliceCount();
-      
+
       for (var i=0; i<maxSpreadSize; i++) {
         if (layers[i]==undefined)
           layers[i] = new Rectangle();
@@ -516,14 +516,14 @@ VVVV.Nodes.RectangleCanvas = function(id, graph) {
         if (clippingLayerIn.isConnected())
           layers[i].clippingLayer = clippingLayerIn.getValue(i);
       }
-      
+
       for (var i=0; i<layers.length; i++) {
         layersOut.setValue(i, layers[i]);
       }
-      
+
       layersOut.setSliceCount(maxSpreadSize);
     //}
-    
+
   }
 }
 VVVV.Nodes.RectangleCanvas.prototype = new VVVV.Core.Node();
@@ -538,14 +538,14 @@ VVVV.Nodes.RectangleCanvas.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.TextCanvas = function(id, graph) {
   this.constructor(id, "Text (Canvas VVVVjs)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var renderStateIn = this.addInputPin('Render State', [], VVVV.PinTypes.CanvasRenderState);
   var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
   var clippingLayerIn = this.addInputPin('Clipping Layer', [], VVVV.PinTypes.CanvasLayer);
@@ -555,11 +555,11 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
   alignIn.enumOptions = ['start', 'left', 'end', 'right', 'center'];
   var baselineIn = this.addInputPin('Baseline', ['alphabetic'], VVVV.PinTypes.Enum);
   baselineIn.enumOptions = ['top', 'hanging', 'middle', 'alphabetic', 'ideographic', 'bottom'];
-  
+
   var layersOut = this.addOutputPin('Layer', [], VVVV.PinTypes.CanvasLayer);
-  
+
   var layers = [];
-  
+
   var Text = function() {
     this.transform = mat4.create();
     mat4.identity(this.transform);
@@ -569,14 +569,14 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
     this.baseline = 'top';
     this.renderState = defaultRenderState;
     this.clippingLayer = undefined;
-  
+
     this.draw = function(ctx, invisible) {
       if (this.clippingLayer) {
         ctx.save();
         this.clippingLayer.draw(ctx, true);
         ctx.clip();
       }
-      
+
       ctx.restoreView();
       ctx.save();
       if (this.transform)
@@ -598,11 +598,11 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
         ctx.restore();
     }
   }
-  
+
   this.evaluate = function() {
-  
+
     var maxSpreadSize = this.getMaxInputSliceCount();
-    
+
     for (var i=0; i<maxSpreadSize; i++) {
       if (layers[i]==undefined)
         layers[i] = new Text();
@@ -614,13 +614,13 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
       layers[i].renderState = renderStateIn.getValue(i);
       layers[i].clippingLayer = clippingLayerIn.getValue(i);
     }
-    
+
     for (var i=0; i<layers.length; i++) {
       layersOut.setValue(i, layers[i]);
     }
-    
+
     layersOut.setSliceCount(maxSpreadSize);
-    
+
   }
 }
 VVVV.Nodes.TextCanvas.prototype = new VVVV.Core.Node();
@@ -634,14 +634,14 @@ VVVV.Nodes.TextCanvas.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
   this.constructor(id, "BezierCurve (Canvas VVVVjs)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var renderStateIn = this.addInputPin('Render State', [], VVVV.PinTypes.CanvasRenderState);
   var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
   var clippingLayerIn = this.addInputPin('Clipping Layer', [], VVVV.PinTypes.CanvasLayer);
@@ -652,11 +652,11 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
   var control2XIn = this.addInputPin('Control 2 X', [0.0], VVVV.PinTypes.Value);
   var control2YIn = this.addInputPin('Control 2 Y', [0.0], VVVV.PinTypes.Value);
   var binSizeIn = this.addInputPin('BinSize', [-1], VVVV.PinTypes.Value);
-  
+
   var layersOut = this.addOutputPin('Layer', [], VVVV.PinTypes.CanvasLayer);
-  
+
   var layers = [];
-  
+
   var BezierCurve = function() {
     this.transform = mat4.create();
     mat4.identity(this.transform);
@@ -671,26 +671,26 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
     this.fillColor = [1.0, 1.0, 1.0, 1.0];
     this.renderState = defaultRenderState;
     this.clippingLayer = undefined;
-  
+
     this.draw = function(ctx, invisible) {
       if (this.x.length<1)
         return;
-      
+
       if (this.clippingLayer) {
         ctx.save();
         this.clippingLayer.draw(ctx, true);
         ctx.clip();
-      }  
-      
+      }
+
       if (!invisible)
         this.renderState.apply(ctx);
       else
         invisibleRenderState.apply(ctx);
-      
+
       ctx.restoreView();
       if (this.transform)
         ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
-      
+
       ctx.beginPath();
       ctx.moveTo(this.x[0], this.y[0]);
       for (var i=1; i<this.x.length; i++) {
@@ -707,12 +707,12 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
         ctx.fill();
       if (this.renderState.strokeColor.rgba[3]>0)
         ctx.stroke();
-        
+
       if (this.clippingLayer)
         ctx.restore();
     }
   }
-  
+
   function adjustVertexListSize(layer, idx) {
     layer.x.splice(idx);
     layer.y.splice(idx);
@@ -721,19 +721,19 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
     layer.c2x.splice(idx);
     layer.c2y.splice(idx);
   }
-  
+
   this.evaluate = function() {
-  
+
     //if (xIn.pinIsChanged() || yIn.pinIsChanged() || control1XIn.pinIsChanged() || control2XIn.pinIsChanged()|| control2XIn.pinIsChanged() || control2YIn.pinIsChanged() || strokeColorIn.pinIsChanged() || lineWidthIn.pinIsChanged() || fillColorIn.pinIsChanged()) {
       var maxSpreadSize = this.getMaxInputSliceCount();
-        
+
       var binNum = 0;
       var subIndex = 0;
       for (var j=0; j<maxSpreadSize || (binSizeIn.getValue(0)>0 && (subIndex>0 || binNum%transformIn.getSliceCount()>0)); j++) {
         if (layers[binNum]==undefined)
           layers[binNum] = new BezierCurve();
-          
-          
+
+
         if (subIndex == 0) {
           layers[binNum].renderState = renderStateIn.getValue(binNum);
           layers[binNum].transform = transformIn.getValue(binNum);
@@ -746,7 +746,7 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
         layers[binNum].c1y[subIndex] = control1YIn.getValue(j);
         layers[binNum].c2x[subIndex] = control2XIn.getValue(j);
         layers[binNum].c2y[subIndex] = control2YIn.getValue(j);
-        
+
         subIndex++;
         if (binSizeIn.getValue(0)>0 && subIndex>=binSizeIn.getValue(binNum)) {
           if (subIndex<layers[binNum].x.length) {
@@ -769,7 +769,7 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
       }
       layersOut.setSliceCount(layers.length);
     //}
-    
+
   }
 }
 VVVV.Nodes.BezierCurveCanvas.prototype = new VVVV.Core.Node();
@@ -785,41 +785,41 @@ VVVV.Nodes.BezierCurveCanvas.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.QuadCanvas = function(id, graph) {
   this.constructor(id, "Quad (Canvas VVVVjs)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
   var clippingLayerIn = this.addInputPin('Clipping Layer', [], VVVV.PinTypes.CanvasLayer);
   var textureIn = this.addInputPin('Texture', [], VVVV.PinTypes.HTML5Texture);
   var colorIn = this.addInputPin('Color', [new VVVV.Types.Color('1.0, 1.0, 1.0, 1.0')], VVVV.PinTypes.Color);
-  
+
   var layersOut = this.addOutputPin('Layer', [], VVVV.PinTypes.CanvasLayer);
-  
+
   var layers = [];
-  
+
   var Quad = function() {
     this.transform = mat4.create();
     this.clippingLayer = undefined;
     mat4.identity(this.transform);
     this.texture = VVVV.PinTypes.HTML5Texture.defaultValue();
     this.color = [1.0, 1.0, 1.0, 1.0];
-  
+
     this.draw = function(ctx, invisible) {
       if (this.clippingLayer) {
         ctx.save();
         this.clippingLayer.draw(ctx, true);
         ctx.clip();
       }
-      
+
       ctx.restoreView();
       if (this.transform)
         ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
-        
+
       if (this.texture!="Empty Texture") {
         if (this.texture.loaded) {
           ctx.globalAlpha = this.color[3];
@@ -840,16 +840,16 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
         ctx.fillStyle = 'rgba('+parseInt(this.color.rgba[0]*255)+', '+parseInt(this.color.rgba[1]*255)+', '+parseInt(this.color.rgba[2]*255)+', '+this.color.rgba[3]+')';
         ctx.fillRect(-.5, -.5, 1, 1);
       }
-      
+
       if (this.clippingLayer)
         ctx.restore();
     }
   }
-  
+
   this.evaluate = function() {
-  
+
     var maxSpreadSize = this.getMaxInputSliceCount();
-      
+
     for (var i=0; i<maxSpreadSize; i++) {
       if (layers[i]==undefined)
         layers[i] = new Quad();
@@ -859,13 +859,13 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
       if (clippingLayerIn.isConnected())
         layers[i].clippingLayer = clippingLayerIn.getValue(i);
     }
-    
+
     for (var i=0; i<layers.length; i++) {
       layersOut.setValue(i, layers[i]);
     }
-    
+
     layersOut.setSliceCount(maxSpreadSize);
-    
+
   }
 }
 VVVV.Nodes.QuadCanvas.prototype = new VVVV.Core.Node();
@@ -880,27 +880,27 @@ VVVV.Nodes.QuadCanvas.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.GroupCanvas = function(id, graph) {
   this.constructor(id, "Group (Canvas VVVVjs)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var layerCountIn = this.addInvisiblePin("Layer Count", [2], VVVV.PinTypes.Value);
-  
+
   var layerIns = [];
-  
+
   var layerOut = this.addOutputPin("Layer", [], VVVV.PinTypes.CanvasLayer);
-  
+
   this.initialize = function() {
     var layerCount = Math.max(2, layerCountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, layerIns, layerCount, function(i) {
       return this.addInputPin("Layer "+(i+1), [], VVVV.PinTypes.CanvasLayer);
     });
   }
-  
+
   this.evaluate = function() {
     if (layerCountIn.pinIsChanged())
       this.initialize();
@@ -917,7 +917,7 @@ VVVV.Nodes.GroupCanvas = function(id, graph) {
     }
     layerOut.setSliceCount(outSliceIdx);
   }
-  
+
 }
 VVVV.Nodes.GroupCanvas.prototype = new VVVV.Core.Node();
 
@@ -931,23 +931,23 @@ VVVV.Nodes.GroupCanvas.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.RendererCanvas = function(id, graph) {
   this.constructor(id, "Renderer (Canvas VVVVjs)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var layersIn = this.addInputPin("Layers", [], VVVV.PinTypes.CanvasLayer);
   var clearIn = this.addInputPin("Clear", [1], VVVV.PinTypes.Value);
   var bgColorIn = this.addInputPin("Background Color", [new VVVV.Types.Color("0.0, 0.0, 0.0, 1.0")], VVVV.PinTypes.Color);
   var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], VVVV.PinTypes.Value);
   var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], VVVV.PinTypes.Value);
   var viewIn = this.addInputPin("View", [], VVVV.PinTypes.Transform);
-  
+
   var canvasOut = this.addOutputPin("Canvas Out", []);
-  
+
   var ctx;
   var canvasWidth;
   var canvasHeight;
@@ -956,49 +956,80 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   var canvas;
   var viewT = mat4.create();
   var projT;
-  
+
   // this is actually some code duplication, because the very same exists in Renderer (EX9)
   function attachMouseEvents(canvas) {
     $(canvas).detach('mousemove');
     $(canvas).detach('mousedown');
     $(canvas).detach('mouseup');
-    VVVV.MousePositions[canvas.id] = {'x': 0.0, 'y': 0.0, 'wheel': 0.0, 'lb': 0.0, 'mb': 0.0, 'rb': 0.0};
+    VVVV.MousePositions[canvas.id] = {'x': [0.0], 'y': [0.0], 'wheel': [0.0], 'lb': [0.0], 'mb': [0.0], 'rb': [0.0]};
     $(canvas).mousemove(function(e) {
       var x = (e.pageX - $(this).offset().left) * 2 / $(this).width() - 1;
       var y = -((e.pageY - $(this).offset().top) * 2 / $(this).height() - 1);
-      VVVV.MousePositions['_all'].x = x;
-      VVVV.MousePositions['_all'].y = y;
-      VVVV.MousePositions[canvas.id].x = x;
-      VVVV.MousePositions[canvas.id].y = y;
+      VVVV.MousePositions['_all'].x[0] = x;
+      VVVV.MousePositions['_all'].y[0] = y;
+      VVVV.MousePositions[canvas.id].x[0] = x;
+      VVVV.MousePositions[canvas.id].y[0] = y;
     });
     $(canvas).bind('mousewheel', function(e) {
       var delta = e.originalEvent.wheelDelta/120;
-      VVVV.MousePositions[canvas.id].wheel += delta;
-      VVVV.MousePositions['_all'].wheel += delta;
+      VVVV.MousePositions[canvas.id].wheel[0] += delta;
+      VVVV.MousePositions['_all'].wheel[0] += delta;
     });
     $(canvas).bind('DOMMouseScroll', function(e) {
       var delta = -e.originalEvent.detail/3;
-      VVVV.MousePositions[canvas.id].wheel += delta;
-      VVVV.MousePositions['_all'].wheel += delta;
+      VVVV.MousePositions[canvas.id].wheel[0] += delta;
+      VVVV.MousePositions['_all'].wheel[0] += delta;
     })
     function mouseup(e) {
       switch (e.which) {
-        case 1: VVVV.MousePositions['_all'].lb = 0; VVVV.MousePositions[canvas.id].lb = 0; break;
-        case 2: VVVV.MousePositions['_all'].mb = 0; VVVV.MousePositions[canvas.id].mb = 0; break;
-        case 3: VVVV.MousePositions['_all'].rb = 0; VVVV.MousePositions[canvas.id].rb = 0; break;
+        case 1: VVVV.MousePositions['_all'].lb[0] = 0; VVVV.MousePositions[canvas.id].lb[0] = 0; break;
+        case 2: VVVV.MousePositions['_all'].mb[0] = 0; VVVV.MousePositions[canvas.id].mb[0] = 0; break;
+        case 3: VVVV.MousePositions['_all'].rb[0] = 0; VVVV.MousePositions[canvas.id].rb[0] = 0; break;
       }
     }
     $(canvas).mousedown(function(e) {
       switch (e.which) {
-        case 1: VVVV.MousePositions['_all'].lb = 1; VVVV.MousePositions[canvas.id].lb = 1; break;
-        case 2: VVVV.MousePositions['_all'].mb = 1; VVVV.MousePositions[canvas.id].mb = 1; break;
-        case 3: VVVV.MousePositions['_all'].rb = 1; VVVV.MousePositions[canvas.id].rb = 1; break;
+        case 1: VVVV.MousePositions['_all'].lb[0] = 1; VVVV.MousePositions[canvas.id].lb[0] = 1; break;
+        case 2: VVVV.MousePositions['_all'].mb[0] = 1; VVVV.MousePositions[canvas.id].mb[0] = 1; break;
+        case 3: VVVV.MousePositions['_all'].rb[0] = 1; VVVV.MousePositions[canvas.id].rb[0] = 1; break;
       }
       $(document).unbind('mouseup', mouseup);
       $(document).mouseup(mouseup);
     });
+
+    function setTouchPositions(e, element) {
+      var i = e.originalEvent.changedTouches.length;
+      while (i--) {
+        var x = (e.originalEvent.changedTouches[i].pageX - $(element).offset().left) * 2 / $(element).width() - 1;
+        var y = -((e.originalEvent.changedTouches[i].pageY - $(element).offset().top) * 2 / $(element).height() - 1);
+        VVVV.MousePositions['_all'].x[e.originalEvent.changedTouches[i].identifier] = VVVV.MousePositions[element.id].x[e.originalEvent.changedTouches[i].identifier] = x;
+        VVVV.MousePositions['_all'].y[e.originalEvent.changedTouches[i].identifier] = VVVV.MousePositions[element.id].y[e.originalEvent.changedTouches[i].identifier] = y;
+      }
+    }
+
+    $(canvas).bind('touchstart', function(e) {
+      var i = e.originalEvent.changedTouches.length;
+      while (i--) {
+        VVVV.MousePositions['_all'].lb[e.originalEvent.changedTouches[i].identifier] = VVVV.MousePositions[canvas.id].lb[e.originalEvent.changedTouches[i].identifier] = 1;
+      }
+      setTouchPositions(e, this);
+    })
+
+    $(canvas).bind('touchend', function(e) {
+      var i = e.originalEvent.changedTouches.length;
+      while (i--) {
+        VVVV.MousePositions['_all'].lb[e.originalEvent.changedTouches[i].identifier] = VVVV.MousePositions[canvas.id].lb[e.originalEvent.changedTouches[i].identifier] = 0;
+      }
+    })
+
+    $(canvas).bind('touchmove', function(e) {
+      setTouchPositions(e, this);
+      e.preventDefault();
+    })
+
   }
-  
+
   this.getContext = function() {
 
     var selector = this.invisiblePins["Descriptive Name"].getValue(0);
@@ -1018,36 +1049,36 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
 
     canvasWidth = canvas.width;
     canvasHeight = canvas.height;
-    
+
     if (!canvas || !canvas.getContext)
       return;
-      
+
     attachMouseEvents(canvas);
-    
+
     ctx = canvas.getContext('2d');
     canvas.ctx = ctx;
-    
+
     ctx.restoreView = function() {
       ctx.setTransform(viewT[0], viewT[1], viewT[4], viewT[5], viewT[12], viewT[13]);
     }
-    
+
   }
-  
+
   this.destroy = function() {
     $(canvas).remove();
   }
 
   this.evaluate = function() {
-    
+
     if (this.invisiblePins["Descriptive Name"].pinIsChanged()) {
       if ($(canvas).hasClass('vvvv-js-generated-renderer'))
         $(canvas).remove();
       this.getContext();
     }
-  
+
     if (!ctx)
       return;
-      
+
     if (bufferWidthIn.pinIsChanged() || bufferHeightIn.pinIsChanged()) {
       var w = parseInt(bufferWidthIn.getValue(0));
       var h = parseInt(bufferHeightIn.getValue(0));
@@ -1062,7 +1093,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
       projT = mat4.create([canvasWidth/2, 0, 0, 0, 0, -canvasHeight/2, 0, 0, 0, 0, 1, 0, canvasWidth/2, canvasHeight/2, 0, 1]);
       mat4.multiply(projT, viewIn.getValue(0), viewT);
     }
-      
+
     if (bgColorIn.pinIsChanged()) {
       var col = bgColorIn.getValue(0);
       bgColor[0] = parseInt(col.rgba[0]*255);
@@ -1070,36 +1101,36 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
       bgColor[2] = parseInt(col.rgba[2]*255);
       bgColor[3] = col.rgba[3];
     }
-      
+
     if (true) { //layersIn.pinIsChanged() || bgColorIn.pinIsChanged() || clearIn.pinIsChanged() || viewIn.pinIsChanged()) {
-    
+
       defaultRenderState.apply(ctx);
-      
+
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      
+
       if (true) {//clearIn.getValue(0)>0.5) {
         if (bgColor[3]<1.0)
           ctx.clearRect(0, 0, canvasWidth, canvasHeight);
         ctx.fillStyle = 'rgba('+bgColor[0]+','+bgColor[1]+','+bgColor[2]+','+bgColor[3]+')';
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
       }
-      
+
       if (viewIn.pinIsChanged()) {
         mat4.multiply(projT, viewIn.getValue(0), viewT);
       }
-      
+
       ctx.restoreView();
-      
+
       if (layersIn.isConnected()) {
         for (var i=0; i<layersIn.getSliceCount(); i++) {
           layersIn.getValue(i).draw(ctx);
         }
       }
-      
+
       canvasOut.setValue(0, canvas);
-      
+
     }
-    
+
     canvas.loaded = true;
 
 
