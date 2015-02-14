@@ -51,6 +51,13 @@ VVVV.Patches = {};
 VVVV.Editors = {};
 
 /**
+ * Fired when framerate is lower than 15fps for a certain amount of frames. See VVVV.MainLoop#update
+ */
+VVVV.onLowFrameRate = function() {
+  
+}
+
+/**
  * Fired when a node is being created that is not implemented
  * @param {String} nodename the name of the node which is not implemented
  */

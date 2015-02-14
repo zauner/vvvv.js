@@ -20,6 +20,7 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
   var start = undefined;
   var animFrameRequested = false;
   
+  this.lowFrameRateCount = 0;
   var measureStart = 0;
   var print_framerate = false;
   
@@ -56,6 +57,12 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
         measureStart = start;
       }
       that.frameNum++;
+      
+      if (elapsed>66 && that.lowFrameRateCount++>50) {
+        VVVV.onLowFrameRate();
+      }
+      else
+        lowFrameRateCount = 0;
     }
     if (run) // && framecount<1)
       window.setTimeout(function() {
