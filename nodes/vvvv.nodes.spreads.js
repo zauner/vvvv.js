@@ -862,6 +862,8 @@ VVVV.Nodes.QueueSpreads = function(id, graph) {
     }
     
     if (reset>=0.5) {
+      output.length = 0;
+      binsizes.length = 0;
       outputOut.setSliceCount(0);
       outputbinsizeOut.setSliceCount(0);
     }
