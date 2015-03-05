@@ -53,7 +53,7 @@ WebAudioNode.prototype.createAudioPins = function()
   {
     this.audioInputPins.push(this.addInputPin('Input '+(i+1), [], VVVV.PinTypes.WebAudio));
   }
-  for(var i = 0; i < this.apiNode.numberOfInputs; i++)
+  for(var i = 0; i < this.apiNode.numberOfOutputs; i++)
   {
     this.audioOutputPins.push(this.addOutputPin('Output '+(i+1), [], VVVV.PinTypes.WebAudio));
   }
@@ -166,6 +166,7 @@ VVVV.Nodes.MediaElementSource = function(id, graph) {
       {
         mediaElements[0] = inElement;
         this.createAPINode(audioIn.getValue(0));
+        inElement.volume = 1;
       }
       
       if(this.apiNode)
