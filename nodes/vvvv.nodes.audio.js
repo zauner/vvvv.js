@@ -145,6 +145,8 @@ VVVV.Nodes.AnalyserNode = function(id, graph) {
     {
       fftOut.setValue(i, fftData[i]); //FIXME: veeeeery inefficient!
     }
+    
+    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
   }
 }
 VVVV.Nodes.AnalyserNode.prototype = new WebAudioNode('Analyser');
@@ -237,6 +239,8 @@ VVVV.Nodes.BeatDetector = function(id, graph) {
     beatDetector.process(audioContext.currentTime, fftData);
     beatCounterOut.setValue(0, beatDetector.beat_counter);
     bpmOut.setValue(0, beatDetector.win_bpm_int / 10);
+    
+    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
   }
 }
 VVVV.Nodes.BeatDetector.prototype = new WebAudioNode('Analyser');
