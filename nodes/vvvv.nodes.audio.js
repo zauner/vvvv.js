@@ -12,8 +12,11 @@ VVVV.PinTypes.WebAudio = {
   },
   connectionChangedHandlers: {
     'webaudio': function() {
-      if(this.direction == PinDirection.Input)
+      if(this.direction == PinDirection.Output)
+      {
+        console.log("Connection changed!", this);
         this.audioConnectionChanged = true;
+      }
     }
   }
 }
@@ -39,9 +42,15 @@ function WebAudioNode(id, name, graph) {
   }
   else //constructing prototype
   {
-    this.createAPINode = function()
+    this.createAPINode = function(arg)
     {
-      this.apiNode = audioContext['create'+id].apply(audioContext, arguments);
+      //this is just for debugging purposes with firefox's web audio visualiser
+      if(id == 'Analyser')
+        this.apiNode = audioContext.createAnalyser(arg);
+      else if(id == 'MediaElementSource')
+        this.apiNode = audioContext.createMediaElementSource(arg);
+      else //this is the normal code
+        this.apiNode = audioContext['create'+id].apply(audioContext, arguments);
     }
     this.auto_evaluate = false;
   }
@@ -55,7 +64,7 @@ WebAudioNode.prototype.createAudioPins = function()
   }
   for(var i = 0; i < this.apiNode.numberOfOutputs; i++)
   {
-    this.audioOutputPins.push(this.addOutputPin('Output '+(i+1), [], VVVV.PinTypes.WebAudio));
+    this.audioOutputPins.push(this.addOutputPin('Output '+(i+1), [this.apiNode], VVVV.PinTypes.WebAudio));
   }
 }
 WebAudioNode.prototype.createParamPins = function()
@@ -72,14 +81,20 @@ WebAudioNode.prototype.createParamPins = function()
 WebAudioNode.prototype.updateAudioConnections = function()
 {
   var that = this;
-  this.audioInputPins.forEach(function(audioIn, i) {
-    if(audioIn.audioConnectionChanged && audioIn.getValue(0) instanceof AudioNode)
+  this.audioOutputPins.forEach(function(audioOut, outIndex) {
+    if(audioOut.audioConnectionChanged && that.apiNode)
     {
-      console.log("Connecting!");
-      audioIn.getValue(0).connect(that.apiNode, 0 /*FIXME*/, i);
-      audioIn.audioConnectionChanged = false;
+      console.log("Re-connecting!");
+      that.apiNode.disconnect(outIndex);
+      audioOut.links.forEach(function(link)
+      {
+        var inPin = link.toPin;
+        var inNode = inPin.node;
+        var inIndex = inNode.audioInputPins.indexOf(inPin);
+        that.apiNode.connect(inNode.apiNode, outIndex, inIndex);
+      });
+      audioOut.audioConnectionChanged = false;
     }
-    
   });
 }
 
@@ -153,12 +168,14 @@ VVVV.Nodes.MediaElementSource = function(id, graph) {
   
   var audioIn = this.addInputPin('Audio', [], this);
   var audioOut = this.addOutputPin('Output', [], VVVV.PinTypes.WebAudio);
+  this.audioOutputPins.push(audioOut);
   
   this.initialize = function() {};
   
   var mediaElements = [ 7 ];
   
   this.evaluate = function() {
+    this.updateAudioConnections();
     if(audioIn.pinIsChanged())
     {
       var inElement = audioIn.getValue(0);
