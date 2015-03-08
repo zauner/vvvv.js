@@ -124,8 +124,6 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
         VVVV.loadScript('nodes/vvvv.nodes.node.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.astronomy.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.xml.js', loadMonitor);
-        
-        VVVV.loadScript('lib/beatdetektor.js', loadMonitor);
       }
       VVVV.loadScript('editors/vvvv.editors.browser_editor.js', loadMonitor);
     }

@@ -548,6 +548,7 @@ VVVV.Nodes.BeatDetector = function(id, graph) {
   }
 }
 VVVV.Nodes.BeatDetector.prototype = new WebAudioNode('Analyser');
+VVVV.Nodes.BeatDetector.requirements = ["beatdetektor"];
 
 /*VVVV.Nodes.BiquadFilterNode = makeAudioNodeConstructor('BiquadFilter');
 VVVV.Nodes.ChannelMergerNode = makeAudioNodeConstructor('ChannelMerger');
