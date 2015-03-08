@@ -56,6 +56,8 @@ function WebAudioNode(id, name, graph) {
         this.apiNode = audioContext.createDelay(arg);
       else if(id == 'Gain')
         this.apiNode = audioContext.createGain(arg);
+      else if(id == 'DynamicsCompressor')
+        this.apiNode = audioContext.createDynamicsCompressor(arg);
       else //this is the normal code
         this.apiNode = audioContext['create'+id].apply(audioContext, arguments);
     }
@@ -344,6 +346,37 @@ VVVV.Nodes.Gain = function(id, graph) {
   }
 }
 VVVV.Nodes.Gain.prototype = new WebAudioNode('Gain');
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: DynamicsCompressor (HTML5 Audio)
+ Author(s): 'Lukas Winter'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.DynamicsCompressor = function(id, graph) {
+  WebAudioNode.call(this, id, 'DynamicsCompressor (HTML5 Audio)', graph);
+  
+  this.meta = {
+    authors: ['Lukas Winter'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var reductionOut = this.addOutputPin('Reduction', [ 0 ], VVVV.PinTypes.Value);
+  
+  this.evaluate = function() {
+    this.updateAudioConnections();
+    this.updateParamPins();
+    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+    
+    //according to the spec, reduction shouldn't be an AudioParam, but browsers seem to implement it as such
+    if(this.apiNode)
+      reductionOut.setValue(0, this.apiNode.reduction.value);
+  }
+}
+VVVV.Nodes.DynamicsCompressor.prototype = new WebAudioNode('DynamicsCompressor');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
