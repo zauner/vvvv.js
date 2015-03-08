@@ -409,6 +409,39 @@ VVVV.Nodes.Gain.prototype = new WebAudioNode('Gain');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Convolver (HTML5 Audio)
+ Author(s): 'Lukas Winter'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Convolver = function(id, graph) {
+  WebAudioNode.call(this, id, 'Convolver (HTML5 Audio)', graph);
+  
+  this.meta = {
+    authors: ['Lukas Winter'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var responseIn = this.addInputPin("Impulse Response", [], VVVV.PinTypes.AudioBuffer);
+  var normalizeIn = this.addInputPin("Normalize", [1], VVVV.PinTypes.Value);
+  
+  this.evaluate = function() {
+    if(this.apiNode && (normalizeIn.pinIsChanged() || responseIn.pinIsChanged()))
+    {
+      this.apiNode.normalize = normalizeIn.getValue(0) != 0;
+      this.apiNode.buffer = responseIn.getValue(0);
+    }
+    this.updateAudioConnections();
+    this.updateParamPins();
+    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+  }
+}
+VVVV.Nodes.Convolver.prototype = new WebAudioNode('Convolver');
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: BiquadFilter (HTML5 Audio)
  Author(s): 'Lukas Winter'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
