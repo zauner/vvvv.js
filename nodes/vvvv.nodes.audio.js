@@ -12,7 +12,7 @@ VVVV.PinTypes.WebAudio = {
   },
   connectionChangedHandlers: {
     'webaudio': function() {
-      if(this.direction == PinDirection.Output)
+      if(this.direction == VVVV.PinDirection.Output)
       {
         console.log("Connection changed!", this);
         this.audioConnectionChanged = true;
