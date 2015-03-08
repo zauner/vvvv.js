@@ -52,6 +52,8 @@ function WebAudioNode(id, name, graph) {
         this.apiNode = audioContext.createMediaElementSource(arg);
       else if(id == 'Oscillator')
         this.apiNode = audioContext.createOscillator(arg);
+      else if(id == 'Delay')
+        this.apiNode = audioContext.createDelay(arg);
       else //this is the normal code
         this.apiNode = audioContext['create'+id].apply(audioContext, arguments);
     }
@@ -285,6 +287,36 @@ VVVV.Nodes.Oscillator = function(id, graph) {
   }
 }
 VVVV.Nodes.Oscillator.prototype = new WebAudioNode('Oscillator');
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Delay (HTML5 Audio)
+ Author(s): 'Lukas Winter'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Delay = function(id, graph) {
+  WebAudioNode.call(this, id, 'Delay (HTML5 Audio)', graph);
+  
+  this.meta = {
+    authors: ['Lukas Winter'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var createAPINode = this.createAPINode;
+  this.createAPINode = function() { createAPINode.call(this, 10); }
+  
+  this.delays_output = true;
+  
+  this.evaluate = function() {
+    this.updateAudioConnections();
+    this.updateParamPins();
+    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+  }
+}
+VVVV.Nodes.Delay.prototype = new WebAudioNode('Delay');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
