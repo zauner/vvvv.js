@@ -58,6 +58,8 @@ function WebAudioNode(id, name, graph) {
         this.apiNode = audioContext.createGain(arg);
       else if(id == 'DynamicsCompressor')
         this.apiNode = audioContext.createDynamicsCompressor(arg);
+      else if(id == 'BiquadFilter')
+        this.apiNode = audioContext.createBiquadFilter(arg);
       else //this is the normal code
         this.apiNode = audioContext['create'+id].apply(audioContext, arguments);
     }
@@ -346,6 +348,37 @@ VVVV.Nodes.Gain = function(id, graph) {
   }
 }
 VVVV.Nodes.Gain.prototype = new WebAudioNode('Gain');
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: BiquadFilter (HTML5 Audio)
+ Author(s): 'Lukas Winter'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.BiquadFilter = function(id, graph) {
+  WebAudioNode.call(this, id, 'BiquadFilter (HTML5 Audio)', graph);
+  
+  this.meta = {
+    authors: ['Lukas Winter'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var typeIn = this.addInputPin("Type", ['lowpass'], VVVV.PinTypes.Enum);
+  typeIn.enumOptions = ["lowpass", "highpass", "bandpass", "lowshelf", "highshelf", "peaking", "notch", "allpass" ];
+  
+  this.evaluate = function() {
+    this.updateAudioConnections();
+    this.updateParamPins();
+    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+    
+    if(this.apiNode && typeIn.pinIsChanged())
+      this.apiNode.type = typeIn.getValue(0);
+  }
+}
+VVVV.Nodes.BiquadFilter.prototype = new WebAudioNode('BiquadFilter');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
