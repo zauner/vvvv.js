@@ -39,6 +39,7 @@ function WebAudioNode(id, name, graph) {
     }
     this.audioInputPins = [];
     this.audioOutputPins = [];
+    this.paramPins = [];
   }
   else //constructing prototype
   {
@@ -72,11 +73,23 @@ WebAudioNode.prototype.createParamPins = function()
   for(var key in this.apiNode)
   {
     var param = this.apiNode[key];
-    if(key instanceof AudioParam)
+    if(param instanceof AudioParam)
     {
-      this.addInputPin(key.replace(/([a-z^])([A-Z])/g, '$1 $2'), [param.defaultValue], VVVV.PinTypes.WebAudio);
+      this.paramPins.push(this.addInputPin(key.replace(/([a-z^])([A-Z])/g, '$1 $2'), [param.defaultValue], VVVV.PinTypes.Value)); //FIXME: params can be connected to a value or an audio stream
+      this.paramPins[this.paramPins.length - 1].apiName = key;
     }
   }
+}
+WebAudioNode.prototype.updateParamPins = function()
+{
+  var that = this;
+  this.paramPins.forEach( function(pin, i)
+  {
+    if(pin.pinIsChanged() && that.apiNode)
+    {
+      that.apiNode[pin.apiName].value = pin.getValue(0);
+    }
+  });
 }
 WebAudioNode.prototype.updateAudioConnections = function()
 {
