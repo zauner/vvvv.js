@@ -3,6 +3,8 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,7 +34,7 @@ VVVV.Nodes.IOBoxString = function(id, graph) {
   this.evaluate = function() {
 	  this.outputPins["Output String"].setSliceCount(this.inputPins["Input String"].getSliceCount());
     for (var i=0; i<this.inputPins["Input String"].getSliceCount(); i++) {
-      this.outputPins["Output String"].setValue(i, this.inputPins["Input String"].values[i]);
+      this.outputPins["Output String"].setValue(i, this.inputPins["Input String"].getValue(i));
     }
   }
 
@@ -204,9 +206,9 @@ VVVV.Nodes.AsValue = function(id, graph) {
     for (var i=0; i<maxSize; i++) {
       var inp = inputIn.getValue(i);
       if (/^\s*-?[0-9.e]+\s*$/.test(inp))
-        outputOut.setValue(i, parseFloat(inp));
+        outputOut.setValue(i, inp);
       else
-        outputOut.setValue(i, parseFloat(defaultIn.getValue(i)));
+        outputOut.setValue(i, defaultIn.getValue(i));
     }
     outputOut.setSliceCount(maxSize);
   }
@@ -254,7 +256,6 @@ VVVV.Nodes.SortString = function(id, graph) {
   // evaluate() will be called each frame
   // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
   this.evaluate = function() {
-    xxx = inputIn.values;
     var sorted = _(inputIn.values).map(function(v,i) { return [v, i]; });
     sorted = _(sorted).sortBy(function(x) { return x[0] });
     
@@ -699,7 +700,7 @@ VVVV.Nodes.AvoidNilString = function(id, graph) {
   this.evaluate = function() {
     if (inputIn.pinIsChanged() || defaultIn.pinIsChanged()) {
       var source = inputIn;
-      if (inputIn.values[0]==undefined) {
+      if (inputIn.getSliceCount()==0) {
         source = defaultIn;
       }
       for (var i=0; i<source.values.length; i++) {
@@ -768,7 +769,7 @@ VVVV.Nodes.FormatValueString = function(id, graph) {
       var leadingzeroes = leadingzeroesIn.getValue(i);
 
       var ccount = charactersbeforecomma+charactersaftercomma+(charactersaftercomma>0);
-      input = parseFloat(input).toFixed(charactersaftercomma);
+      input = input.toFixed(charactersaftercomma);
       input = pad(input, ccount, leadingzeroes>=0.5 ? '0' : ' ');
       input = input.replace('.', separators[commasymbol]).replace(/\B(?=(\d{3})+(?!\d))/g, separators[thousandssymbol]);    
       outputOut.setValue(i, input);
@@ -779,3 +780,5 @@ VVVV.Nodes.FormatValueString = function(id, graph) {
 
 }
 VVVV.Nodes.FormatValueString.prototype = new VVVV.Core.Node();
+
+}(vvvvjs_jquery));

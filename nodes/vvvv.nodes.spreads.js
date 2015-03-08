@@ -3,6 +3,8 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: GetSlice (Spreads)
@@ -36,12 +38,12 @@ VVVV.Nodes.GetSliceSpreads = function(id, graph) {
       res = inputIn.getValue(Math.round(indexIn.getValue(i)), binSize);
       if (binSize>1) {
         for (var j=0; j<res.length; j++) {
-          outputOut.setValue(outIdx, parseFloat(res[j]));
+          outputOut.setValue(outIdx, res[j]);
           outIdx++;
         }
       }
       else {
-        outputOut.setValue(i, parseFloat(res));
+        outputOut.setValue(i, res);
         outIdx++;
       }
     }
@@ -170,8 +172,8 @@ VVVV.Nodes.RandomSpread = function(id, graph) {
 
   this.evaluate = function() {
     var count = parseInt(this.inputPins["Spread Count"].getValue(0));
-    var input = parseFloat(this.inputPins["Input"].getValue(0));
-    var width = parseFloat(this.inputPins["Width"].getValue(0));
+    var input = this.inputPins["Input"].getValue(0);
+    var width = this.inputPins["Width"].getValue(0);
     var randomseed = parseInt(this.inputPins["Random Seed"].getValue(0));
     
     rng = new Rc4Random(randomseed.toString());
@@ -255,35 +257,37 @@ VVVV.Nodes.LinearSpread = function(id, graph) {
 
   this.evaluate = function() {
     
-    var count = parseInt(countIn.getValue(0));
-    var width = parseFloat(widthIn.getValue(0));
-    var phase = parseFloat(phaseIn.getValue(0));
-    var input = parseFloat(inputIn.getValue(0));
-    var alignment = alignmentIn.getValue(0);
-    if (alignment=='')
-      alignment = 'Centered';
-    var stepSize = width/count;
-    if (alignment=='Block')
-      stepSize = width/(count-1);
-    var shift = stepSize/2;
-    if (alignment=='Block' || alignment=='LeftJustified')
-      shift = 0;
-    if (alignment=='RightJustified')
-      shift = stepSize;
-    var result;
-    for (var i=0; i<count; i++) {
-      result = i*stepSize + shift;
-      if (alignment!='Block') {
-        if (width!=0)
-          result = (result + phase*width) % width;
+    var maxSize = this.getMaxInputSliceCount();
+    var idx = 0;
+    for (var l=0; l<maxSize; l++) {
+      var count = parseInt(countIn.getValue(l));
+      var width = widthIn.getValue(l);
+      var phase = phaseIn.getValue(l);
+      var input = inputIn.getValue(l);
+      var alignment = alignmentIn.getValue(l);
+      if (alignment=='')
+        alignment = 'Centered';
+      var stepSize = width/count;
+      if (alignment=='Block')
+        stepSize = width/(count-1);
+      var shift = stepSize/2;
+      if (alignment=='Block' || alignment=='LeftJustified')
+        shift = 0;
+      if (alignment=='RightJustified')
+        shift = stepSize;
+      var result;
+      for (var i=0; i<count; i++) {
+        result = i*stepSize + shift;
+        if (alignment!='Block') {
+          if (width!=0)
+            result = (result + phase*width) % width;
+        }
+        result = input-width/2 + result;
+        outputOut.setValue(idx, result);
+        idx++;
       }
-      result = input-width/2 + result;
-      outputOut.setValue(i, result.toFixed(4));
     }
-    
-    outputOut.setSliceCount(count);
-    
-
+    outputOut.setSliceCount(idx);
   }
 
 }
@@ -317,7 +321,7 @@ VVVV.Nodes.AvoidNil = function(id, graph) {
   this.evaluate = function() {
     if (inputIn.pinIsChanged() || defaultIn.pinIsChanged()) {
       var source = inputIn;
-      if (inputIn.values[0]==undefined) {
+      if (inputIn.getSliceCount()==0) {
         source = defaultIn;
       }
       for (var i=0; i<source.values.length; i++) {
@@ -372,7 +376,7 @@ VVVV.Nodes.SwapDim.prototype = new VVVV.Core.Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: I (Spreads)
- Author(s): David Mórász (micro.D)
+ Author(s): woei
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -381,34 +385,52 @@ VVVV.Nodes.I = function(id, graph) {
   this.constructor(id, "I (Spreads)", graph);
   
   this.meta = {
-    authors: ['Mórász Dávid (micro.D)'],
+    authors: ['woei'],
     original_authors: ['VVVV Group'],
-    credits: ['Matthias Zauner'],
-    compatibility_issues: ['This has no phase pin.','Smaller "from" than "to" isn\'t working yet']
+    credits: ['Matthias Zauner, Mórász Dávid (micro.D)'],
+    compatibility_issues: []
   };
   
   var fromIn = this.addInputPin("[ From ..", [0], VVVV.PinTypes.Value);
   var toIn = this.addInputPin(".. To [", [1], VVVV.PinTypes.Value);
+  var phaseIn = this.addInputPin("Phase", [0.0], VVVV.PinTypes.Value);
   
   var outputOut = this.addOutputPin("Output", [0], VVVV.PinTypes.Value);
-
   this.evaluate = function() {
     
-    var from = Math.round(fromIn.getValue(0));
-    var to = Math.round(toIn.getValue(0));
+    var maxSize = this.getMaxInputSliceCount();
     var idx = 0;
-    if (from<=to) {
-      for (var i=from; i < to; i++, idx++ ) {
-        outputOut.setValue(idx, i);
+    for (var s=0; s<maxSize; s++) {
+      var from = Math.round(fromIn.getValue(s));
+      var to = Math.round(toIn.getValue(s));
+      var phase = phaseIn.getValue(s);
+      var range = to-from;
+      var aRange = Math.abs(range);
+      if (from<=to) {
+        for (var i=0; i < aRange; i++, idx++ ) {
+          var o = parseFloat(i)-(aRange*phase);
+          o = Math.round(o) % range;
+          if (o<0)
+            o = range+o;
+          o += from;
+          outputOut.setValue(idx, o);
+        }
       }
-      outputOut.setSliceCount(to-from);
-    }
-    else {
-      for (var i=from; i > to; i--, idx++ ) {
-        outputOut.setValue(idx, i);
+      else {
+        for (var i=aRange; i > 0; i--, idx++ ) {
+          var o = parseFloat(i)-(aRange*phase);
+          o = Math.round(o) % range;
+          if (range<0)
+            o*=-1;
+          if (o<0)
+            o = range-o;
+          o += from;
+          outputOut.setValue(idx, o);
+        }
+        
       }
-      outputOut.setSliceCount(from-to);
     }
+    outputOut.setSliceCount(idx);
   }
 }
 VVVV.Nodes.I.prototype = new VVVV.Core.Node();
@@ -417,7 +439,7 @@ VVVV.Nodes.I.prototype = new VVVV.Core.Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 NODE: CircularSpread (Spreads)
-Author(s): Matija Miloslavich
+Author(s): Matija Miloslavich, woei
 Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -427,57 +449,53 @@ VVVV.Nodes.CircularSpread = function (id, graph) {
   this.constructor(id, "CircularSpread (Spreads)", graph);
 
   this.meta = {
-      authors: ['Matija Miloslavich'],
+      authors: ['Matija Miloslavich, woei'],
       original_authors: ['VVVV Group'],
       credits: [],
-      compatibility_issues: ['only x and y inputs are spreadable']
+      compatibility_issues: []
   };
 
-  this.inpxin = this.addInputPin("Input X", [0.0], VVVV.PinTypes.Value);
-  this.inpyin = this.addInputPin("Input Y", [0.0], VVVV.PinTypes.Value);
-  this.widhin = this.addInputPin("Width", [1.0], VVVV.PinTypes.Value);
-  this.heightin = this.addInputPin("Height", [1.0], VVVV.PinTypes.Value);
-  this.factorin = this.addInputPin("Factor", [1.0], VVVV.PinTypes.Value);
-  this.phasein = this.addInputPin("Phase", [0.0], VVVV.PinTypes.Value);
-  this.sprcntin = this.addInputPin("Spread Count", [1], VVVV.PinTypes.Value);
+  this.xIn = this.addInputPin("Input X", [0.0], VVVV.PinTypes.Value);
+  this.yIn = this.addInputPin("Input Y", [0.0], VVVV.PinTypes.Value);
+  this.widthIn = this.addInputPin("Width", [1.0], VVVV.PinTypes.Value);
+  this.heightIn = this.addInputPin("Height", [1.0], VVVV.PinTypes.Value);
+  this.factorIn = this.addInputPin("Factor", [1.0], VVVV.PinTypes.Value);
+  this.phaseIn = this.addInputPin("Phase", [0.0], VVVV.PinTypes.Value);
+  this.sprcntIn = this.addInputPin("Spread Count", [1], VVVV.PinTypes.Value);
 
-  this.xout = this.addOutputPin("Output X", [0.0], VVVV.PinTypes.Value);
-  this.yout = this.addOutputPin("Output Y", [0.0], VVVV.PinTypes.Value);
+  this.xOut = this.addOutputPin("Output X", [0.0], VVVV.PinTypes.Value);
+  this.yOut = this.addOutputPin("Output Y", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function () {
     
-    var cw = parseFloat(this.widhin.getValue(0)) * 0.5;
-    var ch = parseFloat(this.heightin.getValue(0)) * 0.5;
-    var cf = parseFloat(this.factorin.getValue(0));
-    var cph = parseFloat(this.phasein.getValue(0));
-
-    var spc = parseInt(this.sprcntin.getValue(0));
-
     var pi2 = Math.PI * 2;
-    var ca = pi2 * cph;
+    var pCount = 0;
 
-    var ovi = 0;
+    for (var c = 0; c < this.getMaxInputSliceCount(); c++) {
+      var cxi = this.xIn.getValue(c);
+      var cyi = this.yIn.getValue(c);
 
-    var insc = Math.max(this.inpyin.getSliceCount(), this.inpxin.getSliceCount());
-    
-    for (var insi = 0; insi < insc*spc; insi++) {
-      var cxi = parseFloat(this.inpxin.getValue(insi));
-      var cyi = parseFloat(this.inpyin.getValue(insi));
+      var cw = this.widthIn.getValue(c) * 0.5;
+      var ch = this.heightIn.getValue(c) * 0.5;
+      var cf = this.factorIn.getValue(c);
+      var cph = this.phaseIn.getValue(c) *pi2;
 
-      for (var csi = 0; csi < spc; csi++) {
-        var csa = ca + pi2 * (csi / spc) * cf;
+      var spc = parseInt(this.sprcntIn.getValue(c));
+
+      for (var p = 0; p < spc; p++) {
+        var csa = cph + pi2 * (p / spc) * cf;
 
         var ox = cxi + Math.cos(csa) * cw;
         var oy = cyi + Math.sin(csa) * ch;
 
-        this.xout.setValue(ovi, ox);
-        this.yout.setValue(ovi, oy);
+        this.xOut.setValue(pCount, ox);
+        this.yOut.setValue(pCount, oy);
 
-        ovi++;
+        pCount++;
       }
     }
-    this.xout.setSliceCount(spc*insc);
-    this.yout.setSliceCount(spc*insc);
+    this.xOut.setSliceCount(pCount);
+    this.yOut.setSliceCount(pCount);
   }
 }
 VVVV.Nodes.CircularSpread.prototype = new VVVV.Core.Node();
@@ -523,7 +541,7 @@ VVVV.Nodes.ReverseSpreads.prototype = new VVVV.Core.Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Integral (Spreads)
- Author(s): 'Matthias Zauner'
+ Author(s): 'Matthias Zauner, woei'
  Original Node Author(s): 'VVVV Group'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -532,7 +550,7 @@ VVVV.Nodes.IntegralSpreads = function(id, graph) {
   this.constructor(id, "Integral (Spreads)", graph);
   
   this.meta = {
-    authors: ['Matthias Zauner'],
+    authors: ['Matthias Zauner, woei'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
@@ -542,26 +560,125 @@ VVVV.Nodes.IntegralSpreads = function(id, graph) {
   
   // input pins
   var inputIn = this.addInputPin('Input', [0], VVVV.PinTypes.Value);
+  var binIn = this.addInputPin('Input Bin Size', [-1], VVVV.PinTypes.Value);
   var offsetIn = this.addInputPin('Offset', [0], VVVV.PinTypes.Value);
 
   // output pins
   var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
+  var binOut = this.addOutputPin('Output Bin Size', [2], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
-    var inSize = inputIn.getSliceCount();
-    var integral = parseFloat(offsetIn.getValue(0));
-    outputOut.setValue(0, integral);
-    for (var i=0; i<inSize; i++) {
-      var input = parseFloat(inputIn.getValue(i));
-      integral += input;
-      outputOut.setValue(i+1, integral);
+  	var cIn = inputIn.getSliceCount();
+    var cBin = Math.max(binIn.getSliceCount(),offsetIn.getSliceCount());
+    var binC = 0;
+    var sliceMax = 0;
+    var bins = [];
+    if (cBin > 0) {
+      while (binC < cBin || sliceMax < cIn) {
+        var bin = parseInt(binIn.getValue(binC));
+        if (bin<0)
+          bin = parseInt(Math.round(cIn/parseFloat(Math.abs(bin))));
+        sliceMax += bin;
+        bins[binC] = bin;
+        binC++;
+      }
     }
-    outputOut.setSliceCount(inSize + 1);
+    bins.splice(binC);
+
+    var inId = 0;
+    var outId = 0;
+    for (var b=0; b<binC; b++) {
+      var inSize = bins[b];
+      binOut.setValue(b,inSize+1);
+
+      var integral = offsetIn.getValue(b);
+      for (var i=0; i<inSize; i++) {
+      	outputOut.setValue(outId, integral);
+        outId++;
+        integral += inputIn.getValue(inId + i);
+      }
+      inId += inSize;
+      outputOut.setValue(outId, integral);
+      outId++;
+    }
+
+    outputOut.setSliceCount(outId);
+    binOut.setSliceCount(binC);
   }
 
 }
 VVVV.Nodes.IntegralSpreads.prototype = new VVVV.Core.Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Differential (Spreads)
+ Author(s): 'woei'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.DifferentialSpreads = function(id, graph) {
+  this.constructor(id, "Differential (Spreads)", graph);
+  
+  this.meta = {
+    authors: ['woei'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var inputIn = this.addInputPin('Input', [0.0], VVVV.PinTypes.Value);
+  var binIn = this.addInputPin('Input Bin Size', [-1], VVVV.PinTypes.Value);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
+  var binOut = this.addOutputPin('Output Bin Size', [0], VVVV.PinTypes.Value);
+  var offsetOut = this.addOutputPin('Offset', [0], VVVV.PinTypes.Value);
+
+  this.evaluate = function() {
+    var cIn = inputIn.getSliceCount();
+    var cBin = binIn.getSliceCount();
+    var binC = 0;
+    var sliceMax = 0;
+    var bins = [];
+    if (cBin > 0) {
+      while (binC < cBin || sliceMax < cIn) {
+        var bin = parseInt(binIn.getValue(binC));
+        if (bin<0)
+          bin = parseInt(Math.round(cIn/parseFloat(Math.abs(bin))));
+        sliceMax += bin;
+        bins[binC] = bin;
+        binC++;
+      }
+    }
+    bins.splice(binC);
+
+    var inId = 0;
+    var outId = 0;
+    for (var b=0; b<binC; b++) {
+      var size = bins[b]-1;
+      var last =  inputIn.getValue(inId);
+      binOut.setValue(b,size);
+      offsetOut.setValue(b,last);
+      for (var i=0; i<size; i++) {
+        var input = inputIn.getValue(inId + i+1);
+        outputOut.setValue(outId, input-last);
+        last = input;
+        outId++;
+      }
+      inId += size+1;
+    }
+        
+    outputOut.setSliceCount(outId);
+    binOut.setSliceCount(binC);
+    offsetOut.setSliceCount(binC);
+  }
+
+}
+VVVV.Nodes.DifferentialSpreads.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -702,6 +819,9 @@ VVVV.Nodes.QueueSpreads = function(id, graph) {
 
   var outputOut = this.addOutputPin('Output', [], VVVV.PinTypes.Value);
   var outputbinsizeOut = this.addOutputPin('Output Bin Size', [], VVVV.PinTypes.Value);
+  
+  var output = [];
+  var binsizes = [];
 
   this.evaluate = function() {
     var insert = insertIn.getValue(0);
@@ -712,33 +832,38 @@ VVVV.Nodes.QueueSpreads = function(id, graph) {
     if (insert>=0.5 && reset<0.5) {
       var newSize = inputIn.getSliceCount();
       for (var i=newSize-1; i>=0; i--) {
-        outputOut.values.unshift(inputIn.getValue(i));
+        output.unshift(inputIn.getValue(i));
       }
-      outputbinsizeOut.values.unshift(newSize);
+      binsizes.unshift(newSize);
       
       changed = true;
     }
     
     if (framecountIn.pinIsChanged() || changed) {
-      currFrameCount = outputbinsizeOut.values.length;
+      currFrameCount = binsizes.length;
       for (var i=currFrameCount; i>framecount; i--) {
-        outputOut.values.splice(-outputbinsizeOut.values[i-1])
+        output.splice(-binsizes[i-1])
       }
-      outputbinsizeOut.values.splice(framecount);
+      binsizes.splice(framecount);
       
       changed = true;
     }
     
     if (changed) {
-      for (var i=0; i<outputOut.values.length; i++) {
-        outputOut.setValue(i, outputOut.values[i]);
+      for (var i=0; i<output.length; i++) {
+        outputOut.setValue(i, output[i]);
       }
-      for (var i=0; i<outputbinsizeOut.values.length; i++) {
-        outputbinsizeOut.setValue(i, outputbinsizeOut.values[i]);
-      } 
+      for (var i=0; i<binsizes.length; i++) {
+        outputbinsizeOut.setValue(i, binsizes[i]);
+      }
+      
+      outputOut.setSliceCount(output.length);
+      outputOut.setSliceCount(binsizes.length);
     }
     
     if (reset>=0.5) {
+      output.length = 0;
+      binsizes.length = 0;
       outputOut.setSliceCount(0);
       outputbinsizeOut.setSliceCount(0);
     }
@@ -747,3 +872,5 @@ VVVV.Nodes.QueueSpreads = function(id, graph) {
 
 }
 VVVV.Nodes.QueueSpreads.prototype = new VVVV.Core.Node();
+
+}(vvvvjs_jquery));

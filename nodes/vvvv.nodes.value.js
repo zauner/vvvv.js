@@ -3,6 +3,8 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -44,13 +46,24 @@ VVVV.Nodes.AddValue = function(id, graph) {
 	
     for (var i=0; i<maxSpreadSize; i++) 
   	{
-  		var o = parseFloat(inputPins[0].getValue(i));
+  		var o = inputPins[0].getValue(i);
   		for (var j=1; j < inputPins.length;j++)
   		{
-  			o += parseFloat(inputPins[j].getValue(i));
+  			o += inputPins[j].getValue(i);
   		}
       outPin.setValue(i,o);
     }  
+  }
+  
+  this.getCode = function() {
+    if (cntCfg.pinIsChanged())
+      this.initialize();
+    
+    var pinnames = [];
+    for (var i=0; i<inputPins.length; i++) {
+      pinnames.push("{Input "+(i+1)+"}")
+    }
+    return pinnames.join(" + ");
   }
 
 }
@@ -96,13 +109,24 @@ VVVV.Nodes.SubtractValue = function(id, graph) {
   	
     for (var i=0; i<maxSpreadSize; i++) 
   	{
-  		var o = parseFloat(inputPins[0].getValue(i));
+  		var o = inputPins[0].getValue(i);
   		for (var j=1; j < inputPins.length;j++)
   		{
-  			o -= parseFloat(inputPins[j].getValue(i));
+  			o -= inputPins[j].getValue(i);
   		}
       outPin.setValue(i,o);
     }  
+  }
+  
+  this.getCode = function() {
+    if (cntCfg.pinIsChanged())
+      this.initialize();
+    
+    var pinnames = [];
+    for (var i=0; i<inputPins.length; i++) {
+      pinnames.push("{Input "+(i+1)+"}")
+    }
+    return pinnames.join(" - ");
   }
 
 }
@@ -180,11 +204,15 @@ VVVV.Nodes.GtValue = function(id, graph) {
     
     for (var i=0; i<maxSize; i++) {
       var result = 0;
-      if (parseFloat(input1In.getValue(i))>parseFloat(input2In.getValue(i)))
+      if (input1In.getValue(i)>input2In.getValue(i))
         result = 1;
       outputOut.setValue(i, result);
     }
     outputOut.setSliceCount(maxSize);
+  }
+  
+  this.getCode = function() {
+    return "{Input 1} > {Input 2} ? 1 : 0";
   }
 
 }
@@ -218,11 +246,15 @@ VVVV.Nodes.LtValue = function(id, graph) {
     
     for (var i=0; i<maxSize; i++) {
       var result = 0;
-      if (parseFloat(input1In.getValue(i))<parseFloat(input2In.getValue(i)))
+      if (input1In.getValue(i)<input2In.getValue(i))
         result = 1;
       outputOut.setValue(i, result);
     }
     outputOut.setSliceCount(maxSize);
+  }
+  
+  this.getCode = function() {
+    return "{Input 1} < {Input 2} ? 1 : 0";
   }
 
 }
@@ -268,13 +300,24 @@ VVVV.Nodes.MultiplyValue = function(id, graph) {
   	
     for (var i=0; i<maxSpreadSize; i++) 
   	{
-  		var o = parseFloat(inputPins[0].getValue(i));
+  		var o = inputPins[0].getValue(i);
   		for (var j=1; j < inputPins.length;j++)
   		{
-  			o *= parseFloat(inputPins[j].getValue(i));
+  			o *= inputPins[j].getValue(i);
   		}
       outPin.setValue(i,o);
     } 
+  }
+  
+  this.getCode = function() {
+    if (cntCfg.pinIsChanged())
+      this.initialize();
+    
+    var pinnames = [];
+    for (var i=0; i<inputPins.length; i++) {
+      pinnames.push("{Input "+(i+1)+"}")
+    }
+    return pinnames.join(" * ");
   }
 
 }
@@ -321,6 +364,10 @@ VVVV.Nodes.DivideValue = function(id, graph) {
       outputOut.setValue(i, input1In.getValue(i)/input2In.getValue(i));
     }
     outputOut.setSliceCount(maxSize);
+  }
+  
+  this.getCode = function() {
+    return "{Input} / {Input 2}"
   }
 
 }
@@ -480,7 +527,7 @@ VVVV.Nodes.SelectValue = function(id, graph) {
     var outputIndex = 0;
     for (var i=0; i<maxSize; i++) {
       for (var j=0; j<selectIn.getValue(i); j++) {
-        outputOut.setValue(outputIndex, parseFloat(inputIn.getValue(i)));
+        outputOut.setValue(outputIndex, inputIn.getValue(i));
         formerSliceOut.setValue(outputIndex, i);
         outputIndex++;
       }
@@ -524,8 +571,8 @@ VVVV.Nodes.AsString = function(id, graph) {
       subtype = subtypeIn.getValue(i).match(/^(.+) \(/)[1];
       var out;
       switch (subtype) {
-        case "Real": out = parseFloat(inputIn.getValue(i)).toFixed(4); break;
-        case "Integer": out = parseInt(inputIn.getValue(i)).toFixed(0); break;
+        case "Real": out = inputIn.getValue(i).toFixed(4); break;
+        case "Integer": out = inputIn.getValue(i).toFixed(0); break;
       }
       outputOut.setValue(i, out);
     }
@@ -563,7 +610,7 @@ VVVV.Nodes.Frac = function(id, graph) {
     var maxSize = this.getMaxInputSliceCount();
     
     for (var i=0; i<maxSize; i++) {
-      var inValue = parseFloat(inputIn.getValue(i));
+      var inValue = inputIn.getValue(i);
       wholeOut.setValue(i, Math.floor(inValue));
       realOut.setValue(i, inValue - Math.floor(inValue));
     }
@@ -603,11 +650,11 @@ VVVV.Nodes.AddValueSpectral = function(id, graph) {
     
     var binNum = 0;
     var subIndex = 0;
-    for (var j=0; j<maxSpreadSize || (this.inputPins["Bin Size"].getValue(0)>0 && (subIndex>0 || binNum%this.inputPins["Bin Size"].values.length!=0)); j++) {
+    for (var j=0; j<maxSpreadSize || (this.inputPins["Bin Size"].getValue(0)>0 && (subIndex>0 || binNum%this.inputPins["Bin Size"].getSliceCount()!=0)); j++) {
       if (subIndex == 0)
         var sum = 0;
         
-      sum += parseFloat(this.inputPins["Input"].getValue(j));
+      sum += this.inputPins["Input"].getValue(j);
       
       subIndex++;
       if (this.inputPins["Bin Size"].getValue(0)>0) {
@@ -665,7 +712,7 @@ VVVV.Nodes.WaveShaperValue = function(id, graph) {
     var twoPi = 6.28318530717959;
     
     for (var i=0; i<maxSize; i++) {
-      var input = parseFloat(inputIn.getValue(i));
+      var input = inputIn.getValue(i);
       var shape = shapeIn.getValue(i);
 
       switch (shape) {
@@ -752,11 +799,11 @@ VVVV.Nodes.MapValue = function(id, graph) {
     var maxSize = this.getMaxInputSliceCount();
     
     for (var i=0; i<maxSize; i++) {
-      var input = parseFloat(inputIn.getValue(i));
-      var srcMin = parseFloat(srcMinimumIn.getValue(i));
-      var srcMax = parseFloat(srcMaximumIn.getValue(i));
-      var destMin = parseFloat(destMinimumIn.getValue(i));
-      var destMax = parseFloat(destMaximumIn.getValue(i));
+      var input = inputIn.getValue(i);
+      var srcMin = srcMinimumIn.getValue(i);
+      var srcMax = srcMaximumIn.getValue(i);
+      var destMin = destMinimumIn.getValue(i);
+      var destMax = destMaximumIn.getValue(i);
       var mapping = mappingIn.getValue(i);
       
       if (srcMax == srcMin) {
@@ -1067,12 +1114,12 @@ VVVV.Nodes.RandomValue = function(id, graph) {
       var scale = scaleIn.getValue(i);
       var preventfromdoubles = preventfromdoublesIn.getValue(i);
       
-      var current = outputOut.values[i];
+      var current = outputOut.getValue(i);
       if (current==undefined)
         outputOut.setValue(i, 0.0);
 
       if (enabled>=0.5) {
-        var current = outputOut.values[i];
+        var current = outputOut.getValue(i);
         do {
           var r = Math.random() * scale;
           if (isinteger>=0.5)
@@ -1281,3 +1328,4 @@ VVVV.Nodes.Sift = function(id, graph) {
 }
 VVVV.Nodes.Sift.prototype = new VVVV.Core.Node();
 
+}(vvvvjs_jquery));

@@ -3,6 +3,8 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 /**
  * The HTML5Texture Pin Type
  * @mixin
@@ -183,7 +185,7 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
     if (doSeekIn.pinIsChanged()) {
       for (var i=0; i<maxSpreadSize; i++) {
         if (videos[i%videos.length].loaded && doSeekIn.getValue(i)>=.5) {
-          videos[i%videos.length].currentTime = parseFloat(seekPosIn.getValue(i));
+          videos[i%videos.length].currentTime = seekPosIn.getValue(i);
           if (playIn.getValue(i)>.5)
             videos[i].play();
         }
@@ -197,8 +199,8 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
         if (durationOut.getValue(i)!=videos[i].duration)
           durationOut.setValue(i, videos[i].duration);
         positionOut.setValue(i, videos[i].currentTime);
-        var endTime = parseFloat(endTimeIn.getValue(i));
-        var startTime = parseFloat(startTimeIn.getValue(i));
+        var endTime = endTimeIn.getValue(i);
+        var startTime = startTimeIn.getValue(i);
         if (videos[i].currentTime<startTime)
           videos[i].currentTime = startTime;
         if (videos[i].currentTime>=videos[i].duration || (endTime>=0 && videos[i].currentTime>=endTime)) {
@@ -253,7 +255,7 @@ VVVV.Nodes.AudioOutHTML5 = function(id, graph) {
     
     if (volumeIn.pinIsChanged()) {
       for (var i=0; i<maxSpreadSize; i++) {
-        audioIn.getValue(i).volume = Math.max(0.0, Math.min(1.0, parseFloat(volumeIn.getValue(i))));
+        audioIn.getValue(i).volume = Math.max(0.0, Math.min(1.0, volumeIn.getValue(i)));
       }
     }
     
@@ -261,3 +263,4 @@ VVVV.Nodes.AudioOutHTML5 = function(id, graph) {
 }
 VVVV.Nodes.AudioOutHTML5.prototype = new VVVV.Core.Node();
 
+}(vvvvjs_jquery));

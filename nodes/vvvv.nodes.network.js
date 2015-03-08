@@ -3,6 +3,8 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -89,3 +91,68 @@ VVVV.Nodes.HTTPGet = function(id, graph) {
 
 }
 VVVV.Nodes.HTTPGet.prototype = new VVVV.Core.Node();
+
+VVVV.Nodes.WebsocketClient = function(id, graph) {
+  this.constructor(id, "Websocket (Network Client)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = true;
+  
+  var hostIn = this.addInputPin("URL", ["localhost"], VVVV.PinTypes.String);
+  var portIn = this.addInputPin("Port", [8006], VVVV.PinTypes.Value);
+  var inputIn = this.addInputPin("Input", ["Hello"], VVVV.PinTypes.String);
+  var doSendIn = this.addInputPin("DoSend", [0], VVVV.PinTypes.Value);
+  var enabledIn = this.addInputPin("Enabled", [0], VVVV.PinTypes.Value);
+  
+  var outputOut = this.addOutputPin("Output", [""], VVVV.PinTypes.String);
+  var onDataOut = this.addOutputPin("OnData", [0], VVVV.PinTypes.Value);
+  var connectedOut = this.addOutputPin("Connected", [0], VVVV.PinTypes.Value);
+  
+  var ws = null;
+  var queue = [];
+
+  this.evaluate = function() {
+    
+    if ((enabledIn.getValue(0)<0.5 || hostIn.pinIsChanged() || portIn.pinIsChanged()) && ws!=null) {
+      ws.close();
+      ws = null;
+    }
+    
+    if (enabledIn.getValue(0)>=0.5 && ws == null) {
+      ws = new WebSocket("ws://"+hostIn.getValue(0)+":"+portIn.getValue(0));
+      ws.onopen = function(e) {
+        connectedOut.setValue(0, 1);
+      }
+      ws.onclose = function(e) {
+        connectedOut.setValue(0, 0);
+      }
+      ws.onmessage = function(e) {
+        queue.push(e.data);
+      }
+    }
+    
+    if (queue.length>0) {
+      outputOut.setValue(0, queue.shift());
+      onDataOut.setValue(0, 1);
+    }
+    else {
+      outputOut.setValue(0, "");
+      onDataOut.setValue(0, 0);
+    }
+    
+    if (doSendIn.getValue(0)>=0.5 && ws) {
+      ws.send(inputIn.getValue(0));
+    }
+    
+  }
+
+}
+VVVV.Nodes.WebsocketClient.prototype = new VVVV.Core.Node();
+
+}(vvvvjs_jquery));

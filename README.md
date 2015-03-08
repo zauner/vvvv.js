@@ -1,7 +1,7 @@
 VVVV.js - Visual Web Client Programming
 =======================================
 
-vvvvjs.com
+[www.vvvvjs.com](http://www.vvvvjs.com)
 
 **The visual programming language VVVV brought to your web browser.**
 
@@ -45,12 +45,13 @@ dots in directory names, so make sure to really rename the 'vvvv.js' from the ar
 
 3. Include VVVV.js and the mypatch.v4p in your website (e.g. index.html) like this:
 
-    index.html
+index.html:
+
     <head>
     ...
     <script language="JavaScript" src="javascripts/vvvv_js/lib/jquery/jquery-1.8.2.min.js"></script> 
     <script language="JavaScript" src="javascripts/vvvv_js/vvvv.js"></script>
-    <script language="VVVV" src="mypatch.v4p"></script>
+    <link rel="VVVV" href="mypatch.v4p"/>
     <script language="JavaScript">
       $(document).ready(function() {
         VVVV.init("javascripts/vvvv_js/", 'full', function() {
@@ -73,7 +74,7 @@ All the patches (and subpatches) loaded are stored in the VVVV.Patches object. Y
 
 ### Manually loading patches
 
-If the <script> tag method above doesn't suit your needs (e.g. because you don't want to run the patch immeditely), you can create
+If the &lt;script&gt; tag method above doesn't suit your needs (e.g. because you don't want to run the patch immeditely), you can create
 the VVVV.Core.Patch object yourself like so:
 
     <head>
@@ -82,7 +83,7 @@ the VVVV.Core.Patch object yourself like so:
     <script language="JavaScript" src="javascripts/vvvv_js/vvvv.js"></script>
     <script language="JavaScript">
       $(document).ready(function() {
-        VVVV.init("javascripts/vvvv_js/", 'full');
+        VVVV.init("javascripts/vvvv_js/", 'full', function() {
           console.log('VVVV.js initialized');
           
           var patch = new VVVV.Core.Patch("mypatch.v4p", function() {
@@ -111,3 +112,7 @@ This is the corresponding HTML code:
 While in the example above the Patch constructor new VVVV.Core.Patch("mypatch.v4p", ...) loads a VVVV patch file from the remote server,
 it is also possible to just pass actual VVVV XML Code to the constructor instead of a filename.
 This might be the case, when you display VVVV Code which comes from a forum post or a blog entry.
+
+### More Information
+
+Find more information and guides on [www.vvvvjs.com](http://www.vvvvjs.com).

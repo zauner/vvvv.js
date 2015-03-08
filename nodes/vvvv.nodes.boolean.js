@@ -3,6 +3,8 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -129,7 +131,7 @@ VVVV.Nodes.Not = function(id, graph) {
   this.evaluate = function() {
     var maxSliceCount = this.getMaxInputSliceCount();
     for (var i=0; i<maxSliceCount; i++) {
-      outputOut.setValue(i, 1-Math.round(parseFloat(inputIn.getValue(i))));
+      outputOut.setValue(i, 1-Math.round(inputIn.getValue(i)));
     }
     outputOut.setSliceCount(this.getMaxInputSliceCount());
   }
@@ -169,7 +171,7 @@ VVVV.Nodes.OrSpectral = function(id, graph) {
     var subIndex = 0;
     var result = false;
     
-    for (var i=0; i<maxSpreadSize || (binSizeIn.getValue(0)>0 && (subIndex>0 || binNum%binSizeIn.values.length!=0)); i++) {
+    for (var i=0; i<maxSpreadSize || (binSizeIn.getValue(0)>0 && (subIndex>0 || binNum%binSizeIn.getSliceCount()!=0)); i++) {
       if (subIndex == 0)
         var result = false;
       result = result || (inputIn.getValue(i)>=.5);
@@ -221,7 +223,7 @@ VVVV.Nodes.AndSpectral = function(id, graph) {
     var subIndex = 0;
     var result = false;
     
-    for (var i=0; i<maxSpreadSize || (binSizeIn.getValue(0)>0 && (subIndex>0 || binNum%binSizeIn.values.length!=0)); i++) {
+    for (var i=0; i<maxSpreadSize || (binSizeIn.getValue(0)>0 && (subIndex>0 || binNum%binSizeIn.getSliceCount()!=0)); i++) {
       if (subIndex == 0)
         var result = true;
       result = result && (inputIn.getValue(i)>=.5);
@@ -242,3 +244,5 @@ VVVV.Nodes.AndSpectral = function(id, graph) {
 
 }
 VVVV.Nodes.AndSpectral.prototype = new VVVV.Core.Node();
+
+}(vvvvjs_jquery));

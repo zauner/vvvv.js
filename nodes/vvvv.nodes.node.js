@@ -3,13 +3,16 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 /**
  * The Node Pin Type
  * @mixin
  * @property {String} typeName "Node"
  */
 VVVV.PinTypes.Node = {
-  typeName: "Node"
+  typeName: "Node",
+  reset_on_disconnect: true
 }
 
 /*
@@ -116,11 +119,13 @@ VVVV.Nodes.SwitchNodeInput = function(id, graph) {
     compatibility_issues: ['No dynamic pin count yet']
   };
   
+  this.auto_nil = false;
+  
   var switchIn = this.addInputPin("Switch", [0], VVVV.PinTypes.Value);
   var inputcountIn = this.addInvisiblePin("Input Count", [2], VVVV.PinTypes.Value);
   var inputIn = []
   
-  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Node);
+  var outputOut = this.addOutputPin("Output", [], VVVV.PinTypes.Node);
   
   this.initialize = function() {
     var inputCount = inputcountIn.getValue(0);
@@ -152,3 +157,5 @@ VVVV.Nodes.SwitchNodeInput = function(id, graph) {
 
 }
 VVVV.Nodes.SwitchNodeInput.prototype = new VVVV.Core.Node();
+
+}(vvvvjs_jquery));

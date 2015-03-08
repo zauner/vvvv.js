@@ -3,6 +3,7 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -33,8 +34,8 @@ VVVV.Nodes.Abs = function(id, graph) {
     for (var i=0; i<maxSize; i++) {
       outputOut.setValue(i,
         Math.sqrt(
-          Math.pow(parseFloat(inputRealIn.getValue(i)), 2) +
-          Math.pow(parseFloat(inputImagIn.getValue(i)), 2)
+          Math.pow(inputRealIn.getValue(i), 2) +
+          Math.pow(inputImagIn.getValue(i), 2)
         )
       );
     }
@@ -44,8 +45,7 @@ VVVV.Nodes.Abs = function(id, graph) {
 }
 VVVV.Nodes.Abs.prototype = new VVVV.Core.Node();
 
-
-
+}(vvvvjs_jquery));
 
 
 

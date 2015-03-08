@@ -3,6 +3,8 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Polar (3d)
@@ -359,3 +361,5 @@ VVVV.Nodes.Multiply3dVector = function(id, graph) {
 
 }
 VVVV.Nodes.Multiply3dVector.prototype = new VVVV.Core.Node();
+
+}(vvvvjs_jquery));

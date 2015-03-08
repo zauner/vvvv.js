@@ -1,3 +1,64 @@
+v1.0 / 2014-05-09
+=================
+
+The VVVVJsConnector and the VVVV.js SDK for VVVV has been dropped. From this
+version on, the web-based patch editor is the recommended way to edit patches.
+
+Nodes
+-----
+
+new:
+
+* Switch (Color)
+* AvoidNil (String)
+* Bounds (Spectral)
+* Rectangle (Canvas VVVVjs)
+* * (3d Vector)
+* Inverse (Transform)
+* FormatValue (String)
+* DefineEffect (EX9.Effect)
+* Damper (Animation)
+* LookAt (Transform)
+* Attractor (2d)
+
+
+improved/fixed:
+
+* LFO (Animation): reset pin works now when paused
+* FileTexture (HTML): fixed bug where images where not reloaded on spread change; adds support for Cube Textures
+* LinearSpread (Spreads): fixed crash on width 0.0 and block alignment, changes alignment to Enum
+* Divide (Value): fixed division by zero behaviour
+* added 'Clipping Layer' input pin to Canvas Layer Nodes
+* Arc (Canvas VVVVjs): added 'Draw Segment' and 'Radius' input pins
+* Cylinder (EX9.Geometry): fixes wrong indices
+* LinearFilter (Animation): makes use of MainLoop.deltaT to avoid glitch on window refocus
+* GetSlice (Spreads): got working BinSize pin
+* BezierCurve (Canvas VVVVjs): fixes not working bin size of -1
+
+
+Core
+----
+
+* added built-in/browser-based/cross-platform patch editor
+* added support for inline shader code using DefineEffect node and the built-in shader editor
+* added VVVV.Core.Patch.toXML() function, so VVVV.js patches can be saved
+* added support for loading patches and subpatches from subdirectories
+* only downlaods subpatch once when used multiple times
+* added new CanvasLayer and HTML5 Texture Pin Types
+* fixed bug where | characters in spread values made trouble
+
+API
+---
+
+* added VVVV.Core.Node.auto_nil flag;
+* added VVVV.Core.Node.destroy() callback
+* added VVVV.Core.Node.openGUIWindow() callback
+* added MainLoop.deltaT variable
+* addded VVVV.Helpers.dynamicPins method
+* changed signature of Node.addInputPin, Node.addOutputPin and Node.addInvisiblePin; this breaks backwards compatibility
+
+
+
 v0.3.0 / 2013-08-13
 ===================
 

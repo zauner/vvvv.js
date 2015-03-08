@@ -3,10 +3,12 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: LFO (Animation)
- Author(s): Matthias Zauner, sebl
+ Author(s): Matthias Zauner, sebl, woei
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -15,7 +17,7 @@ VVVV.Nodes.LFO = function(id, graph) {
   this.constructor(id, "LFO (Animation)", graph);
   
   this.meta = {
-    authors: ['Matthias Zauner, sebl'],
+    authors: ['Matthias Zauner, sebl, woei'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: ['Not spreadable yet']
@@ -30,6 +32,7 @@ VVVV.Nodes.LFO = function(id, graph) {
   var PhaseIn = this.addInputPin("Phase", [0.0], VVVV.PinTypes.Value);
   
   var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+  var changeOut = this.addOutputPin("Change", [0], VVVV.PinTypes.Value);
   var CyclesOut = this.addOutputPin("Cycles", [0], VVVV.PinTypes.Value);
   
   var current = [];
@@ -46,11 +49,13 @@ VVVV.Nodes.LFO = function(id, graph) {
 
     for (var i=0; i<maxSize; i++) {
 
-      var period = PeriodIn.getValue(i % PeriodIn.values.length);
-      var paused = PauseIn.getValue(i % PauseIn.values.length);
-      var reverse = ReverseIn.getValue(i % ReverseIn.values.length);
-      var reset = ResetIn.getValue(i % ResetIn.values.length);
-      var phase = PhaseIn.getValue(i % PhaseIn.values.length);
+      var period = PeriodIn.getValue(i);
+      var paused = PauseIn.getValue(i);
+      var reverse = ReverseIn.getValue(i);
+      var reset = ResetIn.getValue(i);
+      var phase = PhaseIn.getValue(i);
+
+      var change = 0;
 
       if (current[i]==undefined) current[i] = 0.0;
       if (cycles[i]==undefined) cycles[i] = 0.0;
@@ -68,10 +73,12 @@ VVVV.Nodes.LFO = function(id, graph) {
         if (current[i]<0) {
           cycles[i] -= Math.ceil(-current[i]);
           current[i] = 1.0 + current[i];
+          change = 1;
         }
 
         if (current[i]>1){
           cycles[i] += Math.floor(current[i]);
+          change = 1;
         }
       }
 
@@ -80,16 +87,19 @@ VVVV.Nodes.LFO = function(id, graph) {
       if (reset>=0.5){
         current[i] = 0.0;
         cycles[i] = 0;
+        change = 1;
       }
 
       if (paused<0.5 || reset>=0.5) { 
         outputOut.setValue(i, (current[i]+phase)%1);
+        changeOut.setValue(i, change);
         CyclesOut.setValue(i, cycles[i]);
       }
 
       current[i] = current[i] %1;
     }
     outputOut.setSliceCount(maxSize);
+    changeOut.setSliceCount(maxSize);
     CyclesOut.setSliceCount(maxSize);
     current.splice(maxSize);
     cycles.splice(maxSize);
@@ -145,8 +155,8 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
         lastUpdate[i] = new Date().getTime();
       var dt = this.parentPatch.mainloop.deltaT; //new Date().getTime()-lastUpdate[i];
         
-      var pos = parseFloat(positionIn.getValue(i));
-      var filterTime = parseFloat(filterTimeIn.getValue(i));
+      var pos = positionIn.getValue(i);
+      var filterTime = filterTimeIn.getValue(i);
       
       if (currPos[i]==undefined)
         currPos[i] = pos;
@@ -236,8 +246,8 @@ VVVV.Nodes.Damper = function(id, graph) {
         lastUpdate[i] = new Date().getTime();
       var dt = this.parentPatch.mainloop.deltaT; //new Date().getTime()-lastUpdate[i];
         
-      var pos = parseFloat(positionIn.getValue(i));
-      var filterTime = parseFloat(filterTimeIn.getValue(i));
+      var pos = positionIn.getValue(i);
+      var filterTime = filterTimeIn.getValue(i);
       
       if (currPos[i]==undefined)
         currPos[i] = pos;
@@ -540,6 +550,79 @@ VVVV.Nodes.FlipFlop = function(id, graph) {
 }
 VVVV.Nodes.FlipFlop.prototype = new VVVV.Core.Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: MonoFlop (Animation)
+ Author(s): woei
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.MonoFlop = function(id, graph) {
+  this.constructor(id, "MonoFlop (Animation)", graph);
+  
+  this.meta = {
+    authors: ['woei'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  this.auto_evaluate = true;
+  
+  var setIn = this.addInputPin("Set", [0], VVVV.PinTypes.Value);
+  var resetIn = this.addInputPin("Reset", [0], VVVV.PinTypes.Value);
+  var timeIn = this.addInputPin("Time", [0], VVVV.PinTypes.Value);
+  var retrigIn = this.addInputPin("Retriggerable", [0], VVVV.PinTypes.Value);
+  
+  var outputOut = this.addOutputPin("Output", [0], VVVV.PinTypes.Value);
+  var inverseOutputOut = this.addOutputPin("Inverse Output", [1], VVVV.PinTypes.Value);
+  
+  var buffer = [];
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    var currSize = outputOut.getSliceCount();
+    if (maxSize>currSize) {
+      for (var i=currSize; i<maxSize; i++) {
+        outputOut.setValue(i, 0);
+        inverseOutputOut.setValue(i, 1);
+      }
+    }
+    
+    for (var i = 0; i < maxSize; i++) {
+      if (buffer[i] == undefined)
+        buffer[i] = 0.0;
+      if (outputOut.getValue(i) == undefined)
+        outputOut.setValue(i,0);
+
+      if (outputOut.getValue(i) == 1) {
+        buffer[i] += this.parentPatch.mainloop.deltaT/1000.0;
+        
+        if ((setIn.getValue(i) == 1) && (retrigIn.getValue(i) == 1)) {
+          buffer[i] = 0;
+        }
+        
+        if (buffer[i] >= timeIn.getValue(i) || (resetIn.getValue(i) == 1)) {
+          buffer[i] = 0.0;
+          outputOut.setValue(i, 0);
+          inverseOutputOut.setValue(i, 1);
+        }
+      }
+      else if (setIn.getValue(i) == 1) {
+        outputOut.setValue(i, 1);
+        inverseOutputOut.setValue(i, 0);
+      }
+    }
+    outputOut.setSliceCount(maxSize);
+    inverseOutputOut.setSliceCount(maxSize);
+    buffer.splice(maxSize);
+  }
+
+}
+VVVV.Nodes.MonoFlop.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -607,24 +690,30 @@ VVVV.Nodes.FrameDelay = function(id, graph) {
   };
   
   this.delays_output = true;
+  this.auto_evaluate = true;
   
   var input1In = this.addInputPin("Input 1", [0.0], VVVV.PinTypes.Value);
   var default1In = this.addInputPin("Default 1", [0.0], VVVV.PinTypes.Value);
   var initIn = this.addInputPin("Initialize", [0], VVVV.PinTypes.Value);
   
   var output1Out = this.addOutputPin("Output 1", [0.0], VVVV.PinTypes.Value);
-  
+  var buf = [];
 
   this.evaluate = function() {
     
     var maxSize = this.getMaxInputSliceCount();
     
     for (var i=0; i<maxSize; i++) {
-      if (initIn.getValue(i)>0.5)
+      if (initIn.getValue(i)>0.5 || buf[i]==undefined)
         output1Out.setValue(i, default1In.getValue(i));
       else
-        output1Out.setValue(i, input1In.getValue(i));
+        output1Out.setValue(i, buf[i]);
     }
+    
+    for (var i=0; i<maxSize; i++) {
+      buf[i] = input1In.getValue(i);
+    }
+    
     output1Out.setSliceCount(maxSize);
     
   }
@@ -679,7 +768,7 @@ VVVV.Nodes.Toggle = function(id, graph) {
       if (Math.round(resetIn.getValue(i))>=1)
         result = 0;
       if (Math.round(inputIn.getValue(i))>=1)
-        result = 1 - parseFloat(outputOut.getValue(i));
+        result = 1 - outputOut.getValue(i);
       if (result!=undefined && outputOut.getValue(i)!=result) {
         outputOut.setValue(i, result);
         inverseOutputOut.setValue(i, 1-result);
@@ -754,10 +843,10 @@ VVVV.Nodes.Counter = function(id, graph) {
     if(doCount)
     {
       for(var i=0; i<maxSize; i++) {
-        var incr = parseFloat(incrIn.getValue(i));
-        var output = i>=outputOut.getSliceCount() ? 0.0 : parseFloat(outputOut.getValue(i));
-        var max = parseFloat(maxIn.getValue(i));
-        var min = parseFloat(minIn.getValue(i));
+        var incr = incrIn.getValue(i);
+        var output = i>=outputOut.getSliceCount() ? 0.0 : outputOut.getValue(i);
+        var max = maxIn.getValue(i);
+        var min = minIn.getValue(i);
       
         var mode = 0;
         if(modeIn.getValue(i)=='Unlimited') mode=1;
@@ -815,3 +904,5 @@ VVVV.Nodes.Counter = function(id, graph) {
   }
 }
 VVVV.Nodes.Counter.prototype = new VVVV.Core.Node();
+
+}(vvvvjs_jquery));

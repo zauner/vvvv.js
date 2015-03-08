@@ -1,4 +1,6 @@
 
+(function($) {
+
 /** The frames per second VVVV.js should run, defaults to 60fps */
 VVVV.fps = 60;
 
@@ -16,12 +18,17 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
   var dom = new VVVV.Core.DOMInterface(patch);
   var run = true;
   var start = undefined;
+  var animFrameRequested = false;
   
+  this.lowFrameRateCount = 0;
   var measureStart = 0;
   var print_framerate = false;
   
   /** the time in ms elapsed since the last evaluation cycle */
   this.deltaT = 1000/VVVV.fps;
+  
+  /** the frame number */
+  this.frameNum = 0;
   
   patch.setMainloop(this);
 
@@ -49,9 +56,18 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
         }
         measureStart = start;
       }
+      that.frameNum++;
+      
+      if (elapsed>66 && that.lowFrameRateCount++>50) {
+        VVVV.onLowFrameRate();
+      }
+      else
+        lowFrameRateCount = 0;
     }
     if (run) // && framecount<1)
-      window.setTimeout(update, Math.max(0, Math.round(1000/VVVV.fps-elapsed)));
+      window.setTimeout(function() {
+        window.requestAnimationFrame(update);
+      }, Math.max(0, Math.round(1000/VVVV.fps-elapsed)));
     
   }
   
@@ -89,3 +105,5 @@ VVVV.Core.MainLoop = function(patch, frames_per_second) {
   
 
 }
+
+}(vvvvjs_jquery));

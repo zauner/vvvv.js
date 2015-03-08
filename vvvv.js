@@ -6,6 +6,10 @@
 /** @define {string} */
 var VVVV_ENV = 'development';
 
+var vvvvjs_jquery = $.noConflict();
+$ = vvvvjs_jquery;
+
+(function($) {
 
 // some prerequisites ...
 $.ajaxPrefilter(function( options, originalOptions, jqXHR ) {
@@ -45,6 +49,13 @@ VVVV.NodeNames = [];
  */
 VVVV.Patches = {};
 VVVV.Editors = {};
+
+/**
+ * Fired when framerate is lower than 15fps for a certain amount of frames. See VVVV.MainLoop#update
+ */
+VVVV.onLowFrameRate = function() {
+  
+}
 
 /**
  * Fired when a node is being created that is not implemented
@@ -102,6 +113,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
         VVVV.loadScript('mainloop/vvvv.mainloop.js', loadMonitor);
         VVVV.loadScript('mainloop/vvvv.dominterface.js', loadMonitor);
   
+        VVVV.loadScript('types/vvvv.shared_types.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.value.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.string.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.boolean.js', loadMonitor);
@@ -124,6 +136,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
         VVVV.loadScript('nodes/vvvv.nodes.node.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.astronomy.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.xml.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.differential.js', loadMonitor);
       }
       VVVV.loadScript('editors/vvvv.editors.browser_editor.js', loadMonitor);
     }
@@ -142,8 +155,13 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
 
     VVVV.MainLoops = [];
 
-    $("script[language='VVVV']").each(function(i) {
-      var p = new VVVV.Core.Patch($(this).attr('src'), function() {
+    $("link[rel='VVVV'], script[language='VVVV']").each(function(i) {
+      var href_attribute = 'href';
+      if ($(this).get(0).tagName=='SCRIPT') {
+        if (VVVV_ENV=='development') console.warn('DEPRECATED: loading patches via <script language="VVVV" src="..."> tag is deprecated. Use <link rel="VVVV" href="..."> instead.');
+        href_attribute = 'src';
+      }
+      var p = new VVVV.Core.Patch($(this).attr(href_attribute), function() {
         var m = new VVVV.Core.MainLoop(this);
         VVVV.MainLoops.push(m);
       });
@@ -156,6 +174,8 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
   if (VVVV_ENV=='production')
     initialisationComplete();
 };
+
+}(vvvvjs_jquery));
 
 
 

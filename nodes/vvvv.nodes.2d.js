@@ -3,6 +3,8 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+(function($) {
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Cross (2d)
@@ -197,10 +199,10 @@ VVVV.Nodes.Points2Vector2d = function(id, graph) {
     var maxSize = this.getMaxInputSliceCount();
     
     for (var i=0; i<maxSize; i++) {
-      var x1 = parseFloat(x1In.getValue(i));
-      var y1 = parseFloat(y1In.getValue(i));
-      var x2 = parseFloat(x2In.getValue(i));
-      var y2 = parseFloat(y2In.getValue(i));
+      var x1 = x1In.getValue(i);
+      var y1 = y1In.getValue(i);
+      var x2 = x2In.getValue(i);
+      var y2 = y2In.getValue(i);
       
       var x = x2 - x1;
       var y = y2 - y1;
@@ -258,10 +260,10 @@ VVVV.Nodes.Vector2Points2d = function(id, graph) {
     var maxSize = this.getMaxInputSliceCount();
     
     for (var i=0; i<maxSize; i++) {
-      var x = parseFloat(xIn.getValue(i));
-      var y = parseFloat(yIn.getValue(i));
-      var length = parseFloat(lengthIn.getValue(i));
-      var angle = parseFloat(angleIn.getValue(i) - .25) * 2 * Math.PI;
+      var x = xIn.getValue(i);
+      var y = yIn.getValue(i);
+      var length = lengthIn.getValue(i);
+      var angle = angleIn.getValue(i) - .25 * 2 * Math.PI;
 
       var dx = length/2 * Math.sin(angle);
       var dy = -length/2 * Math.cos(angle);
@@ -281,3 +283,145 @@ VVVV.Nodes.Vector2Points2d = function(id, graph) {
 
 }
 VVVV.Nodes.Vector2Points2d.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Attractor (2d)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Attractor2d = function(id, graph) {
+  this.constructor(id, "Attractor (2d)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var xIn = this.addInputPin('X', [0], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin('Y', [0], VVVV.PinTypes.Value);
+  var attractorxIn = this.addInputPin('Attractor X', [0], VVVV.PinTypes.Value);
+  var attractoryIn = this.addInputPin('Attractor Y', [0], VVVV.PinTypes.Value);
+  var attractorstrengthIn = this.addInputPin('Attractor Strength', [1], VVVV.PinTypes.Value);
+  var attractorpowerIn = this.addInputPin('Attractor Power', [1], VVVV.PinTypes.Value);
+  var attractorradiusIn = this.addInputPin('Attractor Radius', [0.1], VVVV.PinTypes.Value);
+
+  // output pins
+  var outputxOut = this.addOutputPin('Output X', [0], VVVV.PinTypes.Value);
+  var outputyOut = this.addOutputPin('Output Y', [0], VVVV.PinTypes.Value);
+  
+  function sign(f) {
+    return f<0 ? -1 : ( f>0 ? 1 : 0);
+  }
+
+  this.evaluate = function() {
+    
+    var posSize = Math.max(xIn.getSliceCount(), yIn.getSliceCount());
+    var attrSize = Math.max(attractorxIn.getSliceCount(), attractoryIn.getSliceCount());
+    
+    var x, y, attractorx, attractory, attractorystrength, attractorpower, attractorradius;
+    var dx, dy;
+    
+    for (var i=0; i<posSize; i++) {
+      x = xIn.getValue(i);
+      y = yIn.getValue(i);
+      
+      for (var j=0; j<attrSize; j++) {
+        attractorx = attractorxIn.getValue(j);
+        attractory = attractoryIn.getValue(j);
+        attractorstrength = attractorstrengthIn.getValue(j);
+        attractorpower = attractorpowerIn.getValue(j);
+        attractorradius = attractorradiusIn.getValue(j);
+  
+        dx = x - attractorx;
+        dy = y - attractory;
+        if (dx!=0 || dy!=0) {
+          var l = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2))
+          var m = 0.0;
+          if (l<=attractorradius) {
+            var s = l / attractorradius;
+            m = attractorstrength * (Math.pow(s, attractorpower) * sign(s) / s - 1);
+          }
+          
+          x += dx * m;
+          y += dy * m;
+        }
+      }
+      outputxOut.setValue(i, x);
+      outputyOut.setValue(i, y);
+    }
+    
+    // you also might want to do stuff like this:
+    outputxOut.setSliceCount(posSize);
+    outputyOut.setSliceCount(posSize);
+  }
+
+}
+VVVV.Nodes.Attractor2d.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: ConnectAll (2d)
+ Author(s): 'woei'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.ConnectAll2d = function(id, graph) {
+  this.constructor(id, "ConnectAll (2d)", graph);
+  
+  this.meta = {
+    authors: ['woei'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  // input pins
+  var xinIn = this.addInputPin('X In', [0], VVVV.PinTypes.Value);
+  var yinIn = this.addInputPin('Y In', [0], VVVV.PinTypes.Value);
+
+  // output pins
+  var x1outOut = this.addOutputPin('X1 Out', [0], VVVV.PinTypes.Value);
+  var y1outOut = this.addOutputPin('Y1 Out', [0], VVVV.PinTypes.Value);
+  var x2outOut = this.addOutputPin('X2 Out', [0], VVVV.PinTypes.Value);
+  var y2outOut = this.addOutputPin('Y2 Out', [0], VVVV.PinTypes.Value);
+
+  // evaluate() will be called each frame
+  // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+
+    var idx = 0;
+    for (var i=0; i<maxSize; i++) {
+      for (var j=i+1; j<maxSize; j++) {
+        x1outOut.setValue(idx, xinIn.getValue(i));
+        y1outOut.setValue(idx, yinIn.getValue(i));
+        x2outOut.setValue(idx, xinIn.getValue(j));
+        y2outOut.setValue(idx, yinIn.getValue(j));
+        idx++;
+      }
+    }
+
+    x1outOut.setSliceCount(idx);
+    y1outOut.setSliceCount(idx);
+    x2outOut.setSliceCount(idx);
+    y2outOut.setSliceCount(idx);
+  }
+
+}
+VVVV.Nodes.ConnectAll2d.prototype = new VVVV.Core.Node();
+
+}(vvvvjs_jquery));
