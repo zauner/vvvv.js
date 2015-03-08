@@ -50,6 +50,8 @@ function WebAudioNode(id, name, graph) {
         this.apiNode = audioContext.createAnalyser(arg);
       else if(id == 'MediaElementSource')
         this.apiNode = audioContext.createMediaElementSource(arg);
+      else if(id == 'Oscillator')
+        this.apiNode = audioContext.createOscillator(arg);
       else //this is the normal code
         this.apiNode = audioContext['create'+id].apply(audioContext, arguments);
     }
@@ -235,6 +237,54 @@ VVVV.Nodes.AudioDestination = function(id, graph) {
   }
 }
 VVVV.Nodes.AudioDestination.prototype = new WebAudioNode('AudioDestination');
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Oscillator (HTML5 Audio)
+ Author(s): 'Lukas Winter'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Oscillator = function(id, graph) {
+  WebAudioNode.call(this, id, 'Oscillator (HTML5 Audio)', graph);
+  
+  this.meta = {
+    authors: ['Lukas Winter'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var typeIn = this.addInputPin("Type", ['sine'], VVVV.PinTypes.Enum);
+  typeIn.enumOptions = ['sine', 'square', 'sawtooth', 'triangle', 'custom' ];
+  var enableIn = this.addInputPin("Enabled", [1], VVVV.PinTypes.Value);
+  
+  this.auto_evaluate = true;
+  
+  this.evaluate = function() {
+    this.updateAudioConnections();
+    this.updateParamPins();
+    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+    
+    if(typeIn.pinIsChanged() && this.apiNode)
+    {
+      this.apiNode.type = typeIn.getValue(0);
+    }
+    
+    if(enableIn.pinIsChanged() && this.apiNode)
+    {
+      if(enableIn.getValue(0) > 0)
+      {
+        this.apiNode.start();
+      }
+      else
+      {
+        this.apiNode.stop();
+      }
+    }
+  }
+}
+VVVV.Nodes.Oscillator.prototype = new WebAudioNode('Oscillator');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
