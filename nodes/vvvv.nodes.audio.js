@@ -21,6 +21,15 @@ VVVV.PinTypes.WebAudio = {
   }
 }
 
+VVVV.PinTypes.AudioBuffer = {
+  typeName: "AudioBuffer",
+  reset_on_disconnect: true,
+  defaultValue: function() {
+    return "Empty audio buffer";
+  },
+  connectionChangedHandlers: {}
+}
+
 var audioContext = null;
 
 function WebAudioNode(id, name, graph) {
@@ -120,6 +129,55 @@ WebAudioNode.prototype.updateAudioConnections = function()
     }
   });
 }
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: FileAudioBuffer (HTML5 Audio)
+ Author(s): 'Lukas Winter'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.FileAudioBuffer = function(id, graph) {
+  this.constructor(id, 'FileAudioBuffer (HTML5 Audio)', graph);
+  
+  this.meta = {
+    authors: ['Lukas Winter'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var that = this;
+  this.auto_evaluate = false;
+  
+  var filenamePin = this.addInputPin("Filename", [""], VVVV.PinTypes.String);
+  var outputPin = this.addOutputPin("Audio Out", [], VVVV.PinTypes.AudioBuffer);
+  
+  this.evaluate = function() {
+
+    if (!audioContext) return;
+    
+    if (filenamePin.pinIsChanged())
+    {
+      var maxSize = this.getMaxInputSliceCount();
+      for (var i=0; i<maxSize; i++) {
+        var filename = VVVV.Helpers.prepareFilePath(filenamePin.getValue(i), this.parentPatch);
+        var request = new XMLHttpRequest();
+        request.open("GET", filename, true);
+        request.responseType = "arraybuffer";
+        request.onload = function(j) { return function()
+        {
+          audioContext.decodeAudioData(request.response, function(buffer){
+            outputPin.setValue(j, buffer);
+          });
+        }}(i);
+        request.send();
+      }
+    }
+    
+  }
+};
+VVVV.Nodes.FileAudioBuffer.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
