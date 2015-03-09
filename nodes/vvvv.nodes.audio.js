@@ -442,6 +442,41 @@ VVVV.Nodes.Convolver.prototype = new WebAudioNode('Convolver');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: WaveShaper (HTML5 Audio)
+ Author(s): 'Lukas Winter'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.WaveShaper = function(id, graph) {
+  WebAudioNode.call(this, id, 'WaveShaper (HTML5 Audio)', graph);
+  
+  this.meta = {
+    authors: ['Lukas Winter'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var curveIn = this.addInputPin("Curve", [], VVVV.PinTypes.Value);
+  var oversampleIn = this.addInputPin("Oversample", [1], VVVV.PinTypes.Enum);
+  oversampleIn.enumOptions = ["none", "2x", "4x"];
+  
+  this.evaluate = function() {
+    if(this.apiNode && curveIn.pinIsChanged())
+    {
+      var curve = new Float32Array(curveIn.getValue(0, curveIn.getSliceCount()));
+      if(curve.length > 2)
+        this.apiNode.curve = curve;
+    }
+    this.updateAudioConnections();
+    this.updateParamPins();
+    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+  }
+}
+VVVV.Nodes.WaveShaper.prototype = new WebAudioNode('WaveShaper');
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: BiquadFilter (HTML5 Audio)
  Author(s): 'Lukas Winter'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
