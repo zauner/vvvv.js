@@ -21,7 +21,7 @@ VVVV.PinTypes.Value.makeLabel = VVVV.PinTypes.String.makeLabel = function(elemen
       .text(node.IOBoxInputPin().getValue(i))
       .attr('class', 'vvvv-node-label')
       .attr('shape-rendering', 'crispEdges')
-      .attr('dy', function(d) { 
+      .attr('dy', function(d) {
         return i*12+12;
       })
       .attr('dx', 4)
@@ -41,7 +41,7 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
   $inputbox.get(0).select();
   
   $inputbox.change(function() {
-    if (this.typeName=="Value")
+    if (pin.typeName=="Value")
       pin.setValue(sliceIdx, parseFloat($(this).val()));
     else
       pin.setValue(sliceIdx, $(this).val());
@@ -57,7 +57,7 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
     }
   });
   
-  if (this.typeName=='Value') {
+  if (pin.typeName=='Value') {
     function scroll(el, delta, e) {
       var mod = $(el).val()%1;
       if (!isNaN(mod)) {
@@ -498,7 +498,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         var y = d3.event.pageY;
         var $nodeselection = $('<div id="node_selection"><input type="text" id="node_filter"/></div>');
         var $nodeselectionlist = $('<select id="new_node" size="8">');
-        $nodeselection.append($nodeselectionlist);    
+        $nodeselection.append($nodeselectionlist);
         $nodeselection.css('left', x);
         $nodeselection.css('top', y);
         
@@ -782,7 +782,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         .attr('fill', function(d) {
           if (d.invisiblePins["Descriptive Name"]==undefined || d.invisiblePins["Descriptive Name"].getValue(0)=="")
             return 'rgba(0,0,0,0)';
-          return 'rgba(0,0,0,1)'; 
+          return 'rgba(0,0,0,1)';
         })
         .attr('y', function(d) { return d.getHeight() })
         .attr('width', 5)
@@ -803,7 +803,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
               .attr('y', j*12 + 2)
               .attr('fill', 'rgba(0,0,0,0)');
             
-            if (!selector) {  
+            if (!selector) {
               l.on('contextmenu', function(d) {
                 if (d.IOBoxInputPin().getValue(0)!=undefined && !d.IOBoxInputPin().isConnected()) {
                   $('.resettable', thatWin.window.document).remove();
@@ -830,7 +830,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             .text(function(d) { return d.label(); })
             .attr('class', 'vvvv-node-label')
             .attr('shape-rendering', 'crispEdges')
-            .attr('dy', function(d, i) { 
+            .attr('dy', function(d, i) {
               return i*12+12;
             })
             .attr('dx', 4)
@@ -842,7 +842,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
     // INPUT PINS
       
     inputPins = nodes.selectAll('g.vvvv-input-pin')
-      .data(function(d) { 
+      .data(function(d) {
         if (d.isSubpatch)
           return _(d.inputPins).sortBy(function(p) { return p.slavePin ? p.slavePin.node.x : 1 }).map(function(p,k) { return p });
         else
@@ -1009,7 +1009,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             .attr('x2', d.x + d.node.x + 2 + .5)
             .attr('y2', d.y + d.node.y + 2 + .5)
           
-          if (linkStart.direction==VVVV.PinDirection.Output)  
+          if (linkStart.direction==VVVV.PinDirection.Output)
             var targetDir = 'input';
           else
             var targetDir = 'output';
@@ -1171,7 +1171,7 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
     else
       var $iobox = $('<div class="row value readonlyvalue"><div style="height:100%">'+p.getValue(0)+'</div></div>');
     if (p.typeName=="Color") {
-      $iobox.find('div').css('background-color', 'rgba('+_(p.getValue(0).rgba).map(function(c) { return parseInt(c*255) }).join(',')+')'); 
+      $iobox.find('div').css('background-color', 'rgba('+_(p.getValue(0).rgba).map(function(c) { return parseInt(c*255) }).join(',')+')');
     }
     $(that.win.document).find('#values').append($iobox);
   }
@@ -1223,7 +1223,7 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
         $(that.win.document).find('#values').append($iobox);
       }
       if (p.typeName=="Color") {
-        $iobox.find('div').css('background-color', 'rgba('+_(p.getValue(i).rgba).map(function(c) { return parseInt(c*255) }).join(',')+')'); 
+        $iobox.find('div').css('background-color', 'rgba('+_(p.getValue(i).rgba).map(function(c) { return parseInt(c*255) }).join(',')+')');
       }
     }
     i++;
