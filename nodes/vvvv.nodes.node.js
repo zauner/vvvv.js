@@ -12,7 +12,76 @@
  */
 VVVV.PinTypes.Node = {
   typeName: "Node",
-  reset_on_disconnect: true
+  reset_on_disconnect: true,
+  connectionChangedHandlers: {
+    'nodepin': function() {
+      function setPinTypes(oldType, type) {
+        for(pinname in this.node.outputPins) {
+          if (this.node.outputPins[pinname].typeName!=oldType.typeName)
+            continue;
+          this.node.outputPins[pinname].setType(type);
+          if (this.node.outputPins[pinname].slavePin)
+            this.node.outputPins[pinname].slavePin.setType(type);
+        }
+        for(pinname in this.node.inputPins) {
+          if (this.node.inputPins[pinname].typeName!=oldType.typeName)
+            continue;
+          this.node.inputPins[pinname].setType(type);
+          if (this.node.inputPins[pinname].masterPin)
+            this.node.inputPins[pinname].masterPin.setType(type);
+        }
+      }
+      
+      if (this.direction==VVVV.PinDirection.Input) {
+        if (this.isConnected()) {
+          var fromPin;
+          if (this.links.length>0)
+            fromPin = this.links[0].fromPin
+          else if (this.masterPin)
+            fromPin = this.masterPin
+          setPinTypes.call(this, VVVV.PinTypes.Node, VVVV.PinTypes[fromPin.typeName]);
+        }
+        else {
+          // check if there's an input connection
+          var reset_to_node_type = true;
+          for (var pinname in this.node.inputPins) {
+            if (this.node.inputPins[pinname].isConnected())
+              reset_to_node_type = false;
+          }
+          for (var pinname in this.node.outputPins) {
+            if (this.node.outputPins[pinname].isConnected())
+              reset_to_node_type = false;
+          }
+          if (reset_to_node_type)
+            setPinTypes.call(this, VVVV.PinTypes[this.typeName], VVVV.PinTypes.Node);
+        }
+      }
+      else if (this.direction==VVVV.PinDirection.Output) {
+        if (this.isConnected()) {
+          var toPin;
+          if (this.links.length>0)
+            toPin = this.links[0].toPin
+          else if (this.slavePin)
+            toPin = this.slavePin
+          setPinTypes.call(this, VVVV.PinTypes.Node, VVVV.PinTypes[toPin.typeName]);
+        }
+        else {
+          // check if there's an input connection
+          var reset_to_node_type = true;
+          for (var pinname in this.node.inputPins) {
+            if (this.node.inputPins[pinname].isConnected())
+              reset_to_node_type = false;
+          }
+          for (var pinname in this.node.outputPins) {
+            if (this.node.outputPins[pinname].isConnected())
+              reset_to_node_type = false;
+          }
+          if (reset_to_node_type)
+            setPinTypes.call(this, VVVV.PinTypes[this.typeName], VVVV.PinTypes.Node);
+        }
+      }
+    }
+  }
 }
 
 /*
@@ -40,52 +109,6 @@ VVVV.Nodes.IOBoxNode = function(id, graph) {
 
   // output pins
   var outputnodeOut = this.addOutputPin('Output Node', [], VVVV.PinTypes.Node);
-  
-  this.initialize = function() {
-    inputnodeIn.connectionChangedHandlers['nodepin'] = function() {
-      if (this.isConnected()) {
-        var fromPin;
-        if (this.links.length>0)
-          fromPin = this.links[0].fromPin
-        else if (this.masterPin)
-          fromPin = this.masterPin
-        this.setType(VVVV.PinTypes[fromPin.typeName]);
-        outputnodeOut.setType(VVVV.PinTypes[fromPin.typeName]);
-        if (outputnodeOut.slavePin)
-          outputnodeOut.slavePin.setType(VVVV.PinTypes[fromPin.typeName]);
-      }
-      else {
-        if (!outputnodeOut.isConnected()) {
-          this.setType(VVVV.PinTypes.Node);
-          outputnodeOut.setType(VVVV.PinTypes.Node);
-          if (outputnodeOut.slavePin)
-            outputnodeOut.slavePin.setType(VVVV.PinTypes.Node);
-        }
-      }
-    }
-    
-    outputnodeOut.connectionChangedHandlers['nodepin'] = function() {
-      if (this.isConnected()) {
-        var toPin;
-        if (this.links.length>0)
-          toPin = this.links[0].toPin
-        else if (this.slavePin)
-          toPin = this.slavePin
-        this.setType(VVVV.PinTypes[toPin.typeName]);
-        inputnodeIn.setType(VVVV.PinTypes[toPin.typeName]);
-        if (inputnodeIn.masterPin)
-          inputnodeIn.masterPin.setType(VVVV.PinTypes[toPin.typeName]);
-      }
-      else {
-        if (!inputnodeIn.isConnected()) {
-          this.setType(VVVV.PinTypes.Node);
-          inputnodeIn.setType(VVVV.PinTypes.Node);
-          if (inputnodeIn.masterPin)
-            inputnodeIn.masterPin.setType(VVVV.PinTypes.Node);
-        }
-      }
-    }
-  }
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();

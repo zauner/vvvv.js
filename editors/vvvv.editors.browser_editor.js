@@ -1030,7 +1030,8 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             getAllUpstreamNodes(linkStart.node);
           chart.selectAll('g.vvvv-'+targetDir+'-pin')
             .filter(function(d) {
-              if (d.typeName!=linkStart.typeName && (linkStart.typeName!="Node" || VVVV.PinTypes[d.typeName].primitive && (d.typeName!="Node" || VVVV.PinTypes[linkStart.typeName].primitive)))
+              //if (d.typeName!=linkStart.typeName && (linkStart.typeName!="Node" || VVVV.PinTypes[d.typeName].primitive && (d.typeName!="Node" || VVVV.PinTypes[linkStart.typeName].primitive)))
+              if (!(d.typeName==linkStart.typeName || (linkStart.typeName=="Node" && !VVVV.PinTypes[d.typeName].primitive) || (d.typeName=="Node" && !VVVV.PinTypes[linkStart.typeName].privimive)))
                 return false;
               if (upnodes.indexOf(d.node)>=0 || d.node==linkStart.node)
                 return false;

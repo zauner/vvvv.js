@@ -259,7 +259,7 @@ VVVV.Core = {
      * @return true, if there are incoming or outgoing links to or from this pin (and its masterPin, if preset)
      */
     this.isConnected = function() {
-      return (this.links.length > 0 || (this.masterPin && this.masterPin.isConnected()));
+      return (this.links.length > 0 || (this.masterPin && this.masterPin.isConnected()) || (this.slavePin && this.slavePin.links.length>0));
     }
 
     /**
@@ -291,7 +291,7 @@ VVVV.Core = {
       if (newType.typeName == this.typeName)
         return;
       var that = this;
-      delete this.connectionChangedHandlers['nodepin'];
+      //delete this.connectionChangedHandlers['nodepin'];
       delete this.connectionChangedHandlers['webglresource'];
       _(newType.connectionChangedHandlers).each(function(handler, key) {
         that.connectionChangedHandlers[key] = newType.connectionChangedHandlers[key];
@@ -341,8 +341,7 @@ VVVV.Core = {
     this.connectionChanged = function() {
       var that = this;
       _(this.connectionChangedHandlers).each(function(handler) {
-        that.f = handler;
-        that.f();
+        handler.call(that);
       });
     }
 
