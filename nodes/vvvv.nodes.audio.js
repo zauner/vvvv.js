@@ -468,6 +468,10 @@ VVVV.Nodes.WaveShaper = function(id, graph) {
       if(curve.length > 2)
         this.apiNode.curve = curve;
     }
+    if(this.apiNode && oversampleIn.pinIsChanged())
+    {
+      this.apiNode.oversample = oversampleIn.getValue(0);
+    }
     this.updateAudioConnections();
     this.updateParamPins();
     this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
