@@ -16,12 +16,27 @@ VVVV.PinTypes.Node = {
   connectionChangedHandlers: {
     'nodepin': function() {
       function setPinTypes(oldType, type) {
+        // check if there's an input connection
+        for (var pinname in this.node.inputPins) {
+          if (this.pinname!=pinname && this.node.inputPins[pinname].typeName==oldType.typeName && this.node.inputPins[pinname].typeName!='Node' && this.node.inputPins[pinname].isConnected())
+            return;
+        }
+        for (var pinname in this.node.outputPins) {
+          if (this.pinname!=pinname && this.node.outputPins[pinname].typeName==oldType.typeName && this.node.outputPins[pinname].typeName!='Node' && this.node.outputPins[pinname].isConnected())
+            return;
+        }
+        
         for(pinname in this.node.outputPins) {
           if (this.node.outputPins[pinname].typeName!=oldType.typeName)
             continue;
           this.node.outputPins[pinname].setType(type);
           if (this.node.outputPins[pinname].slavePin)
             this.node.outputPins[pinname].slavePin.setType(type);
+          var i=this.node.outputPins[pinname].links.length;
+          while (i--) {
+            if (this.node.outputPins[pinname].links[i].toPin.typeName!=type.typeName)
+              this.node.outputPins[pinname].links[i].toPin.connectionChanged();
+          }
         }
         for(pinname in this.node.inputPins) {
           if (this.node.inputPins[pinname].typeName!=oldType.typeName)
@@ -29,6 +44,8 @@ VVVV.PinTypes.Node = {
           this.node.inputPins[pinname].setType(type);
           if (this.node.inputPins[pinname].masterPin)
             this.node.inputPins[pinname].masterPin.setType(type);
+          if (this.pinname!=pinname && this.node.inputPins[pinname].links.length>0)
+            this.node.inputPins[pinname].links[0].fromPin.connectionChanged();
         }
       }
       
@@ -42,18 +59,7 @@ VVVV.PinTypes.Node = {
           setPinTypes.call(this, VVVV.PinTypes.Node, VVVV.PinTypes[fromPin.typeName]);
         }
         else {
-          // check if there's an input connection
-          var reset_to_node_type = true;
-          for (var pinname in this.node.inputPins) {
-            if (this.node.inputPins[pinname].isConnected())
-              reset_to_node_type = false;
-          }
-          for (var pinname in this.node.outputPins) {
-            if (this.node.outputPins[pinname].isConnected())
-              reset_to_node_type = false;
-          }
-          if (reset_to_node_type)
-            setPinTypes.call(this, VVVV.PinTypes[this.typeName], VVVV.PinTypes.Node);
+          setPinTypes.call(this, VVVV.PinTypes[this.typeName], VVVV.PinTypes.Node);
         }
       }
       else if (this.direction==VVVV.PinDirection.Output) {
@@ -66,18 +72,7 @@ VVVV.PinTypes.Node = {
           setPinTypes.call(this, VVVV.PinTypes.Node, VVVV.PinTypes[toPin.typeName]);
         }
         else {
-          // check if there's an input connection
-          var reset_to_node_type = true;
-          for (var pinname in this.node.inputPins) {
-            if (this.node.inputPins[pinname].isConnected())
-              reset_to_node_type = false;
-          }
-          for (var pinname in this.node.outputPins) {
-            if (this.node.outputPins[pinname].isConnected())
-              reset_to_node_type = false;
-          }
-          if (reset_to_node_type)
-            setPinTypes.call(this, VVVV.PinTypes[this.typeName], VVVV.PinTypes.Node);
+          setPinTypes.call(this, VVVV.PinTypes[this.typeName], VVVV.PinTypes.Node);
         }
       }
     }
