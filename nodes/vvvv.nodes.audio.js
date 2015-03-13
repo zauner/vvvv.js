@@ -94,7 +94,9 @@ WebAudioNode.prototype.createParamPins = function()
     var param = this.apiNode[key];
     if(param instanceof AudioParam)
     {
-      this.paramPins.push(this.addInputPin(key.replace(/([a-z^])([A-Z])/g, '$1 $2'), [param.defaultValue], VVVV.PinTypes.Value)); //FIXME: params can be connected to a value or an audio stream
+      var name = key.replace(/([a-z^])([A-Z])/g, '$1 $2');
+      name = name.charAt(0).toUpperCase() + name.slice(1);
+      this.paramPins.push(this.addInputPin(name, [param.defaultValue], VVVV.PinTypes.Value)); //FIXME: params can be connected to a value or an audio stream
       this.paramPins[this.paramPins.length - 1].apiName = key;
     }
   }
