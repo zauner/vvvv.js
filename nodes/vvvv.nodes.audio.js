@@ -344,7 +344,7 @@ VVVV.Nodes.Oscillator = function(id, graph) {
   typeIn.enumOptions = ['sine', 'square', 'sawtooth', 'triangle', 'custom' ];
   var enableIn = this.addInputPin("Enabled", [1], VVVV.PinTypes.Value);
   
-  this.auto_evaluate = false;
+  this.auto_evaluate = true;
   
   this.evaluate = function() {
     this.updateAudioConnections();
@@ -367,6 +367,11 @@ VVVV.Nodes.Oscillator = function(id, graph) {
         this.apiNode.stop();
       }
     }
+  }
+  
+  this.destroy = function() {
+    if (this.apiNode)
+      this.apiNode.stop();
   }
 }
 VVVV.Nodes.Oscillator.prototype = new WebAudioNode('Oscillator');
