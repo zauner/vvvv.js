@@ -49,6 +49,7 @@ function WebAudioNode(id, name, graph) {
     this.audioInputPins = [];
     this.audioOutputPins = [];
     this.paramPins = [];
+    this.modulationPins = [];
   }
   else //constructing prototype
   {
@@ -96,8 +97,14 @@ WebAudioNode.prototype.createParamPins = function()
     {
       var name = key.replace(/([a-z^])([A-Z])/g, '$1 $2');
       name = name.charAt(0).toUpperCase() + name.slice(1);
-      this.paramPins.push(this.addInputPin(name, [param.defaultValue], VVVV.PinTypes.Value)); //FIXME: params can be connected to a value or an audio stream
-      this.paramPins[this.paramPins.length - 1].apiName = key;
+      
+      var valuePin = this.addInputPin(name, [param.defaultValue], VVVV.PinTypes.Value);
+      valuePin.apiName = key;
+      this.paramPins.push(valuePin);
+      
+      var modulationPin = this.addInputPin(name + " Modulation", [], VVVV.PinTypes.WebAudio);
+      modulationPin.apiName = key;
+      this.modulationPins.push(modulationPin);
     }
   }
 }
@@ -124,8 +131,16 @@ WebAudioNode.prototype.updateAudioConnections = function()
       {
         var inPin = link.toPin;
         var inNode = inPin.node;
-        var inIndex = inNode.audioInputPins.indexOf(inPin);
-        that.apiNode.connect(inNode.apiNode, outIndex, inIndex);
+        if(inPin.apiName) //param modulation
+        {
+          var param = inNode.apiNode[inPin.apiName];
+          that.apiNode.connect(param, outIndex);
+        }
+        else //regular audio input
+        {
+          var inIndex = inNode.audioInputPins.indexOf(inPin);
+          that.apiNode.connect(inNode.apiNode, outIndex, inIndex);
+        }
       });
       audioOut.audioConnectionChanged = false;
     }
