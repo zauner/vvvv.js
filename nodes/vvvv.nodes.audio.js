@@ -4,6 +4,8 @@
 // Additional authors of sub components are mentioned at the specific code locations.
 // This component was developed is (c) 2014 Lukas Winter, distributed under the MIT license.
 
+(function($) {
+
 VVVV.PinTypes.WebAudio = {
   typeName: "WebAudio",
   reset_on_disconnect: true,
@@ -316,7 +318,7 @@ VVVV.Nodes.AudioDestination = function(id, graph) {
   this.createAPINode = function() { this.apiNode = audioContext.destination; };
   
   this.evaluate = function() {
-    this.updateAudioConnections();    
+    this.updateAudioConnections();
   }
 }
 VVVV.Nodes.AudioDestination.prototype = new WebAudioNode('AudioDestination');
@@ -342,7 +344,7 @@ VVVV.Nodes.Oscillator = function(id, graph) {
   typeIn.enumOptions = ['sine', 'square', 'sawtooth', 'triangle', 'custom' ];
   var enableIn = this.addInputPin("Enabled", [1], VVVV.PinTypes.Value);
   
-  this.auto_evaluate = true;
+  this.auto_evaluate = false;
   
   this.evaluate = function() {
     this.updateAudioConnections();
@@ -388,8 +390,6 @@ VVVV.Nodes.Delay = function(id, graph) {
   
   var createAPINode = this.createAPINode;
   this.createAPINode = function() { createAPINode.call(this, 10); }
-  
-  this.delays_output = true;
   
   this.evaluate = function() {
     this.updateAudioConnections();
@@ -618,3 +618,4 @@ VVVV.Nodes.PannerNode = makeAudioNodeConstructor('Panner');
 VVVV.Nodes.ScriptProcessorNode = makeAudioNodeConstructor('ScriptProcessor');
 VVVV.Nodes.WaveShaperNode = makeAudioNodeConstructor('WaveShaper');*/
 
+}(vvvvjs_jquery));
