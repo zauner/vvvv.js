@@ -86,11 +86,14 @@ WebAudioNode.prototype.createAudioPins = function()
 {
   for(var i = 0; i < this.apiNode.numberOfInputs; i++)
   {
-    this.audioInputPins.push(this.addInputPin('Input '+(i+1), [], VVVV.PinTypes.WebAudio));
+    var inPin = this.addInputPin('Input '+(i+1), [], VVVV.PinTypes.WebAudio);
+    inPin.apiIndex = i;
+    this.audioInputPins.push(inPin);
   }
   for(var i = 0; i < this.apiNode.numberOfOutputs; i++)
   {
     var outputPin = this.addOutputPin('Output '+(i+1), [this.apiNode], VVVV.PinTypes.WebAudio);
+    outputPin.apiIndex = i;
     this.audioOutputPins.push(outputPin);
     outputPin.audioConnectionChanged = true;
     //FIXME: If the pin was added by the XML before and we re-add it here _after_ node initialization, we lose any connections made by the XML
@@ -146,7 +149,7 @@ WebAudioNode.prototype.updateAudioConnections = function()
         }
         else //regular audio input
         {
-          var inIndex = inNode.audioInputPins.indexOf(inPin);
+          var inIndex = inPin.apiIndex;
           that.apiNode.connect(inNode.apiNode, outIndex, inIndex);
         }
       });
@@ -496,6 +499,51 @@ VVVV.Nodes.Gain = function(id, graph) {
   }
 }
 VVVV.Nodes.Gain.prototype = new WebAudioNode('Gain');
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Add (HTML5 Audio)
+ Author(s): 'Lukas Winter'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Add = function(id, graph) {
+  WebAudioNode.call(this, id, 'Add (HTML5 Audio)', graph);
+  
+  this.meta = {
+    authors: ['Lukas Winter'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var cntCfg = this.addInvisiblePin("Input Count",[2],VVVV.PinTypes.Value); 
+  var that = this;
+  
+  var addInputPins = function()
+  {
+    var inputCount = Math.max(2, cntCfg.getValue(0));
+    VVVV.Helpers.dynamicPins(that, that.audioInputPins, inputCount, function(i) {
+      var pin = that.addInputPin('Input '+(i+1), [], VVVV.PinTypes.WebAudio);
+      pin.apiIndex = 0;
+      return pin;
+    })
+  };
+  
+  this.initialize = function()
+  {
+    this.createAPINode();
+    this.createAudioPins();
+  };
+  
+  this.evaluate = function() {
+    if (cntCfg.pinIsChanged())
+      addInputPins();
+    this.updateAudioConnections();
+    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+  }
+}
+VVVV.Nodes.Add.prototype = new WebAudioNode('Gain');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
