@@ -52,6 +52,7 @@ function WebAudioNode(id, name, graph) {
     this.audioOutputPins = [];
     this.paramPins = [];
     this.modulationPins = [];
+    this.auto_nil = false;
   }
   else //constructing prototype
   {
@@ -72,6 +73,8 @@ function WebAudioNode(id, name, graph) {
         this.apiNode = audioContext.createDynamicsCompressor(arg);
       else if(id == 'BiquadFilter')
         this.apiNode = audioContext.createBiquadFilter(arg);
+      else if(id == 'MediaStreamSource')
+        this.apiNode = audioContext.createMediaStreamSource(arg);
       else //this is the normal code
         this.apiNode = audioContext['create'+id].apply(audioContext, arguments);
     }
@@ -87,7 +90,10 @@ WebAudioNode.prototype.createAudioPins = function()
   }
   for(var i = 0; i < this.apiNode.numberOfOutputs; i++)
   {
-    this.audioOutputPins.push(this.addOutputPin('Output '+(i+1), [this.apiNode], VVVV.PinTypes.WebAudio));
+    var outputPin = this.addOutputPin('Output '+(i+1), [this.apiNode], VVVV.PinTypes.WebAudio);
+    this.audioOutputPins.push(outputPin);
+    outputPin.audioConnectionChanged = true;
+    //FIXME: If the pin was added by the XML before and we re-add it here _after_ node initialization, we lose any connections made by the XML
   }
 }
 WebAudioNode.prototype.createParamPins = function()
