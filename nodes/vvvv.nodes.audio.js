@@ -325,6 +325,65 @@ VVVV.Nodes.AudioDestination.prototype = new WebAudioNode('AudioDestination');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: AudioIn (HTML5 Audio)
+ Author(s): 'Lukas Winter'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.AudioIn = function(id, graph) {
+  WebAudioNode.call(this, id, 'AudioIn (HTML5 Audio)', graph);
+  
+  this.meta = {
+    authors: ['Lukas Winter'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = true;
+  
+  var that = this;
+  
+  this.initialize = function()
+  {
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+    if (navigator.getUserMedia )
+    {
+      navigator.getUserMedia(
+      {
+        "audio":
+        {
+          "mandatory":
+          {
+            "googEchoCancellation": "false",
+            "googAutoGainControl": "false",
+            "googNoiseSuppression": "false",
+            "googHighpassFilter": "false"
+          },
+          "optional": []
+        },
+      }, function success(stream)
+      {
+        that.createAPINode(stream);
+        that.createAudioPins();
+      }, function errror(err)
+      {
+        console.log(err);
+      });
+    }
+    else
+      return(alert("Error: getUserMedia not supported!"));
+  };
+  
+  this.evaluate = function() {
+    this.updateAudioConnections();
+    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+  }
+}
+VVVV.Nodes.AudioIn.prototype = new WebAudioNode('MediaStreamSource');
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Oscillator (HTML5 Audio)
  Author(s): 'Lukas Winter'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
