@@ -344,6 +344,8 @@ VVVV.Nodes.AudioIn = function(id, graph) {
   
   var that = this;
   
+  var statusOut = this.addOutputPin("Status", ['Waiting'], VVVV.PinTypes.String);
+  
   this.initialize = function()
   {
     navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
@@ -366,13 +368,14 @@ VVVV.Nodes.AudioIn = function(id, graph) {
       {
         that.createAPINode(stream);
         that.createAudioPins();
+        statusOut.setValue(0, 'OK');
       }, function errror(err)
       {
-        console.log(err);
+        statusOut.setValue(0, err);
       });
     }
     else
-      return(alert("Error: getUserMedia not supported!"));
+      statusOut.setValue(0, "Error: getUserMedia not supported!");
   };
   
   this.evaluate = function() {
