@@ -48,6 +48,14 @@ function WebAudioNode(id, name, graph) {
       this.createAudioPins();
       this.createParamPins();
     }
+    this.destroy = function()
+    {
+      if (this.apiNode)
+      {
+        this.apiNode.disconnect();
+        this.apiNode = undefined;
+      }
+    }
     this.audioInputPins = [];
     this.audioOutputPins = [];
     this.paramPins = [];
@@ -438,11 +446,6 @@ VVVV.Nodes.Oscillator = function(id, graph) {
         this.apiNode.stop();
       }
     }
-  }
-  
-  this.destroy = function() {
-    if (this.apiNode)
-      this.apiNode.stop();
   }
 }
 VVVV.Nodes.Oscillator.prototype = new WebAudioNode('Oscillator');
