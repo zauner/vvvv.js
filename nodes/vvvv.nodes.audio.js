@@ -100,11 +100,18 @@ WebAudioNode.prototype.createAudioPins = function()
   }
   for(var i = 0; i < this.apiNode.numberOfOutputs; i++)
   {
-    var outputPin = this.addOutputPin('Output '+(i+1), [this.apiNode], VVVV.PinTypes.WebAudio);
+    var pinName = 'Output '+(i+1);
+    if(this.outputPins.hasOwnProperty(pinName)) //pin was already added by XML
+    {
+      var outputPin = this.outputPins[pinName];
+      outputPin.setType(VVVV.PinTypes.WebAudio);
+      outputPin.setValue(0, this.apiNode);
+    }
+    else
+      var outputPin = this.addOutputPin(pinName, [this.apiNode], VVVV.PinTypes.WebAudio);
     outputPin.apiIndex = i;
     this.audioOutputPins.push(outputPin);
     outputPin.audioConnectionChanged = true;
-    //FIXME: If the pin was added by the XML before and we re-add it here _after_ node initialization, we lose any connections made by the XML
   }
 }
 WebAudioNode.prototype.createParamPins = function()
@@ -141,27 +148,26 @@ WebAudioNode.prototype.updateParamPins = function()
 WebAudioNode.prototype.updateAudioConnections = function()
 {
   var that = this;
-  this.audioOutputPins.forEach(function(audioOut, outIndex) {
-    if(audioOut.audioConnectionChanged && that.apiNode)
+  this.audioOutputPins.forEach(function(outPin) {
+    if(outPin.audioConnectionChanged && that.apiNode)
     {
       console.log("Re-connecting!");
-      that.apiNode.disconnect(outIndex);
-      audioOut.links.forEach(function(link)
+      that.apiNode.disconnect(outPin.apiIndex);
+      outPin.links.forEach(function(link)
       {
         var inPin = link.toPin;
         var inNode = inPin.node;
         if(inPin.apiName) //param modulation
         {
           var param = inNode.apiNode[inPin.apiName];
-          that.apiNode.connect(param, outIndex);
+          that.apiNode.connect(param, outPin.apiIndex);
         }
         else //regular audio input
         {
-          var inIndex = inPin.apiIndex;
-          that.apiNode.connect(inNode.apiNode, outIndex, inIndex);
+          that.apiNode.connect(inNode.apiNode, outPin.apiIndex, inPin.apiIndex);
         }
       });
-      audioOut.audioConnectionChanged = false;
+      outPin.audioConnectionChanged = false;
     }
   });
 }
