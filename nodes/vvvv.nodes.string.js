@@ -771,7 +771,7 @@ VVVV.Nodes.FormatValueString = function(id, graph) {
       var ccount = charactersbeforecomma+charactersaftercomma+(charactersaftercomma>0);
       input = input.toFixed(charactersaftercomma);
       input = pad(input, ccount, leadingzeroes>=0.5 ? '0' : ' ');
-      input = input.replace('.', separators[commasymbol]).replace(/\B(?=(\d{3})+(?!\d))/g, separators[thousandssymbol]);    
+      input = input.replace('.', separators[commasymbol]).replace(/\B(?=(\d{3})+(?!\d))/g, separators[thousandssymbol]);
       outputOut.setValue(i, input);
     }
     
@@ -780,5 +780,48 @@ VVVV.Nodes.FormatValueString = function(id, graph) {
 
 }
 VVVV.Nodes.FormatValueString.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: S+H (String)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.SampleAndHoldString = function(id, graph) {
+  this.constructor(id, "S+H (String)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['different output slice count in pure VVVV, if Set pin has only one slice']
+  };
+  
+  var inputIn = this.addInputPin("Input", [''], VVVV.PinTypes.String);
+  var setIn = this.addInputPin("Set", [0], VVVV.PinTypes.Value);
+  
+  var outputOut = this.addOutputPin("Output", [''], VVVV.PinTypes.String);
+  
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    for (var i=0; i<maxSize; i++) {
+      if (outputOut.values[i]==undefined) {
+        outputOut.setValue(i, 0.0);
+      }
+      if (Math.round(setIn.getValue(i))>=0.5) {
+        outputOut.setValue(i, inputIn.getValue(i));
+      }
+    }
+    outputOut.setSliceCount(maxSize);
+    
+  }
+
+}
+VVVV.Nodes.SampleAndHoldString.prototype = new VVVV.Core.Node();
 
 }(vvvvjs_jquery));
