@@ -48,10 +48,19 @@ function WebAudioNode(id, name, graph) {
       this.createAudioPins();
       this.createParamPins();
     }
+    this.destroy = function()
+    {
+      if (this.apiNode)
+      {
+        this.apiNode.disconnect();
+        this.apiNode = undefined;
+      }
+    }
     this.audioInputPins = [];
     this.audioOutputPins = [];
     this.paramPins = [];
     this.modulationPins = [];
+    this.auto_nil = false;
   }
   else //constructing prototype
   {
@@ -72,6 +81,8 @@ function WebAudioNode(id, name, graph) {
         this.apiNode = audioContext.createDynamicsCompressor(arg);
       else if(id == 'BiquadFilter')
         this.apiNode = audioContext.createBiquadFilter(arg);
+      else if(id == 'MediaStreamSource')
+        this.apiNode = audioContext.createMediaStreamSource(arg);
       else //this is the normal code
         this.apiNode = audioContext['create'+id].apply(audioContext, arguments);
     }
@@ -83,11 +94,24 @@ WebAudioNode.prototype.createAudioPins = function()
 {
   for(var i = 0; i < this.apiNode.numberOfInputs; i++)
   {
-    this.audioInputPins.push(this.addInputPin('Input '+(i+1), [], VVVV.PinTypes.WebAudio));
+    var inPin = this.addInputPin('Input '+(i+1), [], VVVV.PinTypes.WebAudio);
+    inPin.apiIndex = i;
+    this.audioInputPins.push(inPin);
   }
   for(var i = 0; i < this.apiNode.numberOfOutputs; i++)
   {
-    this.audioOutputPins.push(this.addOutputPin('Output '+(i+1), [this.apiNode], VVVV.PinTypes.WebAudio));
+    var pinName = 'Output '+(i+1);
+    if(this.outputPins.hasOwnProperty(pinName)) //pin was already added by XML
+    {
+      var outputPin = this.outputPins[pinName];
+      outputPin.setType(VVVV.PinTypes.WebAudio);
+      outputPin.setValue(0, this.apiNode);
+    }
+    else
+      var outputPin = this.addOutputPin(pinName, [this.apiNode], VVVV.PinTypes.WebAudio);
+    outputPin.apiIndex = i;
+    this.audioOutputPins.push(outputPin);
+    outputPin.audioConnectionChanged = true;
   }
 }
 WebAudioNode.prototype.createParamPins = function()
@@ -124,27 +148,26 @@ WebAudioNode.prototype.updateParamPins = function()
 WebAudioNode.prototype.updateAudioConnections = function()
 {
   var that = this;
-  this.audioOutputPins.forEach(function(audioOut, outIndex) {
-    if(audioOut.audioConnectionChanged && that.apiNode)
+  this.audioOutputPins.forEach(function(outPin) {
+    if(outPin.audioConnectionChanged && that.apiNode)
     {
       console.log("Re-connecting!");
-      that.apiNode.disconnect(outIndex);
-      audioOut.links.forEach(function(link)
+      that.apiNode.disconnect(outPin.apiIndex);
+      outPin.links.forEach(function(link)
       {
         var inPin = link.toPin;
         var inNode = inPin.node;
         if(inPin.apiName) //param modulation
         {
           var param = inNode.apiNode[inPin.apiName];
-          that.apiNode.connect(param, outIndex);
+          that.apiNode.connect(param, outPin.apiIndex);
         }
         else //regular audio input
         {
-          var inIndex = inNode.audioInputPins.indexOf(inPin);
-          that.apiNode.connect(inNode.apiNode, outIndex, inIndex);
+          that.apiNode.connect(inNode.apiNode, outPin.apiIndex, inPin.apiIndex);
         }
       });
-      audioOut.audioConnectionChanged = false;
+      outPin.audioConnectionChanged = false;
     }
   });
 }
@@ -325,6 +348,68 @@ VVVV.Nodes.AudioDestination.prototype = new WebAudioNode('AudioDestination');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: AudioIn (HTML5 Audio)
+ Author(s): 'Lukas Winter'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.AudioIn = function(id, graph) {
+  WebAudioNode.call(this, id, 'AudioIn (HTML5 Audio)', graph);
+  
+  this.meta = {
+    authors: ['Lukas Winter'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = true;
+  
+  var that = this;
+  
+  var statusOut = this.addOutputPin("Status", ['Waiting'], VVVV.PinTypes.String);
+  
+  this.initialize = function()
+  {
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+    if (navigator.getUserMedia )
+    {
+      navigator.getUserMedia(
+      {
+        "audio":
+        {
+          "mandatory":
+          {
+            "googEchoCancellation": "false",
+            "googAutoGainControl": "false",
+            "googNoiseSuppression": "false",
+            "googHighpassFilter": "false"
+          },
+          "optional": []
+        },
+      }, function success(stream)
+      {
+        that.createAPINode(stream);
+        that.createAudioPins();
+        statusOut.setValue(0, 'OK');
+      }, function errror(err)
+      {
+        statusOut.setValue(0, err);
+      });
+    }
+    else
+      statusOut.setValue(0, "Error: getUserMedia not supported!");
+  };
+  
+  this.evaluate = function() {
+    this.updateAudioConnections();
+    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+  }
+}
+VVVV.Nodes.AudioIn.prototype = new WebAudioNode('MediaStreamSource');
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Oscillator (HTML5 Audio)
  Author(s): 'Lukas Winter'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -367,11 +452,6 @@ VVVV.Nodes.Oscillator = function(id, graph) {
         this.apiNode.stop();
       }
     }
-  }
-  
-  this.destroy = function() {
-    if (this.apiNode)
-      this.apiNode.stop();
   }
 }
 VVVV.Nodes.Oscillator.prototype = new WebAudioNode('Oscillator');
@@ -428,6 +508,51 @@ VVVV.Nodes.Gain = function(id, graph) {
   }
 }
 VVVV.Nodes.Gain.prototype = new WebAudioNode('Gain');
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Add (HTML5 Audio)
+ Author(s): 'Lukas Winter'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Add = function(id, graph) {
+  WebAudioNode.call(this, id, 'Add (HTML5 Audio)', graph);
+  
+  this.meta = {
+    authors: ['Lukas Winter'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var cntCfg = this.addInvisiblePin("Input Count",[2],VVVV.PinTypes.Value); 
+  var that = this;
+  
+  var addInputPins = function()
+  {
+    var inputCount = Math.max(2, cntCfg.getValue(0));
+    VVVV.Helpers.dynamicPins(that, that.audioInputPins, inputCount, function(i) {
+      var pin = that.addInputPin('Input '+(i+1), [], VVVV.PinTypes.WebAudio);
+      pin.apiIndex = 0;
+      return pin;
+    })
+  };
+  
+  this.initialize = function()
+  {
+    this.createAPINode();
+    this.createAudioPins();
+  };
+  
+  this.evaluate = function() {
+    if (cntCfg.pinIsChanged())
+      addInputPins();
+    this.updateAudioConnections();
+    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+  }
+}
+VVVV.Nodes.Add.prototype = new WebAudioNode('Gain');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
