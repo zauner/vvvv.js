@@ -13,13 +13,6 @@ VVVV.PinTypes.WebAudio = {
     return "Unconnected Audio";
   },
   connectionChangedHandlers: {
-    'webaudio': function() {
-      if(this.direction == VVVV.PinDirection.Output)
-      {
-        console.log("Connection changed!", this);
-        this.audioConnectionChanged = true;
-      }
-    }
   }
 }
 
@@ -95,7 +88,7 @@ WebAudioNode.prototype.createAudioPins = function()
   for(var i = 0; i < this.apiNode.numberOfInputs; i++)
   {
     var inPin = this.addInputPin('Input '+(i+1), [], VVVV.PinTypes.WebAudio);
-    inPin.apiIndex = i;
+    inPin.apiName = i;
     this.audioInputPins.push(inPin);
   }
   for(var i = 0; i < this.apiNode.numberOfOutputs; i++)
@@ -105,11 +98,11 @@ WebAudioNode.prototype.createAudioPins = function()
     {
       var outputPin = this.outputPins[pinName];
       outputPin.setType(VVVV.PinTypes.WebAudio);
-      outputPin.setValue(0, this.apiNode);
+      outputPin.setValue(0, { node: this, name: i });
     }
     else
-      var outputPin = this.addOutputPin(pinName, [this.apiNode], VVVV.PinTypes.WebAudio);
-    outputPin.apiIndex = i;
+      var outputPin = this.addOutputPin(pinName, [{ node: this, name: i }], VVVV.PinTypes.WebAudio);
+    outputPin.apiName = i;
     this.audioOutputPins.push(outputPin);
     outputPin.audioConnectionChanged = true;
   }
@@ -148,28 +141,42 @@ WebAudioNode.prototype.updateParamPins = function()
 WebAudioNode.prototype.updateAudioConnections = function()
 {
   var that = this;
-  this.audioOutputPins.forEach(function(outPin) {
-    if(outPin.audioConnectionChanged && that.apiNode)
+  this.audioInputPins.concat(this.modulationPins).forEach( function(pin)
+  {
+    if(pin.pinIsChanged())
     {
-      console.log("Re-connecting!");
-      that.apiNode.disconnect(outPin.apiIndex);
-      outPin.links.forEach(function(link)
+      var newSource = pin.getValue(0);
+      var oldSource = pin.oldValue;
+      
+      if(oldSource)
       {
-        var inPin = link.toPin;
-        var inNode = inPin.node;
-        if(inPin.apiName) //param modulation
-        {
-          var param = inNode.apiNode[inPin.apiName];
-          that.apiNode.connect(param, outPin.apiIndex);
-        }
-        else //regular audio input
-        {
-          that.apiNode.connect(inNode.apiNode, outPin.apiIndex, inPin.apiIndex);
-        }
-      });
-      outPin.audioConnectionChanged = false;
+        oldSource.node.doDisconnect(that.apiNode, oldSource.name, pin.apiName);
+      }
+      if(newSource && newSource != "Unconnected Audio")
+      {
+        console.log(newSource);
+        newSource.node.doConnect(that.apiNode, newSource.name, pin.apiName);
+      }
+      
+      pin.oldValue = newSource;
     }
   });
+}
+WebAudioNode.prototype.doConnect = function(destApiNode, srcOutput, destInput)
+{
+  console.log("doConnect", this.apiNode, srcOutput, destApiNode, destInput);
+  if(typeof destInput == "number")
+    this.apiNode.connect(destApiNode, srcOutput, destInput);
+  else if(typeof destInput == "string")
+  {
+    var destParam = destApiNode[destInput];
+    this.apiNode.connect(destParam, srcOutput);
+  }
+}
+WebAudioNode.prototype.doDisconnect = function(destApiNode, srcOutput, destInput)
+{
+  console.log("doDisconnect");
+  this.apiNode.disconnect(srcOutput);
 }
 
 /*
@@ -269,7 +276,7 @@ VVVV.Nodes.AnalyserNode = function(id, graph) {
       fftOut.setValue(i, fftData[i]); //FIXME: veeeeery inefficient!
     }
     
-    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+    
   }
 }
 VVVV.Nodes.AnalyserNode.prototype = new WebAudioNode('Analyser');
@@ -313,7 +320,7 @@ VVVV.Nodes.MediaElementSource = function(id, graph) {
       
       if(this.apiNode)
       {
-        audioOut.setValue(0, this.apiNode);
+        audioOut.setValue(0, { node: this, name:0 });
       }
     }
     
@@ -363,8 +370,6 @@ VVVV.Nodes.AudioIn = function(id, graph) {
     compatibility_issues: []
   };
   
-  this.auto_evaluate = true;
-  
   var that = this;
   
   var statusOut = this.addOutputPin("Status", ['Waiting'], VVVV.PinTypes.String);
@@ -403,7 +408,7 @@ VVVV.Nodes.AudioIn = function(id, graph) {
   
   this.evaluate = function() {
     this.updateAudioConnections();
-    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+    
   }
 }
 VVVV.Nodes.AudioIn.prototype = new WebAudioNode('MediaStreamSource');
@@ -429,12 +434,10 @@ VVVV.Nodes.Oscillator = function(id, graph) {
   typeIn.enumOptions = ['sine', 'square', 'sawtooth', 'triangle', 'custom' ];
   var enableIn = this.addInputPin("Enabled", [1], VVVV.PinTypes.Value);
   
-  this.auto_evaluate = true;
-  
   this.evaluate = function() {
     this.updateAudioConnections();
     this.updateParamPins();
-    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+    
     
     if(typeIn.pinIsChanged() && this.apiNode)
     {
@@ -479,7 +482,7 @@ VVVV.Nodes.Delay = function(id, graph) {
   this.evaluate = function() {
     this.updateAudioConnections();
     this.updateParamPins();
-    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+    
   }
 }
 VVVV.Nodes.Delay.prototype = new WebAudioNode('Delay');
@@ -504,7 +507,7 @@ VVVV.Nodes.Gain = function(id, graph) {
   this.evaluate = function() {
     this.updateAudioConnections();
     this.updateParamPins();
-    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+    
   }
 }
 VVVV.Nodes.Gain.prototype = new WebAudioNode('Gain');
@@ -534,7 +537,7 @@ VVVV.Nodes.Add = function(id, graph) {
     var inputCount = Math.max(2, cntCfg.getValue(0));
     VVVV.Helpers.dynamicPins(that, that.audioInputPins, inputCount, function(i) {
       var pin = that.addInputPin('Input '+(i+1), [], VVVV.PinTypes.WebAudio);
-      pin.apiIndex = 0;
+      pin.apiName = 0;
       return pin;
     })
   };
@@ -549,7 +552,7 @@ VVVV.Nodes.Add = function(id, graph) {
     if (cntCfg.pinIsChanged())
       addInputPins();
     this.updateAudioConnections();
-    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+    
   }
 }
 VVVV.Nodes.Add.prototype = new WebAudioNode('Gain');
@@ -582,7 +585,7 @@ VVVV.Nodes.Convolver = function(id, graph) {
     }
     this.updateAudioConnections();
     this.updateParamPins();
-    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+    
   }
 }
 VVVV.Nodes.Convolver.prototype = new WebAudioNode('Convolver');
@@ -621,7 +624,7 @@ VVVV.Nodes.WaveShaper = function(id, graph) {
     }
     this.updateAudioConnections();
     this.updateParamPins();
-    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+    
   }
 }
 VVVV.Nodes.WaveShaper.prototype = new WebAudioNode('WaveShaper');
@@ -649,7 +652,7 @@ VVVV.Nodes.BiquadFilter = function(id, graph) {
   this.evaluate = function() {
     this.updateAudioConnections();
     this.updateParamPins();
-    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+    
     
     if(this.apiNode && typeIn.pinIsChanged())
       this.apiNode.type = typeIn.getValue(0);
@@ -679,7 +682,7 @@ VVVV.Nodes.DynamicsCompressor = function(id, graph) {
   this.evaluate = function() {
     this.updateAudioConnections();
     this.updateParamPins();
-    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+    
     
     //according to the spec, reduction shouldn't be an AudioParam, but browsers seem to implement it as such
     if(this.apiNode)
@@ -730,7 +733,7 @@ VVVV.Nodes.BeatDetector = function(id, graph) {
     beatCounterOut.setValue(0, beatDetector.beat_counter);
     bpmOut.setValue(0, beatDetector.win_bpm_int / 10);
     
-    this.audioOutputPins.forEach( function(pin) { pin.markPinAsChanged(); } );
+    
   }
 }
 VVVV.Nodes.BeatDetector.prototype = new WebAudioNode('Analyser');
