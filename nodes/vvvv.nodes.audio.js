@@ -284,13 +284,13 @@ VVVV.Nodes.FileAudioBuffer.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: AnalyserNode (HTML5 Audio)
+ NODE: FFT (HTML5 Audio)
  Author(s): 'Lukas Winter'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-VVVV.Nodes.AnalyserNode = function(id, graph) {
-  WebAudioNode.call(this, id, 'AnalyserNode (HTML5 Audio)', graph);
+VVVV.Nodes.FFT = function(id, graph) {
+  WebAudioNode.call(this, id, 'FFT (HTML5 Audio)', graph);
   
   this.meta = {
     authors: ['Lukas Winter'],
@@ -335,7 +335,7 @@ VVVV.Nodes.AnalyserNode = function(id, graph) {
     
   }
 }
-VVVV.Nodes.AnalyserNode.prototype = new WebAudioNode('Analyser');
+VVVV.Nodes.FFT.prototype = new WebAudioNode('Analyser');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
