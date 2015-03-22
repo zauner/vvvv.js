@@ -534,6 +534,8 @@ VVVV.Nodes.Delay = function(id, graph) {
     compatibility_issues: []
   };
   
+  this.delays_output = true;
+  
   var createAPINode = this.createAPINode;
   this.createAPINode = function() { createAPINode.call(this, 10); }
   
