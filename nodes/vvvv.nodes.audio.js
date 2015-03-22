@@ -299,6 +299,8 @@ VVVV.Nodes.AnalyserNode = function(id, graph) {
     compatibility_issues: []
   };
   
+  this.auto_evaluate = true;
+  
   var that = this;
   
   var fftSizeIn = this.addInputPin('FFTSize', ['2048'], VVVV.PinTypes.Value);
@@ -733,6 +735,8 @@ VVVV.Nodes.DynamicsCompressor = function(id, graph) {
     compatibility_issues: []
   };
   
+  this.auto_evaluate = true;
+  
   var reductionOut = this.addOutputPin('Reduction', [ 0 ], VVVV.PinTypes.Value);
   
   this.evaluate = function() {
@@ -763,6 +767,8 @@ VVVV.Nodes.BeatDetector = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  
+  this.auto_evaluate = true;
   
   var that = this;
   var fftSize = 1024;
