@@ -423,32 +423,35 @@ VVVV.Nodes.MediaElementSource = function(id, graph) {
   
   var audioIn = this.addInputPin('Audio', [], this);
   var audioOut = this.addOutputPin('Output', [], VVVV.PinTypes.WebAudio);
-  audioOut.apiIndex = 0;
-  audioOut.audioConnections = [];
+  audioOut.apiName = 0;
   this.audioOutputPins.push(audioOut);
   
   this.initialize = function() {};
   
-  var mediaElements = [ 7 ];
+  var mediaElements = [];
   
-  this.evaluate = function() {
-    this.updateAudioConnections();
+  this.evaluate = function()
+  {
     if(audioIn.pinIsChanged())
     {
-      var inElement = audioIn.getValue(0);
-      if(inElement != mediaElements[0] && inElement)
+      var n = this.getMaxInputSliceCount();
+      audioOut.setSliceCount(n);
+      mediaElements.length = n;
+      
+      for(var i = 0; i < n; i++)
       {
-        mediaElements[0] = inElement;
-        this.createAPINode(audioIn.getValue(0));
-        inElement.volume = 1;
-        
-        if(this.apiNode)
+        var inElement = audioIn.getValue(i);
+        if(inElement && inElement != mediaElements[i])
         {
-          audioOut.setValue(0, { node: this, name:0 });
+          mediaElements[i] = inElement;
+          this.apiMultiNode[i] = this.createAPISingleNode(inElement);
+          inElement.volume = 1;
+          audioOut.setValue(i, new WebAudioOutputSlice(this.apiMultiNode[i], 0));
         }
       }
     }
     
+    this.updateAudioConnections();
   }
 }
 VVVV.Nodes.MediaElementSource.prototype = new WebAudioNode('MediaElementSource');
@@ -470,7 +473,7 @@ VVVV.Nodes.AudioDestination = function(id, graph) {
     compatibility_issues: []
   };
   
-  this.createAPINode = function() { this.apiNode = audioContext.destination; };
+  this.createAPISingleNode = function() { return audioContext.destination; };
   
   this.evaluate = function() {
     this.updateAudioConnections();
