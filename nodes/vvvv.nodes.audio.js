@@ -145,11 +145,6 @@ function WebAudioNode(id, name, graph) {
   }
 }
 WebAudioNode.prototype = new VVVV.Core.Node();
-WebAudioNode.prototype.createAPINode = function(arg)
-{
-  var args = [].concat.apply([1], arguments);
-  this.createAPIMultiNode.apply(this, args);
-}
 WebAudioNode.prototype.truncateAPIMultiNode = function(n)
 {
   var that = this;
@@ -522,7 +517,7 @@ VVVV.Nodes.AudioIn = function(id, graph) {
         },
       }, function success(stream)
       {
-        that.createAPINode(stream);
+        that.createAPIMultiNode(1, stream);
         that.createAudioPins();
         statusOut.setValue(0, 'OK');
       }, function errror(err)
@@ -604,10 +599,15 @@ VVVV.Nodes.Delay = function(id, graph) {
     compatibility_issues: []
   };
   
-  this.delays_output = true;
+  //Deactivate this until we find out how this plays together with spreadability
+  //this.delays_output = true;
   
-  var createAPINode = this.createAPINode;
-  this.createAPINode = function() { createAPINode.call(this, 10); }
+  var maxDelayCfg = this.addInvisiblePin("Maximum Delay",[1],VVVV.PinTypes.Value);
+  
+  this.createAPISingleNode = function()
+  {
+    return audioContext.createDelay(maxDelayCfg.getValue(0));
+  }
   
   this.evaluate = function() {
     this.updateAudioConnections();
@@ -668,13 +668,14 @@ VVVV.Nodes.Add = function(id, graph) {
     VVVV.Helpers.dynamicPins(that, that.audioInputPins, inputCount, function(i) {
       var pin = that.addInputPin('Input '+(i+1), [], VVVV.PinTypes.WebAudio);
       pin.apiName = 0;
+      pin.oldValue = [];
       return pin;
     })
   };
   
   this.initialize = function()
   {
-    this.createAPINode();
+    this.createAPIMultiNode(1);
     this.createAudioPins();
   };
   
