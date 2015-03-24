@@ -6,6 +6,8 @@
 
 (function($) {
 
+var debugID = 0;
+
 VVVV.PinTypes.WebAudio = {
   typeName: "WebAudio",
   reset_on_disconnect: true,
@@ -25,6 +27,66 @@ VVVV.PinTypes.AudioBuffer = {
   connectionChangedHandlers: {}
 }
 
+var WebAudioOutputSlice = function WebAudioOutputSlice(srcApiNode, srcName)
+{
+  this.srcApiNode = srcApiNode;
+  this.srcName = srcName;
+  
+  this.connections = [];
+}
+WebAudioOutputSlice.prototype =
+{
+  connect: function(destApiNode, destName)
+  {
+    console.log("CONNECT ", this.srcApiNode, " OUTPUT ", this.srcName, "\n TO ", destApiNode, " INPUT ", destName);
+    
+    if(typeof destName == "number")
+      this.srcApiNode.connect(destApiNode, this.srcName, destName);
+    else if(typeof destName == "string")
+    {
+      var destParam = destApiNode[destName];
+      console.log("DEST PARAM ", destParam);
+      this.srcApiNode.connect(destParam, this.srcName);
+    }
+    else
+    {
+      console.log("EEEK!", typeof destName, destName);
+    }
+    
+    this.connections.push({destApiNode: destApiNode, destName: destName});
+  },
+  
+  disconnect: function(destApiNode, destName)
+  {
+    console.log("DISCONNECT ", this.srcApiNode, " OUTPUT ", this.srcName, "\n FROM ", destApiNode, " INPUT ", destName);
+    
+    var that = this;
+    this.srcApiNode.disconnect(this.srcName);
+    
+    var indexToRemove = -1;
+    this.connections.forEach(function(connection, i)
+    {
+      if(connection.destApiNode == destApiNode && connection.destName == destName)
+        indexToRemove = i;
+      else //reconnect a lost connection
+      {
+        if(typeof connection.destName == "number")
+          that.srcApiNode.connect(connection.destApiNode, that.srcName, connection.destName);
+        else if(typeof connection.destName == "string")
+        {
+          var destParam = connection.destApiNode[connection.destName];
+          that.srcApiNode.connect(destParam, that.srcName);
+        }
+      }
+    });
+    
+    if(indexToRemove != -1)
+      this.connections.splice(indexToRemove, 1);
+    else
+      console.log("Warning: Connection removal bug detected!");
+  }
+};
+
 var audioContext = null;
 
 function WebAudioNode(id, name, graph) {
@@ -37,74 +99,111 @@ function WebAudioNode(id, name, graph) {
     }
     this.initialize = function()
     {
-      this.createAPINode();
+      this.createAPIMultiNode(1);
       this.createAudioPins();
       this.createParamPins();
     }
     this.destroy = function()
     {
-      var that = this;
-      if (this.apiNode)
-      {
-        for(var i = 0; i < this.apiNode.numberOfOutputs; i++)
-        {
-          this.apiNode.disconnect(i);
-        }
-        
-        //disconnect all incoming connections here because the node is no longer evaluated
-        this.audioInputPins.concat(this.modulationPins).forEach( function(pin)
-        {
-          var oldSource = pin.oldValue;
-          if(oldSource && oldSource != "Unconnected Audio")
-          {
-            oldSource.node.doDisconnect(that.apiNode, oldSource.name, pin.apiName);
-          }
-        });
-        
-        //Cannot unref apiNode here because it is needed to break dangling outgoing Web Audio connections
-        //this.apiNode = undefined;
-      }
+      this.truncateAPIMultiNode(0);
     }
     this.audioInputPins = [];
     this.audioOutputPins = [];
     this.paramPins = [];
     this.modulationPins = [];
+    this.apiMultiNode = [];
     this.auto_nil = false;
   }
   else //constructing prototype
   {
-    this.createAPINode = function(arg)
+    this.createAPISingleNode = function(arg)
     {
       //this is just for debugging purposes with firefox's web audio visualiser
       if(id == 'Analyser')
-        this.apiNode = audioContext.createAnalyser(arg);
+        var apiNode = audioContext.createAnalyser(arg);
       else if(id == 'MediaElementSource')
-        this.apiNode = audioContext.createMediaElementSource(arg);
+        var apiNode = audioContext.createMediaElementSource(arg);
       else if(id == 'Oscillator')
-        this.apiNode = audioContext.createOscillator(arg);
+        var apiNode = audioContext.createOscillator(arg);
       else if(id == 'Delay')
-        this.apiNode = audioContext.createDelay(arg);
+        var apiNode = audioContext.createDelay(arg);
       else if(id == 'Gain')
-        this.apiNode = audioContext.createGain(arg);
+        var apiNode = audioContext.createGain(arg);
       else if(id == 'DynamicsCompressor')
-        this.apiNode = audioContext.createDynamicsCompressor(arg);
+        var apiNode = audioContext.createDynamicsCompressor(arg);
       else if(id == 'BiquadFilter')
-        this.apiNode = audioContext.createBiquadFilter(arg);
+        var apiNode = audioContext.createBiquadFilter(arg);
       else if(id == 'MediaStreamSource')
-        this.apiNode = audioContext.createMediaStreamSource(arg);
+        var apiNode = audioContext.createMediaStreamSource(arg);
       else //this is the normal code
-        this.apiNode = audioContext['create'+id].apply(audioContext, arguments);
+        var apiNode = audioContext['create'+id].apply(audioContext, arguments);
+      
+      apiNode['_id'] = debugID++;
+      return apiNode;
     }
     this.auto_evaluate = false;
   }
 }
 WebAudioNode.prototype = new VVVV.Core.Node();
+WebAudioNode.prototype.createAPINode = function(arg)
+{
+  var args = [].concat.apply([1], arguments);
+  this.createAPIMultiNode.apply(this, args);
+}
+WebAudioNode.prototype.truncateAPIMultiNode = function(n)
+{
+  var that = this;
+  this.audioInputPins.concat(this.modulationPins).forEach( function(pin)
+  {
+    for(var i = n; i < that.apiMultiNode.length; i++)
+    {
+      var oldSource = pin.oldValue[i];
+      if(oldSource && oldSource != "Unconnected Audio")
+      {
+        oldSource.disconnect(that.apiMultiNode[i], pin.apiName);
+      }
+      delete pin.oldValue[i];
+    }
+  });
+  this.apiMultiNode.splice(n);
+}
+WebAudioNode.prototype.createAPIMultiNode = function(n)
+{
+  var that = this;
+  var allArgs = [].slice.call(arguments, 1);
+  for(var i = this.apiMultiNode.length; i < n; i++)
+  {
+    var thoseArgs = [];
+    allArgs.forEach(function(thisArg)
+    {
+      if(thisArg instanceof Array)
+        thoseArgs.push(thisArg[i]);
+      else
+        thoseArgs.push(thisArg);
+    });
+    
+    this.apiMultiNode[i] = this.createAPISingleNode(thoseArgs);
+    
+    this.audioOutputPins.forEach(function(pin)
+    {
+      pin.setValue(i, new WebAudioOutputSlice(that.apiMultiNode[i], pin.apiName));
+    });
+  }
+  this.apiNode = this.apiMultiNode[0];
+}
+//override this if your node implementation needs to pass arguments to the AudioNode factory function
+WebAudioNode.prototype.resizeAPIMultiNode = function(n)
+{
+  this.truncateAPIMultiNode(n);
+  this.createAPIMultiNode(n);
+}
 WebAudioNode.prototype.createAudioPins = function()
 {
   for(var i = 0; i < this.apiNode.numberOfInputs; i++)
   {
     var inPin = this.addInputPin('Input '+(i+1), [], VVVV.PinTypes.WebAudio);
     inPin.apiName = i;
+    inPin.oldValue = [];
     this.audioInputPins.push(inPin);
   }
   for(var i = 0; i < this.apiNode.numberOfOutputs; i++)
@@ -114,10 +213,10 @@ WebAudioNode.prototype.createAudioPins = function()
     {
       var outputPin = this.outputPins[pinName];
       outputPin.setType(VVVV.PinTypes.WebAudio);
-      outputPin.setValue(0, { node: this, name: i });
+      outputPin.setValue(0, new WebAudioOutputSlice(this.apiNode, i));
     }
     else
-      var outputPin = this.addOutputPin(pinName, [{ node: this, name: i }], VVVV.PinTypes.WebAudio);
+      var outputPin = this.addOutputPin(pinName, [new WebAudioOutputSlice(this.apiNode, i)], VVVV.PinTypes.WebAudio);
     outputPin.apiName = i;
     outputPin.audioConnections = [];
     this.audioOutputPins.push(outputPin);
@@ -139,6 +238,7 @@ WebAudioNode.prototype.createParamPins = function()
       
       var modulationPin = this.addInputPin(name + " Modulation", [], VVVV.PinTypes.WebAudio);
       modulationPin.apiName = key;
+      modulationPin.oldValue = [];
       this.modulationPins.push(modulationPin);
     }
   }
@@ -157,80 +257,44 @@ WebAudioNode.prototype.updateParamPins = function()
 WebAudioNode.prototype.updateAudioConnections = function()
 {
   var that = this;
+  
+  var n = this.getMaxInputSliceCount();
+  var sliceCountChanged = n != this.apiMultiNode.length;
+  
+  this.resizeAPIMultiNode(n);
+  
+  if(sliceCountChanged)
+    that.audioOutputPins.forEach(function(pin) { pin.setSliceCount(n) });
+  
   this.audioInputPins.concat(this.modulationPins).forEach( function(pin)
   {
     if(pin.pinIsChanged())
     {
-      var newSource = pin.getValue(0);
-      var oldSource = pin.oldValue;
-      
-      if(oldSource == newSource)
+      for(var i = 0; i < n; i++)
       {
-        console.log("No change!");
-        return;
-      }
-      
-      if(oldSource && oldSource != "Unconnected Audio")
-      {
-        oldSource.node.doDisconnect(that.apiNode, oldSource.name, pin.apiName);
-      }
-      if(newSource && newSource != "Unconnected Audio")
-      {
-        console.log(newSource);
-        newSource.node.doConnect(that.apiNode, newSource.name, pin.apiName);
-      }
-      
-      pin.oldValue = newSource;
-    }
-  });
-}
-WebAudioNode.prototype.doConnect = function(destApiNode, srcOutput, destInput)
-{
-  console.log("doConnect", this.apiNode, srcOutput, destApiNode, destInput);
-  if(typeof destInput == "number")
-    this.apiNode.connect(destApiNode, srcOutput, destInput);
-  else if(typeof destInput == "string")
-  {
-    var destParam = destApiNode[destInput];
-    this.apiNode.connect(destParam, srcOutput);
-  }
-  
-  //bookkeeping of current connections
-  var audioConnections = this.audioOutputPins[srcOutput].audioConnections;
-  audioConnections.push({ 'destApiNode': destApiNode, 'destInput': destInput });
-}
-WebAudioNode.prototype.doDisconnect = function(destApiNode, srcOutput, destInput)
-{
-  console.log("doDisconnect");
-  var that = this;
-  
-  //the following call unfortunately disconnects all outgoing connections from this output
-  //as of now (21.03.2015) there is no browser which implements a disconnect call that can target just one specific connection
-  //therefore we have to reconnect later in the bookkeeping step
-  this.apiNode.disconnect(srcOutput);
-  
-  //bookkeeping of current connections
-  var audioConnections = this.audioOutputPins[srcOutput].audioConnections;
-  var indexToRemove = -1;
-  audioConnections.forEach(function(connection, i)
-  {
-    if(connection.destApiNode == destApiNode && connection.destInput == destInput)
-      indexToRemove = i;
-    else //reconnect a lost connection
-    {
-      if(typeof connection.destInput == "number")
-        that.apiNode.connect(connection.destApiNode, srcOutput, connection.destInput);
-      else if(typeof connection.destInput == "string")
-      {
-        var destParam = connection.destApiNode[connection.destInput];
-        that.apiNode.connect(destParam, srcOutput);
+        var newSource = pin.getValue(i);
+        var oldSource = pin.oldValue[i];
+        
+        if(oldSource == newSource)
+        {
+          console.log("No change!");
+          continue;
+        }
+        
+        if(oldSource && oldSource != "Unconnected Audio")
+        {
+          oldSource.disconnect(that.apiMultiNode[i], pin.apiName);
+        }
+        if(newSource && newSource != "Unconnected Audio")
+        {
+          console.log(newSource);
+          newSource.connect(that.apiMultiNode[i], pin.apiName);
+        }
+        
+        pin.oldValue[i] = newSource;
       }
     }
   });
-  if(indexToRemove != -1)
-    audioConnections.splice(indexToRemove, 1);
-  else
-    console.log("Warning: Connection removal bug detected!");
 }
 
 /*
