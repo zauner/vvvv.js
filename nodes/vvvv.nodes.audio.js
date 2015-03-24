@@ -248,9 +248,12 @@ WebAudioNode.prototype.updateParamPins = function()
   var that = this;
   this.paramPins.forEach( function(pin, i)
   {
-    if(pin.pinIsChanged() && that.apiNode)
+    if(pin.pinIsChanged())
     {
-      that.apiNode[pin.apiName].value = pin.getValue(0);
+      that.apiMultiNode.forEach( function(apiNode, i)
+      {
+        apiNode[pin.apiName].value = pin.getValue(i);
+      });
     }
   });
 }
