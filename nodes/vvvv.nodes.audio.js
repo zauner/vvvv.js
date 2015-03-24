@@ -262,40 +262,45 @@ WebAudioNode.prototype.updateAudioConnections = function()
   var that = this;
   
   var n = this.getMaxInputSliceCount();
-  var sliceCountChanged = n != this.apiMultiNode.length;
+  var oldSliceCount = this.apiMultiNode.length;
   
   this.resizeAPIMultiNode(n);
   
-  if(sliceCountChanged)
+  if(n != oldSliceCount)
     that.audioOutputPins.forEach(function(pin) { pin.setSliceCount(n) });
   
   this.audioInputPins.concat(this.modulationPins).forEach( function(pin)
   {
+    var i = n; //don't check this inputs connections by default
+    
+    if(n != oldSliceCount)
+      i = oldSliceCount; //check only new slices if slice count changed
+    
     if(pin.pinIsChanged())
+      i = 0; //check all slices if some pin value changed
+    
+    for(; i < n; i++)
     {
-      for(var i = 0; i < n; i++)
+      var newSource = pin.getValue(i);
+      var oldSource = pin.oldValue[i];
+      
+      if(oldSource == newSource)
       {
-        var newSource = pin.getValue(i);
-        var oldSource = pin.oldValue[i];
-        
-        if(oldSource == newSource)
-        {
-          console.log("No change!");
-          continue;
-        }
-        
-        if(oldSource && oldSource != "Unconnected Audio")
-        {
-          oldSource.disconnect(that.apiMultiNode[i], pin.apiName);
-        }
-        if(newSource && newSource != "Unconnected Audio")
-        {
-          console.log(newSource);
-          newSource.connect(that.apiMultiNode[i], pin.apiName);
-        }
-        
-        pin.oldValue[i] = newSource;
+        console.log("No change!");
+        continue;
       }
+      
+      if(oldSource && oldSource != "Unconnected Audio")
+      {
+        oldSource.disconnect(that.apiMultiNode[i], pin.apiName);
+      }
+      if(newSource && newSource != "Unconnected Audio")
+      {
+        console.log(newSource);
+        newSource.connect(that.apiMultiNode[i], pin.apiName);
+      }
+      
+      pin.oldValue[i] = newSource;
     }
   });
 }
