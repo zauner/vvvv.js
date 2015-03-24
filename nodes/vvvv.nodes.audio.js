@@ -84,6 +84,11 @@ WebAudioOutputSlice.prototype =
       this.connections.splice(indexToRemove, 1);
     else
       console.log("Warning: Connection removal bug detected!");
+  },
+  
+  toString: function()
+  {
+    return this.srcApiNode.constructor.name + ":" + this.srcName + " (" + this.srcApiNode.channelCount + "ch)";
   }
 };
 
@@ -177,7 +182,7 @@ WebAudioNode.prototype.createAPIMultiNode = function(n)
         thoseArgs.push(thisArg);
     });
     
-    this.apiMultiNode[i] = this.createAPISingleNode(thoseArgs);
+    this.apiMultiNode[i] = this.createAPISingleNode.apply(this.createAPISingleNode, thoseArgs);
     
     this.audioOutputPins.forEach(function(pin)
     {
