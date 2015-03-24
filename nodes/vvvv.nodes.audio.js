@@ -370,36 +370,58 @@ VVVV.Nodes.FFT = function(id, graph) {
   
   var that = this;
   
-  var fftSizeIn = this.addInputPin('FFTSize', ['2048'], VVVV.PinTypes.Value);
+  var fftSizeIn = this.addInputPin('FFTSize', [2048], VVVV.PinTypes.Value);
   var smoothingIn = this.addInputPin('Smoothing', [0.8], VVVV.PinTypes.Value);
   var fftOut = this.addOutputPin('FFT', [], VVVV.PinTypes.Value);
-  var fftData;
+  var fftData = new Float32Array(1024);;
+  var binCount = 1024;
   
-  function setFFTSize(size)
+  function nearestPow2( aSize )
   {
-    if(!size)
-      size = 32;
-    fftOut.setSliceCount(size);
-    fftData = new Float32Array(size);
+    return Math.pow( 2, Math.round( Math.log( aSize ) / Math.log( 2 ) ) ); 
   }
-  
-  setFFTSize(2048);
   
   this.evaluate = function()
   {
-    if(fftSizeIn.pinIsChanged())
-      setFFTSize(fftSizeIn.getValue(0));
-    if(smoothingIn.pinIsChanged())
-      this.apiNode.smoothingTimeConstant = smoothingIn.getValue(0);
-    
-    this.updateAudioConnections();
-    this.apiNode.getFloatFrequencyData(fftData);
-    for(var i = 0; i < fftData.length; i++)
+    var n = this.getMaxInputSliceCount();
+    if(n != this.apiMultiNode.length && !fftSizeIn.pinIsChanged())
     {
-      fftOut.setValue(i, fftData[i]); //FIXME: veeeeery inefficient!
+      fftOut.setSliceCount(binCount*n);
+      fftData = new Float32Array(binCount);
     }
     
+    this.updateAudioConnections();
     
+    if(fftSizeIn.pinIsChanged())
+    {
+      binCount = 0;
+      for(var i = 0; i < n; i++)
+      {
+        var size = fftSizeIn.getValue(i);
+        if(size < 32) size = 32;
+        if(size > 32768) size = 32768;
+        size = nearestPow2(size);
+        this.apiMultiNode[i].fftSize = size;
+        binCount = Math.max(size / 2, binCount);
+      }
+      if(binCount != fftData.length)
+      {
+        fftOut.setSliceCount(binCount*n);
+        fftData = new Float32Array(binCount);
+      }
+    }
+
+    for(var i = 0; i < n; i++)
+    {
+      if(smoothingIn.pinIsChanged())
+        this.apiMultiNode[i].smoothingTimeConstant = smoothingIn.getValue(i);
+      
+      this.apiMultiNode[i].getFloatFrequencyData(fftData);
+      for(var j = 0; j < binCount; j++)
+      {
+        fftOut.setValue(i*binCount + j, fftData[j]); //FIXME: veeeeery inefficient!
+      }
+    }
   }
 }
 VVVV.Nodes.FFT.prototype = new WebAudioNode('Analyser');
