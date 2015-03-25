@@ -589,28 +589,17 @@ VVVV.Nodes.Oscillator = function(id, graph) {
   
   var typeIn = this.addInputPin("Type", ['sine'], VVVV.PinTypes.Enum);
   typeIn.enumOptions = ['sine', 'square', 'sawtooth', 'triangle', 'custom' ];
-  var enableIn = this.addInputPin("Enabled", [1], VVVV.PinTypes.Value);
   
   this.evaluate = function() {
     this.updateAudioConnections();
     this.updateParamPins();
     
+    var n = this.getMaxInputSliceCount();
     
-    if(typeIn.pinIsChanged() && this.apiNode)
+    if(typeIn.pinIsChanged())
     {
-      this.apiNode.type = typeIn.getValue(0);
-    }
-    
-    if(enableIn.pinIsChanged() && this.apiNode)
-    {
-      if(enableIn.getValue(0) > 0)
-      {
-        this.apiNode.start();
-      }
-      else
-      {
-        this.apiNode.stop();
-      }
+      for(var i = 0; i < n; i++)
+        this.apiMultiNode[i].type = typeIn.getValue(i);
     }
   }
 }
