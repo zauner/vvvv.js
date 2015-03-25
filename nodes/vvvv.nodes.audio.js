@@ -938,16 +938,4 @@ VVVV.Nodes.BeatDetector = function(id, graph) {
 VVVV.Nodes.BeatDetector.prototype = new WebAudioNode('Analyser');
 VVVV.Nodes.BeatDetector.requirements = ["beatdetektor"];
 
-/*VVVV.Nodes.BiquadFilterNode = makeAudioNodeConstructor('BiquadFilter');
-VVVV.Nodes.ChannelMergerNode = makeAudioNodeConstructor('ChannelMerger');
-VVVV.Nodes.ChannelSplitterNode = makeAudioNodeConstructor('ChannelSplitter');
-VVVV.Nodes.ConvolverNode = makeAudioNodeConstructor('Convolver');
-VVVV.Nodes.DelayNode = makeAudioNodeConstructor('Delay');
-VVVV.Nodes.DynamicsCompressorNode = makeAudioNodeConstructor('DynamicsCompressor');
-VVVV.Nodes.GainNode = makeAudioNodeConstructor('Gain');
-VVVV.Nodes.OscillatorNode = makeAudioNodeConstructor('Oscillator');
-VVVV.Nodes.PannerNode = makeAudioNodeConstructor('Panner');
-VVVV.Nodes.ScriptProcessorNode = makeAudioNodeConstructor('ScriptProcessor');
-VVVV.Nodes.WaveShaperNode = makeAudioNodeConstructor('WaveShaper');*/
-
 }(vvvvjs_jquery));
