@@ -343,11 +343,13 @@ VVVV.Nodes.FileAudioBuffer = function(id, graph) {
         request.onload = function(j) { return function()
         {
           audioContext.decodeAudioData(request.response, function(buffer){
-            outputPin.setValue(j, buffer);
+            if(j < that.getMaxInputSliceCount())
+              outputPin.setValue(j, buffer);
           });
         }}(i);
         request.send();
       }
+      outputPin.setSliceCount(maxSize);
     }
     
   }
@@ -741,14 +743,18 @@ VVVV.Nodes.Convolver = function(id, graph) {
   var normalizeIn = this.addInputPin("Normalize", [1], VVVV.PinTypes.Value);
   
   this.evaluate = function() {
-    if(this.apiNode && (normalizeIn.pinIsChanged() || responseIn.pinIsChanged()))
-    {
-      this.apiNode.normalize = normalizeIn.getValue(0) != 0;
-      this.apiNode.buffer = responseIn.getValue(0);
-    }
     this.updateAudioConnections();
     this.updateParamPins();
-    
+    if(normalizeIn.pinIsChanged() || responseIn.pinIsChanged())
+    {
+      var n = this.getMaxInputSliceCount();
+      for(var i = 0; i < n; i++)
+      {
+        this.apiMultiNode[i].normalize = normalizeIn.getValue(i) > 0.5;
+        if(responseIn.getValue(i) instanceof AudioBuffer)
+          this.apiMultiNode[i].buffer = responseIn.getValue(i);
+      }
+    }
   }
 }
 VVVV.Nodes.Convolver.prototype = new WebAudioNode('Convolver');
