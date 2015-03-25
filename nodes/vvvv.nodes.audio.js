@@ -257,11 +257,16 @@ WebAudioNode.prototype.updateParamPins = function()
     }
   });
 }
+//override this if your node needs another way of determining the number of API nodes
+WebAudioNode.prototype.getAudioSliceCount = function()
+{
+  return this.getMaxInputSliceCount();
+}
 WebAudioNode.prototype.updateAudioConnections = function()
 {
   var that = this;
   
-  var n = this.getMaxInputSliceCount();
+  var n = this.getAudioSliceCount();
   var oldSliceCount = this.apiMultiNode.length;
   
   this.resizeAPIMultiNode(n);
