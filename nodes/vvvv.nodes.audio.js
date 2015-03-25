@@ -771,23 +771,42 @@ VVVV.Nodes.WaveShaper = function(id, graph) {
   };
   
   var curveIn = this.addInputPin("Curve", [], VVVV.PinTypes.Value);
+  var binSizeIn = this.addInputPin("Bin Size", [-1], VVVV.PinTypes.Value);
   var oversampleIn = this.addInputPin("Oversample", [1], VVVV.PinTypes.Enum);
   oversampleIn.enumOptions = ["none", "2x", "4x"];
   
+  this.getAudioSliceCount = function()
+  {
+    return Math.max(this.audioInputPins[0].getSliceCount(), oversampleIn.getSliceCount(), binSizeIn.getSliceCount());
+  }
+  
   this.evaluate = function() {
-    if(this.apiNode && curveIn.pinIsChanged())
-    {
-      var curve = new Float32Array(curveIn.getValue(0, curveIn.getSliceCount()));
-      if(curve.length > 2)
-        this.apiNode.curve = curve;
-    }
-    if(this.apiNode && oversampleIn.pinIsChanged())
-    {
-      this.apiNode.oversample = oversampleIn.getValue(0);
-    }
     this.updateAudioConnections();
     this.updateParamPins();
     
+    var n = this.getAudioSliceCount();
+    
+    if(curveIn.pinIsChanged() || binSizeIn.pinIsChanged())
+    {
+      var binStartIndex = 0;
+      for(var i = 0; i < n; i++)
+      {
+        var binSize = binSizeIn.getValue(i);
+        if(binSize < 0)
+          binSize = Math.ceil(curveIn.getSliceCount() / (-binSize));
+        var curve = new Float32Array(curveIn.getValue(binStartIndex / binSize, binSize));
+        console.log(curve);
+        if(curve.length > 2)
+          this.apiMultiNode[i].curve = curve;
+        
+        binStartIndex += binSize;
+      }
+    }
+    if(oversampleIn.pinIsChanged())
+    {
+      for(var i = 0; i < n; i++)
+        this.apiMultiNode[i].oversample = oversampleIn.getValue(i);
+    }
   }
 }
 VVVV.Nodes.WaveShaper.prototype = new WebAudioNode('WaveShaper');
