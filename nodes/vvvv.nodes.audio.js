@@ -853,8 +853,10 @@ VVVV.Nodes.DynamicsCompressor = function(id, graph) {
     
     
     //according to the spec, reduction shouldn't be an AudioParam, but browsers seem to implement it as such
-    if(this.apiNode)
-      reductionOut.setValue(0, this.apiNode.reduction.value);
+    this.apiMultiNode.forEach( function(apiNode, i)
+    {
+      reductionOut.setValue(i, apiNode.reduction.value);
+    });
   }
 }
 VVVV.Nodes.DynamicsCompressor.prototype = new WebAudioNode('DynamicsCompressor');
