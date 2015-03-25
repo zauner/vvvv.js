@@ -900,31 +900,39 @@ VVVV.Nodes.BeatDetector = function(id, graph) {
   this.auto_evaluate = true;
   
   var that = this;
-  var fftSize = 1024;
-  var fftData = new Float32Array(fftSize);
-  var beatDetector;
+  var fftSize = 2048;
+  var fftData = new Float32Array(fftSize/2);
+  var beatDetectors = [ ];
   
   var beatCounterOut = this.addOutputPin('Beat Counter', [ 0 ], VVVV.PinTypes.Value);
   var bpmOut = this.addOutputPin('BPM', [ 0 ], VVVV.PinTypes.Value);
   
-  var initialize = this.initialize;
-  this.initialize = function() {
-    initialize.call(this);
-    this.apiNode.fftSize = fftSize;
-    this.apiNode.smoothingTimeConstant = 0;
+  this.createAPISingleNode = function()
+  {
+    var apiNode = audioContext.createAnalyser();
+    apiNode.fftSize = fftSize;
+    apiNode.smoothingTimeConstant = 0;
+    return apiNode;
   }
   
   this.evaluate = function()
   {
-    if(!beatDetector)
-      beatDetector = new BeatDetektor();
     this.updateAudioConnections();
-    this.apiNode.getFloatFrequencyData(fftData);
-    beatDetector.process(audioContext.currentTime, fftData);
-    beatCounterOut.setValue(0, beatDetector.beat_counter);
-    bpmOut.setValue(0, beatDetector.win_bpm_int / 10);
+    var n = this.getMaxInputSliceCount();
     
+    for(var i = 0; i < n; i++)
+    {
+      if(!beatDetectors[i])
+        beatDetectors[i] = new BeatDetektor();
+      this.apiMultiNode[i].getFloatFrequencyData(fftData);
+      beatDetectors[i].process(audioContext.currentTime, fftData);
+      beatCounterOut.setValue(i, beatDetectors[i].beat_counter);
+      bpmOut.setValue(i, beatDetectors[i].win_bpm_int / 10);
+    }
     
+    beatDetectors.length = n;
+    beatCounterOut.setSliceCount(n);
+    bpmOut.setSliceCount(n);
   }
 }
 VVVV.Nodes.BeatDetector.prototype = new WebAudioNode('Analyser');
