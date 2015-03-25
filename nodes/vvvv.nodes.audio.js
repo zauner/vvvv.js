@@ -677,7 +677,7 @@ VVVV.Nodes.Gain.prototype = new WebAudioNode('Gain');
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-VVVV.Nodes.Add = function(id, graph) {
+VVVV.Nodes.AddAudio = function(id, graph) {
   WebAudioNode.call(this, id, 'Add (HTML5 Audio)', graph);
   
   this.meta = {
@@ -714,7 +714,7 @@ VVVV.Nodes.Add = function(id, graph) {
     
   }
 }
-VVVV.Nodes.Add.prototype = new WebAudioNode('Gain');
+VVVV.Nodes.AddAudio.prototype = new WebAudioNode('Gain');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
