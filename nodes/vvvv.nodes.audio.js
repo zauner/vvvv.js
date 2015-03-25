@@ -816,9 +816,12 @@ VVVV.Nodes.BiquadFilter = function(id, graph) {
     this.updateAudioConnections();
     this.updateParamPins();
     
-    
-    if(this.apiNode && typeIn.pinIsChanged())
-      this.apiNode.type = typeIn.getValue(0);
+    if(typeIn.pinIsChanged())
+    {
+      var n = this.getMaxInputSliceCount();
+      for(var i = 0; i < n; i++)
+        this.apiMultiNode[i].type = typeIn.getValue(i);
+    }
   }
 }
 VVVV.Nodes.BiquadFilter.prototype = new WebAudioNode('BiquadFilter');
