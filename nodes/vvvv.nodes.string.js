@@ -824,4 +824,57 @@ VVVV.Nodes.SampleAndHoldString = function(id, graph) {
 }
 VVVV.Nodes.SampleAndHoldString.prototype = new VVVV.Core.Node();
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Cons (String)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.ConsString = function(id, graph) {
+  this.constructor(id, "Cons (String)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = false;
+  
+  var inputPins = [];
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', ["text"], VVVV.PinTypes.String);
+
+  // invisible pins
+  var inputcountIn = this.addInvisiblePin('Input Count', [2], VVVV.PinTypes.Value);
+  
+  // initialize() will be called after node creation
+  this.initialize = function() {
+    var inputCount = Math.max(2, inputcountIn.getValue(0));
+    VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
+      return this.addInputPin('Input '+(i+1), ["text"], VVVV.PinTypes.String);
+    })
+  }
+
+  this.evaluate = function() {
+    if (inputcountIn.pinIsChanged())
+      this.initialize();
+    
+    var idx = 0;
+    for (var i=0; i<inputPins.length; i++) {
+      for (var j=0; j<inputPins[i].getSliceCount(); j++) {
+        outputOut.setValue(idx++, inputPins[i].getValue(j));
+      }
+    }
+    outputOut.setSliceCount(idx);
+  }
+
+}
+VVVV.Nodes.ConsString.prototype = new VVVV.Core.Node();
+
 }(vvvvjs_jquery));
