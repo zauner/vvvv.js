@@ -595,6 +595,13 @@ VVVV.Nodes.Oscillator = function(id, graph) {
   var typeIn = this.addInputPin("Type", ['sine'], VVVV.PinTypes.Enum);
   typeIn.enumOptions = ['sine', 'square', 'sawtooth', 'triangle', 'custom' ];
   
+  this.createAPISingleNode = function()
+  {
+    var apiNode = audioContext.createOscillator();
+    apiNode.start();
+    return apiNode;
+  }
+  
   this.evaluate = function() {
     this.updateAudioConnections();
     this.updateParamPins();
