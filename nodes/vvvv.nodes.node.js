@@ -176,4 +176,96 @@ VVVV.Nodes.SwitchNodeInput = function(id, graph) {
 }
 VVVV.Nodes.SwitchNodeInput.prototype = new VVVV.Core.Node();
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: GetSlice (Node)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.GetSliceNode = function(id, graph) {
+  this.constructor(id, "GetSlice (Node)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var inputIn = this.addInputPin("Input", [], VVVV.PinTypes.Node);
+  var binSizeIn = this.addInputPin("BinSize", [1], VVVV.PinTypes.Value);
+  var indexIn = this.addInputPin("Index", [0], VVVV.PinTypes.Value);
+  
+  var outputOut = this.addOutputPin("Output", [], VVVV.PinTypes.Node);
+
+  this.evaluate = function() {
+    var size = indexIn.getSliceCount();
+    var res, binSize;
+    var outIdx = 0;
+    for (var i=0; i<size; i++) {
+      binSize = binSizeIn.getValue(i);
+      res = inputIn.getValue(Math.round(indexIn.getValue(i)), binSize);
+      if (binSize>1) {
+        for (var j=0; j<res.length; j++) {
+          outputOut.setValue(outIdx, res[j]);
+          outIdx++;
+        }
+      }
+      else {
+        outputOut.setValue(i, res);
+        outIdx++;
+      }
+    }
+    outputOut.setSliceCount(outIdx);
+  }
+
+}
+VVVV.Nodes.GetSliceNode.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Select (Node)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.SelectNode = function(id, graph) {
+  this.constructor(id, "Select (Node)", graph);
+  
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var inputIn = this.addInputPin("Input", [], VVVV.PinTypes.Node);
+  var selectIn = this.addInputPin("Select", [1], VVVV.PinTypes.Value);
+  
+  var outputOut = this.addOutputPin("Output", [], VVVV.PinTypes.Node);
+  var formerSliceOut = this.addOutputPin("Former Slice", [0], VVVV.PinTypes.Value);
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    var outputIndex = 0;
+    for (var i=0; i<maxSize; i++) {
+      for (var j=0; j<selectIn.getValue(i); j++) {
+        outputOut.setValue(outputIndex, inputIn.getValue(i));
+        formerSliceOut.setValue(outputIndex, i);
+        outputIndex++;
+      }
+    }
+    outputOut.setSliceCount(outputIndex);
+    formerSliceOut.setSliceCount(outputIndex);
+  }
+
+}
+VVVV.Nodes.SelectNode.prototype = new VVVV.Core.Node();
+
 }(vvvvjs_jquery));
