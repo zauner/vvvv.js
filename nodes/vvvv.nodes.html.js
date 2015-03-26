@@ -486,6 +486,8 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
                 v = $(this).is(":checked") ? $(this).attr('value') : "";
               else if ($(this).prop('tagName')=="INPUT")
                 v = $(this).val();
+              if (v==undefined)
+                v = "";
               setSlices.push({sliceIdx: j, value: v});
               thatNode.dirty = true;
             }
