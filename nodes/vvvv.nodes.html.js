@@ -150,8 +150,16 @@ VVVV.PinTypes.HTMLStyle = {
 */
 
 var element_node_defs = [
-  {nodename: "Element", tagname: "div", attributes: [], dynamic: true},
-  {nodename: "Link", tagname: "a", attributes: [{name: 'href', type: VVVV.PinTypes.String, value: '#'}]}
+  {nodename: "Element", tagname: "div", pins: [], dynamic: true},
+  {nodename: "Link", tagname: "a", pins: [{name: 'href', type: VVVV.PinTypes.String, value: '#', attribute: true}]},
+  {nodename: "Image", tagname: "img", pins: [{name: 'src', type: VVVV.PinTypes.String, value: '', attribute: true}]},
+  {nodename: "TextInput", tagname: "input type='text'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]},
+  {nodename: "Checkbox", tagname: "input type='checkbox'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true, attribute: true}, {name: 'value', value: '1', type: VVVV.PinTypes.String, attribute: true}]},
+  {nodename: "RadioButton", tagname: "input type='radio'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: '1', type: VVVV.PinTypes.String, attribute: true}]},
+  {nodename: "Button", tagname: "input type='button'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: 'Push me', type: VVVV.PinTypes.String, attribute: true}]},
+  //{nodename: "SelectBox", tagname: "select", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'Option Labels', value: 'Option 1', type: VVVV.PinTypes.String}, {name: 'Option Values', value: '1', type: VVVV.PinTypes.String}, {name: 'Selected Index', value: 0, type: VVVV.PinTypes.Value}]}
+  {nodename: "SelectBox", tagname: "select", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}]},
+  {nodename: "SelectOption", tagname: "option", pins: [{name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]}
 ]
 
 element_node_defs.forEach(function(element_node_def) {
@@ -177,11 +185,16 @@ element_node_defs.forEach(function(element_node_def) {
       tagName = element_node_def.tagname;
     var parentIn = this.addInputPin("Parent", [], VVVV.PinTypes.HTMLLayer);
     var textIn = this.addInputPin("Text", [""], VVVV.PinTypes.String);
+    //var idIn = this.addInputPin("ID", [""], VVVV.PinTypes.String);
+    //var classIn = this.addInputPin("Class", [""], VVVV.PinTypes.String);
     var posIn = this.addInputPin("Element Position", [0], VVVV.PinTypes.Value);
     var attributePins = [];
     var staticAttributePins = [];
-    for (var i=0; i<element_node_def.attributes.length; i++) {
-      staticAttributePins.push(this.addInputPin(element_node_def.attributes[i].name, [element_node_def.attributes[i].value], element_node_def.attributes[i].type));
+    for (var i=0; i<element_node_def.pins.length; i++) {
+      if (element_node_def.pins[i].type && element_node_def.pins[i].attribute==true)
+        staticAttributePins.push(this.addInputPin(element_node_def.pins[i].name, [element_node_def.pins[i].value], element_node_def.pins[i].type));
+      else
+        this.addInputPin(element_node_def.pins[i].name, [element_node_def.pins[i].value], element_node_def.pins[i].type)
     }
 
     var layersOut = this.addOutputPin("Layers Out", [], VVVV.PinTypes.HTMLLayer);
@@ -423,6 +436,97 @@ VVVV.Nodes.GetPositionHTML = function(id, graph) {
 }
 VVVV.Nodes.GetPositionHTML.prototype = new VVVV.Core.Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: GetValue (HTML)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.GetValueHTML = function(id, graph) {
+  this.constructor(id, "GetValue (HTML)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
+  
+  var valueOut = this.addOutputPin("Output", [0], VVVV.PinTypes.String);
+
+  var handlers = [];
+  var targets = [];
+  
+  var setSlices = [];
+
+  this.evaluate = function() {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+    
+    var thatNode = this;
+    
+    if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
+      for (var i=0; i<maxSpreadSize; i++) {
+        if (targets[i]!=undefined && (targets[i]!=elementIn.getValue(i).element[0])) {
+          $(targets[i]).unbind("change input paste keyup", handlers[i]);
+          handlers[i] = undefined;
+        }
+        if (handlers[i]==undefined) {
+          targets[i] = elementIn.getValue(i).element[0];
+          (function(j) {
+            handlers[j] = function(e) {
+              var v = "";
+              if ($(this).prop('tagName')=="SELECT")
+                v = $(this).find("option:selected").attr('value');
+              else if ($(this).prop('tagName')=="INPUT" && $(this).prop('type')=="checkbox")
+                v = $(this).is(":checked") ? $(this).attr('value') : "";
+              else if ($(this).prop('tagName')=="INPUT" && $(this).prop('type')=="radio")
+                v = $(this).is(":checked") ? $(this).attr('value') : "";
+              else if ($(this).prop('tagName')=="INPUT")
+                v = $(this).val();
+              setSlices.push({sliceIdx: j, value: v});
+              thatNode.dirty = true;
+            }
+          }(i));
+          $(targets[i]).bind("change input paste keyup", handlers[i]);
+          handlers[i].call(targets[i]);
+        }
+      }
+      
+      handlers.length = maxSpreadSize;
+      targets.length = maxSpreadSize;
+      valueOut.setSliceCount(maxSpreadSize);
+    }
+    else {
+      for (var i=0; i<targets.length; i++) {
+        $(targets[i]).unbind("change input paste keyup", handlers[i]);
+      }
+      handlers.length = 0;
+      targets.length = 0;
+      valueOut.setValue(0, "");
+      valueOut.setSliceCount(1);
+    }
+    
+    if (setSlices.length>0) {
+      var i = setSlices.length;
+      while (i--) {
+        valueOut.setValue(setSlices[i].sliceIdx, setSlices[i].value);
+      }
+      setSlices.length = 0;
+      thatNode.dirty = false;
+    }
+  }
+  
+  this.destroy = function() {
+    for (var i=0; i<targets.length; i++) {
+      $(targets[i]).unbind("change input paste keyup", handlers[i]);
+    }
+  }
+}
+VVVV.Nodes.GetValueHTML.prototype = new VVVV.Core.Node();
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -434,6 +538,8 @@ VVVV.Nodes.GetPositionHTML.prototype = new VVVV.Core.Node();
 var event_node_defs = [
   {name: 'Event', code: 'click', dynamic: true},
   {name: 'Click', code: 'click'},
+  {name: 'MouseDown', code: 'mousedown'},
+  {name: 'MouseUp', code: 'mouseup'},
   {name: 'MouseOver', code: 'mouseover'},
   {name: 'MouseEnter', code: 'mouseenter'},
   {name: 'MouseLeave', code: 'mouseleave'},
@@ -508,6 +614,7 @@ event_node_defs.forEach(function(event_node_def) {
           $(targets[i]).unbind(eventTypes[i], handlers[i]);
         }
         handlers.length = 0;
+        targets.length = 0;
         onEventOut.setValue(0, 0);
         onEventOut.setSliceCount(1);
       }
