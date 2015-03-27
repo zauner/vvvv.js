@@ -976,7 +976,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
       chart.selectAll('g.vvvv-input-pin')
         .on('contextmenu', function(d, i) {
           if (VVVV.PinTypes[d.typeName].openInputBox) {
-            if (d.getValue(0)!=undefined) {
+            if (d.getValue(0)!=undefined && !d.isConnected()) {
               $('.resettable', thatWin.window.document).remove();
               var $inputbox = $("<input type='text'/>");
               $('body', thatWin.window.document).append($inputbox);
