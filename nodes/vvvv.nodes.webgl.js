@@ -2622,7 +2622,7 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
   this.auto_evaluate = false;
 
   var nameIn = this.addInputPin("Effect Descriptor", [''], VVVV.PinTypes.String);
-  var sourceCodeIn = this.addInvisiblePin("Source Code", ['#ifdef GL_ES\nprecision highp float;\n#endif\n\nuniform mat4 tW : WORLD;\nuniform mat4 tV : VIEW;\nuniform mat4 tP : PROJECTION;\n\nuniform vec4 Color : COLOR = {1.0, 1.0, 1.0, 1.0};\nuniform sampler2D Texture;\nuniform mat4 Texture_Transform;\nuniform float Alpha = 1.0;\n\nvarying vec2 vs2psTexCd;\n\nvertex_shader:\n\nattribute vec3 PosO : POSITION;\nattribute vec2 TexCd : TEXCOORD0;\n\nvoid main(void) {\n  gl_Position = tP * tV * tW * vec4(PosO, 1.0);\n  vs2psTexCd = (Texture_Transform * vec4(TexCd, 0, 1)).xy;\n}\n\n\nfragment_shader:\n\nvoid main(void) {\n  gl_FragColor = Color * texture2D(Texture, vs2psTexCd) * vec4(1.0, 1.0, 1.0, Alpha);\n}'], VVVV.PinTypes.String);
+  var sourceCodeIn = this.addInvisiblePin("Source Code", ['#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform mat4 tW : WORLD;\nuniform mat4 tV : VIEW;\nuniform mat4 tP : PROJECTION;\n\nuniform vec4 Color : COLOR = {1.0, 1.0, 1.0, 1.0};\nuniform sampler2D Texture;\nuniform mat4 Texture_Transform;\nuniform float Alpha = 1.0;\n\nvarying vec2 vs2psTexCd;\n\nvertex_shader:\n\nattribute vec3 PosO : POSITION;\nattribute vec2 TexCd : TEXCOORD0;\n\nvoid main(void) {\n  gl_Position = tP * tV * tW * vec4(PosO, 1.0);\n  vs2psTexCd = (Texture_Transform * vec4(TexCd, 0, 1)).xy;\n}\n\n\nfragment_shader:\n\nvoid main(void) {\n  gl_FragColor = Color * texture2D(Texture, vs2psTexCd) * vec4(1.0, 1.0, 1.0, Alpha);\n}'], VVVV.PinTypes.String);
 
   var currentName = '';
   var w; // the UI window
@@ -2654,7 +2654,7 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
   }
 
   this.openUIWindow = function() {
-    w = window.open(VVVV.Root+"/code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
+    w = window.open(location.protocol+'//'+location.host+location.pathname.replace(/\/[^\/]*$/, '')+'/'+VVVV.Root+"/code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
     var thatNode = this;
     window.setTimeout(function() {
       w.document.title = currentName+" / VVVV.js Effect Editor";
