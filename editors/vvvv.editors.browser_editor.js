@@ -31,7 +31,7 @@ VVVV.PinTypes.Value.makeLabel = VVVV.PinTypes.String.makeLabel = function(elemen
 }
 
 VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(win, $element, pin, sliceIdx) {
-  $inputbox = $("<input type='text' value='"+pin.getValue(sliceIdx).toString().replace(/\|/g, "||").replace(/'/g, '&apos;')+"' class='pininputbox value resettable'/>");
+  $inputbox = $("<input type='text' value='"+pin.getValue(sliceIdx).toString().replace(/\|/g, "||").replace(/'/g, '&apos;').replace(/</g, '&lt;').replace(/>/g, '&gt;')+"' class='pininputbox value resettable'/>");
   $inputbox.css('position', $element.css('position'));
   $inputbox.css('width', $element.css('width'));
   $inputbox.css('height', $element.css('height'));
@@ -45,7 +45,7 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
       pin.setValue(sliceIdx, parseFloat($(this).val()));
     else
       pin.setValue(sliceIdx, $(this).val());
-    var valstr = _(pin.values).map(function(v) { return '|'+v.toString().replace(/\|/g, "||").replace(/'/g, '&apos;')+'|'});
+    var valstr = _(pin.values).map(function(v) { return '|'+v.toString().replace(/\|/g, "||").replace(/'/g, '&apos;').replace(/</g, '&lt;').replace(/>/g, '&gt;')+'|'});
     valstr.length = pin.getSliceCount();
     pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+valstr.join(',')+"'/></NODE>");
     //pin.node.parentPatch.afterUpdate();
@@ -1162,13 +1162,13 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
     })
     
     if (VVVV.PinTypes[p.typeName].openInputBox && p.direction!=VVVV.PinDirection.Output && !p.isConnected() && p.getValue(0)!=undefined) {
-      var $iobox = $('<div class="row value"><div style="height:100%">'+p.getValue(0)+'</div></div>');
+      var $iobox = $('<div class="row value"><div style="height:100%">'+p.getValue(0).toString().replace(/</g, '&lt;').replace(/>/g, '&gt;')+'</div></div>');
       $iobox.find('div').click(function() {
         VVVV.PinTypes[p.typeName].openInputBox(that.win, $(this), p, 0);
       })
     }
     else
-      var $iobox = $('<div class="row value readonlyvalue"><div style="height:100%">'+p.getValue(0)+'</div></div>');
+      var $iobox = $('<div class="row value readonlyvalue"><div style="height:100%">'+p.getValue(0).toString().replace(/</g, '&lt;').replace(/>/g, '&gt;')+'</div></div>');
     if (p.typeName=="Color") {
       $iobox.find('div').css('background-color', 'rgba('+_(p.getValue(0).rgba).map(function(c) { return parseInt(c*255) }).join(',')+')');
     }
@@ -1206,7 +1206,7 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
       if (!pinChanged && $currentElement.children().first().hasClass('pininputbox')) // leave open iobox alone ...
         continue;
       if (VVVV.PinTypes[p.typeName].openInputBox && p.direction!=VVVV.PinDirection.Output && !p.isConnected() && p.getValue(0)!=undefined) {
-        var $iobox = $('<div class="row value"><div style="height:100%">'+p.getValue(i)+'</div></div>');
+        var $iobox = $('<div class="row value"><div style="height:100%">'+p.getValue(i).toString().replace(/</g, '&lt;').replace(/>/g, '&gt;')+'</div></div>');
         (function(sliceIdx) {
           $iobox.find('div').click(function() {
             VVVV.PinTypes[p.typeName].openInputBox(that.win, $(this), p, sliceIdx);
@@ -1214,7 +1214,7 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
         })(i);
       }
       else
-        var $iobox = $('<div class="row value readonlyvalue"><div style="height:100%">'+p.getValue(i)+'</div></div>');
+        var $iobox = $('<div class="row value readonlyvalue"><div style="height:100%">'+p.getValue(i).toString().replace(/</g, '&lt;').replace(/>/g, '&gt;')+'</div></div>');
       if ($currentElement.length>0) {
         $currentElement.replaceWith($iobox);
       }
