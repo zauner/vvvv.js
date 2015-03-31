@@ -407,6 +407,11 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
         layers[i].endAngle = endAngleIn.getValue(i)*Math.PI*2;
         layers[i].renderState = renderStateIn.getValue(i);
         layers[i].drawSegment = segmentIn.getValue(i)==1;
+        if (layers[i].radius<0) {
+          layers[i].radius = -layers[i].radius;
+          layers[i].startAngle += Math.PI;
+          layers[i].endAngle += Math.PI;
+        }
         if (clippingLayerIn.isConnected())
           layers[i].clippingLayer = clippingLayerIn.getValue(i);
       }
