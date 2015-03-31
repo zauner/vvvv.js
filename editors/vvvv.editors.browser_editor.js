@@ -1357,7 +1357,7 @@ VVVV.Editors.BrowserEditor.Interface = function() {
     var $dl = $("<a>save</a>");
     $('body').append($dl);
     $dl.attr('href', "data:application/octet-stream;charset=utf-8,"+encodeURIComponent(xml));
-    $dl.attr('download', nodename);
+    $dl.attr('download', nodename.replace( /.*\//, ''));
     $dl[0].click();
     $dl.remove();
   }
