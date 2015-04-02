@@ -250,7 +250,18 @@ VVVV.Core = {
     }
 
     this.disconnect = function() {
-      this.values = this.values.slice(0);
+      if (this.typeName=="Color") {
+        var v = [];
+        for (var i=0; i<this.values.length; i++) {
+          v[i] = new VVVV.Types.Color("0,0,0,0");
+          this.values[i].copy_to(v[i]);
+        }
+        this.values = v;
+      }
+      else
+        this.values = this.values.slice(0);
+      if (this.slavePin)
+        this.slavePin.values = this.values;
       this.markPinAsChanged();
     }
 
