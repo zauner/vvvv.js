@@ -2654,7 +2654,7 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
   }
 
   this.openUIWindow = function() {
-    w = window.open(location.protocol+'//'+location.host+location.pathname.replace(/\/[^\/]*$/, '')+'/'+VVVV.Root+"/code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
+    w = window.open(location.protocol+'//'+location.host+(VVVV.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVV.Root+"/code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
     var thatNode = this;
     window.setTimeout(function() {
       w.document.title = currentName+" / VVVV.js Effect Editor";

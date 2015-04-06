@@ -278,7 +278,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
   var selectedNodes = [];
   var patch = p;
   var maxNodeId = 0;
-  var pageURL = location.protocol+'//'+location.host+location.pathname.replace(/\/[^\/]*$/, '')+'/'+VVVV.Root+'/patch.html';
+  var pageURL = location.protocol+'//'+location.host+(VVVV.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVV.Root+'/patch.html';
   var modKeyPressed = {CTRL: false, SHIFT: false, ALT: false};
   var selectionBB = {x1: 0, y1: 0, x2: 0, y2: 0};
   
@@ -1121,7 +1121,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
 
 VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
   
-  this.win = window.open(VVVVRoot+'/inspektor.html', 'inspektor', "location=no, width=250, height=600, toolbar=no" );
+  this.win = window.open(location.protocol+'//'+location.host+(VVVV.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVV.Root+'/inspektor.html', 'inspektor', "location=no, width=250, height=600, toolbar=no" );
   var node;
   var pin;
   insw = this.win;
