@@ -43,7 +43,7 @@ VVVV.Types.HTMLLayer = function(tagName) {
       }
     }
     this.style.apply(this);
-    
+
     if (this.parent.tagName) {
       if (this.parent.element[0]!=this.element[0].parentElement) {
         this.parent.element.append(this.element);
@@ -63,7 +63,7 @@ VVVV.Types.HTMLLayer = function(tagName) {
     this.element.remove();
     this.element = $newElement;
   }
-  
+
   this.setPosition = function(pos) {
     this.position = pos;
     if ((this.element.next().length>0 && this.element.next().data('vvvvjslayer') && this.position > this.element.next().data('vvvvjslayer').position)
@@ -157,6 +157,7 @@ var element_node_defs = [
   {nodename: "Checkbox", tagname: "input type='checkbox'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true, attribute: true}, {name: 'value', value: '1', type: VVVV.PinTypes.String, attribute: true}]},
   {nodename: "RadioButton", tagname: "input type='radio'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: '1', type: VVVV.PinTypes.String, attribute: true}]},
   {nodename: "Button", tagname: "input type='button'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: 'Push me', type: VVVV.PinTypes.String, attribute: true}]},
+  {nodename: "RangeSlider", tagname: "input type='range'", pins:[{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: 0, type: VVVV.PinTypes.Value, attribute: true}, {name: 'min', value: 0, type: VVVV.PinTypes.Value, attribute: true}, {name: 'max', value: 10, type: VVVV.PinTypes.Value, attribute: true}, {name: 'step', value: 1, type: VVVV.PinTypes.Value, attribute: true}]},
   //{nodename: "SelectBox", tagname: "select", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'Option Labels', value: 'Option 1', type: VVVV.PinTypes.String}, {name: 'Option Values', value: '1', type: VVVV.PinTypes.String}, {name: 'Selected Index', value: 0, type: VVVV.PinTypes.Value}]}
   {nodename: "SelectBox", tagname: "select", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}]},
   {nodename: "SelectOption", tagname: "option", pins: [{name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]}
@@ -187,7 +188,7 @@ element_node_defs.forEach(function(element_node_def) {
     var textIn = this.addInputPin("Text", [""], VVVV.PinTypes.String);
     //var idIn = this.addInputPin("ID", [""], VVVV.PinTypes.String);
     //var classIn = this.addInputPin("Class", [""], VVVV.PinTypes.String);
-    var posIn = this.addInputPin("Element Position", [0], VVVV.PinTypes.Value);
+    //var posIn = this.addInputPin("Element Position", [0], VVVV.PinTypes.Value);
     var attributePins = [];
     var staticAttributePins = [];
     for (var i=0; i<element_node_def.pins.length; i++) {
@@ -257,21 +258,21 @@ element_node_defs.forEach(function(element_node_def) {
         layers[i].style = styleIn.getValue(i);
 
         layers[i].apply();
-        layers[i].setPosition(posIn.getValue(i));
+        //layers[i].setPosition(posIn.getValue(i));
 
         layersOut.setValue(i, layers[i]);
       }
-      
+
       // remove untracked elements
       for (var i=maxSpreadSize; i<layers.length; i++) {
         layers[i].element.remove();
       }
-      
+
       layers.length = maxSpreadSize;
       layersOut.setSliceCount(maxSpreadSize);
 
     }
-    
+
     this.destroy = function() {
       for (var i=0; i<layers.length; i++) {
         layers[i].element.remove();
@@ -280,6 +281,78 @@ element_node_defs.forEach(function(element_node_def) {
   }
   VVVV.Nodes[element_node_def.nodename+'HTML'].prototype = new VVVV.Core.Node();
 });
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Group (HTML)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.GroupHTML = function(id, graph) {
+  this.constructor(id, "Group (HTML)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var parentIn = this.addInputPin("Parent", [], VVVV.PinTypes.HTMLLayer);
+  var outputCountIn = this.addInvisiblePin("Output Count", [2], VVVV.PinTypes.Value);
+
+  var outPins = [];
+
+  var layers = [];
+  
+  this.initialize = function() {
+    var outputCount = Math.max(2, outputCountIn.getValue(0));
+    for (var i=outPins.length; i<outputCount; i++) {
+      outPins.push(this.addOutputPin("Element Slot "+(i+1), [], VVVV.PinTypes.HTMLLayer));
+    }
+    for (var i=outPins.length-1; i>=outputCount; i--) {
+      this.removeOutputPin(outPins[i].pinname);
+    }
+    outPins.length = outputCount;
+  }
+
+  this.evaluate = function() {
+    if (outputCountIn.pinIsChanged()) {
+      this.initialize();
+      this.parentPatch.afterUpdate();
+    }
+  
+    var sliceCount = parentIn.getSliceCount();
+
+    for (var i=0; i<sliceCount; i++) {
+      for (var j=0; j<outPins.length; j++) {
+        var layer = outPins[j].values[i];
+        if (!layer)
+          layer = new VVVV.Types.HTMLLayer("span");
+        layer.parent = parentIn.getValue(i);
+        layer.apply();
+        outPins[j].setValue(i, layer);
+      }
+    }
+    
+    for (var i=0; i<outPins.length; i++) {
+      for (var j=outPins[i].values.length-1; j>=sliceCount; j--) {
+        outPins[i].values[j].element.remove();
+      }
+    }
+  }
+  
+  this.destroy = function() {
+    for (var i=0; i<outPins.length; i++) {
+      for (var j=0; j<outPins[i].values.length; j++) {
+        outPins[i].values[j].element.remove();
+      }
+    }
+  }
+}
+VVVV.Nodes.GroupHTML.prototype = new VVVV.Core.Node();
 
 
 /*
@@ -310,7 +383,7 @@ VVVV.Nodes.GetElementHTML = function(id, graph) {
 
   this.evaluate = function() {
     var maxSpreadSize = this.getMaxInputSliceCount();
-    
+
     var $parent;
     if (parentIn.isConnected())
       $parent = parentIn.getValue(0).element;
@@ -337,7 +410,7 @@ VVVV.Nodes.GetElementHTML = function(id, graph) {
 
       binSizeOut.setValue(i, binSize);
     }
-    
+
     layers.length = idx;
     layersOut.setSliceCount(idx);
     binSizeOut.setSliceCount(selectorCount);
@@ -366,13 +439,13 @@ VVVV.Nodes.GetPositionHTML = function(id, graph) {
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
   var spaceIn = this.addInputPin("Space", ["Browser Pixels"], VVVV.PinTypes.Enum);
   spaceIn.enumOptions = ["Document Pixels", "Document [-1, +1]", "Parent Element Pixels"];
-  
+
   var xOut = this.addOutputPin("X", [0], VVVV.PinTypes.Value);
   var yOut = this.addOutputPin("Y", [0], VVVV.PinTypes.Value);
 
   var observers = [];
   var targets = [];
-  
+
   function updatePosition(el, idx) {
     var pos;
     if (spaceIn.getValue(idx)==spaceIn.enumOptions[0] || spaceIn.getValue(idx)==spaceIn.enumOptions[1])
@@ -389,7 +462,7 @@ VVVV.Nodes.GetPositionHTML = function(id, graph) {
 
   this.evaluate = function() {
     var maxSpreadSize = this.getMaxInputSliceCount();
-    
+
     if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
       for (var i=0; i<maxSpreadSize; i++) {
         if (targets[i]!=undefined && targets[i]!=elementIn.getValue(i).element[0]) {
@@ -410,7 +483,7 @@ VVVV.Nodes.GetPositionHTML = function(id, graph) {
         }
         updatePosition(targets[i], i);
       }
-      
+
       observers.length = maxSpreadSize;
       targets.length = maxSpreadSize;
       xOut.setSliceCount(maxSpreadSize);
@@ -427,7 +500,7 @@ VVVV.Nodes.GetPositionHTML = function(id, graph) {
       yOut.setSliceCount(1);
     }
   }
-  
+
   this.destroy = function() {
     observers.forEach(function(o) {
       o.disconnect();
@@ -454,19 +527,19 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
   };
 
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
-  
+
   var valueOut = this.addOutputPin("Output", [0], VVVV.PinTypes.String);
 
   var handlers = [];
   var targets = [];
-  
+
   var setSlices = [];
 
   this.evaluate = function() {
     var maxSpreadSize = this.getMaxInputSliceCount();
-    
+
     var thatNode = this;
-    
+
     if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
       for (var i=0; i<maxSpreadSize; i++) {
         if (targets[i]!=undefined && (targets[i]!=elementIn.getValue(i).element[0])) {
@@ -496,7 +569,7 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
           handlers[i].call(targets[i]);
         }
       }
-      
+
       handlers.length = maxSpreadSize;
       targets.length = maxSpreadSize;
       valueOut.setSliceCount(maxSpreadSize);
@@ -510,7 +583,7 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
       valueOut.setValue(0, "");
       valueOut.setSliceCount(1);
     }
-    
+
     if (setSlices.length>0) {
       var i = setSlices.length;
       while (i--) {
@@ -520,7 +593,7 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
       thatNode.dirty = false;
     }
   }
-  
+
   this.destroy = function() {
     for (var i=0; i<targets.length; i++) {
       $(targets[i]).unbind("change input paste keyup", handlers[i]);
@@ -561,30 +634,30 @@ event_node_defs.forEach(function(event_node_def) {
       credits: [],
       compatibility_issues: []
     };
-    
+
     this.auto_evaluate = true;
 
     var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
-    
+
     var eventCode = '';
     var eventIn = undefined;
     if (event_node_def.dynamic)
       var eventIn = this.addInputPin("Event", ["click"], VVVV.PinTypes.String);
     else
       eventCode = event_node_def.code;
-    
+
     var onEventOut = this.addOutputPin("OnEvent", [0], VVVV.PinTypes.Value);
 
     var handlers = [];
     var targets = [];
     var eventTypes = [];
-    
+
     var setSlices = [];
     var doReset = false;
 
     this.evaluate = function() {
       var maxSpreadSize = this.getMaxInputSliceCount();
-      
+
       if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
         for (var i=0; i<maxSpreadSize; i++) {
           if (eventIn)
@@ -605,7 +678,7 @@ event_node_defs.forEach(function(event_node_def) {
             $(targets[i]).bind(eventTypes[i], handlers[i]);
           }
         }
-        
+
         handlers.length = maxSpreadSize;
         targets.length = maxSpreadSize;
         eventTypes.length = maxSpreadSize;
@@ -620,7 +693,7 @@ event_node_defs.forEach(function(event_node_def) {
         onEventOut.setValue(0, 0);
         onEventOut.setSliceCount(1);
       }
-      
+
       if (doReset) {
         var i = onEventOut.getSliceCount();
         while (i--) {
@@ -637,7 +710,7 @@ event_node_defs.forEach(function(event_node_def) {
         doReset = true;
       }
     }
-    
+
     this.destroy = function() {
       for (var i=0; i<handlers.length; i++) {
         $(targets[i]).unbind(eventTypes[i], handlers[i]);
@@ -717,19 +790,19 @@ var style_node_definitions = [
 ]
 
 style_node_definitions.forEach(function(style_node_def) {
-  
+
   VVVV.Nodes[style_node_def.name+"HTML"] = function(id, graph) {
     this.constructor(id, style_node_def.name+" (HTML)", graph);
-  
+
     this.meta = {
       authors: ['Matthias Zauner'],
       original_authors: [],
       credits: [],
       compatibility_issues: []
     };
-  
+
     var styleIn = this.addInputPin("Style In", [], VVVV.PinTypes.HTMLStyle);
-    
+
     var propertyPins = [];
     for (var i=0; i<style_node_def.pins.length; i++) {
       var v = [];
@@ -747,24 +820,24 @@ style_node_definitions.forEach(function(style_node_def) {
       if (style_node_def.pins[i].is_property)
         propertyPins.push(pin);
     }
-  
+
     var styleOut = this.addOutputPin("Style Out", [], VVVV.PinTypes.HTMLStyle);
-  
+
     var styles = [];
-    
+
     var rgba = [];
-  
+
     this.evaluate = function() {
       var maxSpreadSize = this.getMaxInputSliceCount();
-  
+
       var property_distribution = [];
-  
+
       for (var i=0; i<maxSpreadSize; i++) {
         if (!styles[i]) {
           styles[i] = new VVVV.Types.HTMLStyle();
         }
         styles[i].copy_properties(styleIn.getValue(i));
-  
+
         for (var j=0; j<propertyPins.length; j++) {
           var v;
           if (propertyPins[j].typeName=="Color") {
@@ -780,7 +853,7 @@ style_node_definitions.forEach(function(style_node_def) {
             if (propertyPins[j].unit)
               v += propertyPins[j].unit;
             styles[i].style_properties[propertyPins[j].pinname] = v;
-          
+
             if (!property_distribution[i])
               property_distribution[i] = {};
             property_distribution[i][propertyPins[j].pinname] = true;
@@ -792,7 +865,7 @@ style_node_definitions.forEach(function(style_node_def) {
         }
         styleOut.setValue(i, styles[i]);
       }
-  
+
       // clean style_properties from removed properties
       for (var i=0; i<maxSpreadSize; i++) {
         for (stylename in styles[i].style_properties) {
@@ -800,12 +873,12 @@ style_node_definitions.forEach(function(style_node_def) {
             delete styles[i].style_properties[stylename];
         }
       }
-  
+
       styleOut.setSliceCount(maxSpreadSize);
     }
   }
   VVVV.Nodes[style_node_def.name+"HTML"].prototype = new VVVV.Core.Node();
-  
+
 });
 
 
