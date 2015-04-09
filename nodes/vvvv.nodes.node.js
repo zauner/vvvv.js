@@ -152,3 +152,45 @@ VVVV.Nodes.SwitchNodeInput = function(id, graph) {
 
 }
 VVVV.Nodes.SwitchNodeInput.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Select (Node)
+ Author(s): David Gann
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.SelectNode = function(id, graph) {
+  this.constructor(id, "Select (Node)", graph);
+  
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var inputIn = this.addInputPin("Input Node", [], VVVV.PinTypes.Node);
+  var selectIn = this.addInputPin("Select", [1], VVVV.PinTypes.Value);
+  
+  var outputOut = this.addOutputPin("Output", [], VVVV.PinTypes.Node);
+  var formerSliceOut = this.addOutputPin("Former Slice", [0], VVVV.PinTypes.Value);
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+    
+    var outputIndex = 0;
+    for (var i=0; i<maxSize; i++) {
+      for (var j=0; j<selectIn.getValue(i); j++) {
+        outputOut.setValue(outputIndex, inputIn.getValue(i));
+        formerSliceOut.setValue(outputIndex, i);
+        outputIndex++;
+      }
+    }
+    outputOut.setSliceCount(outputIndex);
+    formerSliceOut.setSliceCount(outputIndex);
+  }
+
+}
+VVVV.Nodes.SelectNode.prototype = new VVVV.Core.Node();
