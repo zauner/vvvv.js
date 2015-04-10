@@ -363,20 +363,23 @@ VVVV.Core = {
     this.generateStaticCode = function(checkForChanges) {
       var subcode = "";
       var dirtycode = "if (";
+      var nilcode = "if (";
       for (var j=0; j<this.values.incomingPins.length; j++) {
         var pin = this.values.incomingPins[j];
         dirtycode += "patch.nodeMap["+pin.node.id+"].inputPins['"+pin.pinname+"'].pinIsChanged() || ";
+        nilcode += "patch.nodeMap["+pin.node.id+"].inputPins['"+pin.pinname+"'].values[0]==undefined || ";
         subcode = "Math.max(patch.nodeMap["+pin.node.id+"].inputPins['"+pin.pinname+"'].getSliceCount(), "+subcode;
       }
       dirtycode += "false) {\n";
+      nilcode += "false) { patch.nodeMap["+this.node.id+"].outputPins['Output'].setSliceCount(0); }\n else {";
       subcode += "0)";
       for (var j=0; j<this.values.incomingPins.length-1; j++) {
         subcode += ")";
       }
       subcode += ";\n";
-      var code = "";
+      var code = nilcode;
       if (checkForChanges)
-        code = dirtycode;
+        code += dirtycode;
       code += "  var iii = ";
       code += subcode;
       code += "  patch.nodeMap["+this.node.id+"].outputPins['Output'].setSliceCount(iii);";
@@ -384,7 +387,8 @@ VVVV.Core = {
       code += "    patch.nodeMap["+this.node.id+"].outputPins['Output'].setValue(iii, "+this.values.code+");\n";
       code += "  }\n";
       if (checkForChanges)
-        code += "}\n";
+        code += "}\n"; // dirty check
+      code += "}\n";   // nil check
       return code;
     }
   },
