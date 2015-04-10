@@ -1176,6 +1176,7 @@ VVVV.Nodes.SignValue = function(id, graph) {
     }
     
     absolutepartOut.setSliceCount(maxSize);
+    signpartOut.setSliceCount(maxSize);
   }
 
 }

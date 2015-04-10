@@ -40,6 +40,10 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
   $element.replaceWith($inputbox);
   $inputbox.get(0).select();
   
+  win.window.document.exitPointerLock = win.window.document.exitPointerLock    ||
+                                        win.window.document.mozExitPointerLock ||
+                                        win.window.document.webkitExitPointerLock;
+  
   $inputbox.change(function() {
     if (pin.typeName=="Value")
       pin.setValue(sliceIdx, parseFloat($(this).val()));
