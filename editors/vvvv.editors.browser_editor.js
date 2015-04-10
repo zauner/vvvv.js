@@ -1168,7 +1168,7 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
       })
     }
     else
-      var $iobox = $('<div class="row value readonlyvalue"><div style="height:100%">'+p.getValue(0).toString().replace(/</g, '&lt;').replace(/>/g, '&gt;')+'</div></div>');
+      var $iobox = $('<div class="row value readonlyvalue"><div style="height:100%">'+(p.getValue(0)==undefined ? "undefined" : p.getValue(0).toString().replace(/</g, '&lt;').replace(/>/g, '&gt;'))+'</div></div>');
     if (p.typeName=="Color") {
       $iobox.find('div').css('background-color', 'rgba('+_(p.getValue(0).rgba).map(function(c) { return parseInt(c*255) }).join(',')+')');
     }
