@@ -390,7 +390,7 @@ VVVV.Nodes.FFT = function(id, graph) {
   
   function nearestPow2( aSize )
   {
-    return Math.pow( 2, Math.round( Math.log( aSize ) / Math.log( 2 ) ) ); 
+    return Math.pow( 2, Math.round( Math.log( aSize ) / Math.log( 2 ) ) );
   }
   
   this.evaluate = function()
@@ -624,7 +624,7 @@ VVVV.Nodes.Oscillator.prototype = new WebAudioNode('Oscillator');
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-VVVV.Nodes.Delay = function(id, graph) {
+VVVV.Nodes.DelayAudio = function(id, graph) {
   WebAudioNode.call(this, id, 'Delay (HTML5 Audio)', graph);
   
   this.meta = {
@@ -650,7 +650,7 @@ VVVV.Nodes.Delay = function(id, graph) {
     
   }
 }
-VVVV.Nodes.Delay.prototype = new WebAudioNode('Delay');
+VVVV.Nodes.DelayAudio.prototype = new WebAudioNode('Delay');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -694,7 +694,7 @@ VVVV.Nodes.AddAudio = function(id, graph) {
     compatibility_issues: []
   };
   
-  var cntCfg = this.addInvisiblePin("Input Count",[2],VVVV.PinTypes.Value); 
+  var cntCfg = this.addInvisiblePin("Input Count",[2],VVVV.PinTypes.Value);
   var that = this;
   
   var addInputPins = function()
