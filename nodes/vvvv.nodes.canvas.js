@@ -72,13 +72,15 @@ VVVV.PinTypes.CanvasRenderState = {
   }
 }
 
-var defaultCanvasLayer = function() {
+VVVV.Types.CanvasLayer = function() {
   this.draw = function() {};
 }
+
+var defaultCanvasLayer = new VVVV.Types.CanvasLayer();
 VVVV.PinTypes.CanvasLayer = {
   typeName: "CanvasLayer",
   reset_on_disconnect: true,
-  defaultValue: defaultCanvasLayer
+  defaultValue: function() { return defaultCanvasLayer; }
 }
 
 /*
@@ -920,7 +922,12 @@ VVVV.Nodes.GroupCanvas = function(id, graph) {
         }
       }
     }
-    layerOut.setSliceCount(outSliceIdx);
+    if (outSliceIdx>0)
+      layerOut.setSliceCount(outSliceIdx);
+    else {
+      layerOut.setValue(0, defaultCanvasLayer);
+      layerOut.setSliceCount(1);
+    }
   }
 
 }
@@ -943,6 +950,8 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  
+  this.auto_nil = false;
 
   var layersIn = this.addInputPin("Layers", [], VVVV.PinTypes.CanvasLayer);
   var clearIn = this.addInputPin("Clear", [1], VVVV.PinTypes.Value);
@@ -1096,10 +1105,11 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
         $(canvas).attr('height', canvasHeight);
       }
       projT = mat4.create([canvasWidth/2, 0, 0, 0, 0, -canvasHeight/2, 0, 0, 0, 0, 1, 0, canvasWidth/2, canvasHeight/2, 0, 1]);
-      mat4.multiply(projT, viewIn.getValue(0), viewT);
+      if (viewIn.getValue(0))
+        mat4.multiply(projT, viewIn.getValue(0), viewT);
     }
 
-    if (bgColorIn.pinIsChanged()) {
+    if (bgColorIn.pinIsChanged() && bgColorIn.getValue(0)!=undefined) {
       var col = bgColorIn.getValue(0);
       bgColor[0] = parseInt(col.rgba[0]*255);
       bgColor[1] = parseInt(col.rgba[1]*255);
@@ -1128,7 +1138,8 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
 
       if (layersIn.isConnected()) {
         for (var i=0; i<layersIn.getSliceCount(); i++) {
-          layersIn.getValue(i).draw(ctx);
+          if (layersIn.getValue(i)!=undefined)
+            layersIn.getValue(i).draw(ctx);
         }
       }
 
