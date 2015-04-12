@@ -719,7 +719,7 @@ VVVV.Core = {
     this.hasNilInputs = function() {
       var result = false
       _(this.inputPins).each(function(p) {
-        if (p.values[0]==undefined)
+        if (p.getSliceCount()==0 || p.values[0]==undefined)
           result = true;
       });
       return result;
