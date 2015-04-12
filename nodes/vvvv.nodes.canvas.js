@@ -360,11 +360,11 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
     this.strokeColor = [1.0, 1.0, 1.0, 1.0];
     this.lineWidth = 1.0;
     this.renderState = defaultRenderState;
-    this.clippingLayer = undefined;
+    this.clippingLayer = defaultCanvasLayer;
     this.drawSegment = false;
 
     this.draw = function(ctx, invisible) {
-      if (this.clippingLayer) {
+      if (this.clippingLayer!=defaultCanvasLayer) {
         ctx.save();
         this.clippingLayer.draw(ctx, true);
         ctx.clip();
@@ -390,7 +390,7 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
         ctx.fill();
       if (this.renderState.strokeColor.rgba[3]>0)
         ctx.stroke();
-      if (this.clippingLayer)
+      if (this.clippingLayer!=defaultCanvasLayer)
         ctx.restore();
     }
   }
@@ -414,8 +414,7 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
           layers[i].startAngle += Math.PI;
           layers[i].endAngle += Math.PI;
         }
-        if (clippingLayerIn.isConnected())
-          layers[i].clippingLayer = clippingLayerIn.getValue(i);
+        layers[i].clippingLayer = clippingLayerIn.getValue(i);
       }
 
       for (var i=0; i<layers.length; i++) {
@@ -462,10 +461,10 @@ VVVV.Nodes.RectangleCanvas = function(id, graph) {
     this.transform = mat4.create();
     mat4.identity(this.transform);
     this.renderState = defaultRenderState;
-    this.clippingLayer = undefined;
+    this.clippingLayer = defaultCanvasLayer;
 
     this.draw = function(ctx, invisible) {
-      if (this.clippingLayer) {
+      if (this.clippingLayer!=defaultCanvasLayer) {
         ctx.save();
         this.clippingLayer.draw(ctx, true);
         ctx.clip();
@@ -501,7 +500,7 @@ VVVV.Nodes.RectangleCanvas = function(id, graph) {
         ctx.fill();
       if (this.renderState.strokeColor.rgba[3]>0)
         ctx.stroke();
-      if (this.clippingLayer)
+      if (this.clippingLayer!=defaultCanvasLayer)
         ctx.restore();
 
     }
@@ -520,8 +519,7 @@ VVVV.Nodes.RectangleCanvas = function(id, graph) {
         layers[i].height = heightIn.getValue(i);
         layers[i].cornerRadius = cornerRadiusIn.getValue(i);
         layers[i].renderState = renderStateIn.getValue(i);
-        if (clippingLayerIn.isConnected())
-          layers[i].clippingLayer = clippingLayerIn.getValue(i);
+        layers[i].clippingLayer = clippingLayerIn.getValue(i);
       }
 
       for (var i=0; i<layers.length; i++) {
@@ -575,10 +573,10 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
     this.align = 'start';
     this.baseline = 'top';
     this.renderState = defaultRenderState;
-    this.clippingLayer = undefined;
+    this.clippingLayer = defaultCanvasLayer;
 
     this.draw = function(ctx, invisible) {
-      if (this.clippingLayer) {
+      if (this.clippingLayer!=defaultCanvasLayer) {
         ctx.save();
         this.clippingLayer.draw(ctx, true);
         ctx.clip();
@@ -601,7 +599,7 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
       if (this.renderState.strokeColor.rgba[3]>0)
         ctx.strokeText(this.text, 0, 0);
       ctx.restore();
-      if (this.clippingLayer)
+      if (this.clippingLayer!=defaultCanvasLayer)
         ctx.restore();
     }
   }
@@ -677,13 +675,13 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
     this.lineWidth = 1.0;
     this.fillColor = [1.0, 1.0, 1.0, 1.0];
     this.renderState = defaultRenderState;
-    this.clippingLayer = undefined;
+    this.clippingLayer = defaultCanvasLayer;
 
     this.draw = function(ctx, invisible) {
       if (this.x.length<1)
         return;
 
-      if (this.clippingLayer) {
+      if (this.clippingLayer!=defaultCanvasLayer) {
         ctx.save();
         this.clippingLayer.draw(ctx, true);
         ctx.clip();
@@ -715,7 +713,7 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
       if (this.renderState.strokeColor.rgba[3]>0)
         ctx.stroke();
 
-      if (this.clippingLayer)
+      if (this.clippingLayer!=defaultCanvasLayer)
         ctx.restore();
     }
   }
@@ -744,8 +742,7 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
         if (subIndex == 0) {
           layers[binNum].renderState = renderStateIn.getValue(binNum);
           layers[binNum].transform = transformIn.getValue(binNum);
-          if (clippingLayerIn.isConnected())
-            layers[binNum].clippingLayer = clippingLayerIn.getValue(binNum);
+          layers[binNum].clippingLayer = clippingLayerIn.getValue(binNum);
         }
         layers[binNum].x[subIndex] = xIn.getValue(j);
         layers[binNum].y[subIndex] = yIn.getValue(j);
@@ -811,13 +808,13 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
 
   var Quad = function() {
     this.transform = mat4.create();
-    this.clippingLayer = undefined;
+    this.clippingLayer = defaultCanvasLayer;
     mat4.identity(this.transform);
     this.texture = VVVV.PinTypes.HTML5Texture.defaultValue();
     this.color = [1.0, 1.0, 1.0, 1.0];
 
     this.draw = function(ctx, invisible) {
-      if (this.clippingLayer) {
+      if (this.clippingLayer!=defaultCanvasLayer) {
         ctx.save();
         this.clippingLayer.draw(ctx, true);
         ctx.clip();
@@ -848,7 +845,7 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
         ctx.fillRect(-.5, -.5, 1, 1);
       }
 
-      if (this.clippingLayer)
+      if (this.clippingLayer!=defaultCanvasLayer)
         ctx.restore();
     }
   }
@@ -863,8 +860,7 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
       layers[i].transform = transformIn.getValue(i);
       layers[i].texture = textureIn.getValue(i);
       layers[i].color = colorIn.getValue(i);
-      if (clippingLayerIn.isConnected())
-        layers[i].clippingLayer = clippingLayerIn.getValue(i);
+      layers[i].clippingLayer = clippingLayerIn.getValue(i);
     }
 
     for (var i=0; i<layers.length; i++) {
