@@ -1825,7 +1825,7 @@ VVVV.Nodes.Quad = function(id, graph) {
       // shaders
 
       var fragmentShaderCode = "#ifdef GL_ES\n";
-      fragmentShaderCode += "precision highp float;\n";
+      fragmentShaderCode += "precision mediump float;\n";
       fragmentShaderCode += "#endif\n";
       fragmentShaderCode += "uniform vec4 col : COLOR = {1.0, 1.0, 1.0, 1.0}; varying vec2 vs2psTexCd; uniform sampler2D Samp0; void main(void) { gl_FragColor = col*texture2D(Samp0, vs2psTexCd); if (gl_FragColor.a==0.0) discard;  }";
       var vertexShaderCode = "attribute vec3 PosO : POSITION; attribute vec2 TexCd : TEXCOORD0; uniform mat4 tW : WORLD; uniform mat4 tV : VIEW; uniform mat4 tP : PROJECTION; uniform mat4 tTex; varying vec2 vs2psTexCd; void main(void) { gl_Position = tP * tV * tW * vec4(PosO, 1.0); vs2psTexCd = (tTex * vec4(TexCd.xy-.5, 0.0, 1.0)).xy+.5; }";
@@ -1960,7 +1960,7 @@ VVVV.Nodes.GridSegment = function(id, graph) {
 
     if (this.contextChanged) {
 	    var fragmentShaderCode = "#ifdef GL_ES\n";
-	    fragmentShaderCode += "precision highp float;\n";
+	    fragmentShaderCode += "precision mediump float;\n";
 	    fragmentShaderCode += "#endif\n";
 	    fragmentShaderCode += "uniform vec4 col : COLOR = {1.0, 1.0, 1.0, 1.0}; varying vec2 vs2psTexCd; uniform sampler2D Samp0; void main(void) { gl_FragColor = col*texture2D(Samp0, vs2psTexCd); if (gl_FragColor.a==0.0) discard;  }";
 	    var vertexShaderCode = "attribute vec3 PosO : POSITION; attribute vec2 TexCd : TEXCOORD0; uniform mat4 tW : WORLD; uniform mat4 tV : VIEW; uniform mat4 tP : PROJECTION; uniform mat4 tTex; varying vec2 vs2psTexCd; void main(void) { gl_Position = tP * tV * tW * vec4(PosO, 1.0); vs2psTexCd = (tTex * vec4(TexCd.xy-.5, 0.0, 1.0)).xy+.5; }";
@@ -2505,9 +2505,11 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
 
         if (currentShaderProgram!=layer.shader.shaderProgram) {
           gl.useProgram(layer.shader.shaderProgram);
-          gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["PROJECTION"]].position, false, pMatrix);
-          gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEW"]].position, false, vMatrix);
-          if (layer.shader.uniformSemanticMap["VIEWPROJECTION"])
+          if (layer.shader.uniformSemanticMap["PROJECTION"] && layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["PROJECTION"]].position!=0)
+            gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["PROJECTION"]].position, false, pMatrix);
+          if (layer.shader.uniformSemanticMap["VIEW"] && layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEW"]].position!=0)
+            gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEW"]].position, false, vMatrix);
+          if (layer.shader.uniformSemanticMap["VIEWPROJECTION"] && layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEWPROJECTION"]].position!=0)
             gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEWPROJECTION"]].position, false, vpMatrix);
         }
 
@@ -2668,8 +2670,10 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
           return;
         }
         sourceCodeIn.setValue(0, $('textarea', w.document).val());
-        if (VVVV.ShaderCodeResources[currentName].relatedNodes.length>0)
+        if (VVVV.ShaderCodeResources[currentName].relatedNodes.length>0) {
           thatNode.showStatus('notice', 'Compiling ...');
+          thatNode.evaluate();
+        }
         else
           thatNode.showStatus('notice', 'No instance of this shader found. Create a node (./'+currentName+') and connect it to a Renderer (EX9) to compile.');
       });
