@@ -1255,12 +1255,19 @@ VVVV.Core = {
 
             // load 3rd party libs, if required for this node
             if (VVVV.NodeLibrary[nodename.toLowerCase()].requirements) {
-              thisPatch.resourcesPending++; // pause patch evaluation
               _(VVVV.NodeLibrary[nodename.toLowerCase()].requirements).each(function(libname) {
                 if (VVVV.LoadedLibs[libname]===undefined)
+                  thisPatch.resourcesPending++; // pause patch evaluation
                   VVVV.loadScript(VVVV.ThirdPartyLibs[libname], function() {
                     thisPatch.resourcesPending--; // resume patch evaluation
                     VVVV.LoadedLibs[libname]=VVVV.ThirdPartyLibs[libname];
+                    updateLinks(xml);
+                    thisPatch.afterUpdate();
+                    thisPatch.compile();
+                    if (thisPatch.resourcesPending<=0 && ready_callback) {
+                      ready_callback();
+                      ready_callback = undefined;
+                    }
                   });
               });
             }
