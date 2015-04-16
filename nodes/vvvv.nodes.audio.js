@@ -5,6 +5,9 @@
 // This component was developed is (c) 2014 Lukas Winter, distributed under the MIT license.
 
 (function($) {
+  
+if (!AudioContext)
+  return;
 
 var debugID = 0;
 
