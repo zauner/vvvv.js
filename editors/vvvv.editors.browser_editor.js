@@ -472,6 +472,12 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         if (thatWin.state==UIState.Connecting) {
           chart.select('.vvvv-link.current-link').remove();
           $('.resettable', thatWin.window.document).remove();
+          chart.selectAll('.vvvv-input-pin rect, .vvvv-output-pin rect')
+            .attr('width', 4)
+            .attr('height', 4)
+            .attr('x', 0)
+            .attr('y', 0)
+            .attr('class', '')
           thatWin.state = UIState.Idle;
         }
         d3.event.stopPropagation();
@@ -609,6 +615,12 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
       background.on('click', function() {
         thatWin.state = UIState.Idle;
         $('.resettable', thatWin.window.document).remove();
+        chart.selectAll('.vvvv-input-pin rect, .vvvv-output-pin rect')
+          .attr('width', 4)
+          .attr('height', 4)
+          .attr('x', 0)
+          .attr('y', 0)
+          .attr('class', '')
         $('#node_selection', thatWin.window.document).remove();
         resetSelection();
         linkStart = undefined;
@@ -1042,7 +1054,8 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           }
           if (!linkStart.node.delays_output)
             getAllUpstreamNodes(linkStart.node);
-          chart.selectAll('g.vvvv-'+targetDir+'-pin')
+          
+          chart.selectAll('g.vvvv-'+targetDir+'-pin rect')
             .filter(function(d) {
               //if (d.typeName!=linkStart.typeName && (linkStart.typeName!="Node" || VVVV.PinTypes[d.typeName].primitive && (d.typeName!="Node" || VVVV.PinTypes[linkStart.typeName].primitive)))
               if (!(d.typeName==linkStart.typeName || (linkStart.typeName=="Node" && !VVVV.PinTypes[d.typeName].primitive) || (d.typeName=="Node" && !VVVV.PinTypes[linkStart.typeName].privimive)))
@@ -1051,12 +1064,12 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
                 return false;
               return true;
             })
-            .append('svg:rect')
-              .attr('class', 'vvvv-connection-highlight resettable')
-              .attr('width', 4)
-              .attr('height', 3)
-              .attr('fill', 'rgba(0,0,0,1)')
-              .attr('y', function(d) { return d.direction==VVVV.PinDirection.Input ? -3 : 3})
+            .attr('width', 6)
+            .attr('height', 6)
+            .attr('x', -1)
+            .attr('y', function(d) { return d.direction==VVVV.PinDirection.Input ? -2 : 0})
+            .attr('class', 'vvvv-connection-highlight')
+              
         }
         else {
 
