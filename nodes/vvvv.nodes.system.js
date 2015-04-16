@@ -273,4 +273,116 @@ VVVV.Nodes.ScreenInfo = function(id, graph) {
 }
 VVVV.Nodes.ScreenInfo.prototype = new VVVV.Core.Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: DefineNode (System)
+ Author(s): Matthias Zauner
+ Original Node Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.DefineNode = function(id, graph) {
+  this.constructor(id, "DefineNode (System)", graph);
+
+  this.auto_nil = false;
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['Matthias Zauner'],
+    credits: [],
+    compatibility_issues: ['Not available in classic VVVV']
+  };
+
+  this.auto_evaluate = false;
+
+  var nameIn = this.addInvisiblePin("Node Name", [''], VVVV.PinTypes.String);
+  var sourceCodeIn = this.addInvisiblePin("Source Code", ['var valueIn = this.addInputPin("Value In", [0], VVVV.PinTypes.Value);\nvar stringIn = this.addInputPin("String In", ["text"], VVVV.PinTypes.String);\nvar colorIn = this.addInputPin("Color In", [], VVVV.PinTypes.Color);\n\nvar valueOut = this.addOutputPin("Value Out", [0], VVVV.PinTypes.Value);\nvar stringOut = this.addOutputPin("String Out", ["text"], VVVV.PinTypes.String);\nvar colorOut = this.addOutputPin("Color Out", [], VVVV.PinTypes.Color);\n\nthis.initialize = function() {\n\n//Put node configuration code here ...\n}\n\nthis.evaluate = function() {\n  var maxSize = this.getMaxInputSliceCount();\n\n  for (var i=0; i<maxSize; i++) {\n\n    valueOut.setValue(i, valueIn.getValue(i));\n    stringOut.setValue(i, stringIn.getValue(i));\n    colorOut.setValue(i, colorIn.getValue(i));\n  }\n\n  valueOut.setSliceCount(maxSize);\n  stringOut.setSliceCount(maxSize);\n  colorOut.setSliceCount(maxSize);\n}\n\nthis.destroy = function() {\n  // This is called when the node is deleted\n}'], VVVV.PinTypes.String);
+
+  var currentName = '';
+  var f = undefined;
+  var w; // the UI window
+
+  this.relatedNodes = [];
+
+  this.initialize = function() {
+    this.evaluate();
+  }
+
+  this.evaluate = function() {
+    if (nameIn.getValue(0)!='') {
+      if (nameIn.pinIsChanged()) {
+        var descriptor = nameIn.getValue(0);
+        if (descriptor=='')
+          return;
+        if (VVVV.NodeLibrary[descriptor.toLowerCase()] && VVVV.NodeLibrary[descriptor.toLowerCase()].definingNode!=this) {
+          console.warn("The node '"+descriptor+"' has already been defined.");
+          this.not_implemented = true;
+        }
+        if (currentName!='') { // if the name has been already set, but is changed now
+          VVVV.NodeLibrary[descriptor.toLowerCase()] = VVVV.NodeLibrary[currentName.toLowerCase()];
+          delete VVVV.NodeLibrary[currentName.toLowerCase()];
+        }
+        currentName = descriptor;
+        this.not_implemented = false;
+        if (w)
+          $('#path', w.document).text((this.parentPatch.nodename || 'root')+' / '+(currentName!='' ? currentName : 'Untitled'));
+      }
+
+      if (sourceCodeIn.pinIsChanged() || nameIn.pinIsChanged()) {
+        try {
+          f = new Function("id", "graph", 'this.constructor(id, "'+currentName+'", graph); '+sourceCodeIn.getValue(0));
+          f.prototype = new VVVV.Core.Node();
+          f.definingNode = this;
+          VVVV.NodeLibrary[currentName.toLowerCase()] = f;
+          for (var i=0; i<this.relatedNodes.length; i++) {
+            var n = this.relatedNodes[i];
+            n.parentPatch.doLoad("<PATCH><NODE id='"+n.id+"' systemname='"+currentName+"' createme='pronto'><BOUNDS type='Node' left='"+(n.x*15)+"' top='"+(n.y*15)+"'></BOUNDS></NODE></PATCH>", function() { n.parentPatch.afterUpdate(); });
+          }
+          if (VVVV.NodeNames.indexOf(currentName)>=0)
+            VVVV.NodeNames.splice(VVVV.NodeNames.indexOf(currentName), 1);
+          VVVV.NodeNames.push(currentName);
+          this.showStatus('success', 'Successfully updated.');
+          this.not_implemented = false;
+        }
+        catch (e) {
+          this.showStatus('error', e.message);
+          this.not_implemented = true;
+        }
+
+      }
+    }
+  }
+
+  this.openUIWindow = function() {
+    w = window.open(location.protocol+'//'+location.host+(VVVV.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVV.Root+"/code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
+    var thatNode = this;
+    window.setTimeout(function() {
+      w.document.title = currentName+" / VVVV.js Node Editor";
+      var definingNodeName = thatNode.parentPatch.nodename || 'root';
+      var nodeName = currentName!='' ? currentName : 'Untitled';
+      $('#path', w.document).text(definingNodeName+' / '+nodeName);
+      $('textarea', w.document).text(sourceCodeIn.getValue(0));
+      $('#compile_button', w.document).click(function() {
+        if (currentName=='') {
+          thatNode.showStatus('error', 'Please provide a name for this node first');
+          return;
+        }
+        sourceCodeIn.setValue(0, $('textarea', w.document).val());
+        thatNode.showStatus('notice', 'Compiling ...');
+        thatNode.evaluate();
+      });
+      w.focus();
+    }, 500);
+  }
+
+  this.showStatus = function(type, message) {
+    if (w) {
+      $('#status', w.document).text(message);
+      $('#status', w.document).attr('class', type);
+    }
+  }
+
+}
+VVVV.Nodes.DefineNode.prototype = new VVVV.Core.Node();
+
 }(vvvvjs_jquery));

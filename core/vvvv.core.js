@@ -1215,28 +1215,14 @@ VVVV.Core = {
 
       $(xml).find('node').each(function() {
 
-        // in case of renaming a node, delete the old one first
-        if ($(this).attr('createme')=='pronto' && thisPatch.nodeMap[$(this).attr('id')]!=undefined) {
-          var n = thisPatch.nodeMap[$(this).attr('id')];
-          if (VVVV_ENV=='development') console.log("node renamed, so deleting node "+n.id+' / '+n.nodename);
-
-          _(n.inputPins).each(function(p) {
-            _(p.links).each(function (link) {
-              link.destroy();
-              link.fromPin.connectionChanged();
-            });
-          })
-
-          _(n.outputPins).each(function(p) {
-            _(p.links).each(function (link) {
-              link.destroy();
-              link.toPin.connectionChanged();
-              link.toPin.markPinAsChanged();
-            });
-          })
-
-          thisPatch.nodeList.splice(thisPatch.nodeList.indexOf(n),1);
-          delete thisPatch.nodeMap[n.id];
+        // in case the node's id is already present
+        var nodeToReplace = undefined;
+        var nodeExists = false;
+        if (thisPatch.nodeMap[$(this).attr('id')]!=undefined) {
+          if ($(this).attr('createme')=='pronto') // renaming node ...
+            nodeToReplace = thisPatch.nodeMap[$(this).attr('id')];
+          else // just moving it ...
+            nodeExists = true;
         }
 
         var $bounds;
@@ -1245,13 +1231,19 @@ VVVV.Core = {
         else
           $bounds = $(this).find('bounds[type="Node"]').first();
 
-        var nodeExists = thisPatch.nodeMap[$(this).attr('id')]!=undefined;
         if (!nodeExists) {
           var nodename = $(this).attr('systemname')!="" ? $(this).attr('systemname') : $(this).attr('nodename');
           if (nodename==undefined)
             return;
           if (VVVV.NodeLibrary[nodename.toLowerCase()]!=undefined) {
             var n = new VVVV.NodeLibrary[nodename.toLowerCase()]($(this).attr('id'), thisPatch);
+            if (VVVV.NodeLibrary[nodename.toLowerCase()].definingNode) {
+              n.definingNode = VVVV.NodeLibrary[nodename.toLowerCase()].definingNode;
+              if (nodeToReplace)
+                VVVV.NodeLibrary[nodename.toLowerCase()].definingNode.relatedNodes[VVVV.NodeLibrary[nodename.toLowerCase()].definingNode.relatedNodes.indexOf(nodeToReplace)] = n;
+              else
+                VVVV.NodeLibrary[nodename.toLowerCase()].definingNode.relatedNodes.push(n);
+            }
 
             // load 3rd party libs, if required for this node
             if (VVVV.NodeLibrary[nodename.toLowerCase()].requirements) {
@@ -1326,8 +1318,6 @@ VVVV.Core = {
             else {
               var n = new VVVV.Core.Node($(this).attr('id'), nodename, thisPatch);
               n.not_implemented = true;
-              if (syncmode=='diff' && VVVV.Config.auto_undo == true)
-                thisPatch.editor.sendUndo();
               VVVV.onNotImplemented(nodename);
             }
           }
@@ -1357,6 +1347,9 @@ VVVV.Core = {
               if (VVVV.Patches[path].length == 0)
                 delete VVVV.Patches[path];
             }
+          }
+          if (n.definingNode) { // remove connection to related DefineNode node
+            n.definingNode.relatedNodes.splice(n.definingNode.relatedNodes.indexOf(n), 1);
           }
           thisPatch.nodeList.splice(thisPatch.nodeList.indexOf(n),1);
           n.destroy();
@@ -1446,7 +1439,77 @@ VVVV.Core = {
 
         //Initialize node
         if (!nodeExists) {
+          if (nodeToReplace) { // copy config pins from node which is being replaced
+            console.log("replacing node "+n.id+" / "+nodeToReplace.nodename+" with "+n.nodename);
+            _(nodeToReplace.invisiblePins).each(function(p, name) {
+              if (!n.invisiblePins[name])
+                n.invisiblePins[name] = p;
+              else {
+                thisPatch.pinMap[n.id+"_inv_"+name] = n.inputPins[name];
+                if (n.invisiblePins[name].typeName==p.typeName)
+                  n.invisiblePins[name].values = p.values;
+              }
+            });
+          }
+
           n.initialize();
+
+          if (nodeToReplace) { // copy in- and output pins from node which is being replaced
+            _(nodeToReplace.inputPins).each(function(p, name) {
+              if (n.inputPins[name]) {
+                thisPatch.pinMap[n.id+"_in_"+name] = n.inputPins[name];
+                if (n.inputPins[name].typeName!=p.typeName) {
+                  var i = p.links.length;
+                  while (i--) {
+                    p.links[i].destroy();
+                  }
+                }
+                else {
+                  n.inputPins[name].values = p.values;
+                  var i = p.links.length;
+                  while (i--) {
+                    n.inputPins[name].links[i] = p.links[i];
+                    n.inputPins[name].links[i].toPin = n.inputPins[name];
+                  }
+                }
+              }
+              else {
+                var i = p.links.length;
+                while (i--) {
+                  p.links[i].destroy();
+                }
+              }
+            });
+            _(nodeToReplace.outputPins).each(function(p, name) {
+              if (n.outputPins[name]) {
+                thisPatch.pinMap[n.id+"_out_"+name] = n.outputPins[name];
+                if (n.outputPins[name].typeName!=p.typeName) {
+                  var i = p.links.length;
+                  while (i--) {
+                    p.links[i].destroy();
+                  }
+                }
+                else {
+                  n.outputPins[name].values = p.values;
+                  var i = p.links.length;
+                  while (i--) {
+                    n.outputPins[name].links[i] = p.links[i];
+                    n.outputPins[name].links[i].fromPin = n.outputPins[name];
+                  }
+                }
+              }
+              else {
+                var i = p.links.length;
+                while (i--) {
+                  p.links[i].destroy();
+                }
+              }
+            });
+            thisPatch.nodeList.splice(thisPatch.nodeList.indexOf(nodeToReplace),1);
+            nodeToReplace.destroy();
+            delete nodeToReplace;
+            nodeToReplace = undefined;
+          }
           thisPatch.nodeList.push(n);
         }
 

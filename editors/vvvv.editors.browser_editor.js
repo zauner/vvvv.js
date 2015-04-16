@@ -39,11 +39,11 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
   $inputbox.css('top', $element.css('top'));
   $element.replaceWith($inputbox);
   $inputbox.get(0).select();
-  
+
   win.window.document.exitPointerLock = win.window.document.exitPointerLock    ||
                                         win.window.document.mozExitPointerLock ||
                                         win.window.document.webkitExitPointerLock;
-  
+
   $inputbox.change(function() {
     if (pin.typeName=="Value")
       pin.setValue(sliceIdx, parseFloat($(this).val()));
@@ -60,7 +60,7 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
       $(this).remove();
     }
   });
-  
+
   if (pin.typeName=='Value') {
     function scroll(el, delta, e) {
       var mod = $(el).val()%1;
@@ -86,7 +86,7 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
       e.preventDefault();
       return false;
     })
-    
+
     win.window.document.addEventListener('pointerlockerror', function(e) {
       console.log('POINTER LOCK ERROR');
       /*alert("It seems Pointer Lock is not allowed yet. Click somewhere in the browser window (not the patch window) to request Pointer Lock");
@@ -94,7 +94,7 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
         this.requestPointerLock();
       }
       $('body').bind('click', addPointerLockRequest);
-      
+
       $(document).on('pointerlockchange', function() {
         if (document.pointerLockElement) {
           alert('ok, you should be good now.');
@@ -102,13 +102,13 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
         $('body').unbind("click", addPointerLockRequest);
       })*/
     })
-    
+
     $inputbox.mousedown(function(e) {
       if (e.which==3) {
         this.requestPointerLock();
       }
     })
-    
+
     $inputbox.mouseup(function(e) {
       if (e.which==3) {
         win.window.document.exitPointerLock();
@@ -116,7 +116,7 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
         win.state = UIState.Idle;
       }
     })
-    
+
     $inputbox.mousemove(function(e) {
       if (win.window.document.pointerLockElement) {
         win.state = UIState.PinDragging;
@@ -125,7 +125,7 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
       }
     })
   }
-  
+
   $inputbox.bind('paste', function(e) {
     e.stopPropagation();
   })
@@ -148,7 +148,7 @@ VVVV.PinTypes.Enum.openInputBox = function(win, $element, pin, sliceIdx) {
   $inputbox.css('left', $element.css('left'));
   $inputbox.css('top', $element.css('top'));
   $element.replaceWith($inputbox);
-  
+
   $inputbox.change(function() {
     //pin.node.parentPatch.doLoad("<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+$(this).val()+"'/></NODE>");
     pin.setValue(sliceIdx, $(this).val());
@@ -173,9 +173,11 @@ VVVV.PinTypes.Color.makeLabel = function(element, node) {
         .attr('y', i * 12 + 4)
         .attr('fill', function(d) {
           var col = node.IOBoxInputPin().getValue(i);
-          var svgcol = [];
-          for (var j=0; j<col.rgba.length; j++) {
-            svgcol[j] = parseInt(col.rgba[j]*256);
+          var svgcol = [0, 0, 0, 0];
+          if (col) {
+            for (var j=0; j<col.rgba.length; j++) {
+              svgcol[j] = parseInt(col.rgba[j]*256);
+            }
           }
           return 'rgba('+svgcol.join(',')+')';
       })
@@ -183,7 +185,7 @@ VVVV.PinTypes.Color.makeLabel = function(element, node) {
 }
 
 VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
-  
+
   var modulatedComp = 0;
   function setModulatedComp(e) {
     if (e.altKey && e.shiftKey)
@@ -195,11 +197,11 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
     else
       modulatedComp = 0;
   }
-  
+
   $(win.window.document)
     .keydown(setModulatedComp)
     .keyup(setModulatedComp)
-  
+
   $inputbox = $('<div class="pininputbox color resettable"></div>');
   $inputbox.css('position', $element.css('position'));
   $inputbox.css('width', "120px");
@@ -213,18 +215,18 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
   }
   svgcol[3] = 255; // ignore alpha here ...
   $inputbox.css('background-color', 'rgba('+svgcol.join(',')+')');
-  
+
   $element.replaceWith($inputbox);
-  
+
   var hsv = col.getHSV();
   hsv[3] = col.rgba[3];
-  
+
   var labels = "HSVA";
   for (var i=0; i<4; i++) {
     $slider = $('<input type="range" name="hsv[]" min="0" max="1" step="0.001" value="'+hsv[i]+'"/>');
     $inputbox.append('<span class="color-component">'+labels[i]+":</div>");
     $inputbox.append($slider);
-    
+
     (function(j) {
       $slider.on('input', function() {
         hsv[j] = parseFloat($(this).val());
@@ -232,7 +234,7 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
       });
     }(i));
   }
-  
+
   function scroll(delta) {
     var incr = delta * 0.01;
     hsv[modulatedComp] += incr;
@@ -243,7 +245,7 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
       $(this).val(hsv[i]);
     });
   }
-  
+
   function setPin() {
     col.setHSV(hsv[0], hsv[1], hsv[2]);
     col.rgba[3] = hsv[3];
@@ -255,7 +257,7 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
     valstr.length = pin.getSliceCount();
     pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+valstr.join(',')+"'/></NODE>");
   }
-  
+
   $inputbox.on('mousewheel', function(e) {
     var delta = e.originalEvent.wheelDelta/120;
     scroll(delta);
@@ -273,9 +275,9 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
 VVVV.Editors.BrowserEditor = {}
 
 VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
-  
+
   this.state = UIState.Idle;
-  
+
   var dragStart = {x: 0, y: 0};
   var chart, nodes, inputPins, outputPins, links;
   var linkStart = undefined;
@@ -285,31 +287,31 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
   var pageURL = location.protocol+'//'+location.host+(VVVV.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVV.Root+'/patch.html';
   var modKeyPressed = {CTRL: false, SHIFT: false, ALT: false};
   var selectionBB = {x1: 0, y1: 0, x2: 0, y2: 0};
-  
+
   if (!selector)
     this.window = window.open(pageURL, p.nodename, "location=no, width="+p.windowWidth+", height="+p.windowHeight+", toolbar=no" );
   else
     this.window = window;
-  
+
   function resetSelection() {
     chart.selectAll('.vvvv-node.selected')
       .attr('class', function(d) { return d.isIOBox? 'vvvv-node vvvv-iobox' : 'vvvv-node' })
     selectedNodes = [];
   }
-  
+
   var thatWin = this;
   window.setTimeout(function() {
     for (var i=0; i<patch.nodeList.length; i++) {
       maxNodeId = Math.max(maxNodeId, patch.nodeList[i].id);
     }
-    
+
     if (!selector) {
       thatWin.window.document.title = p.nodename;
       root = d3.select(thatWin.window.document.body);
     }
     else
       root = d3.select($(selector).get(0));
-    
+
     if (!selector) {
       $('body', thatWin.window.document).on('copy', function(e) {
         var $patch = $('<PATCH>');
@@ -338,12 +340,12 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         xml = xml.replace(/<\/pin>/g, "\n  </PIN>");
         xml = xml.replace(/<lonk/g, "\n  <LINK");
         xml = xml.replace(/<\/lonk>/g, "\n  </LINK>");
-        
+
         e.originalEvent.clipboardData.setData("text/plain", xml);
         e.preventDefault();
         return false;
       });
-      
+
       var mouseX = 0;
       var mouseY = 0;
       $('body', thatWin.window.document).mousemove(function(e) {
@@ -355,7 +357,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         if (!xml.match(/^<!DOCTYPE PATCH/))
           return false;
         $patch = $(xml);
-        
+
         var boundsLeft = undefined;
         var boundsTop = undefined;
         $patch.find('node bounds').each(function() {
@@ -366,7 +368,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           if (!boundsTop || top<boundsTop)
             boundsTop = top;
         });
-        
+
         var oldNewNodeIdMap = {};
         $patch.find('node').each(function() {
           maxNodeId++;
@@ -385,10 +387,10 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           $(this).attr("srcnodeid", oldNewNodeIdMap[fromNodeId]);
           $(this).attr("dstnodeid", oldNewNodeIdMap[toNodeId]);
         });
-        
+
         var xml = $patch.wrapAll('<d></d>').parent().html();
         editor.update(patch, xml);
-        
+
         resetSelection();
         var newNodeIDs = _(oldNewNodeIdMap).map(function(node_id) { return node_id});
         chart.selectAll('.vvvv-node').each(function(node) {
@@ -399,18 +401,18 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         })
       });
     }
-    
+
     chart = root
     .append('svg:svg')
       .attr('class','chart')
       .attr('width', Math.max(patch.windowWidth, patch.boundingBox.width))
       .attr('height', Math.max(patch.windowHeight, patch.boundingBox.height))
-      
+
     var background = chart.append('svg:rect')
     .attr('class','background')
     .attr('width', Math.max(patch.windowWidth, patch.boundingBox.width))
     .attr('height', Math.max(patch.windowHeight, patch.boundingBox.height))
-    
+
     if (!selector) {
       chart.on('mousemove', function() {
         if (thatWin.state==UIState.Connecting) {
@@ -439,12 +441,12 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         else if (thatWin.state==UIState.AreaSelecting) {
           selectionBB.x2 = d3.event.pageX;
           selectionBB.y2 = d3.event.pageY;
-            
+
           chart.select('.selection-area')
             .attr('transform', 'translate('+Math.min(selectionBB.x1, selectionBB.x2)+', '+Math.min(selectionBB.y1, selectionBB.y2)+')')
             .attr('width', Math.abs(selectionBB.x2 - selectionBB.x1))
             .attr('height', Math.abs(selectionBB.y2 - selectionBB.y1))
-          
+
           resetSelection();
           chart.selectAll('.vvvv-node').each(function(d) {
             var bounds = {x: [d.x, d.x + d.getWidth()], y: [d.y, d.y + d.getHeight()]};
@@ -503,7 +505,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         $nodeselection.append($nodeselectionlist);
         $nodeselection.css('left', x);
         $nodeselection.css('top', y);
-        
+
         $('body', thatWin.window.document).append($nodeselection)
         $nodeselection.find('input').bind('paste', function(e) {
           e.stopPropagation();
@@ -535,15 +537,15 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           }
           filterNodes();
         });
-        
+
         function tryAddNode() {
           var filtertext = $nodeselection.find('#node_filter').val();
           var nodename = $nodeselection.find('#new_node option:selected').val();
           var filename = "";
-          
+
           if (!nodename && (filtertext.match(/\.fx$/) || filtertext.match(/\.v4p$/)) )  // if no option from the dropdown matches
             nodename = filtertext;
-          
+
           if (nodename) {
             var match;
             // ./some/path/to/SomeShader.fx with path
@@ -560,14 +562,14 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
               nodename = filtertext;
               filename = filtertext;
             }
-            
+
             maxNodeId++;
             var cmd = "<PATCH>";
             cmd += "<NODE componentmode='Hidden' id='"+maxNodeId+"' nodename='"+nodename+"' systemname='"+nodename+"' "+(filename!=""?"filename='"+filename+"'":"")+">";
             cmd += "<BOUNDS type='Node' left='"+x*15+"' top='"+y*15+"' width='100' height='100'/>";
             cmd += "</NODE>";
             editor.update(patch, cmd);
-            
+
             $nodeselection.remove();
           }
           else {
@@ -578,7 +580,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             cmd += "<PIN pinname='Input String' values='|"+filtertext+"|'/>";
             cmd += "</NODE>";
             editor.update(patch, cmd);
-            
+
             $nodeselection.remove();
           }
         }
@@ -590,7 +592,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         thatWin.state = UIState.AreaSelecting;
         selectionBB.x1 = selectionBB.x2 = d3.event.pageX+1;
         selectionBB.y1 = selectionBB.y2 = d3.event.pageY+1;
-        
+
         chart.append('svg:rect')
           .attr('class', 'selection-area')
           .attr('stroke', '#000')
@@ -600,10 +602,10 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           .attr('transform', 'translate('+selectionBB.x1+', '+selectionBB.y1+')')
           .attr('width', 0)
           .attr('height', 0)
-          
+
         resetSelection();
       })
-      
+
       background.on('click', function() {
         thatWin.state = UIState.Idle;
         $('.resettable', thatWin.window.document).remove();
@@ -611,7 +613,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         resetSelection();
         linkStart = undefined;
       })
-    
+
       // set modifier keys
       function setModifierKeys(e) {
         modKeyPressed.CTRL = e.ctrlKey;
@@ -620,7 +622,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
       }
       $(thatWin.window.document).keydown(setModifierKeys);
       $(thatWin.window.document).keyup(setModifierKeys);
-      
+
       $(thatWin.window.document).keydown(function(e) {
         // DELETE key
         if (e.which==46 && selectedNodes.length>0) {
@@ -640,7 +642,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             })
           }
           cmd += "</PATCH>";
-          
+
           editor.update(patch, cmd);
           selectedNodes = [];
         }
@@ -671,7 +673,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           return false;
         }
       })
-    
+
       $(thatWin.window).resize(function() {
         patch.windowWidth = $(this).width();
         patch.windowHeight = $(this).height();
@@ -680,9 +682,9 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         patch.afterUpdate();
       })
     }
-    
+
     thatWin.drawComplete();
-    
+
     //graph.afterEvaluate = this.redraw;
     patch.afterUpdate = function() {
       thatWin.drawComplete();
@@ -698,33 +700,33 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
       });
     }
   }, 1000);
-  
+
   this.close = function() {
     this.window.close();
   }
-  
+
   this.drawComplete = function() {
     if (nodes)
       nodes.remove();
     if (links)
       links.remove();
-    
+
     if (!selector && (patch.windowWidth != $(thatWin.window).width() || patch.windowHeight != $(thatWin.window).height()))
       thatWin.window.resizeTo(patch.windowWidth, patch.windowHeight);
-      
+
     chart
       .attr('width', Math.max(patch.windowWidth, patch.boundingBox.width))
       .attr('height', Math.max(patch.windowHeight, patch.boundingBox.height))
-      
+
     chart.selectAll('.background')
       .attr('width', Math.max(patch.windowWidth, patch.boundingBox.width))
       .attr('height', Math.max(patch.windowHeight, patch.boundingBox.height))
-      
+
     var link_group = chart.append('svg:g')
       .attr('class', 'link-group');
-    
+
     // NODES
-      
+
     nodes = chart.selectAll('g.vvvv-node')
       .data(patch.nodeList)
       .enter().append('svg:g')
@@ -739,7 +741,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         })
         .attr('id', function(d) { return 'vvvv-node-'+d.id})
         .attr('transform', function(d) { return 'translate('+d.x+','+d.y+')' })
-       
+
     nodes.append('svg:rect')
       .attr('class', 'vvvv-node-background')
       .attr('height', function(d) { return d.getHeight(); })
@@ -752,23 +754,23 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         else
           return '#cdcdcd';
       })
-    
+
     nodes.append('svg:rect')
       .attr('class', 'vvvv-node-pinbar')
       .attr('height', function (d) { return d.isIOBox? 2 : 4 })
       .attr('fill', function(d) { return d.isIOBox? "#dddddd" : "#9a9a9a"; })
       .attr('width', function(d) { return d.getWidth(); })
-      
+
     nodes.append('svg:rect')
       .attr('class', 'vvvv-node-pinbar')
       .attr('y',function(d) { return d.isIOBox? d.getHeight() -2 : d.getHeight()-4; })
       .attr('height', function (d) { return d.isIOBox? 2 : 4 })
       .attr('fill', function(d) { return d.isIOBox? "#dddddd" : "#9a9a9a"; })
       .attr('width', function(d) { return d.getWidth(); })
-      
+
     nodes.append('svg:g')
       .attr('class', 'descriptive-name-bg')
-      
+
     nodes.append('svg:text')
       .text(function(d) { return (d.invisiblePins["Descriptive Name"]) ? d.invisiblePins["Descriptive Name"].getValue(0) : null })
       .attr('class', 'vvvv-node-descriptive-name')
@@ -778,7 +780,17 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
       .attr('font-size', 10)
       .attr('font-family', 'Lucida Sans Unicode')
       .attr('fill', 'white')
-      
+
+    nodes.append('svg:text')
+      .text(function(d) { return (d.invisiblePins["Node Name"] && d.nodename=="DefineNode (System)") ? d.invisiblePins["Node Name"].getValue(0) : null })
+      .attr('class', 'vvvv-node-descriptive-name')
+      .attr('shape-rendering', 'crispEdges')
+      .attr('dy', function(d) { return d.getHeight()+12 })
+      .attr('dx', 2)
+      .attr('font-size', 10)
+      .attr('font-family', 'Lucida Sans Unicode')
+      .attr('fill', 'blue')
+
     nodes.selectAll('g.descriptive-name-bg')
       .append('svg:rect')
         .attr('fill', function(d) {
@@ -789,7 +801,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         .attr('y', function(d) { return d.getHeight() })
         .attr('width', 5)
         .attr('height', 14)
-      
+
     nodes.each(function(d) {
       if (d.isIOBox && VVVV.PinTypes[d.IOBoxInputPin().typeName].makeLabel) {
         VVVV.PinTypes[d.IOBoxInputPin().typeName].makeLabel(this, d);
@@ -804,7 +816,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
               .attr('height', d.getHeight()/rowCount - 4)
               .attr('y', j*12 + 2)
               .attr('fill', 'rgba(0,0,0,0)');
-            
+
             if (!selector) {
               l.on('contextmenu', function(d) {
                 if (d.IOBoxInputPin().getValue(0)!=undefined && !d.IOBoxInputPin().isConnected()) {
@@ -840,9 +852,9 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             .attr('font-family', 'Lucida Sans Unicode')
       }
     });
-        
+
     // INPUT PINS
-      
+
     inputPins = nodes.selectAll('g.vvvv-input-pin')
       .data(function(d) {
         if (d.isSubpatch)
@@ -862,7 +874,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           //  d.x = d.node.getWidth() - d.x - 4;
           return 'translate('+d.x+', 0)';
         })
-        
+
     inputPins.append('svg:rect')
       .attr('width', 4)
       .attr('height', 4)
@@ -875,7 +887,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             .attr('height', 4)
             .attr('fill', 'rgba(0,0,0,1)')
             .attr('y', -4)
-            
+
           d3.select(this).append('svg:text')
             .text(function(d) {
               if (d.getSliceCount()>1)
@@ -893,7 +905,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         chart.selectAll('#vvvv-node-'+d.node.id+' g.vvvv-input-pin text').remove();
         chart.selectAll('#vvvv-node-'+d.node.id+' g.vvvv-input-pin rect.vvvv-input-pin-highlight').remove();
       })
-      
+
     outputPins = nodes.selectAll('g.vvvv-output-pin')
       .data(function(d) { return _(d.outputPins).map(function(p,k) { return p }); })
       .enter().append('svg:g')
@@ -908,7 +920,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           //  d.x = d.node.getWidth() - d.x - 4;
           return 'translate('+d.x+', '+d.y+')';
         });
-        
+
     outputPins.append('svg:rect')
       .attr('width', 4)
       .attr('height', 4)
@@ -921,12 +933,12 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             .attr('height', 4)
             .attr('fill', 'rgba(0,0,0,1)')
             .attr('y', -4)
-          
+
           if (d.values.code) {
             var f = new Function("patch", d.generateStaticCode(false));
             f(d.node.parentPatch);
           }
-            
+
           d3.select(this).append('svg:text')
             .text(function(d) {
               if (d.getSliceCount()>1)
@@ -944,13 +956,13 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         chart.selectAll('#vvvv-node-'+d.node.id+' g.vvvv-output-pin text').remove();
         chart.selectAll('#vvvv-node-'+d.node.id+' g.vvvv-output-pin rect.vvvv-output-pin-highlight').remove();
       })
-      
-      
+
+
     links = link_group.selectAll('g.vvvv-link')
       .data(patch.linkList)
       .enter().append('svg:g')
         .attr('class', 'vvvv-link')
-    
+
     links.append('svg:line')
       .attr('stroke', 'rgba(0, 0, 0, 0)')
       .attr('stroke-width', 4)
@@ -958,7 +970,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
       .attr('y1', function(d) { return d.fromPin.y + d.fromPin.node.y + 4 + .5 })
       .attr('x2', function(d) { return d.toPin.x + d.toPin.node.x + 2 + .5 })
       .attr('y2', function(d) { return d.toPin.y + d.toPin.node.y + .5 });
-      
+
     links.append('svg:line')
       .attr('stroke', '#000')
       .attr('stroke-width', 1)
@@ -966,14 +978,14 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
       .attr('y1', function(d) { return d.fromPin.y + d.fromPin.node.y + 4 + .5 })
       .attr('x2', function(d) { return d.toPin.x + d.toPin.node.x + 2 + .5 })
       .attr('y2', function(d) { return d.toPin.y + d.toPin.node.y + .5 });
-    
+
     // set descriptive name widths after rendering
     $('.descriptive-name-bg rect', thatWin.window.document).each(function() {
       $(this, thatWin.window.document).attr('width', $(this, thatWin.window.document).parent().next().get(0).getBBox().width+4);
     })
-    
+
     // Editing Functionality starts here ...
-    
+
     if (!selector) {
       chart.selectAll('g.vvvv-input-pin')
         .on('contextmenu', function(d, i) {
@@ -990,12 +1002,12 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
               VVVV.PinTypes[d.typeName].openInputBox(thatWin, $inputbox, d, 0);
             }
           }
-          
+
           d3.event.stopPropagation();
           d3.event.preventDefault();
           return false;
         })
-      
+
       chart.selectAll('g.vvvv-input-pin, g.vvvv-output-pin')
       .on('click', function(d, i) {
         if (thatWin.state!=UIState.Connecting) {
@@ -1010,12 +1022,12 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             .attr('y1', d.y + d.node.y + 2 + .5)
             .attr('x2', d.x + d.node.x + 2 + .5)
             .attr('y2', d.y + d.node.y + 2 + .5)
-          
+
           if (linkStart.direction==VVVV.PinDirection.Output)
             var targetDir = 'input';
           else
             var targetDir = 'output';
-          
+
           var upnodes = [];
           function getAllUpstreamNodes(node) {
             var u = node.getUpstreamNodes();
@@ -1025,7 +1037,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
                 getAllUpstreamNodes(u[j]);
               }
             }
-            
+
             return false;
           }
           if (!linkStart.node.delays_output)
@@ -1047,7 +1059,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
               .attr('y', function(d) { return d.direction==VVVV.PinDirection.Input ? -3 : 3})
         }
         else {
-          
+
           if (linkStart.direction==VVVV.PinDirection.Input) {
             var srcPin = d;
             var dstPin = linkStart;
@@ -1056,7 +1068,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             var srcPin = linkStart;
             var dstPin = d;
           }
-          
+
           if ($(this).find('.vvvv-connection-highlight').length==1) {
             var cmd = "<PATCH>";
             _(dstPin.links).each(function(l) {
@@ -1064,9 +1076,9 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             });
             cmd += "<LINK createme='pronto' srcnodeid='"+srcPin.node.id+"' srcpinname='"+srcPin.pinname+"' dstnodeid='"+dstPin.node.id+"' dstpinname='"+dstPin.pinname+"'/>";
             cmd += "</PATCH>";
-            
+
             editor.update(patch, cmd);
-            
+
             chart.select('.vvvv-link.current-link').remove();
             chart.select('.vvvv-connection-highlight').remove();
             thatWin.state = UIState.Idle;
@@ -1078,15 +1090,15 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
       .on('mousedown', function() {
         d3.event.stopPropagation();
       })
-      
+
       chart.selectAll('g.vvvv-link')
         .on("contextmenu", function(d) {
           if (thatWin.state == UIState.Idle)
             editor.update(patch, "<PATCH><LINK deleteme='pronto' srcnodeid='"+d.fromPin.node.id+"' srcpinname='"+d.fromPin.pinname+"' dstnodeid='"+d.toPin.node.id+"' dstpinname='"+d.toPin.pinname+"'/></PATCH>")
-          
+
           d3.event.preventDefault();
         })
-        
+
       nodes
         .on('mousedown', function(d) {
           $('.resettable', thatWin.window.document).remove();
@@ -1118,20 +1130,20 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           return false;
         })
     }
-    
+
   }
-  
+
 }
 
 VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
-  
+
   this.win = window.open(location.protocol+'//'+location.host+(VVVV.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVV.Root+'/inspektor.html', 'inspektor', "location=no, width=250, height=600, toolbar=no" );
   var node;
   var pin;
   insw = this.win;
-  
+
   var that = this;
-  
+
   function showOverview() {
     pin = undefined;
     $(that.win.document).find('#pins, #values').empty()
@@ -1151,11 +1163,11 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
       addPin(p);
     })
   }
-  
+
   function addPin(p) {
     var $pinlink = $('<a class="row pin" href="#">'+p.pinname+'</a>');
     $(that.win.document).find('#pins').append($pinlink);
-    
+
     $pinlink.click(function(e) {
       $(that.win.document).find('a.pin.active').removeClass('active');
       $(this).addClass('active');
@@ -1164,7 +1176,7 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
       e.preventDefault();
       return false;
     })
-    
+
     if (VVVV.PinTypes[p.typeName].openInputBox && p.direction!=VVVV.PinDirection.Output && !p.isConnected() && p.getValue(0)!=undefined) {
       var $iobox = $('<div class="row value"><div style="height:100%">'+p.getValue(0).toString().replace(/</g, '&lt;').replace(/>/g, '&gt;')+'</div></div>');
       $iobox.find('div').click(function() {
@@ -1178,11 +1190,11 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
     }
     $(that.win.document).find('#values').append($iobox);
   }
-  
+
   function showAllSlices(p) {
     var pinChanged = (pin!=p);
     pin = p;
-    
+
     var sliceCount = p.getSliceCount();
     var $sliceCountBox = $('<div class="row heading"><input type="text" value="'+sliceCount+'"/ size="3"/> Slices</div>');
     if (p.direction!=VVVV.PinDirection.Input)
@@ -1199,11 +1211,11 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
       }
       pin.setSliceCount(newSliceCount);
       pin.node.parentPatch.afterUpdate();
-      
+
       e.preventDefault();
       return false;
     })
-    
+
     var i = 0;
     for (i=0; i<sliceCount; i++) {
       var $currentElement = $(that.win.document).find('#values .row').eq(i+1);
@@ -1235,7 +1247,7 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
       e.eq(i).remove();
     }
   }
-  
+
   this.update = function() {
     if (!node)
       return;
@@ -1244,28 +1256,28 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
     else
       showOverview();
   }
-  
+
   this.setNode = function(n) {
     node = n;
     showOverview();
   }
-  
+
   this.close = function() {
     this.win.close();
   }
-  
+
 }
 
 VVVV.Editors.BrowserEditor.Interface = function() {
-  
+
   var patchWindows = [];
   var patches = {};
   this.inspector = undefined;
-  
+
   function confirmLeave() {
     return "Are you sure you want to leave? Unsaved changes in your patches will be lost.";
   }
-  
+
   this.enable = function(p, opts) {
     opts = opts || {}
     this.addPatch(p);
@@ -1273,13 +1285,13 @@ VVVV.Editors.BrowserEditor.Interface = function() {
     if (!opts.selector) {
       var that = this;
       $(window).bind('beforeunload', confirmLeave);
-      
+
       $(window).unload(function() {
         that.disable();
       })
-      
+
       this.openInspector(VVVV.Root);
-      
+
       if (patchWindows[0].window) {
         if (opts && opts.success)
           opts.success();
@@ -1290,7 +1302,7 @@ VVVV.Editors.BrowserEditor.Interface = function() {
       }
     }
   }
-  
+
   this.openInspector = function(VVVVRoot, node) {
     if (this.inspector)
       return;
@@ -1301,7 +1313,7 @@ VVVV.Editors.BrowserEditor.Interface = function() {
       that.inspector = undefined;
     })
   }
-  
+
   var patch_signatures = [];
   this.addPatch = function(p) {
     var patch_signature = p.id;
@@ -1322,7 +1334,7 @@ VVVV.Editors.BrowserEditor.Interface = function() {
       this.addPatch(subpatches[i]);
     }
   }
-  
+
   this.removePatch = function(p) {
     var subpatches = p.getSubPatches();
     for (var i=0; i<subpatches.length; i++) {
@@ -1334,11 +1346,11 @@ VVVV.Editors.BrowserEditor.Interface = function() {
       delete patches[path];
     console.log(patches);
   }
-  
+
   this.openPatch = function(p, selector) {
     patchWindows.push(new VVVV.Editors.BrowserEditor.PatchWindow(p, this, selector));
   }
-  
+
   this.update = function(node, cmd) {
     var path = VVVV.Helpers.prepareFilePath(node.nodename, node.parentPatch)
     var n = patches[path].length;
@@ -1347,7 +1359,7 @@ VVVV.Editors.BrowserEditor.Interface = function() {
       patches[path][i].afterUpdate();
     }
   }
-  
+
   this.disable = function() {
     for (var i=0; i<patchWindows.length; i++) {
       patchWindows[i].close();
@@ -1356,7 +1368,7 @@ VVVV.Editors.BrowserEditor.Interface = function() {
       this.inspector.close();
     $(window).unbind('beforeunload', confirmLeave);
   }
-  
+
   this.save = function(nodename, xml) {
     var $dl = $("<a>save</a>");
     $('body').append($dl);
@@ -1365,12 +1377,12 @@ VVVV.Editors.BrowserEditor.Interface = function() {
     $dl[0].click();
     $dl.remove();
   }
-  
+
   this.sendUndo = function() {
-    
+
   }
-  
-  
+
+
 };
 
 // Convinience function to easily inject a patch into the page
