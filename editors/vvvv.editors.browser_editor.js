@@ -520,6 +520,8 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         function filterNodes(e) {
           $nodeselectionlist.empty();
           var filter = $nodeselection.find('#node_filter').val().toLowerCase();
+          if (filter!="")
+            $('.makro', thatWin.window.document).remove();
           var available_nodes = VVVV.NodeNames.concat(_(VVVV.ShaderCodeResources).map(function(s,k) { return k.replace("%VVVV%/effects/", ""); }));
           var matchingNodes = _(_(available_nodes).filter(function(n) { return VVVV.Helpers.translateOperators(n).toLowerCase().indexOf(filter)>=0 })).sortBy(function(n) { return n.toLowerCase().indexOf(filter);  });
           for (var i=0; i<matchingNodes.length; i++) {
@@ -589,7 +591,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
 
             $nodeselection.remove();
           }
-          $('.resettable', thatWin.window.document).remove();
+          $('.makro', thatWin.window.document).remove();
         }
         $nodeselection.find('#new_node').click(tryAddNode);
         
@@ -597,7 +599,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           .data(VVVV.Makros)
           .enter().append('svg:g')
             .attr('class', 'makro resettable')
-            .attr('transform', function(d, i) { return "translate("+(x-125+Math.floor(i%3)*85)+", "+(y-25-Math.floor(i/3)*25)+")"; })
+            .attr('transform', function(d, i) { return "translate("+(x-85-(i%2)*85)+", "+(y+Math.floor(i/2)*25)+")"; })
             .on('click', function(d) {
               var command = d.command.replace("{left}", x*15).replace("{top}", y*15).replace("{id}", ++maxNodeId);
               editor.update(patch, command);
@@ -609,7 +611,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         makros.append('svg:rect')
           .attr('width', 80)
           .attr('height', 20)
-          .attr('fill', '#888')
+          .attr('fill', '#AAA')
           
         makros.append('svg:text')
           .text(function(d) { return d.name })
