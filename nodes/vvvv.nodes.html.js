@@ -441,7 +441,7 @@ VVVV.Nodes.GetPositionHTML = function(id, graph) {
   };
 
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
-  var spaceIn = this.addInputPin("Space", ["Browser Pixels"], VVVV.PinTypes.Enum);
+  var spaceIn = this.addInputPin("Space", ["Document Pixels"], VVVV.PinTypes.Enum);
   spaceIn.enumOptions = ["Document Pixels", "Document [-1, +1]", "Parent Element Pixels"];
 
   var xOut = this.addOutputPin("X", [0], VVVV.PinTypes.Value);
@@ -457,8 +457,8 @@ VVVV.Nodes.GetPositionHTML = function(id, graph) {
     else
       pos = $(el).position();
     if (spaceIn.getValue(idx)==spaceIn.enumOptions[1]) {
-      pos.left = (pos.left/window.innerWidth) * 2.0 - 1.0;
-      pos.top = ((pos.top/window.innerHeight) * 2.0 - 1.0) * -1;
+      pos.left = (pos.left/window.outerWidth) * 2.0 - 1.0;
+      pos.top = ((pos.top/window.outerHeight) * 2.0 - 1.0) * -1;
     }
     xOut.setValue(idx, pos.left);
     yOut.setValue(idx, pos.top);
@@ -512,6 +512,68 @@ VVVV.Nodes.GetPositionHTML = function(id, graph) {
   }
 }
 VVVV.Nodes.GetPositionHTML.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: SetPosition (HTML)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.PositionHTML = function(id, graph) {
+  this.constructor(id, "Position (HTML)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var styleIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLStyle);
+  //var spaceIn = this.addInputPin("Space", ["Pixels"], VVVV.PinTypes.Enum);
+  //spaceIn.enumOptions = ["Pixels", "Document [-1, +1]"];
+  var absoluteIn = this.addInputPin("Absolute Position", [1], VVVV.PinTypes.Value);
+
+  var xIn = this.addInputPin("X", [0], VVVV.PinTypes.Value);
+  var yIn = this.addInputPin("Y", [0], VVVV.PinTypes.Value);
+  
+  var styleOut = this.addOutputPin("Style Out", [], VVVV.PinTypes.HTMLStyle);
+
+  var styles = [];
+
+  this.evaluate = function() {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+
+    for (var i=0; i<maxSpreadSize; i++) {
+      if (!styles[i]) {
+        styles[i] = new VVVV.Types.HTMLStyle();
+      }
+      styles[i].copy_properties(styleIn.getValue(i));
+      
+      if (absoluteIn.getValue(i)>=0.5) {
+        styles[i].style_properties['position'] = 'absolute';
+        styles[i].style_properties['left'] = xIn.getValue(i)+'px';
+        styles[i].style_properties['top'] = yIn.getValue(i)+'px';
+        delete styles[i].style_properties['margin-left'];
+        delete styles[i].style_properties['margin-right'];
+      }
+      else {
+        delete styles[i].style_properties['position'];
+        delete styles[i].style_properties['left'];
+        delete styles[i].style_properties['top']
+        styles[i].style_properties['margin-left'] = xIn.getValue(i)+'px';
+        styles[i].style_properties['margin-top'] = yIn.getValue(i)+'px';
+      }
+      
+      styleOut.setValue(i, styles[i]);
+    }
+    
+    styles.length = maxSpreadSize;
+    styleOut.setSliceCount(maxSpreadSize);
+  }
+}
+VVVV.Nodes.PositionHTML.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
