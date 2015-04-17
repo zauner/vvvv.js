@@ -1916,8 +1916,8 @@ VVVV.Core = {
 
     // bind the #-shortcuts
     function checkLocationHash() {
-      var match = window.location.hash.match('#([^\/]+)\/'+thisPatch.ressource+'$');
-      if (match) {
+      var match = window.location.hash.match('#([^\/]+)\/('+thisPatch.ressource+'|[0-9]+)$');
+      if (match && VVVV.Editors[match[1]] && (match[2]==thisPatch.ressource || VVVV.Patches[match[2]]==thisPatch || VVVV.Patches.length==match[2])) {
         console.log('launching editor ...');
         var ed = new VVVV.Editors[match[1]]();
         ed.enable(thisPatch);
