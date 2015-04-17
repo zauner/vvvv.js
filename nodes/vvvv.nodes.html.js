@@ -345,6 +345,7 @@ VVVV.Nodes.GroupHTML = function(id, graph) {
       for (var j=outPins[i].values.length-1; j>=sliceCount; j--) {
         outPins[i].values[j].element.remove();
       }
+      outPins[i].setSliceCount(sliceCount);
     }
   }
   
