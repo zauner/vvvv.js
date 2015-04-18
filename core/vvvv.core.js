@@ -1248,7 +1248,7 @@ VVVV.Core = {
             // load 3rd party libs, if required for this node
             if (VVVV.NodeLibrary[nodename.toLowerCase()].requirements) {
               _(VVVV.NodeLibrary[nodename.toLowerCase()].requirements).each(function(libname) {
-                if (VVVV.LoadedLibs[libname]===undefined)
+                if (VVVV.LoadedLibs[libname]===undefined) {
                   thisPatch.resourcesPending++; // pause patch evaluation
                   VVVV.loadScript(VVVV.ThirdPartyLibs[libname], function() {
                     thisPatch.resourcesPending--; // resume patch evaluation
@@ -1261,6 +1261,7 @@ VVVV.Core = {
                       ready_callback = undefined;
                     }
                   });
+                }
               });
             }
           }
