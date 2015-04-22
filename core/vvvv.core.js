@@ -1800,6 +1800,8 @@ VVVV.Core = {
         addSubGraphToRecipe(lostLoopRoots[i]);
       }
 
+      compiledCode = "try {\n"+compiledCode+"\n} catch (e) { console.error(e.message); console.log(e.stack); }";
+
       this.compiledFunc = new Function('patch', compiledCode);
       //console.log(this.compiledFunc.toString());
     }
