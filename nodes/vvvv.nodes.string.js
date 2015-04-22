@@ -206,7 +206,7 @@ VVVV.Nodes.AsValue = function(id, graph) {
     for (var i=0; i<maxSize; i++) {
       var inp = inputIn.getValue(i);
       if (/^\s*-?[0-9.e]+\s*$/.test(inp))
-        outputOut.setValue(i, inp);
+        outputOut.setValue(i, parseFloat(inp));
       else
         outputOut.setValue(i, defaultIn.getValue(i));
     }
