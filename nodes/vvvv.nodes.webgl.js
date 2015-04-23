@@ -6,7 +6,11 @@
 (function($) {
 
 /** A hash table of {@VVVV.Types.ShaderCodeResource} objects, indexed with the name/path of the shader code resource */
-VVVV.ShaderCodeResources = {};
+VVVV.ShaderCodeResources = {
+  "%VVVV%/effects/PhongDirectional.vvvvjs.fx": undefined,
+  "%VVVV%/effects/GouraudDirectional.vvvvjs.fx": undefined,
+  "%VVVV%/effects/Constant.vvvvjs.fx": undefined,
+};
 
 /**
  * Stores and caches shader code, which comes from loaded .vvvvjs.fx files or a DefineEffect node
