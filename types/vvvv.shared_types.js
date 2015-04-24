@@ -63,4 +63,13 @@ VVVV.Types.Color = function(str) {
   }
 }
 
+VVVV.Types.CanvasGraphics = {
+  typeName: "CanvasGraphics",
+  reset_on_disconnect: true,
+  defaultValue: function() {
+    return "NONE";
+  }
+  
+}
+
 }(vvvvjs_jquery));

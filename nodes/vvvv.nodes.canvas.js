@@ -956,7 +956,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], VVVV.PinTypes.Value);
   var viewIn = this.addInputPin("View", [], VVVV.PinTypes.Transform);
 
-  var canvasOut = this.addOutputPin("Canvas Out", []);
+  var canvasOut = this.addOutputPin("Canvas Out", [], VVVV.PinTypes.CanvasGraphics);
 
   var ctx;
   var canvasWidth;

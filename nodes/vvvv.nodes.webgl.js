@@ -580,13 +580,14 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['Using WebGL renderer as source doesnt work correctly in Chrome.']
+    compatibility_issues: []
   };
 
   var sourceIn = this.addInputPin("Source", [], VVVV.PinTypes.WebGlResource);
   var outputOut = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
 
   var texture;
+  var warningIssued = false;
 
   this.evaluate = function() {
     if (!this.renderContexts) return;
@@ -609,6 +610,9 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
         outputOut.setValue(0, source);
       }
       else {
+        if (!warningIssued)
+          console.warn("Using DX9Texture with Canvas Renderer input is deprecated and will be removed. Use CanvasTexture (EX9.Texture) instead.");
+        warningIssued = true;
         if (texture==undefined) {
           texture = gl.createTexture();
           texture.context = gl;
@@ -640,6 +644,80 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
 
 }
 VVVV.Nodes.DX9Texture.prototype = new VVVV.Core.Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: CanvasTexture (EX9.Texture)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.CanvasTextureWebGl = function(id, graph) {
+  this.constructor(id, "CanvasTexture (EX9.Texture)", graph);
+
+  this.auto_nil = false;
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var sourceIn = this.addInputPin("Source", [], VVVV.PinTypes.CanvasGraphics);
+  var outputOut = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
+
+  var texture;
+
+  this.evaluate = function() {
+    if (!this.renderContexts) return;
+    var gl = this.renderContexts[0];
+    if (!gl)
+      return;
+
+    if (this.contextChanged && texture) {
+      texture.context.deleteTexture(texture);
+      texture = undefined;
+    }
+
+    if (sourceIn.isConnected()) {
+      var source = sourceIn.getValue(0);
+      if (!source)
+        return;
+      if ( (source.width & (source.width-1)) != 0 || (source.height & (source.height-1)) != 0)
+        console.log("Warning: Source renderer's width/height is not a power of 2. DX9Texture will most likely not work.");
+      if (texture==undefined) {
+        texture = gl.createTexture();
+        texture.context = gl;
+      }
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+
+      outputOut.setValue(0, texture);
+    }
+    else {
+      delete texture;
+      gl.deleteTexture(texture);
+      outputOut.setValue(0, undefined);
+    }
+
+    this.contextChanged = false;
+
+  }
+
+  this.destroy = function() {
+    if (texture)
+      texture.context.deleteTexture(texture);
+  }
+
+}
+VVVV.Nodes.CanvasTextureWebGl.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
