@@ -532,7 +532,7 @@ VVVV.Nodes.PositionHTML = function(id, graph) {
     compatibility_issues: []
   };
 
-  var styleIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLStyle);
+  var styleIn = this.addInputPin("Style In", [], VVVV.PinTypes.HTMLStyle);
   //var spaceIn = this.addInputPin("Space", ["Pixels"], VVVV.PinTypes.Enum);
   //spaceIn.enumOptions = ["Pixels", "Document [-1, +1]"];
   var absoluteIn = this.addInputPin("Absolute Position", [1], VVVV.PinTypes.Value);
@@ -576,6 +576,58 @@ VVVV.Nodes.PositionHTML = function(id, graph) {
   }
 }
 VVVV.Nodes.PositionHTML.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Transform (HTML)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.TransformHTML = function(id, graph) {
+  this.constructor(id, "Transform (HTML)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var styleIn = this.addInputPin("Style In", [], VVVV.PinTypes.HTMLStyle);
+  var transformIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
+
+  var styleOut = this.addOutputPin("Style Out", [], VVVV.PinTypes.HTMLStyle);
+
+  var styles = [];
+
+  this.evaluate = function() {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+    var str, j, t;
+
+    for (var i=0; i<maxSpreadSize; i++) {
+      if (!styles[i]) {
+        styles[i] = new VVVV.Types.HTMLStyle();
+      }
+      styles[i].copy_properties(styleIn.getValue(i));
+
+      str = 'matrix3d(';
+      t = transformIn.getValue(i);
+      for (j=0; j<15; j++) {
+        str += t[j]+",";
+      }
+      str += t[j]+")";
+
+      styles[i].style_properties['transform'] = str;
+
+      styleOut.setValue(i, styles[i]);
+    }
+
+    styles.length = maxSpreadSize;
+    styleOut.setSliceCount(maxSpreadSize);
+  }
+}
+VVVV.Nodes.TransformHTML.prototype = new VVVV.Core.Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -855,7 +907,7 @@ var style_node_definitions = [
   {name: "Padding", pins: [{name: "padding-left", value: 1, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, {name: "padding-top", value: 1, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, {name: "padding-right", value: 1, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, {name: "padding-bottom", value: 1, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, ]},
   {name: "Margin", pins: [{name: "margin-left", value: 1, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, {name: "margin-top", value: 1, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, {name: "margin-right", value: 1, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, {name: "margin-bottom", value: 1, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, ]},
   {name: "Font", pins: [{name: "color", type: VVVV.PinTypes.Color, is_property: true}, {name: "font-family", value: "inherit", type: VVVV.PinTypes.String, is_property: true}, {name: "font-weight", value: "inherit", type: VVVV.PinTypes.Enum, is_property: true, enumOptions: ["inherit", "normal", "light", "bold"]}, {name: "text-decoration", value: "inherit", type: VVVV.PinTypes.Enum, is_property: true, enumOptions: ["inherit", "none", "underline", "line-through"]}]},
-  {name: "FontSize", pins: [{name: "font-size", value: 12, unit: "px", type: VVVV.PinTypes.Value, is_property: true}]}
+  {name: "FontSize", pins: [{name: "font-size", value: 12, unit: "px", type: VVVV.PinTypes.Value, is_property: true}]},
 ]
 
 style_node_definitions.forEach(function(style_node_def) {
