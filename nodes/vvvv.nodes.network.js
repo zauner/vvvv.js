@@ -73,6 +73,7 @@ VVVV.Nodes.HTTPGet = function(id, graph) {
       $.ajax({
         url: urlIn.getValue(i),
         type: 'get',
+        dataType: 'text',
         success: function(response, status, xhr) {
           body = response;
           status = xhr.status;
