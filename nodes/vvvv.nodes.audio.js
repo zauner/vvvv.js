@@ -143,6 +143,10 @@ function WebAudioNode(id, name, graph) {
         var apiNode = audioContext.createBiquadFilter(arg);
       else if(id == 'MediaStreamSource')
         var apiNode = audioContext.createMediaStreamSource(arg);
+      else if(id == 'Convolver')
+        var apiNode = audioContext.createConvolver(arg);
+      else if(id == 'WaveShaper')
+        var apiNode = audioContext.createWaveShaper(arg);
       else //this is the normal code
         var apiNode = audioContext['create'+id].apply(audioContext, arguments);
       
