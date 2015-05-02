@@ -728,6 +728,47 @@ VVVV.Nodes.AddAudio.prototype = new WebAudioNode('Gain');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Add (HTML5 Audio Spectral)
+ Author(s): 'Lukas Winter'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.AddAudioSpectral = function(id, graph) {
+  WebAudioNode.call(this, id, 'Add (HTML5 Audio Spectral)', graph);
+  
+  this.meta = {
+    authors: ['Lukas Winter'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var that = this;
+  var apiNode;
+  
+  this.createAPISingleNode = function()
+  {
+    if(!apiNode)
+      apiNode = audioContext.createGain();
+    return apiNode;
+  };
+  
+  this.initialize = function()
+  {
+    this.createAPIMultiNode(1);
+    this.createAudioPins();
+  };
+  
+  this.evaluate = function() {
+    
+    this.updateAudioConnections();
+    this.audioOutputPins[0].setSliceCount(1);
+  }
+}
+VVVV.Nodes.AddAudioSpectral.prototype = new WebAudioNode('Gain');
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Convolver (HTML5 Audio)
  Author(s): 'Lukas Winter'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
