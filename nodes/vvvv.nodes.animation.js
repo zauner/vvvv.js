@@ -905,4 +905,110 @@ VVVV.Nodes.Counter = function(id, graph) {
 }
 VVVV.Nodes.Counter.prototype = new VVVV.Core.Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Counter (Animation)
+ Author(s): Lukas Winter
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.ADSR = function(id, graph) {
+  this.constructor(id, "ADSR (Animation)", graph);
+  
+  this.meta = {
+    authors: ['Lukas Winter'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  this.auto_evaluate = true;
+  
+  var inputIn = this.addInputPin("Input", [0], VVVV.PinTypes.Value);
+  var attackTimeIn = this.addInputPin("Attack Time", [0.1], VVVV.PinTypes.Value);
+  var decayTimeIn = this.addInputPin("Decay Time", [0.1], VVVV.PinTypes.Value);
+  var sustainLevelIn = this.addInputPin("Sustain Level", [0.5], VVVV.PinTypes.Value);
+  var releaseTimeIn = this.addInputPin("Release Time", [0.5], VVVV.PinTypes.Value);
+  
+  var outputOut = this.addOutputPin("Output", [0], VVVV.PinTypes.Value);
+  
+  //create a little state machine for each slice
+  var phase = ['idle'];
+  var tOld = new Date().getTime();
+  var inputValues = [0];
+  var oldInputValues = [0];
+  
+  this.evaluate = function() { 
+    var maxSize = this.getMaxInputSliceCount();
+    var t = new Date().getTime();
+    var dt = t - tOld;
+    inputValues = inputIn.getValue(0, maxSize);
+    if(!inputValues.length) inputValues = [inputValues];
+    outputOut.setSliceCount(maxSize);
+    
+    for(var i = 0; i < maxSize; i++)
+    {
+      if(inputValues[i] > 0.5 && oldInputValues[i] < 0.5)
+        phase[i] = 'attack';
+      var held = inputValues[i];
+      var level = outputOut.getValue(i);
+      var attackTime = attackTimeIn.getValue(i) * 1000;
+      var decayTime = decayTimeIn.getValue(i) * 1000;
+      var sustainLevel = sustainLevelIn.getValue(i);
+      var releaseTime = releaseTimeIn.getValue(i) * 1000;
+      
+      //console.log(inputValues[i], phase[i]);
+      switch(phase[i])
+      {
+        case 'attack':
+        {
+          level += dt / attackTime;
+          if(level >= 1)
+          {
+            level = 1;
+            phase[i] = held ? 'decay' : 'release';
+          }
+        }
+        break;
+        case 'decay':
+        {
+          level -= dt / decayTime;
+          if(!held)
+          {
+            phase[i] = 'release';
+          }
+          else if(level <= sustainLevel)
+          {
+            level = sustainLevel;
+            phase[i] = 'sustain';
+          }
+        }
+        break;
+        case 'sustain':
+        {
+          if(!held)
+            phase[i] = 'release';
+        }
+        break;
+        case 'release':
+        {
+          level -= dt / releaseTime * sustainLevel;
+          if(level <= 0)
+          {
+            level = 0;
+            phase[i] = 'idle';
+          }
+        }
+        break;
+      }
+      outputOut.setValue(i, level);
+    }
+    
+    tOld = t;
+    oldInputValues = inputValues;
+  }
+}
+VVVV.Nodes.ADSR.prototype = new VVVV.Core.Node();
+
 }(vvvvjs_jquery));
