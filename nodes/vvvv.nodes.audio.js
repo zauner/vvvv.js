@@ -143,6 +143,10 @@ function WebAudioNode(id, name, graph) {
         var apiNode = audioContext.createBiquadFilter(arg);
       else if(id == 'MediaStreamSource')
         var apiNode = audioContext.createMediaStreamSource(arg);
+      else if(id == 'Convolver')
+        var apiNode = audioContext.createConvolver(arg);
+      else if(id == 'WaveShaper')
+        var apiNode = audioContext.createWaveShaper(arg);
       else //this is the normal code
         var apiNode = audioContext['create'+id].apply(audioContext, arguments);
 
@@ -725,6 +729,47 @@ VVVV.Nodes.AddAudio = function(id, graph) {
   }
 }
 VVVV.Nodes.AddAudio.prototype = new WebAudioNode('Gain');
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Add (HTML5 Audio Spectral)
+ Author(s): 'Lukas Winter'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.AddAudioSpectral = function(id, graph) {
+  WebAudioNode.call(this, id, 'Add (HTML5 Audio Spectral)', graph);
+  
+  this.meta = {
+    authors: ['Lukas Winter'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  
+  var that = this;
+  var apiNode;
+  
+  this.createAPISingleNode = function()
+  {
+    if(!apiNode)
+      apiNode = audioContext.createGain();
+    return apiNode;
+  };
+  
+  this.initialize = function()
+  {
+    this.createAPIMultiNode(1);
+    this.createAudioPins();
+  };
+  
+  this.evaluate = function() {
+    
+    this.updateAudioConnections();
+    this.audioOutputPins[0].setSliceCount(1);
+  }
+}
+VVVV.Nodes.AddAudioSpectral.prototype = new WebAudioNode('Gain');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
