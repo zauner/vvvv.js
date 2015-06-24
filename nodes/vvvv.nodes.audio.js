@@ -5,8 +5,8 @@
 // This component was developed is (c) 2014 Lukas Winter, distributed under the MIT license.
 
 (function($) {
-  
-if (!AudioContext)
+
+if (!window.AudioContext)
   return;
 
 var debugID = 0;
@@ -34,7 +34,7 @@ var WebAudioOutputSlice = function WebAudioOutputSlice(srcApiNode, srcName)
 {
   this.srcApiNode = srcApiNode;
   this.srcName = srcName;
-  
+
   this.connections = [];
 }
 WebAudioOutputSlice.prototype =
@@ -42,7 +42,7 @@ WebAudioOutputSlice.prototype =
   connect: function(destApiNode, destName)
   {
     console.log("CONNECT ", this.srcApiNode, " OUTPUT ", this.srcName, "\n TO ", destApiNode, " INPUT ", destName);
-    
+
     if(typeof destName == "number")
       this.srcApiNode.connect(destApiNode, this.srcName, destName);
     else if(typeof destName == "string")
@@ -55,17 +55,17 @@ WebAudioOutputSlice.prototype =
     {
       console.log("EEEK!", typeof destName, destName);
     }
-    
+
     this.connections.push({destApiNode: destApiNode, destName: destName});
   },
-  
+
   disconnect: function(destApiNode, destName)
   {
     console.log("DISCONNECT ", this.srcApiNode, " OUTPUT ", this.srcName, "\n FROM ", destApiNode, " INPUT ", destName);
-    
+
     var that = this;
     this.srcApiNode.disconnect(this.srcName);
-    
+
     var indexToRemove = -1;
     this.connections.forEach(function(connection, i)
     {
@@ -82,13 +82,13 @@ WebAudioOutputSlice.prototype =
         }
       }
     });
-    
+
     if(indexToRemove != -1)
       this.connections.splice(indexToRemove, 1);
     else
       console.log("Warning: Connection removal bug detected!");
   },
-  
+
   toString: function()
   {
     return this.srcApiNode.constructor.name + ":" + this.srcName + " (" + this.srcApiNode.channelCount + "ch)";
@@ -145,7 +145,7 @@ function WebAudioNode(id, name, graph) {
         var apiNode = audioContext.createMediaStreamSource(arg);
       else //this is the normal code
         var apiNode = audioContext['create'+id].apply(audioContext, arguments);
-      
+
       apiNode['_id'] = debugID++;
       return apiNode;
     }
@@ -184,9 +184,9 @@ WebAudioNode.prototype.createAPIMultiNode = function(n)
       else
         thoseArgs.push(thisArg);
     });
-    
+
     this.apiMultiNode[i] = this.createAPISingleNode.apply(this.createAPISingleNode, thoseArgs);
-    
+
     this.audioOutputPins.forEach(function(pin)
     {
       pin.setValue(i, new WebAudioOutputSlice(that.apiMultiNode[i], pin.apiName));
@@ -234,11 +234,11 @@ WebAudioNode.prototype.createParamPins = function()
     {
       var name = key.replace(/([a-z^])([A-Z])/g, '$1 $2');
       name = name.charAt(0).toUpperCase() + name.slice(1);
-      
+
       var valuePin = this.addInputPin(name, [param.defaultValue], VVVV.PinTypes.Value);
       valuePin.apiName = key;
       this.paramPins.push(valuePin);
-      
+
       var modulationPin = this.addInputPin(name + " Modulation", [], VVVV.PinTypes.WebAudio);
       modulationPin.apiName = key;
       modulationPin.oldValue = [];
@@ -268,36 +268,36 @@ WebAudioNode.prototype.getAudioSliceCount = function()
 WebAudioNode.prototype.updateAudioConnections = function()
 {
   var that = this;
-  
+
   var n = this.getAudioSliceCount();
   var oldSliceCount = this.apiMultiNode.length;
-  
+
   this.resizeAPIMultiNode(n);
-  
+
   if(n != oldSliceCount)
     that.audioOutputPins.forEach(function(pin) { pin.setSliceCount(n) });
-  
+
   this.audioInputPins.concat(this.modulationPins).forEach( function(pin)
   {
     var i = n; //don't check this inputs connections by default
-    
+
     if(n != oldSliceCount)
       i = oldSliceCount; //check only new slices if slice count changed
-    
+
     if(pin.pinIsChanged())
       i = 0; //check all slices if some pin value changed
-    
+
     for(; i < n; i++)
     {
       var newSource = pin.getValue(i);
       var oldSource = pin.oldValue[i];
-      
+
       if(oldSource == newSource)
       {
         console.log("No change!");
         continue;
       }
-      
+
       if(oldSource && oldSource != "Unconnected Audio")
       {
         oldSource.disconnect(that.apiMultiNode[i], pin.apiName);
@@ -307,7 +307,7 @@ WebAudioNode.prototype.updateAudioConnections = function()
         console.log(newSource);
         newSource.connect(that.apiMultiNode[i], pin.apiName);
       }
-      
+
       pin.oldValue[i] = newSource;
     }
   });
@@ -322,24 +322,24 @@ WebAudioNode.prototype.updateAudioConnections = function()
 
 VVVV.Nodes.FileAudioBuffer = function(id, graph) {
   this.constructor(id, 'FileAudioBuffer (HTML5 Audio)', graph);
-  
+
   this.meta = {
     authors: ['Lukas Winter'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var that = this;
   this.auto_evaluate = false;
-  
+
   var filenamePin = this.addInputPin("Filename", [""], VVVV.PinTypes.String);
   var outputPin = this.addOutputPin("Audio Out", [], VVVV.PinTypes.AudioBuffer);
-  
+
   this.evaluate = function() {
 
     if (!audioContext) return;
-    
+
     if (filenamePin.pinIsChanged())
     {
       var maxSize = this.getMaxInputSliceCount();
@@ -359,7 +359,7 @@ VVVV.Nodes.FileAudioBuffer = function(id, graph) {
       }
       outputPin.setSliceCount(maxSize);
     }
-    
+
   }
 };
 VVVV.Nodes.FileAudioBuffer.prototype = new VVVV.Core.Node();
@@ -373,29 +373,29 @@ VVVV.Nodes.FileAudioBuffer.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.FFT = function(id, graph) {
   WebAudioNode.call(this, id, 'FFT (HTML5 Audio)', graph);
-  
+
   this.meta = {
     authors: ['Lukas Winter'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = true;
-  
+
   var that = this;
-  
+
   var fftSizeIn = this.addInputPin('FFTSize', [2048], VVVV.PinTypes.Value);
   var smoothingIn = this.addInputPin('Smoothing', [0.8], VVVV.PinTypes.Value);
   var fftOut = this.addOutputPin('FFT', [], VVVV.PinTypes.Value);
   var fftData = new Float32Array(1024);;
   var binCount = 1024;
-  
+
   function nearestPow2( aSize )
   {
     return Math.pow( 2, Math.round( Math.log( aSize ) / Math.log( 2 ) ) );
   }
-  
+
   this.evaluate = function()
   {
     var n = this.getMaxInputSliceCount();
@@ -404,9 +404,9 @@ VVVV.Nodes.FFT = function(id, graph) {
       fftOut.setSliceCount(binCount*n);
       fftData = new Float32Array(binCount);
     }
-    
+
     this.updateAudioConnections();
-    
+
     if(fftSizeIn.pinIsChanged())
     {
       binCount = 0;
@@ -430,7 +430,7 @@ VVVV.Nodes.FFT = function(id, graph) {
     {
       if(smoothingIn.pinIsChanged())
         this.apiMultiNode[i].smoothingTimeConstant = smoothingIn.getValue(i);
-      
+
       this.apiMultiNode[i].getFloatFrequencyData(fftData);
       for(var j = 0; j < binCount; j++)
       {
@@ -450,23 +450,23 @@ VVVV.Nodes.FFT.prototype = new WebAudioNode('Analyser');
 
 VVVV.Nodes.MediaElementSource = function(id, graph) {
   WebAudioNode.call(this, id, 'MediaElementSource (HTML5 Audio)', graph);
-  
+
   this.meta = {
     authors: ['Lukas Winter'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var audioIn = this.addInputPin('Audio', [], this);
   var audioOut = this.addOutputPin('Output', [], VVVV.PinTypes.WebAudio);
   audioOut.apiName = 0;
   this.audioOutputPins.push(audioOut);
-  
+
   this.initialize = function() {};
-  
+
   var mediaElements = [];
-  
+
   this.evaluate = function()
   {
     if(audioIn.pinIsChanged())
@@ -474,7 +474,7 @@ VVVV.Nodes.MediaElementSource = function(id, graph) {
       var n = this.getMaxInputSliceCount();
       audioOut.setSliceCount(n);
       mediaElements.length = n;
-      
+
       for(var i = 0; i < n; i++)
       {
         var inElement = audioIn.getValue(i);
@@ -487,7 +487,7 @@ VVVV.Nodes.MediaElementSource = function(id, graph) {
         }
       }
     }
-    
+
     this.updateAudioConnections();
   }
 }
@@ -502,16 +502,16 @@ VVVV.Nodes.MediaElementSource.prototype = new WebAudioNode('MediaElementSource')
 
 VVVV.Nodes.AudioDestination = function(id, graph) {
   WebAudioNode.call(this, id, 'AudioDestination (HTML5 Audio)', graph);
-  
+
   this.meta = {
     authors: ['Lukas Winter'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.createAPISingleNode = function() { return audioContext.destination; };
-  
+
   this.evaluate = function() {
     this.updateAudioConnections();
   }
@@ -527,18 +527,18 @@ VVVV.Nodes.AudioDestination.prototype = new WebAudioNode('AudioDestination');
 
 VVVV.Nodes.AudioIn = function(id, graph) {
   WebAudioNode.call(this, id, 'AudioIn (HTML5 Audio)', graph);
-  
+
   this.meta = {
     authors: ['Lukas Winter'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var that = this;
-  
+
   var statusOut = this.addOutputPin("Status", ['Waiting'], VVVV.PinTypes.String);
-  
+
   this.initialize = function()
   {
     navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
@@ -570,10 +570,10 @@ VVVV.Nodes.AudioIn = function(id, graph) {
     else
       statusOut.setValue(0, "Error: getUserMedia not supported!");
   };
-  
+
   this.evaluate = function() {
     this.updateAudioConnections();
-    
+
   }
 }
 VVVV.Nodes.AudioIn.prototype = new WebAudioNode('MediaStreamSource');
@@ -587,30 +587,30 @@ VVVV.Nodes.AudioIn.prototype = new WebAudioNode('MediaStreamSource');
 
 VVVV.Nodes.Oscillator = function(id, graph) {
   WebAudioNode.call(this, id, 'Oscillator (HTML5 Audio)', graph);
-  
+
   this.meta = {
     authors: ['Lukas Winter'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var typeIn = this.addInputPin("Type", ['sine'], VVVV.PinTypes.Enum);
   typeIn.enumOptions = ['sine', 'square', 'sawtooth', 'triangle', 'custom' ];
-  
+
   this.createAPISingleNode = function()
   {
     var apiNode = audioContext.createOscillator();
     apiNode.start();
     return apiNode;
   }
-  
+
   this.evaluate = function() {
     this.updateAudioConnections();
     this.updateParamPins();
-    
+
     var n = this.getMaxInputSliceCount();
-    
+
     if(typeIn.pinIsChanged())
     {
       for(var i = 0; i < n; i++)
@@ -629,28 +629,28 @@ VVVV.Nodes.Oscillator.prototype = new WebAudioNode('Oscillator');
 
 VVVV.Nodes.DelayAudio = function(id, graph) {
   WebAudioNode.call(this, id, 'Delay (HTML5 Audio)', graph);
-  
+
   this.meta = {
     authors: ['Lukas Winter'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   //Deactivate this until we find out how this plays together with spreadability
   //this.delays_output = true;
-  
+
   var maxDelayCfg = this.addInvisiblePin("Maximum Delay",[1],VVVV.PinTypes.Value);
-  
+
   this.createAPISingleNode = function()
   {
     return audioContext.createDelay(maxDelayCfg.getValue(0));
   }
-  
+
   this.evaluate = function() {
     this.updateAudioConnections();
     this.updateParamPins();
-    
+
   }
 }
 VVVV.Nodes.DelayAudio.prototype = new WebAudioNode('Delay');
@@ -664,18 +664,18 @@ VVVV.Nodes.DelayAudio.prototype = new WebAudioNode('Delay');
 
 VVVV.Nodes.Gain = function(id, graph) {
   WebAudioNode.call(this, id, 'Gain (HTML5 Audio)', graph);
-  
+
   this.meta = {
     authors: ['Lukas Winter'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.evaluate = function() {
     this.updateAudioConnections();
     this.updateParamPins();
-    
+
   }
 }
 VVVV.Nodes.Gain.prototype = new WebAudioNode('Gain');
@@ -689,17 +689,17 @@ VVVV.Nodes.Gain.prototype = new WebAudioNode('Gain');
 
 VVVV.Nodes.AddAudio = function(id, graph) {
   WebAudioNode.call(this, id, 'Add (HTML5 Audio)', graph);
-  
+
   this.meta = {
     authors: ['Lukas Winter'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var cntCfg = this.addInvisiblePin("Input Count",[2],VVVV.PinTypes.Value);
   var that = this;
-  
+
   var addInputPins = function()
   {
     var inputCount = Math.max(2, cntCfg.getValue(0));
@@ -710,18 +710,18 @@ VVVV.Nodes.AddAudio = function(id, graph) {
       return pin;
     })
   };
-  
+
   this.initialize = function()
   {
     this.createAPIMultiNode(1);
     this.createAudioPins();
   };
-  
+
   this.evaluate = function() {
     if (cntCfg.pinIsChanged())
       addInputPins();
     this.updateAudioConnections();
-    
+
   }
 }
 VVVV.Nodes.AddAudio.prototype = new WebAudioNode('Gain');
@@ -735,17 +735,17 @@ VVVV.Nodes.AddAudio.prototype = new WebAudioNode('Gain');
 
 VVVV.Nodes.Convolver = function(id, graph) {
   WebAudioNode.call(this, id, 'Convolver (HTML5 Audio)', graph);
-  
+
   this.meta = {
     authors: ['Lukas Winter'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var responseIn = this.addInputPin("Impulse Response", [], VVVV.PinTypes.AudioBuffer);
   var normalizeIn = this.addInputPin("Normalize", [1], VVVV.PinTypes.Value);
-  
+
   this.evaluate = function() {
     this.updateAudioConnections();
     this.updateParamPins();
@@ -772,30 +772,30 @@ VVVV.Nodes.Convolver.prototype = new WebAudioNode('Convolver');
 
 VVVV.Nodes.WaveShaper = function(id, graph) {
   WebAudioNode.call(this, id, 'WaveShaper (HTML5 Audio)', graph);
-  
+
   this.meta = {
     authors: ['Lukas Winter'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var curveIn = this.addInputPin("Curve", [], VVVV.PinTypes.Value);
   var binSizeIn = this.addInputPin("Bin Size", [-1], VVVV.PinTypes.Value);
   var oversampleIn = this.addInputPin("Oversample", [1], VVVV.PinTypes.Enum);
   oversampleIn.enumOptions = ["none", "2x", "4x"];
-  
+
   this.getAudioSliceCount = function()
   {
     return Math.max(this.audioInputPins[0].getSliceCount(), oversampleIn.getSliceCount(), binSizeIn.getSliceCount());
   }
-  
+
   this.evaluate = function() {
     this.updateAudioConnections();
     this.updateParamPins();
-    
+
     var n = this.getAudioSliceCount();
-    
+
     if(curveIn.pinIsChanged() || binSizeIn.pinIsChanged())
     {
       var binStartIndex = 0;
@@ -808,7 +808,7 @@ VVVV.Nodes.WaveShaper = function(id, graph) {
         console.log(curve);
         if(curve.length > 2)
           this.apiMultiNode[i].curve = curve;
-        
+
         binStartIndex += binSize;
       }
     }
@@ -830,21 +830,21 @@ VVVV.Nodes.WaveShaper.prototype = new WebAudioNode('WaveShaper');
 
 VVVV.Nodes.BiquadFilter = function(id, graph) {
   WebAudioNode.call(this, id, 'BiquadFilter (HTML5 Audio)', graph);
-  
+
   this.meta = {
     authors: ['Lukas Winter'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var typeIn = this.addInputPin("Type", ['lowpass'], VVVV.PinTypes.Enum);
   typeIn.enumOptions = ["lowpass", "highpass", "bandpass", "lowshelf", "highshelf", "peaking", "notch", "allpass" ];
-  
+
   this.evaluate = function() {
     this.updateAudioConnections();
     this.updateParamPins();
-    
+
     if(typeIn.pinIsChanged())
     {
       var n = this.getMaxInputSliceCount();
@@ -864,23 +864,23 @@ VVVV.Nodes.BiquadFilter.prototype = new WebAudioNode('BiquadFilter');
 
 VVVV.Nodes.DynamicsCompressor = function(id, graph) {
   WebAudioNode.call(this, id, 'DynamicsCompressor (HTML5 Audio)', graph);
-  
+
   this.meta = {
     authors: ['Lukas Winter'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = true;
-  
+
   var reductionOut = this.addOutputPin('Reduction', [ 0 ], VVVV.PinTypes.Value);
-  
+
   this.evaluate = function() {
     this.updateAudioConnections();
     this.updateParamPins();
-    
-    
+
+
     //according to the spec, reduction shouldn't be an AudioParam, but browsers seem to implement it as such
     this.apiMultiNode.forEach( function(apiNode, i)
     {
@@ -899,24 +899,24 @@ VVVV.Nodes.DynamicsCompressor.prototype = new WebAudioNode('DynamicsCompressor')
 
 VVVV.Nodes.BeatDetector = function(id, graph) {
   WebAudioNode.call(this, id, 'BeatDetector (HTML5 Audio)', graph);
-  
+
   this.meta = {
     authors: ['Lukas Winter'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = true;
-  
+
   var that = this;
   var fftSize = 2048;
   var fftData = new Float32Array(fftSize/2);
   var beatDetectors = [ ];
-  
+
   var beatCounterOut = this.addOutputPin('Beat Counter', [ 0 ], VVVV.PinTypes.Value);
   var bpmOut = this.addOutputPin('BPM', [ 0 ], VVVV.PinTypes.Value);
-  
+
   this.createAPISingleNode = function()
   {
     var apiNode = audioContext.createAnalyser();
@@ -924,12 +924,12 @@ VVVV.Nodes.BeatDetector = function(id, graph) {
     apiNode.smoothingTimeConstant = 0;
     return apiNode;
   }
-  
+
   this.evaluate = function()
   {
     this.updateAudioConnections();
     var n = this.getMaxInputSliceCount();
-    
+
     for(var i = 0; i < n; i++)
     {
       if(!beatDetectors[i])
@@ -939,7 +939,7 @@ VVVV.Nodes.BeatDetector = function(id, graph) {
       beatCounterOut.setValue(i, beatDetectors[i].beat_counter);
       bpmOut.setValue(i, beatDetectors[i].win_bpm_int / 10);
     }
-    
+
     beatDetectors.length = n;
     beatCounterOut.setSliceCount(n);
     bpmOut.setSliceCount(n);
