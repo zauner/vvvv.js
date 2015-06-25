@@ -1,3 +1,105 @@
+v1.1 / 2015-04-21
+
+This release comes with a revamped evaluation logic, which continously 'compiles' patches to actual JavaScript code. Besides
+ a bunchload of brandnew WebAudio nodes, v1.1 also comes with a set of DOM/Style/Event nodes and the possibility to write your own
+ inline nodes using the built in Node Editor.
+
+Nodes
+-----
+
+new:
+
+* DefineNode (System)
+* ConnectAll (2d)
+* Differential (Spreads)
+* Transform (Transform 2d)
+* GridSegment (DX9)
+* AspectRatio (Transform)
+* Simplex (2-4d)
+* MonoFlop (Animation)
+* Trapeze (Transform)
+* Multiply (Transform)
+* UniformScale (Transform)
+* ApplyTransform (Transform)
+* Integrate (Differential)
+* Cull (EX9.RenderState)
+* WebSocket (Network Client)
+* S+H (String)
+* AsElement (XElement JSON)
+* Element (XElement Split)
+* GetElements (XElement ByName)
+* GetSlice (Node)
+* Select (Node)
+* Cons (String)
+* Gregorian (Astronomy Join)
+* CanvasTexture (EX9.Texture)
+* ADSR (Animation)
+
+* AudioDestination (HTML5 Audio)
+* Oscillator (HTML5 Audio)
+* Delay (HTML5 Audio)
+* Gain (HTML5 Audio)
+* DynamicsProcessor (HTML5 Audio)
+* BiquadFilter (HTML5 Audio)
+* FileAudioBuffer (HTML5 Audio)
+* Convolver (HTML5 Audio)
+* BeatDetector (HTML5 Audio)
+* WaveShaper (HTML5 Audio)
+* AudioIn (HTML5 Audio)
+* Add (HTML5 Audio)
+* FFT (HTML5 Audio)
+* Add (HTML5 Audio Spectral)
+
+* Element (HTML) node and lots of generated element helper nodes
+* Style (HTML) node and lots of generated style helper nodes
+* OnEvent (HTML) node and lots of generated event helper nodes
+* GetValue (HTML)
+* GetText (HTML)
+* SetText (HTML)
+* GetAttribute (HTML)
+* SetAttribute (HTML)
+* ApplyStyle (HTML)
+* GetPosition (HTML)
+* Position (HTML)
+* Transform (HTML)
+
+improved/fixed:
+
+* Mouse (System Window) and Mouse (System Global) have now multi touch support
+* fixed CircularSpread compatibility issues
+* added Multiply option to BlendMode (EX9)
+* fixed I (Spreads) compatibility issues
+* fixed LinearSpread spreadability
+* added BinSize to Differential
+* added Change output to LFO (Animation)
+* added Input BinSize to Integral (Spreads)
+* refactored Transform nodes for performance improvements
+
+Core
+----
+
+* You can define your own inline nodes using the DefineNode node
+* Color input pins can now be modulated using HSV color sliders
+* Spreads are not stored multiple times in each connected output AND input pin, so only one spread has to be modified on Pin#setValue()
+* Replaces dirty-flagging with Pin#changedAt property
+* VVVV.js' mainloop now makes use of window.requestAnimationFrame()
+* All code is now scoped to avoid conflicts with other jQuery versions
+* The Color pin type now uses Float32Array instead of a string representation
+* Fixed bug where red nodes could not be deleted
+* Patches are now compiled to JavaScript code continuously
+* Static Nodes: nodes can now return actual JavaScript code which can be chained/nested with other static nodes
+
+API
+---
+
+* introduced Node#isDirty() method as a replacement for Node#dirty flag
+* PinDirection enum is now VVVV.PinDirection
+* added <link rel="VVVV"> method for loading patches; made <script language="VVVV"> method deprecated
+* Static Nodes: nodes can now implement a getCode() method instead of evaluate(), which returns actual JavaScript code as a string
+* added VVVV.onLowFrameRate callback
+
+
+
 v1.0 / 2014-05-09
 =================
 
