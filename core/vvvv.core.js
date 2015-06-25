@@ -205,9 +205,9 @@ VVVV.Core = {
      */
     this.setValue = function(i, v) {
       if (this.direction==VVVV.PinDirection.Output || !this.isConnected()) {
-        this.values[i] = v;
-        if (!this.primitive || this.values[i]!=v)
+        if (!this.typeName || !VVVV.PinTypes[this.typeName].primitive || this.values[i]!=v)
           this.markPinAsChanged();
+        this.values[i] = v;
       }
 
       if (this.node.isIOBox && this.pinname=='Descriptive Name' && this.node.invisiblePins["Descriptive Name"]) {
