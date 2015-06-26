@@ -58,6 +58,7 @@ VVVV.Types.CanvasRenderState = function() {
     ctx.shadowBlur = this.shadowBlur;
     ctx.shadowColor = 'rgba('+parseInt(this.shadowColor.rgba[0]*255)+','+parseInt(this.shadowColor[1]*255)+','+parseInt(this.shadowColor[2]*255)+','+this.shadowColor[3]+')';
     ctx.globalCompositeOperation = this.blendMode;
+
   }
 }
 
@@ -372,16 +373,18 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
       ctx.restoreView();
       if (this.transform)
         ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
+      ctx.scale(0.01, 0.01); // to fix warped arcs in Chrome (because of drawing in small values); radius and lineWidth are multiplied by 10 below to compensate
       ctx.beginPath();
       if (!invisible)
         this.renderState.apply(ctx);
       else
         invisibleRenderState.apply(ctx);
+      ctx.lineWidth = ctx.lineWidth * 100;
       if (this.drawSegment) {
         ctx.moveTo(0, 0);
         ctx.lineTo(Math.cos(this.startAngle) * this.radius, Math.sin(this.startAngle) * this.radius);
       }
-      ctx.arc(0, 0, this.radius, this.startAngle, this.endAngle, false);
+      ctx.arc(0, 0, this.radius*100.0, this.startAngle, this.endAngle, false);
       if (this.drawSegment) {
         ctx.moveTo(Math.cos(this.endAngle) * this.radius, Math.sin(this.endAngle) * this.radius);
         ctx.lineTo(0, 0);
@@ -473,28 +476,30 @@ VVVV.Nodes.RectangleCanvas = function(id, graph) {
       ctx.restoreView();
       if (this.transform)
         ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
+      ctx.scale(0.01, 0.01); // to fix warped arcs in Chrome (because of drawing in small values); radius and lineWidth are multiplied by 100 below to compensate
       ctx.beginPath();
       if (!invisible)
         this.renderState.apply(ctx);
       else
         invisibleRenderState.apply(ctx);
-      var outer_right = this.width / 2;
-      var inner_right = outer_right - this.cornerRadius;
-      var outer_top = this.height / 2;
-      var inner_top = outer_top - this.cornerRadius;
+      ctx.lineWidth = ctx.lineWidth * 100;
+      var outer_right = this.width * 100 / 2;
+      var inner_right = outer_right - this.cornerRadius * 100;
+      var outer_top = this.height * 100 / 2;
+      var inner_top = outer_top - this.cornerRadius * 100;
       var outer_left = -outer_right;
       var inner_left = -inner_right;
       var outer_bottom = -outer_top;
       var inner_bottom = -inner_top;
       ctx.moveTo(inner_left, outer_bottom);
       ctx.lineTo(inner_right, outer_bottom);
-      ctx.arc(inner_right, inner_bottom, this.cornerRadius, 1.5 * Math.PI, 0, false);
+      ctx.arc(inner_right, inner_bottom, this.cornerRadius * 100, 1.5 * Math.PI, 0, false);
       ctx.lineTo(outer_right, inner_top);
-      ctx.arc(inner_right, inner_top, this.cornerRadius, 0, 0.5 * Math.PI, false);
+      ctx.arc(inner_right, inner_top, this.cornerRadius * 100, 0, 0.5 * Math.PI, false);
       ctx.lineTo(inner_left, outer_top);
-      ctx.arc(inner_left, inner_top, this.cornerRadius, 0.5 * Math.PI, Math.PI, false);
+      ctx.arc(inner_left, inner_top, this.cornerRadius * 100, 0.5 * Math.PI, Math.PI, false);
       ctx.lineTo(outer_left, inner_bottom);
-      ctx.arc(inner_left, inner_bottom, this.cornerRadius, Math.PI, 1.5 * Math.PI, false);
+      ctx.arc(inner_left, inner_bottom, this.cornerRadius * 100, Math.PI, 1.5 * Math.PI, false);
       ctx.closePath();
       if (this.renderState.fillColor.rgba[3]>0)
         ctx.fill();
@@ -946,7 +951,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_nil = false;
 
   var layersIn = this.addInputPin("Layers", [], VVVV.PinTypes.CanvasLayer);
