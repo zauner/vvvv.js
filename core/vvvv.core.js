@@ -205,7 +205,7 @@ VVVV.Core = {
      */
     this.setValue = function(i, v) {
       if (this.direction==VVVV.PinDirection.Output || !this.isConnected()) {
-        if (!this.typeName || !VVVV.PinTypes[this.typeName].primitive || this.values[i]!=v)
+        if (!this.typeName || !VVVV.PinTypes[this.typeName].primitive || this.values[i]!=v || this.typeName=="Color")
           this.markPinAsChanged();
         this.values[i] = v;
       }
@@ -1769,7 +1769,7 @@ VVVV.Core = {
           else {
             if (!node.not_implemented) {
               recipe.push(node);
-              compiledCode += "var n = patch.nodeMap["+node.id+"];";
+              compiledCode += "var n = patch.nodeMap["+node.id+"];\n";
               compiledCode += "if ((n.isDirty() || n.auto_evaluate || n.isSubpatch) && !n.dealWithNilInput()) { n.evaluate(); n.dirty = false; }\n";
             }
           }
