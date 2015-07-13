@@ -25,7 +25,7 @@ VVVV.Types.HTMLLayer = function(tagName) {
   this.set_style_properties = {};
 
   this.setText = function(text) {
-    if (!this.element)
+    if (!this.element || this.element.prop("tagName")=="IFRAME")
       return;
     this.text = text;
     var $el = $(this.element);
