@@ -56,7 +56,7 @@ VVVV.Types.CanvasRenderState = function() {
     ctx.shadowOffsetX = this.shadowOffsetX;
     ctx.shadowOffsetY = this.shadowOffsetY;
     ctx.shadowBlur = this.shadowBlur;
-    ctx.shadowColor = 'rgba('+parseInt(this.shadowColor.rgba[0]*255)+','+parseInt(this.shadowColor[1]*255)+','+parseInt(this.shadowColor[2]*255)+','+this.shadowColor[3]+')';
+    ctx.shadowColor = 'rgba('+parseInt(this.shadowColor.rgba[0]*255)+','+parseInt(this.shadowColor.rgba[1]*255)+','+parseInt(this.shadowColor.rgba[2]*255)+','+this.shadowColor.rgba[3]+')';
     ctx.globalCompositeOperation = this.blendMode;
 
   }
