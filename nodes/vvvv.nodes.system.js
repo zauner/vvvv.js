@@ -3,7 +3,12 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
-(function($) {
+if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
+define(function(require,exports) {
+
+var Node = require('core/vvvv.core.node');
+var VVVV = require('core/vvvv.core.defines');
+var $ = require('jquery');
 
 
 /*
@@ -118,7 +123,7 @@ VVVV.Nodes.MouseGlobal = function(id, graph) {
   }
 
 }
-VVVV.Nodes.MouseGlobal.prototype = new VVVV.Core.Node();
+VVVV.Nodes.MouseGlobal.prototype = new Node();
 
 
 /*
@@ -171,7 +176,7 @@ VVVV.Nodes.MouseWindow = function(id, graph) {
   }
 
 }
-VVVV.Nodes.MouseWindow.prototype = new VVVV.Core.Node();
+VVVV.Nodes.MouseWindow.prototype = new Node();
 
 
 /*
@@ -213,7 +218,7 @@ VVVV.Nodes.ShellExecute = function(id, graph) {
   }
 
 }
-VVVV.Nodes.ShellExecute.prototype = new VVVV.Core.Node();
+VVVV.Nodes.ShellExecute.prototype = new Node();
 
 
 /*
@@ -271,7 +276,7 @@ VVVV.Nodes.ScreenInfo = function(id, graph) {
     }
   }
 }
-VVVV.Nodes.ScreenInfo.prototype = new VVVV.Core.Node();
+VVVV.Nodes.ScreenInfo.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -330,8 +335,8 @@ VVVV.Nodes.DefineNode = function(id, graph) {
 
       if (sourceCodeIn.pinIsChanged() || nameIn.pinIsChanged()) {
         try {
-          f = new Function("id", "graph", 'this.constructor(id, "'+currentName+'", graph); '+sourceCodeIn.getValue(0));
-          f.prototype = new VVVV.Core.Node();
+          f = new Function("id", "graph", 'var VVVV = require("core/vvvv.core"); this.constructor(id, "'+currentName+'", graph); '+sourceCodeIn.getValue(0));
+          f.prototype = new Node();
           f.definingNode = this;
           VVVV.NodeLibrary[currentName.toLowerCase()] = f;
           for (var i=0; i<this.relatedNodes.length; i++) {
@@ -354,7 +359,7 @@ VVVV.Nodes.DefineNode = function(id, graph) {
   }
 
   this.openUIWindow = function() {
-    w = window.open(location.protocol+'//'+location.host+(VVVV.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVV.Root+"/code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
+    w = window.open(location.protocol+'//'+location.host+(VVVVContext.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVVContext.Root+"/code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
     var thatNode = this;
     window.setTimeout(function() {
       w.document.title = currentName+" / VVVV.js Node Editor";
@@ -383,6 +388,6 @@ VVVV.Nodes.DefineNode = function(id, graph) {
   }
 
 }
-VVVV.Nodes.DefineNode.prototype = new VVVV.Core.Node();
+VVVV.Nodes.DefineNode.prototype = new Node();
 
-}(vvvvjs_jquery));
+});

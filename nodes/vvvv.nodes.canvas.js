@@ -3,7 +3,14 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
-(function($) {
+if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
+
+define(function(require,exports) {
+
+
+var glMatrix = require('glMatrix');
+var Node = require('core/vvvv.core.node');
+var VVVV = require('core/vvvv.core.defines');
 
 VVVV.Types.CanvasTexture = { imageObject: undefined, loaded: false };
 
@@ -123,7 +130,7 @@ VVVV.Nodes.FillCanvas = function(id, graph) {
 
   }
 }
-VVVV.Nodes.FillCanvas.prototype = new VVVV.Core.Node();
+VVVV.Nodes.FillCanvas.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -173,7 +180,7 @@ VVVV.Nodes.StrokeCanvas = function(id, graph) {
 
   }
 }
-VVVV.Nodes.StrokeCanvas.prototype = new VVVV.Core.Node();
+VVVV.Nodes.StrokeCanvas.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -220,7 +227,7 @@ VVVV.Nodes.ShadowCanvas = function(id, graph) {
 
   }
 }
-VVVV.Nodes.ShadowCanvas.prototype = new VVVV.Core.Node();
+VVVV.Nodes.ShadowCanvas.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -262,7 +269,7 @@ VVVV.Nodes.BlendCanvas = function(id, graph) {
 
   }
 }
-VVVV.Nodes.BlendCanvas.prototype = new VVVV.Core.Node();
+VVVV.Nodes.BlendCanvas.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -322,7 +329,7 @@ VVVV.Nodes.LinearGradientCanvas = function(id, graph) {
 
   }
 }
-VVVV.Nodes.LinearGradientCanvas.prototype = new VVVV.Core.Node();
+VVVV.Nodes.LinearGradientCanvas.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -354,8 +361,8 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
   var layers = [];
 
   var Arc = function() {
-    this.transform = mat4.create();
-    mat4.identity(this.transform);
+    this.transform = glMatrix.mat4.create();
+    glMatrix.mat4.identity(this.transform);
     this.startAngle = 0;
     this.endAngle = 0.5;
     this.strokeColor = [1.0, 1.0, 1.0, 1.0];
@@ -429,7 +436,7 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
 
   }
 }
-VVVV.Nodes.ArcCanvas.prototype = new VVVV.Core.Node();
+VVVV.Nodes.ArcCanvas.prototype = new Node();
 
 
 /*
@@ -461,8 +468,8 @@ VVVV.Nodes.RectangleCanvas = function(id, graph) {
   var layers = [];
 
   var Rectangle = function() {
-    this.transform = mat4.create();
-    mat4.identity(this.transform);
+    this.transform = glMatrix.mat4.create();
+    glMatrix.mat4.identity(this.transform);
     this.renderState = defaultRenderState;
     this.clippingLayer = defaultCanvasLayer;
 
@@ -536,7 +543,7 @@ VVVV.Nodes.RectangleCanvas = function(id, graph) {
 
   }
 }
-VVVV.Nodes.RectangleCanvas.prototype = new VVVV.Core.Node();
+VVVV.Nodes.RectangleCanvas.prototype = new Node();
 
 
 /*
@@ -571,8 +578,8 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
   var layers = [];
 
   var Text = function() {
-    this.transform = mat4.create();
-    mat4.identity(this.transform);
+    this.transform = glMatrix.mat4.create();
+    glMatrix.mat4.identity(this.transform);
     this.text = "VVVV.js";
     this.font = "sans-serif";
     this.align = 'start';
@@ -633,7 +640,7 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
 
   }
 }
-VVVV.Nodes.TextCanvas.prototype = new VVVV.Core.Node();
+VVVV.Nodes.TextCanvas.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -668,8 +675,8 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
   var layers = [];
 
   var BezierCurve = function() {
-    this.transform = mat4.create();
-    mat4.identity(this.transform);
+    this.transform = glMatrix.mat4.create();
+    glMatrix.mat4.identity(this.transform);
     this.x = [];
     this.y = [];
     this.c1x = [];
@@ -781,7 +788,7 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
 
   }
 }
-VVVV.Nodes.BezierCurveCanvas.prototype = new VVVV.Core.Node();
+VVVV.Nodes.BezierCurveCanvas.prototype = new Node();
 
 
 
@@ -812,9 +819,9 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
   var layers = [];
 
   var Quad = function() {
-    this.transform = mat4.create();
+    this.transform = glMatrix.mat4.create();
     this.clippingLayer = defaultCanvasLayer;
-    mat4.identity(this.transform);
+    glMatrix.mat4.identity(this.transform);
     this.texture = VVVV.PinTypes.HTML5Texture.defaultValue();
     this.color = [1.0, 1.0, 1.0, 1.0];
 
@@ -876,7 +883,7 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
 
   }
 }
-VVVV.Nodes.QuadCanvas.prototype = new VVVV.Core.Node();
+VVVV.Nodes.QuadCanvas.prototype = new Node();
 
 
 /*
@@ -932,7 +939,7 @@ VVVV.Nodes.GroupCanvas = function(id, graph) {
   }
 
 }
-VVVV.Nodes.GroupCanvas.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GroupCanvas.prototype = new Node();
 
 
 /*
@@ -969,7 +976,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   var bgColor = [0.0, 0.0, 0.0, 1.0];
   var clear = 1;
   var canvas;
-  var viewT = mat4.create();
+  var viewT = glMatrix.mat4.create();
   var projT;
 
   // this is actually some code duplication, because the very same exists in Renderer (EX9)
@@ -1105,9 +1112,9 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
         canvasHeight = h;
         $(canvas).attr('height', canvasHeight);
       }
-      projT = mat4.create([canvasWidth/2, 0, 0, 0, 0, -canvasHeight/2, 0, 0, 0, 0, 1, 0, canvasWidth/2, canvasHeight/2, 0, 1]);
+      projT = glMatrix.mat4.create([canvasWidth/2, 0, 0, 0, 0, -canvasHeight/2, 0, 0, 0, 0, 1, 0, canvasWidth/2, canvasHeight/2, 0, 1]);
       if (viewIn.getValue(0))
-        mat4.multiply(projT, viewIn.getValue(0), viewT);
+        glMatrix.mat4.multiply(projT, viewIn.getValue(0), viewT);
     }
 
     if (bgColorIn.pinIsChanged() && bgColorIn.getValue(0)!=undefined) {
@@ -1132,7 +1139,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
       }
 
       if (viewIn.pinIsChanged()) {
-        mat4.multiply(projT, viewIn.getValue(0), viewT);
+        glMatrix.mat4.multiply(projT, viewIn.getValue(0), viewT);
       }
 
       ctx.restoreView();
@@ -1154,6 +1161,6 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   }
 
 }
-VVVV.Nodes.RendererCanvas.prototype = new VVVV.Core.Node();
+VVVV.Nodes.RendererCanvas.prototype = new Node();
 
-}(vvvvjs_jquery));
+});

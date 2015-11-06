@@ -3,7 +3,12 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
-(function($) {
+if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
+define(function(require,exports) {
+
+var Node = require('core/vvvv.core.node');
+var VVVV = require('core/vvvv.core.defines');
+var $ = require('jquery');
 
 /**
  * The HTML5Texture Pin Type
@@ -29,31 +34,31 @@ VVVV.PinTypes.HTML5Texture = {
 
 VVVV.Nodes.FileTextureCanvas = function(id, graph) {
   this.constructor(id, "FileTexture (HTML5 VVVVjs)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = true;
-  
+
   var filenameIn = this.addInputPin('Filename', [], VVVV.PinTypes.String);
-  
+
   var textureOut = this.addOutputPin('Texture Out', [], VVVV.PinTypes.HTML5Texture);
   var widthOut = this.addOutputPin('Width', [0], VVVV.PinTypes.Value);
   var heightOut = this.addOutputPin('Height', [0], VVVV.PinTypes.Value);
   var runningOut = this.addOutputPin('Up and Running', [0], VVVV.PinTypes.Value);
-  
+
   var images = [];
   var textureLoaded = false;
-  
+
   this.evaluate = function() {
-  
+
     var maxSpreadSize = this.getMaxInputSliceCount();
-    
-    if (filenameIn.pinIsChanged()) { 
+
+    if (filenameIn.pinIsChanged()) {
       for (var i=0; i<maxSpreadSize; i++) {
         var filename = VVVV.Helpers.prepareFilePath(filenameIn.getValue(i), this.parentPatch);
         if (filename.indexOf('http://')===0 && VVVV.ImageProxyPrefix!==undefined)
@@ -81,7 +86,7 @@ VVVV.Nodes.FileTextureCanvas = function(id, graph) {
       heightOut.setSliceCount(maxSpreadSize);
       runningOut.setSliceCount(maxSpreadSize);
     }
-    
+
     if (textureLoaded) {
       for (var i=0; i<maxSpreadSize; i++) {
         textureOut.setValue(i, images[i]);
@@ -91,10 +96,10 @@ VVVV.Nodes.FileTextureCanvas = function(id, graph) {
       }
       textureLoaded = false;
     }
-    
+
   }
 }
-VVVV.Nodes.FileTextureCanvas.prototype = new VVVV.Core.Node();
+VVVV.Nodes.FileTextureCanvas.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -105,19 +110,19 @@ VVVV.Nodes.FileTextureCanvas.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.FileStreamCanvas = function(id, graph) {
   this.constructor(id, "FileStream (HTML5 VVVVjs)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = true;
-  
+
   var networkStates = [ 'NETWORK_EMPTY', 'NETWORK_IDLE', 'NETWORK_LOADING', 'NETWORK_NO_SOURCE' ];
   var readyStates = [ 'HAVE_NOTHING', 'HAVE_METADATA', 'HAVE_FUTURE_DATA', 'HAVE_ENOUGH_DATA', 'HAVE_CURRENT_DATA' ];
-  
+
   var playIn = this.addInputPin('Play', [1], VVVV.PinTypes.Value);
   var loopIn = this.addInputPin('Loop', [0], VVVV.PinTypes.Value);
   var startTimeIn = this.addInputPin('Start Time', [0.0], VVVV.PinTypes.Value);
@@ -125,7 +130,7 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
   var doSeekIn = this.addInputPin('Do Seek', [0], VVVV.PinTypes.Value);
   var seekPosIn = this.addInputPin('Seek Position', [0.0], VVVV.PinTypes.Value);
   var filenameIn = this.addInputPin('Filename', ['http://html5doctor.com/demos/video-canvas-magic/video.ogg'], VVVV.PinTypes.String);
-  
+
   var videoOut = this.addOutputPin('Video', [], this);
   var audioOut = this.addOutputPin('Audio', [], this);               // this might be just the same output as the video out for now, since there's no audio tag support yet.
   var durationOut = this.addOutputPin('Duration', [0.0], VVVV.PinTypes.Value);
@@ -134,14 +139,14 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
   var heightOut = this.addOutputPin('Video Height', [0.0], VVVV.PinTypes.Value);
   var networkStatusOut = this.addOutputPin('Network Status', [''], VVVV.PinTypes.String);
   var readyStatusOut = this.addOutputPin('Ready Status', [''], VVVV.PinTypes.String);
-  
+
   var videos = [];
-  
+
   this.evaluate = function() {
-  
+
     var maxSpreadSize = this.getMaxInputSliceCount();
-    
-    if (filenameIn.pinIsChanged()) { 
+
+    if (filenameIn.pinIsChanged()) {
       for (var i=0; i<maxSpreadSize; i++) {
         filename = VVVV.Helpers.prepareFilePath(filenameIn.getValue(i), this.parentPatch);
         if (videos[i]==undefined) {
@@ -151,7 +156,7 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
           videos[i].volume = 0;
           var updateStatus = (function(j) {
             return function() {
-              
+
             }
           })(i);
           videos[i].onprogress = updateStatus;
@@ -165,14 +170,14 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
             videos[i].play();
           else
             videos[i].pause();
-          
+
           videos[i].loaded = true;
           videoOut.setValue(i, videos[i]);
           audioOut.setValue(i, videos[i]);
         }
       }
     }
-    
+
     if (playIn.pinIsChanged()) {
       for (var i=0; i<maxSpreadSize; i++) {
         if (playIn.getValue(i)>0.5)
@@ -181,7 +186,7 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
           videos[i].pause();
       }
     }
-    
+
     if (doSeekIn.pinIsChanged()) {
       for (var i=0; i<maxSpreadSize; i++) {
         if (videos[i%videos.length].loaded && doSeekIn.getValue(i)>=.5) {
@@ -191,7 +196,7 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
         }
       }
     }
-    
+
     for (var i=0; i<maxSpreadSize; i++) {
       if (!videos[i].paused) {
         videoOut.setValue(i, videos[i]);
@@ -219,13 +224,13 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
       if (readyStatusOut.getValue(i)!=readyStates[videos[i].readyState])
         readyStatusOut.setValue(i, readyStates[videos[i].readyState]);
     }
-    
+
     videoOut.setSliceCount(maxSpreadSize);
     audioOut.setSliceCount(maxSpreadSize);
-    
+
   }
 }
-VVVV.Nodes.FileStreamCanvas.prototype = new VVVV.Core.Node();
+VVVV.Nodes.FileStreamCanvas.prototype = new Node();
 
 
 
@@ -238,29 +243,29 @@ VVVV.Nodes.FileStreamCanvas.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.AudioOutHTML5 = function(id, graph) {
   this.constructor(id, "AudioOut (HTML5 VVVVjs)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var audioIn = this.addInputPin('Audio', [], this);
   var volumeIn = this.addInputPin('Volume', [0.5], VVVV.PinTypes.Value);
-  
+
   this.evaluate = function() {
-  
+
     var maxSpreadSize = this.getMaxInputSliceCount();
-    
+
     if (volumeIn.pinIsChanged()) {
       for (var i=0; i<maxSpreadSize; i++) {
         audioIn.getValue(i).volume = Math.max(0.0, Math.min(1.0, volumeIn.getValue(i)));
       }
     }
-    
+
   }
 }
-VVVV.Nodes.AudioOutHTML5.prototype = new VVVV.Core.Node();
+VVVV.Nodes.AudioOutHTML5.prototype = new Node();
 
-}(vvvvjs_jquery));
+});

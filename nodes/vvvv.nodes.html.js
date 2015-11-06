@@ -3,7 +3,11 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
-(function($) {
+if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
+define(function(require,exports) {
+
+var Node = require('core/vvvv.core.node');
+var VVVV = require('core/vvvv.core.defines');
 
 VVVV.Types.HTMLLayer = function(tagName) {
 
@@ -284,7 +288,7 @@ element_node_defs.forEach(function(element_node_def) {
       }
     }
   }
-  VVVV.Nodes[element_node_def.nodename+'HTML'].prototype = new VVVV.Core.Node();
+  VVVV.Nodes[element_node_def.nodename+'HTML'].prototype = new Node();
 });
 
 
@@ -357,7 +361,7 @@ VVVV.Nodes.GroupHTML = function(id, graph) {
     }
   }
 }
-VVVV.Nodes.GroupHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GroupHTML.prototype = new Node();
 
 
 /*
@@ -421,7 +425,7 @@ VVVV.Nodes.GetElementHTML = function(id, graph) {
     binSizeOut.setSliceCount(selectorCount);
   }
 }
-VVVV.Nodes.GetElementHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GetElementHTML.prototype = new Node();
 
 
 /*
@@ -513,7 +517,7 @@ VVVV.Nodes.GetPositionHTML = function(id, graph) {
     })
   }
 }
-VVVV.Nodes.GetPositionHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GetPositionHTML.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -575,7 +579,7 @@ VVVV.Nodes.PositionHTML = function(id, graph) {
     styleOut.setSliceCount(maxSpreadSize);
   }
 }
-VVVV.Nodes.PositionHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.PositionHTML.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -627,7 +631,7 @@ VVVV.Nodes.TransformHTML = function(id, graph) {
     styleOut.setSliceCount(maxSpreadSize);
   }
 }
-VVVV.Nodes.TransformHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.TransformHTML.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -720,7 +724,7 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
     }
   }
 }
-VVVV.Nodes.GetValueHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GetValueHTML.prototype = new Node();
 
 
 /*
@@ -838,7 +842,7 @@ event_node_defs.forEach(function(event_node_def) {
       }
     }
   }
-  VVVV.Nodes["On"+event_node_def.name+"HTML"].prototype = new VVVV.Core.Node();
+  VVVV.Nodes["On"+event_node_def.name+"HTML"].prototype = new Node();
 
 });
 
@@ -899,7 +903,7 @@ VVVV.Nodes.StyleHTML = function(id, graph) {
     styleOut.setSliceCount(maxSpreadSize);
   }
 }
-VVVV.Nodes.StyleHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.StyleHTML.prototype = new Node();
 
 var style_node_definitions = [
   {name: "Background", pins: [{name: "background-color", type: VVVV.PinTypes.Color, is_property: true}]},
@@ -998,7 +1002,7 @@ style_node_definitions.forEach(function(style_node_def) {
       styleOut.setSliceCount(maxSpreadSize);
     }
   }
-  VVVV.Nodes[style_node_def.name+"HTML"].prototype = new VVVV.Core.Node();
+  VVVV.Nodes[style_node_def.name+"HTML"].prototype = new Node();
 
 });
 
@@ -1033,7 +1037,7 @@ VVVV.Nodes.ApplyStyleHTML = function(id, graph) {
     }
   }
 }
-VVVV.Nodes.ApplyStyleHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.ApplyStyleHTML.prototype = new Node();
 
 
 /*
@@ -1111,7 +1115,7 @@ VVVV.Nodes.GetTextHTML = function(id, graph) {
     })
   }
 }
-VVVV.Nodes.GetTextHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GetTextHTML.prototype = new Node();
 
 
 /*
@@ -1150,7 +1154,7 @@ VVVV.Nodes.SetTextHTML = function(id, graph) {
     }
   }
 }
-VVVV.Nodes.SetTextHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.SetTextHTML.prototype = new Node();
 
 
 /*
@@ -1245,7 +1249,7 @@ VVVV.Nodes.GetAttributeHTML = function(id, graph) {
     })
   }
 }
-VVVV.Nodes.GetAttributeHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GetAttributeHTML.prototype = new Node();
 
 
 /*
@@ -1295,7 +1299,7 @@ VVVV.Nodes.SetAttributeHTML = function(id, graph) {
     }
   }
 }
-VVVV.Nodes.SetAttributeHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.SetAttributeHTML.prototype = new Node();
 
 
-}(vvvvjs_jquery));
+});

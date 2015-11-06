@@ -3,7 +3,16 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
-(function($) {
+if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
+
+define(function(require,exports) {
+
+
+var $ = require('jquery');
+var _ = require('underscore');
+var glMatrix = require('glMatrix');
+var VVVV = require('core/vvvv.core.defines');
+var Node = require('core/vvvv.core.node');
 
 /** A hash table of {@VVVV.Types.ShaderCodeResource} objects, indexed with the name/path of the shader code resource */
 VVVV.ShaderCodeResources = {
@@ -47,7 +56,7 @@ VVVV.Types.ShaderCodeResource = function() {
 }
 
 
-var identity = mat4.identity(mat4.create());
+var identity = glMatrix.mat4.identity(glMatrix.mat4.create());
 
 /**
  * A data structure which contains all render state attributes that can be set in VVVV.js
@@ -560,7 +569,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   }
 
 }
-VVVV.Nodes.FileTexture.prototype = new VVVV.Core.Node();
+VVVV.Nodes.FileTexture.prototype = new Node();
 
 
 /*
@@ -643,7 +652,7 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
   }
 
 }
-VVVV.Nodes.DX9Texture.prototype = new VVVV.Core.Node();
+VVVV.Nodes.DX9Texture.prototype = new Node();
 
 
 /*
@@ -717,7 +726,7 @@ VVVV.Nodes.CanvasTextureWebGl = function(id, graph) {
   }
 
 }
-VVVV.Nodes.CanvasTextureWebGl.prototype = new VVVV.Core.Node();
+VVVV.Nodes.CanvasTextureWebGl.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -775,7 +784,7 @@ VVVV.Nodes.VideoTexture = function(id, graph) {
   }
 
 }
-VVVV.Nodes.VideoTexture.prototype = new VVVV.Core.Node();
+VVVV.Nodes.VideoTexture.prototype = new Node();
 
 
 /*
@@ -841,7 +850,7 @@ VVVV.Nodes.VertexBufferJoin = function(id, graph) {
   }
 
 }
-VVVV.Nodes.VertexBufferJoin.prototype = new VVVV.Core.Node();
+VVVV.Nodes.VertexBufferJoin.prototype = new Node();
 
 
 /*
@@ -898,7 +907,7 @@ VVVV.Nodes.MeshJoin = function(id, graph) {
   }
 
 }
-VVVV.Nodes.MeshJoin.prototype = new VVVV.Core.Node();
+VVVV.Nodes.MeshJoin.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -985,7 +994,7 @@ VVVV.Nodes.Grid = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Grid.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Grid.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1076,7 +1085,7 @@ VVVV.Nodes.Sphere = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Sphere.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Sphere.prototype = new Node();
 
 
 /*
@@ -1215,7 +1224,7 @@ VVVV.Nodes.Cylinder = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Cylinder.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Cylinder.prototype = new Node();
 
 
 /*
@@ -1280,7 +1289,7 @@ VVVV.Nodes.BlendWebGLAdvanced = function(id, graph) {
   }
 
 }
-VVVV.Nodes.BlendWebGLAdvanced.prototype = new VVVV.Core.Node();
+VVVV.Nodes.BlendWebGLAdvanced.prototype = new Node();
 
 
 /*
@@ -1346,7 +1355,7 @@ VVVV.Nodes.BlendWebGL = function(id, graph) {
   }
 
 }
-VVVV.Nodes.BlendWebGL.prototype = new VVVV.Core.Node();
+VVVV.Nodes.BlendWebGL.prototype = new Node();
 
 
 /*
@@ -1400,7 +1409,7 @@ VVVV.Nodes.FillWebGL = function(id, graph) {
   }
 
 }
-VVVV.Nodes.FillWebGL.prototype = new VVVV.Core.Node();
+VVVV.Nodes.FillWebGL.prototype = new Node();
 
 
 /*
@@ -1463,7 +1472,7 @@ VVVV.Nodes.ZWriteEnableWebGL = function(id, graph) {
   }
 
 }
-VVVV.Nodes.ZWriteEnableWebGL.prototype = new VVVV.Core.Node();
+VVVV.Nodes.ZWriteEnableWebGL.prototype = new Node();
 
 
 /*
@@ -1513,7 +1522,7 @@ VVVV.Nodes.CullWebGL = function(id, graph) {
   }
 
 }
-VVVV.Nodes.CullWebGL.prototype = new VVVV.Core.Node();
+VVVV.Nodes.CullWebGL.prototype = new Node();
 
 
 /*
@@ -1580,8 +1589,8 @@ VVVV.Nodes.GenericShader = function(id, graph) {
           VVVV.ShaderCodeResources[thatNode.shaderFile].setSourceCode(response);
         },
         error: function() {
-          console.log('ERROR: Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVV.Root));
-          VVVV.onNotImplemented('Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVV.Root));
+          console.log('ERROR: Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVVContext.Root));
+          VVVV.onNotImplemented('Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVVContext.Root));
         }
       });
     }
@@ -1835,7 +1844,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
 
 
 }
-VVVV.Nodes.GenericShader.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GenericShader.prototype = new Node();
 
 
 /*
@@ -1991,7 +2000,7 @@ VVVV.Nodes.Quad = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Quad.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Quad.prototype = new Node();
 
 
 /*
@@ -2183,7 +2192,7 @@ VVVV.Nodes.GridSegment = function(id, graph) {
   }
 
 }
-VVVV.Nodes.GridSegment.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GridSegment.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2235,7 +2244,7 @@ VVVV.Nodes.Group = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Group.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Group.prototype = new Node();
 
 
 /*
@@ -2279,8 +2288,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var pMatrix;
   var vMatrix;
   var vpMatrix;
-  var wvMatrix = mat4.create();
-  var wvpMatrix = mat4.create();
+  var wvMatrix = glMatrix.mat4.create();
+  var wvpMatrix = glMatrix.mat4.create();
 
   var canvas;
   this.ctxt = undefined;              // the renderer's active context. might be the canvas context, or the context of a connected downstream renderer
@@ -2546,24 +2555,24 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
 
     if (projIn.pinIsChanged()) {
       if (projIn.isConnected()) {
-        pMatrix = mat4.create();
-        mat4.set(projIn.getValue(0), pMatrix);
-        mat4.scale(pMatrix, [1, 1, -1]);
+        pMatrix = glMatrix.mat4.create();
+        glMatrix.mat4.set(projIn.getValue(0), pMatrix);
+        glMatrix.mat4.scale(pMatrix, [1, 1, -1]);
       }
       else {
-        pMatrix = mat4.create();
-        mat4.ortho(-1, 1, -1, 1, -100, 100, pMatrix);
-        mat4.scale(pMatrix, [1, 1, -1]);
+        pMatrix = glMatrix.mat4.create();
+        glMatrix.mat4.ortho(-1, 1, -1, 1, -100, 100, pMatrix);
+        glMatrix.mat4.scale(pMatrix, [1, 1, -1]);
       }
       if (this.renderContexts && this.renderContexts[0]) // flip the output texture, if connected to downstream renderer
-        mat4.scale(pMatrix, [1, -1, 1]);
-      vpMatrix = mat4.create();
+        glMatrix.mat4.scale(pMatrix, [1, -1, 1]);
+      vpMatrix = glMatrix.mat4.create();
     }
     if (viewIn.pinIsChanged()) {
       vMatrix = viewIn.getValue(0);
     }
     if (viewIn.pinIsChanged() || projIn.pinIsChanged()) {
-      mat4.multiply(pMatrix, vMatrix, vpMatrix);
+      glMatrix.mat4.multiply(pMatrix, vMatrix, vpMatrix);
     }
 
     if (this.contextChanged) { // don't render anything, if the context changed in this frame. will only give warnings...
@@ -2680,7 +2689,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   }
 
 }
-VVVV.Nodes.RendererWebGL.prototype = new VVVV.Core.Node();
+VVVV.Nodes.RendererWebGL.prototype = new Node();
 
 
 /*
@@ -2738,7 +2747,7 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
   }
 
   this.openUIWindow = function() {
-    w = window.open(location.protocol+'//'+location.host+(VVVV.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVV.Root+"/code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
+    w = window.open(location.protocol+'//'+location.host+(VVVVContext.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVVContext.Root+"/code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
     var thatNode = this;
     window.setTimeout(function() {
       w.document.title = currentName+" / VVVV.js Effect Editor";
@@ -2771,6 +2780,6 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
   }
 
 }
-VVVV.Nodes.DefineEffect.prototype = new VVVV.Core.Node();
+VVVV.Nodes.DefineEffect.prototype = new Node();
 
-}(vvvvjs_jquery));
+});

@@ -3,17 +3,23 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
-(function($) {
+if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
+
+define(function(require,exports) {
+
+
+var _ = require('underscore');
+var VVVV = require('core/vvvv.core.defines');
 
 
 VVVV.Types.Color = function(str) {
-  
+
   this.rgba = new Float32Array(_(str.split(',')).map(function(v) { return parseFloat(v); }));
-  
+
   this.toString = function() {
     return this.rgba[0]+", "+this.rgba[1]+", "+this.rgba[2]+", "+this.rgba[3];
   }
-  
+
   this.setHSV = function(h, s, v) {
     h = (h%1.0 + 1.0)%1.0 * 360;
     var hi = Math.floor(h/60.0);
@@ -30,7 +36,7 @@ VVVV.Types.Color = function(str) {
       default: this.rgba[0] = v; this.rgba[1] = t; this.rgba[2] = p;
     }
   }
-  
+
   this.getHSV = function() {
     var r = this.rgba[0];
     var g = this.rgba[1];
@@ -54,7 +60,7 @@ VVVV.Types.Color = function(str) {
     var v = max;
     return [h/360.0, s, v];
   }
-  
+
   this.copy_to = function(col) {
     col.rgba[0] = this.rgba[0];
     col.rgba[1] = this.rgba[1];
@@ -69,7 +75,7 @@ VVVV.Types.CanvasGraphics = {
   defaultValue: function() {
     return "NONE";
   }
-  
+
 }
 
-}(vvvvjs_jquery));
+});

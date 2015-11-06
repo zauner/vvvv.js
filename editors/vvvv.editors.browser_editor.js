@@ -1,5 +1,13 @@
 
-(function($) {
+if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
+
+define(function(require,exports) {
+
+
+var $ = require('jquery');
+require('d3');
+var VVVV = require('core/vvvv.core.defines');
+var Makros = require('vvvv.makros');
 
 var UIState = {
   'Idle': 0,
@@ -272,9 +280,9 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
   })
 }
 
-VVVV.Editors.BrowserEditor = {}
+var BrowserEditor = {}
 
-VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
+BrowserEditor.PatchWindow = function(p, editor, selector) {
 
   this.state = UIState.Idle;
 
@@ -284,7 +292,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
   var selectedNodes = [];
   var patch = p;
   var maxNodeId = 0;
-  var pageURL = location.protocol+'//'+location.host+(VVVV.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVV.Root+'/patch.html';
+  var pageURL = location.protocol+'//'+location.host+(VVVVContext.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVVContext.Root+'/patch.html';
   var modKeyPressed = {CTRL: false, SHIFT: false, ALT: false};
   var selectionBB = {x1: 0, y1: 0, x2: 0, y2: 0};
 
@@ -594,25 +602,25 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           $('.makro', thatWin.window.document).remove();
         }
         $nodeselection.find('#new_node').click(tryAddNode);
-        
+
         var makros = chart.selectAll('g.makro')
-          .data(VVVV.Makros)
+          .data(Makros)
           .enter().append('svg:g')
             .attr('class', 'makro resettable')
             .attr('transform', function(d, i) { return "translate("+(x-85-(i%2)*85)+", "+(y+Math.floor(i/2)*25)+")"; })
             .on('click', function(d) {
               var command = d.command.replace("{left}", x*15).replace("{top}", y*15).replace("{id}", ++maxNodeId);
               editor.update(patch, command);
-              
+
               $nodeselection.remove();
               $('.makro', thatWin.window.document).remove();
             })
-            
+
         makros.append('svg:rect')
           .attr('width', 80)
           .attr('height', 20)
           .attr('fill', '#AAA')
-          
+
         makros.append('svg:text')
           .text(function(d) { return d.name })
           .attr('text-anchor', 'middle')
@@ -621,7 +629,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           .attr('font-family', 'Lucida Sans Unicode')
           .attr('dy', 12)
           .attr('dx', 40)
-              
+
       })
       .on('mousedown', function() {
         if (thatWin.state!=UIState.Idle)
@@ -1085,7 +1093,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           }
           if (!linkStart.node.delays_output)
             getAllUpstreamNodes(linkStart.node);
-          
+
           chart.selectAll('g.vvvv-'+targetDir+'-pin rect')
             .filter(function(d) {
               //if (d.typeName!=linkStart.typeName && (linkStart.typeName!="Node" || VVVV.PinTypes[d.typeName].primitive && (d.typeName!="Node" || VVVV.PinTypes[linkStart.typeName].primitive)))
@@ -1100,7 +1108,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             .attr('x', -1)
             .attr('y', function(d) { return d.direction==VVVV.PinDirection.Input ? -2 : 0})
             .attr('class', 'vvvv-connection-highlight')
-              
+
         }
         else {
 
@@ -1179,9 +1187,9 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
 
 }
 
-VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
+BrowserEditor.Inspector = function(VVVVRoot) {
 
-  this.win = window.open(location.protocol+'//'+location.host+(VVVV.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVV.Root+'/inspektor.html', 'inspektor', "location=no, width=250, height=600, toolbar=no" );
+  this.win = window.open(location.protocol+'//'+location.host+(VVVVContext.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVVContext.Root+'/inspektor.html', 'inspektor', "location=no, width=250, height=600, toolbar=no" );
   var node;
   var pin;
   insw = this.win;
@@ -1312,7 +1320,7 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
 
 }
 
-VVVV.Editors.BrowserEditor.Interface = function() {
+BrowserEditor.Interface = function() {
 
   var patchWindows = [];
   var patches = {};
@@ -1334,7 +1342,7 @@ VVVV.Editors.BrowserEditor.Interface = function() {
         that.disable();
       })
 
-      this.openInspector(VVVV.Root);
+      this.openInspector(VVVVContext.Root);
 
       if (patchWindows[0].window) {
         if (opts && opts.success)
@@ -1350,7 +1358,7 @@ VVVV.Editors.BrowserEditor.Interface = function() {
   this.openInspector = function(VVVVRoot, node) {
     if (this.inspector)
       return;
-    this.inspector = new VVVV.Editors.BrowserEditor.Inspector(VVVVRoot);
+    this.inspector = new BrowserEditor.Inspector(VVVVRoot);
     var that = this;
     $(this.inspector.win).bind('beforeunload', function() {
       console.log('closing inspektor');
@@ -1392,7 +1400,7 @@ VVVV.Editors.BrowserEditor.Interface = function() {
   }
 
   this.openPatch = function(p, selector) {
-    patchWindows.push(new VVVV.Editors.BrowserEditor.PatchWindow(p, this, selector));
+    patchWindows.push(new BrowserEditor.PatchWindow(p, this, selector));
   }
 
   this.update = function(node, cmd) {
@@ -1431,10 +1439,10 @@ VVVV.Editors.BrowserEditor.Interface = function() {
 
 // Convinience function to easily inject a patch into the page
 VVVV.VVVViewer = function(patch, selector) {
-  var editor = new VVVV.Editors.BrowserEditor.Interface();
+  var editor = new BrowserEditor.Interface();
   editor.enable(patch, {selector: selector});
 }
 
-VVVV.Editors["edit"] = VVVV.Editors.BrowserEditor.Interface;
+return BrowserEditor;
 
-}(vvvvjs_jquery));
+});

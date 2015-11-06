@@ -4,7 +4,11 @@
 // Additional authors of sub components are mentioned at the specific code locations.
 // This component was developed is (c) 2014 Lukas Winter, distributed under the MIT license.
 
-(function($) {
+if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
+define(function(require,exports) {
+
+var Node = require('core/vvvv.core.node');
+var VVVV = require('core/vvvv.core.defines');
 
 if (!window.AudioContext)
   return;
@@ -156,7 +160,7 @@ function WebAudioNode(id, name, graph) {
     this.auto_evaluate = false;
   }
 }
-WebAudioNode.prototype = new VVVV.Core.Node();
+WebAudioNode.prototype = new Node();
 WebAudioNode.prototype.truncateAPIMultiNode = function(n)
 {
   var that = this;
@@ -366,7 +370,7 @@ VVVV.Nodes.FileAudioBuffer = function(id, graph) {
 
   }
 };
-VVVV.Nodes.FileAudioBuffer.prototype = new VVVV.Core.Node();
+VVVV.Nodes.FileAudioBuffer.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -739,32 +743,32 @@ VVVV.Nodes.AddAudio.prototype = new WebAudioNode('Gain');
 
 VVVV.Nodes.AddAudioSpectral = function(id, graph) {
   WebAudioNode.call(this, id, 'Add (HTML5 Audio Spectral)', graph);
-  
+
   this.meta = {
     authors: ['Lukas Winter'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var that = this;
   var apiNode;
-  
+
   this.createAPISingleNode = function()
   {
     if(!apiNode)
       apiNode = audioContext.createGain();
     return apiNode;
   };
-  
+
   this.initialize = function()
   {
     this.createAPIMultiNode(1);
     this.createAudioPins();
   };
-  
+
   this.evaluate = function() {
-    
+
     this.updateAudioConnections();
     this.audioOutputPins[0].setSliceCount(1);
   }
@@ -993,4 +997,4 @@ VVVV.Nodes.BeatDetector = function(id, graph) {
 VVVV.Nodes.BeatDetector.prototype = new WebAudioNode('Analyser');
 VVVV.Nodes.BeatDetector.requirements = ["beatdetektor"];
 
-}(vvvvjs_jquery));
+});
