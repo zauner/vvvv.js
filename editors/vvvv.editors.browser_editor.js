@@ -594,7 +594,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           $('.makro', thatWin.window.document).remove();
         }
         $nodeselection.find('#new_node').click(tryAddNode);
-        
+
         var makros = chart.selectAll('g.makro')
           .data(VVVV.Makros)
           .enter().append('svg:g')
@@ -603,16 +603,16 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             .on('click', function(d) {
               var command = d.command.replace("{left}", x*15).replace("{top}", y*15).replace("{id}", ++maxNodeId);
               editor.update(patch, command);
-              
+
               $nodeselection.remove();
               $('.makro', thatWin.window.document).remove();
             })
-            
+
         makros.append('svg:rect')
           .attr('width', 80)
           .attr('height', 20)
           .attr('fill', '#AAA')
-          
+
         makros.append('svg:text')
           .text(function(d) { return d.name })
           .attr('text-anchor', 'middle')
@@ -621,10 +621,10 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           .attr('font-family', 'Lucida Sans Unicode')
           .attr('dy', 12)
           .attr('dx', 40)
-              
+
       })
       .on('mousedown', function() {
-        if (thatWin.state!=UIState.Idle)
+        if (thatWin.state!=UIState.Idle || d3.event.which!=1)
           return;
         thatWin.state = UIState.AreaSelecting;
         selectionBB.x1 = selectionBB.x2 = d3.event.pageX+1;
@@ -1085,7 +1085,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           }
           if (!linkStart.node.delays_output)
             getAllUpstreamNodes(linkStart.node);
-          
+
           chart.selectAll('g.vvvv-'+targetDir+'-pin rect')
             .filter(function(d) {
               //if (d.typeName!=linkStart.typeName && (linkStart.typeName!="Node" || VVVV.PinTypes[d.typeName].primitive && (d.typeName!="Node" || VVVV.PinTypes[linkStart.typeName].primitive)))
@@ -1100,7 +1100,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             .attr('x', -1)
             .attr('y', function(d) { return d.direction==VVVV.PinDirection.Input ? -2 : 0})
             .attr('class', 'vvvv-connection-highlight')
-              
+
         }
         else {
 
