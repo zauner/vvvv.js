@@ -802,7 +802,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
 
       })
       .on('mousedown', function() {
-        if (thatWin.state!=UIState.Idle)
+        if (thatWin.state!=UIState.Idle || d3.event.which!=1)
           return;
         thatWin.state = UIState.AreaSelecting;
         selectionBB.x1 = selectionBB.x2 = d3.event.pageX+1;
