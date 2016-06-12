@@ -10,6 +10,7 @@ define(function(require,exports) {
   var Node = require('./vvvv.core.node');
   var Link = require('./vvvv.core.link');
   var VVVV = require('./vvvv.core.defines');
+  var ServerSync = require('./vvvv.core.server_sync')
 
   /**
    * @class
@@ -664,6 +665,9 @@ define(function(require,exports) {
       return xml;
     }
 
+    this.remotePatchConnection = null;
+    this.serverSync = null;
+
     /**
      * Assemples the {@link VVVV.Core.Patch.compiledFunc} function, which is called each frame, and subsequently calls all nodes in the correct order. This method is invoked automatically each time the patch has been changed.
      */
@@ -728,9 +732,20 @@ define(function(require,exports) {
           }
           else {
             if (!node.not_implemented) {
-              recipe.push(node);
-              compiledCode += "var n = patch.nodeMap["+node.id+"];\n";
-              compiledCode += "if ((n.isDirty() || n.auto_evaluate || n.isSubpatch) && !n.dealWithNilInput()) { n.evaluate(); n.dirty = false; }\n";
+              if (VVVVContext.name=='browser' && node.environments && node.environments[0]=='nodejs') { // remote execution ...
+                if (thisPatch.remotePatchConnection==null) {
+                  thisPatch.serverSync = new ServerSync(thisPatch);
+                }
+                node.evaluate = function() {
+                  thisPatch.serverSync.sendPinValues(this);
+                }
+                node.environments = ["browser"];
+              }
+              if (!node.environments || node.environments.indexOf(VVVVContext.name)>=0) {
+                recipe.push(node);
+                compiledCode += "var n = patch.nodeMap["+node.id+"];\n";
+                compiledCode += "if ((n.isDirty() || n.auto_evaluate || n.isSubpatch) && !n.dealWithNilInput()) { n.evaluate(); n.dirty = false; }\n";
+              }
             }
           }
           for (var pinname in node.inputPins) {

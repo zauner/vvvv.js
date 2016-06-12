@@ -1408,6 +1408,9 @@ BrowserEditor.Interface = function() {
     var n = patches[path].length;
     for (var i=0; i<n; i++) {
       patches[path][i].doLoad(cmd);
+      if (patches[path][i].serverSync) {
+        patches[path][i].serverSync.sendPatchUpdate(patches[path][i], cmd);
+      }
       patches[path][i].afterUpdate();
     }
   }

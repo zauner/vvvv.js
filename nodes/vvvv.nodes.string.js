@@ -883,4 +883,60 @@ VVVV.Nodes.ConsString = function(id, graph) {
 }
 VVVV.Nodes.ConsString.prototype = new Node();
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Writer (String)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.WriterString = function(id, graph) {
+  this.constructor(id, "Writer (String)", graph);
+
+  this.environments = ['nodejs'];
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  this.auto_evaluate = false;
+
+  var contentIn = this.addInputPin("Content", [""], VVVV.PinTypes.String);
+  var filenameIn = this.addInputPin("Filename", ["file.txt"], VVVV.PinTypes.String);
+  var writeIn = this.addInputPin("Write", [0], VVVV.PinTypes.Value);
+  var appendIn = this.addInputPin("Append", [0], VVVV.PinTypes.Value);
+
+  // output pins
+  var outputOut = this.addOutputPin('Success', [0], VVVV.PinTypes.Value);
+
+
+  // initialize() will be called after node creation
+  var fs;
+  this.initialize = function() {
+    fs = window.server_req('fs');
+  }
+
+  this.evaluate = function() {
+    if (writeIn.getValue(0)>=0.5 || appendIn.getValue(0)>0.5) {
+      try {
+        if (writeIn.getValue(0)>=0.5)
+          fs.writeFileSync(filenameIn.getValue(0), contentIn.getValue(0));
+        else
+          fs.appendFileSync(filenameIn.getValue(0), contentIn.getValue(0));
+        outputOut.setValue(0, 1);
+      }
+      catch (e) {
+        outputOut.setValue(0, 0);
+      }
+    }
+  }
+
+}
+VVVV.Nodes.WriterString.prototype = new Node();
+
 });

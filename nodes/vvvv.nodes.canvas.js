@@ -11,6 +11,7 @@ define(function(require,exports) {
 var glMatrix = require('glMatrix');
 var Node = require('core/vvvv.core.node');
 var VVVV = require('core/vvvv.core.defines');
+var $ = require('jquery');
 
 VVVV.Types.CanvasTexture = { imageObject: undefined, loaded: false };
 
@@ -951,6 +952,8 @@ VVVV.Nodes.GroupCanvas.prototype = new Node();
 
 VVVV.Nodes.RendererCanvas = function(id, graph) {
   this.constructor(id, "Renderer (Canvas VVVVjs)", graph);
+
+  this.environments = ['browser'];
 
   this.meta = {
     authors: ['Matthias Zauner'],

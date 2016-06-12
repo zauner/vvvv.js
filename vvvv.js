@@ -30,7 +30,7 @@ var aliases = {
   glMatrix: 'lib/glMatrix-0.9.5.min',
 }
 
-var VVVVBrowserContext = {};
+var VVVVBrowserContext = {name: 'browser'};
 
 /**
  * Adds the neccessary JavaScripts to the head, calls the callback once everything is in place. Also automatically loads patches specified in script tags.
@@ -40,6 +40,11 @@ var VVVVBrowserContext = {};
  */
 VVVVBrowserContext.init = function (path_to_vvvv, mode, callback) {
   VVVVContext.Root = path_to_vvvv || './';
+
+  window.server_req = function() {
+    console.log('Calling remoty_only_require in browser context does not work.');
+    return null;
+  }
 
   requirejs.config({
     baseUrl: path_to_vvvv,
@@ -93,7 +98,7 @@ VVVVBrowserContext.getRelativeRequire = function(system_require) {
 }
 
 
-var VVVVNodeContext = {};
+var VVVVNodeContext = {name: "nodejs"};
 
 VVVVNodeContext.init = function (path_to_vvvv, mode, callback) {
   VVVVContext.Root = path_to_vvvv || './';
@@ -103,6 +108,10 @@ VVVVNodeContext.init = function (path_to_vvvv, mode, callback) {
   var jsdom = require(VVVVContext.Root+'/node_modules/jsdom');
   jsdom.env('<html></html>', function(err, w) {
     global.window = w;
+    global.document = w.document;
+    w.server_req = function(f) {
+      return require(f);
+    }
     var vvvv = require(VVVVContext.Root+'/core/vvvv.core');
     if (typeof callback === 'function') callback.call(window, vvvv);
   });
