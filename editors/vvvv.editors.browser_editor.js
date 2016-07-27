@@ -802,6 +802,8 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           return 'rgba(0,0,0,0)';
         else if (d.not_implemented)
           return 'rgba(255,0,0,1)';
+        else if (d.cluster)
+          return 'rgba(255, 255, 0, 1)';
         else
           return '#cdcdcd';
       })
@@ -929,7 +931,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
     inputPins.append('svg:rect')
       .attr('width', 4)
       .attr('height', 4)
-      .attr('fill', function(d) { return d.node.isComment() ? 'rgba(0,0,0,0)' : '#666666' })
+      .attr('fill', function(d) { return d.node.isComment() ? 'rgba(0,0,0,0)' : (d.clusterEdge ? '#FFFF00' : '#666666') })
       .on('mouseover', function(d, i) {
         chart.selectAll('#vvvv-node-'+d.node.id+' g.vvvv-input-pin').filter(function(d, j) { return j==i }).each(function() {
           d3.select(this).append('svg:rect')
@@ -975,7 +977,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
     outputPins.append('svg:rect')
       .attr('width', 4)
       .attr('height', 4)
-      .attr('fill', function(d) { return d.node.isComment() ? 'rgba(0,0,0,0)' : '#666666' })
+      .attr('fill', function(d) { return d.node.isComment() ? 'rgba(0,0,0,0)' : (d.clusterEdge ? '#FFFF00' : '#666666') })
       .on('mouseover', function(d, i) {
         chart.selectAll('#vvvv-node-'+d.node.id+' g.vvvv-output-pin').filter(function(d, j) { return j==i }).each(function() {
           d3.select(this).append('svg:rect')

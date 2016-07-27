@@ -3,7 +3,7 @@
 if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
 
 define(function(require,exports) {
-  
+
 
 var _ = require('underscore');
 var $ = require('jquery');
@@ -23,7 +23,8 @@ var MainLoop = function(patch, frames_per_second) {
 
   VVVVContext.fps = frames_per_second || 60;
   var framecount = 0;
-  var dom = new DOMInterface(patch);
+  if (VVVVContext.name=='browser')
+    var dom = new DOMInterface(patch);
   var run = true;
   var start = undefined;
   var animFrameRequested = false;
@@ -37,8 +38,9 @@ var MainLoop = function(patch, frames_per_second) {
 
   /** the frame number */
   this.frameNum = 0;
-
   patch.setMainloop(this);
+
+  var nodeEnvTimer = null;
 
   var that = this;
 
@@ -53,9 +55,11 @@ var MainLoop = function(patch, frames_per_second) {
       if (start)
         that.deltaT = now - start;
       start = now;
-      dom.populateInputConnectors();
+      if (VVVVContext.name=='browser')
+        dom.populateInputConnectors();
       patch.evaluate();
-      dom.processOutputConnectors();
+      if (VVVVContext.name=='browser')
+        dom.processOutputConnectors();
       var elapsed = new Date().getTime()-start;
       if (framecount%10 == 0) {
         if (print_framerate) {
@@ -73,9 +77,14 @@ var MainLoop = function(patch, frames_per_second) {
         lowFrameRateCount = 0;
     }
     if (run) // && framecount<1)
-      window.setTimeout(function() {
-        window.requestAnimationFrame(update);
-      }, Math.max(0, Math.round(1000/VVVVContext.fps-elapsed)));
+      if (VVVVContext.name=='browser') {
+        window.setTimeout(function() {
+          window.requestAnimationFrame(update);
+        }, Math.max(0, Math.round(1000/VVVVContext.fps-elapsed)));
+      }
+      else if (VVVVContext.name=='nodejs') {
+        nodeEnvTimer = setTimeout(update, Math.max(0, Math.round(1000/VVVVContext.fps-elapsed)))
+      }
 
   }
 
@@ -91,6 +100,8 @@ var MainLoop = function(patch, frames_per_second) {
    */
   this.start = function() {
     if (run) return;
+    if (nodeEnvTimer!==null)
+      clearTimeout(nodeEnvTimer);
     run = true;
     update();
   }

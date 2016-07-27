@@ -904,7 +904,7 @@ VVVV.Nodes.WriterString = function(id, graph) {
     compatibility_issues: []
   };
 
-  this.auto_evaluate = false;
+  this.auto_evaluate = true;
 
   var contentIn = this.addInputPin("Content", [""], VVVV.PinTypes.String);
   var filenameIn = this.addInputPin("Filename", ["file.txt"], VVVV.PinTypes.String);
@@ -922,6 +922,7 @@ VVVV.Nodes.WriterString = function(id, graph) {
   }
 
   this.evaluate = function() {
+    outputOut.setValue(0, 0);
     if (writeIn.getValue(0)>=0.5 || appendIn.getValue(0)>0.5) {
       try {
         if (writeIn.getValue(0)>=0.5)

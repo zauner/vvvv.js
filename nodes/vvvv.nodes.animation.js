@@ -31,6 +31,8 @@ VVVV.Nodes.LFO = function(id, graph) {
 
   this.auto_evaluate = true;
 
+  this.environments = ['browser'];
+
   var PeriodIn = this.addInputPin('Period', [1.0], VVVV.PinTypes.Value);
   var PauseIn = this.addInputPin("Pause", [0], VVVV.PinTypes.Value);
   var ReverseIn = this.addInputPin("Reverse", [0], VVVV.PinTypes.Value);

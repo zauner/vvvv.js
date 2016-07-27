@@ -10,7 +10,8 @@ define(function(require,exports) {
   var Node = require('./vvvv.core.node');
   var Link = require('./vvvv.core.link');
   var VVVV = require('./vvvv.core.defines');
-  var ServerSync = require('./vvvv.core.server_sync')
+  var ServerSync = require('./vvvv.core.server_sync');
+  var Cluster = require('./vvvv.core.cluster');
 
   /**
    * @class
@@ -666,7 +667,12 @@ define(function(require,exports) {
     }
 
     this.remotePatchConnection = null;
-    this.serverSync = null;
+    if (this.parentPatch)
+      this.serverSync = this.parentPatch.serverSync;
+    else {
+      this.serverSync = new ServerSync(this);
+    }
+    this.cluster = new Cluster(this);
 
     /**
      * Assemples the {@link VVVV.Core.Patch.compiledFunc} function, which is called each frame, and subsequently calls all nodes in the correct order. This method is invoked automatically each time the patch has been changed.
@@ -682,6 +688,10 @@ define(function(require,exports) {
       var pinList = this.pinList;
       var regex = new RegExp(/\{([^\}]+)\}/g);
       var thisPatch = this;
+
+      this.cluster.detect();
+      if (this.cluster.hasNodes && !this.serverSync.isConnected())
+        this.serverSync.connect();
 
       var compiledCode = "";
 
@@ -702,46 +712,37 @@ define(function(require,exports) {
           lostLoopRoots.push(node);
 
         if ((!loop_detected && nodeStack.indexOf(node.id)<0) || node.delays_output) {
-          if (node.getCode) {
-            node.outputPins["Output"].values.incomingPins = [];
-            var nodecode = "("+node.getCode()+")";
-            var code = nodecode;
-            var match;
-            while (match = regex.exec(nodecode)) {
-              var v;
-              if (node.inputPins[match[1]].values.code) {
-                v = node.inputPins[match[1]].values.code;
-                node.outputPins['Output'].values.incomingPins = node.outputPins['Output'].values.incomingPins.concat(node.inputPins[match[1]].values.incomingPins)
-              }
-              else {
-                if (!node.inputPins[match[1]].isConnected() && node.inputPins[match[1]].getSliceCount()==1)
-                  v = node.inputPins[match[1]].getValue(0);
-                else
-                  v = "patch.nodeMap["+node.id+"].inputPins['"+match[1]+"'].getValue(iii)";
-                node.outputPins['Output'].values.incomingPins.push(node.inputPins[match[1]]);
-              }
-              code = code.replace("{"+match[1]+"}", v);
-            }
-            node.outputPins["Output"].values.code = code;
-            for (var i=0; i<node.outputPins["Output"].links.length; i++) {
-              if (!node.outputPins["Output"].links[i].toPin.node.getCode) {
-                compiledCode += node.outputPins["Output"].generateStaticCode(true);
-                break;
-              }
-            }
-          }
-          else {
-            if (!node.not_implemented) {
-              if (VVVVContext.name=='browser' && node.environments && node.environments[0]=='nodejs') { // remote execution ...
-                if (thisPatch.remotePatchConnection==null) {
-                  thisPatch.serverSync = new ServerSync(thisPatch);
+          if ((node.cluster && VVVVContext.name=="nodejs") || (!node.cluster && VVVVContext.name=="browser")) {
+            if (node.getCode) {
+              node.outputPins["Output"].values.incomingPins = [];
+              var nodecode = "("+node.getCode()+")";
+              var code = nodecode;
+              var match;
+              while (match = regex.exec(nodecode)) {
+                var v;
+                if (node.inputPins[match[1]].values.code) {
+                  v = node.inputPins[match[1]].values.code;
+                  node.outputPins['Output'].values.incomingPins = node.outputPins['Output'].values.incomingPins.concat(node.inputPins[match[1]].values.incomingPins)
                 }
-                node.evaluate = function() {
-                  thisPatch.serverSync.sendPinValues(this);
+                else {
+                  if (!node.inputPins[match[1]].isConnected() && node.inputPins[match[1]].getSliceCount()==1)
+                    v = node.inputPins[match[1]].getValue(0);
+                  else
+                    v = "patch.nodeMap["+node.id+"].inputPins['"+match[1]+"'].getValue(iii)";
+                  node.outputPins['Output'].values.incomingPins.push(node.inputPins[match[1]]);
                 }
-                node.environments = ["browser"];
+                code = code.replace("{"+match[1]+"}", v);
               }
-              if (!node.environments || node.environments.indexOf(VVVVContext.name)>=0) {
+              node.outputPins["Output"].values.code = code;
+              for (var i=0; i<node.outputPins["Output"].links.length; i++) {
+                if (!node.outputPins["Output"].links[i].toPin.node.getCode) {
+                  compiledCode += node.outputPins["Output"].generateStaticCode(true);
+                  break;
+                }
+              }
+            }
+            else {
+              if (!node.not_implemented) {
                 recipe.push(node);
                 compiledCode += "var n = patch.nodeMap["+node.id+"];\n";
                 compiledCode += "if ((n.isDirty() || n.auto_evaluate || n.isSubpatch) && !n.dealWithNilInput()) { n.evaluate(); n.dirty = false; }\n";
@@ -795,38 +796,9 @@ define(function(require,exports) {
 
       this.compiledFunc(this);
 
-      /*var pinname;
-      for (var i=0; i<this.evaluationRecipe.length; i++) {
-        var node = this.evaluationRecipe[i];
-        if (print_timing)
-          console.log(node.nodename);
-        if (node.isDirty() || node.auto_evaluate || node.isSubpatch) {
-          if (print_timing)
-            var start = new Date().getTime();
-          if (node.auto_nil && !node.isSubpatch && node.hasNilInputs()) {
-            for(pinname in node.outputPins) {
-              node.outputPins[pinname].setSliceCount(0);
-            }
-          }
-          else {
-            try {
-              node.evaluate();
-            }
-            catch (e) {
-              console.log('VVVV.Js / Error evaluating '+node.nodename+': '+e.message);
-            }
-            node.dirty = false;
-          }
-          if (print_timing) {
-            if (!nodeProfiles[node.nodename])
-              nodeProfiles[node.nodename] = {count: 0, dt: 0};
-            elapsed = new Date().getTime() - start;
-            nodeProfiles[node.nodename].count++;
-            nodeProfiles[node.nodename].dt += elapsed;
-            console.log(node.nodename+' / '+node.id+': '+elapsed+'ms')
-          }
-        }
-      }*/
+      if (VVVVContext.name=="browser" && this.cluster.hasNodes) {
+        this.cluster.syncPinValues(this.serverSync.socket);
+      }
 
       if (print_timing) {
         _(nodeProfiles).each(function(p, nodename) {
