@@ -103,8 +103,9 @@ var VVVVNodeContext = {name: "nodejs"};
 VVVVNodeContext.init = function (path_to_vvvv, mode, callback) {
   VVVVContext.Root = path_to_vvvv || './';
   var path = require('path');
-  VVVVContext.AppRoot = path.resolve(path.dirname(process.mainModule.filename));
-  VVVVContext.Root = VVVVContext.AppRoot+'/'+VVVVContext.Root;
+  VVVVContext.DocumentRoot = path.resolve(path.dirname(process.mainModule.filename));
+  VVVVContext.ServerRoot = path.resolve(path.dirname(process.mainModule.filename));
+  VVVVContext.Root = VVVVContext.ServerRoot+'/'+VVVVContext.Root; // TODO: ServerRoot or DocumentRoot ?
   var jsdom = require(VVVVContext.Root+'/node_modules/jsdom');
   jsdom.env('<html></html>', function(err, w) {
     global.window = w;
@@ -120,7 +121,7 @@ VVVVNodeContext.init = function (path_to_vvvv, mode, callback) {
 VVVVNodeContext.loadFile = function(filename, opts) {
   var data;
   try {
-    data = require('fs').readFileSync(VVVVContext.AppRoot+'/'+filename, {encoding: 'utf-8'});
+    data = require('fs').readFileSync(filename, {encoding: 'utf-8'});
     if (typeof opts.success === 'function')
       opts.success.call(window, data);
   } catch (e) {

@@ -119,16 +119,27 @@ exports.Helpers = {
     if (path.match(/^%VVVV%/)) // VVVV.js system path
       return path.replace('%VVVV%', VVVVContext.Root);
 
-    if (path.match(/^%PAGE%/)) // hosting HTML page path
-      return path.replace('%PAGE%', location.pathname);
+    if (path.match(/^%PAGE%/)) { // hosting HTML page path
+      if (VVVVContext.name=="browser")
+        return path.replace('%PAGE%', location.pathname);
+      else
+        return path.replace('%PAGE%', VVVVContext.DocumentRoot + VVVVContext.AppRoot);
+    }
 
-    if (path.match(/^(\/|.+:\/\/)/)) // path starting with / or an URL protocol (http://, ftp://, ..)
-      return path;
+    if (path.match(/^(\/|.+:\/\/)/)) { // path starting with / or an URL protocol (http://, ftp://, ..)
+      if (VVVVContext.name=="browser")
+        return path;
+      else
+        return VVVVContext.DocumentRoot + path;
+    }
 
     if (patch)
-      return patch.getAbsolutePath()+path;
-    else
-      return path;
+      path = patch.getAbsolutePath()+path;
+
+    if (VVVVContext.name=="nodejs")
+      path = VVVVContext.DocumentRoot + VVVVContext.AppRoot + path;
+
+    return path;
   },
 
   /**

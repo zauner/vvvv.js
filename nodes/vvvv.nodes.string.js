@@ -926,9 +926,9 @@ VVVV.Nodes.WriterString = function(id, graph) {
     if (writeIn.getValue(0)>=0.5 || appendIn.getValue(0)>0.5) {
       try {
         if (writeIn.getValue(0)>=0.5)
-          fs.writeFileSync(filenameIn.getValue(0), contentIn.getValue(0));
+          fs.writeFileSync(VVVV.Helpers.prepareFilePath(filenameIn.getValue(0), this.patch), contentIn.getValue(0));
         else
-          fs.appendFileSync(filenameIn.getValue(0), contentIn.getValue(0));
+          fs.appendFileSync(VVVV.Helpers.prepareFilePath(filenameIn.getValue(0), this.patch), contentIn.getValue(0));
         outputOut.setValue(0, 1);
       }
       catch (e) {

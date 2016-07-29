@@ -826,8 +826,7 @@ define(function(require,exports) {
       this.nodename = ressource;
       var that = this;
       var path = ressource;
-      if (this.parentPatch)
-        path = VVVV.Helpers.prepareFilePath(ressource, this.parentPatch)
+      path = VVVV.Helpers.prepareFilePath(ressource, this.parentPatch)
       if (!VVVVContext.Patches[path]) {
         VVVVContext.loadFile(path, {
           success: function(r) {

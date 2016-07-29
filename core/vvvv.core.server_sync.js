@@ -18,7 +18,7 @@ define(function(require,exports) {
       this.socket = new WebSocket("ws://localhost:5001");
 
       this.socket.onopen = function() {
-        var msg = {patch: root_patch.nodename};
+        var msg = {app_root: location.pathname, patch: root_patch.nodename};
         this.send(JSON.stringify(msg));
       }
 

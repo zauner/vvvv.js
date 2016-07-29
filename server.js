@@ -50,8 +50,6 @@ function roughSizeOfObject( object ) {
 // Listen
 server.listen(5000)
 
-var page_path = "examples/01_canvas_arcs/";
-
 VVVVContext.init('./', 'full', function (vvvv) {
 
   var websocket_server = ws.createServer(function (conn) {
@@ -62,8 +60,9 @@ VVVVContext.init('./', 'full', function (vvvv) {
       var req = JSON.parse(str);
 
   		if (patch==null) {
-        console.log("Spawning patch "+page_path+req.patch+" for ");
-        patch = new vvvv.Patch(page_path+req.patch, function() {
+        console.log("Spawning patch "+req.patch+" in "+req.app_root);
+        VVVVContext.AppRoot = req.app_root;
+        patch = new vvvv.Patch(req.patch, function() {
           mainloop = new vvvv.MainLoop(this, 0.2);
         });
         patch.afterEvaluate = function() {
