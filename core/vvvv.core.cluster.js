@@ -16,33 +16,33 @@ define(function(require,exports) {
 
     this.detect = function() {
       function findCluster(node, clusterActive) {
-        if (node.cluster)
+        if (node.inCluster)
           return;
-        node.cluster = false;
+        node.inCluster = false;
         if (node.environments && node.environments[0]=='nodejs')
-          node.cluster = true;
+          node.inCluster = true;
         for (var pinname in node.inputPins) {
           if (node.inputPins[pinname].links.length>0) {
             var fromPin = node.inputPins[pinname].links[0].fromPin;
-            findCluster(fromPin.node, (clusterActive || node.cluster) && (!node.environments || node.environments[0]!='browser'));
-            if (!node.environments || node.environments[0]!='browser')
-              node.cluster |= fromPin.node.cluster && clusterActive;
+            findCluster(fromPin.node, (clusterActive || node.inCluster) && (!node.environments || node.environments[0]!='browser') && !node.isSubpatch);
+            if ((!node.environments || node.environments[0]!='browser') && !node.isSubpatch)
+              node.inCluster |= fromPin.node.inCluster && clusterActive;
           }
         }
         for (var pinname in node.inputPins) {
           if (node.inputPins[pinname].links.length>0) {
             var fromPin = node.inputPins[pinname].links[0].fromPin;
-            if (node.cluster)
+            if (node.inCluster)
               fromPin.edgeLinkCount--;
             if (fromPin.edgeLinkCount<=0)
-              fromPin.clusterEdge = false;
+              fromPin.inClusterEdge = false;
           }
         }
 
-        if (node.cluster==true) {
+        if (node.inCluster==true) {
           // set input cluster edges
           for (var pinname in node.inputPins) {
-            if (node.inputPins[pinname].links.length==0 || !node.inputPins[pinname].links[0].fromPin.node.cluster)
+            if (node.inputPins[pinname].links.length==0 || !node.inputPins[pinname].links[0].fromPin.node.inCluster)
               node.inputPins[pinname].clusterEdge = true;
             else
               node.inputPins[pinname].clusterEdge = false;
@@ -55,17 +55,17 @@ define(function(require,exports) {
         }
       }
       for (var i=0; i<patch.nodeList.length; i++) {
-        patch.nodeList[i].cluster = false;
+        patch.nodeList[i].inCluster = false;
       }
       for (var i=0; i<patch.nodeList.length; i++) {
         if (patch.nodeList[i].environments && patch.nodeList[i].environments[0]=="nodejs") {
-          if (!patch.nodeList[i].cluster) // the node would have been marked as cluster node if it had already been visited
+          if (!patch.nodeList[i].inCluster) // the node would have been marked as cluster node if it had already been visited
             findCluster(patch.nodeList[i], true);
         }
       }
       this.clear();
       for (var i=0; i<patch.nodeList.length; i++) {
-        if (patch.nodeList[i].cluster) {
+        if (patch.nodeList[i].inCluster) {
           this.addNode(patch.nodeList[i]);
         }
       }
@@ -121,7 +121,7 @@ define(function(require,exports) {
       }
       if (nodes.length==0)
         return;
-      var msg = {patch: patch.nodename, nodes: nodes};
+      var msg = {patch: patch.getPatchIdentifier(), nodes: nodes};
       console.log(JSON.stringify(msg));
       if (socket.readyState==socket.OPEN)
         socket.send(JSON.stringify(msg));

@@ -122,11 +122,13 @@ VVVVNodeContext.loadFile = function(filename, opts) {
   var data;
   try {
     data = require('fs').readFileSync(filename, {encoding: 'utf-8'});
-    if (typeof opts.success === 'function')
-      opts.success.call(window, data);
   } catch (e) {
     if (typeof opts.error === 'function')
       opts.error.call();
+  }
+  if (data) {
+    if (typeof opts.success === 'function')
+      opts.success.call(window, data);
   }
 }
 

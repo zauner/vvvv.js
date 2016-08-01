@@ -1,5 +1,7 @@
 <!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta28.1.dtd" >
-<PATCH>
+  <PATCH>
+  <BOUNDS type="Window" width="7005" height="7605">
+  </BOUNDS>
   <NODE id="0" nodename="Renderer (Canvas VVVVjs)" systemname="Renderer (Canvas VVVVjs)" componentmode="Hidden">
   <BOUNDS type="Node" left="1320" top="6105" width="100" height="100">
   </BOUNDS>
@@ -270,6 +272,28 @@
   <PIN pinname="Descriptive Name" visible="0" values="||">
   </PIN>
   </NODE>
+  <NODE id="23" nodename="sub.v4p" systemname="sub" filename="sub.v4p" componentmode="Hidden">
+  <BOUNDS type="Node" left="4965" top="4860" width="100" height="100">
+  </BOUNDS>
+  <PIN pinname="aaa" visible="1">
+  </PIN>
+  <PIN pinname="Descriptive Name" visible="0" values="||">
+  </PIN>
+  </NODE>
+  <NODE id="24" nodename="Writer (String)" systemname="Writer (String)" componentmode="Hidden">
+  <BOUNDS type="Node" left="5310" top="5985" width="100" height="100">
+  </BOUNDS>
+  <PIN pinname="Content" visible="1">
+  </PIN>
+  <PIN pinname="Filename" visible="1">
+  </PIN>
+  <PIN pinname="Write" visible="1">
+  </PIN>
+  <PIN pinname="Append" visible="1">
+  </PIN>
+  <PIN pinname="Descriptive Name" visible="0" values="||">
+  </PIN>
+  </NODE>
   <LINK srcnodeid="1" srcpinname="Layer" dstnodeid="0" dstpinname="Layers">
   </LINK>
   <LINK srcnodeid="2" srcpinname="Output" dstnodeid="0" dstpinname="Background Color">
@@ -311,5 +335,9 @@
   <LINK srcnodeid="21" srcpinname="Change" dstnodeid="20" dstpinname="Append">
   </LINK>
   <LINK srcnodeid="21" srcpinname="Output" dstnodeid="22" dstpinname="Input">
+  </LINK>
+  <LINK srcnodeid="20" srcpinname="Success" dstnodeid="23" dstpinname="aaa">
+  </LINK>
+  <LINK srcnodeid="23" srcpinname="sdfsdf" dstnodeid="24" dstpinname="Append">
   </LINK>
   </PATCH>

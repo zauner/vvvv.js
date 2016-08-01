@@ -83,6 +83,17 @@ define(function(require,exports) {
       return match[1] || '';
     }
 
+    var patchIdentifier = undefined;
+    this.getPatchIdentifier = function() {
+      if (patchIdentifier)
+        return patchIdentifier;
+      if (!this.parentPatch)
+        patchIdentifier = "ROOT";
+      else
+        patchIdentifier = this.parentPatch.getPatchIdentifier()+"/"+this.id;
+      return patchIdentifier;
+    }
+
     /**
      * Called when a patch is deleted. Deletes all containing nodes.
      */
@@ -309,6 +320,7 @@ define(function(require,exports) {
               VVVVContext.Patches[path].splice(VVVVContext.Patches[path].indexOf(n), 1);
               if (VVVVContext.Patches[path].length == 0)
                 delete VVVVContext.Patches[path];
+              delete VVVVContext.Patches[n.getPatchIdentifier()];
             }
           }
           if (n.definingNode) { // remove connection to related DefineNode node
@@ -712,7 +724,7 @@ define(function(require,exports) {
           lostLoopRoots.push(node);
 
         if ((!loop_detected && nodeStack.indexOf(node.id)<0) || node.delays_output) {
-          if ((node.cluster && VVVVContext.name=="nodejs") || (!node.cluster && VVVVContext.name=="browser")) {
+          if ((node.inCluster && VVVVContext.name=="nodejs") || (!node.inCluster && VVVVContext.name=="browser") || node.isSubpatch) {
             if (node.getCode) {
               node.outputPins["Output"].values.incomingPins = [];
               var nodecode = "("+node.getCode()+")";
@@ -796,7 +808,7 @@ define(function(require,exports) {
 
       this.compiledFunc(this);
 
-      if (VVVVContext.name=="browser" && this.cluster.hasNodes) {
+      if (this.cluster.hasNodes) {
         this.cluster.syncPinValues(this.serverSync.socket);
       }
 
@@ -833,6 +845,8 @@ define(function(require,exports) {
             that.doLoad(r, function() {
               VVVVContext.Patches[path] = VVVVContext.Patches[path] || [];
               VVVVContext.Patches[path].push(that);
+              VVVVContext.Patches[that.getPatchIdentifier()]
+              VVVVContext.Patches[that.getPatchIdentifier()] = that;
               if (that.success)
                 that.success();
               that.afterUpdate();

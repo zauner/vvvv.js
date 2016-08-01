@@ -60,14 +60,13 @@ VVVVContext.init('./', 'full', function (vvvv) {
       var req = JSON.parse(str);
 
   		if (patch==null) {
+        console.log(req);
         console.log("Spawning patch "+req.patch+" in "+req.app_root);
         VVVVContext.AppRoot = req.app_root;
         patch = new vvvv.Patch(req.patch, function() {
+          this.serverSync.socket = conn;
           mainloop = new vvvv.MainLoop(this, 0.2);
         });
-        patch.afterEvaluate = function() {
-          patch.cluster.syncPinValues(conn);
-        }
 
         console.log("PATCH SIZE:", roughSizeOfObject(patch));
       }
@@ -76,13 +75,14 @@ VVVVContext.init('./', 'full', function (vvvv) {
         //console.log(str);
         var i=req.nodes.length;
         var node = null;
+        var p = VVVVContext.Patches[req.patch];
         while (i--) {
           node = req.nodes[i];
           if (!patch.nodeMap[node.node_id]) // TODO: this handles the case when a synced nodes is created on the client side, and pin values are sent before the actual update arrived. Should be handled cleaner
             continue;
           for (var pinname in node.pinValues) {
-            patch.nodeMap[node.node_id].inputPins[pinname].values = node.pinValues[pinname];
-            patch.nodeMap[node.node_id].inputPins[pinname].markPinAsChanged();
+            p.nodeMap[node.node_id].inputPins[pinname].values = node.pinValues[pinname];
+            p.nodeMap[node.node_id].inputPins[pinname].markPinAsChanged();
           }
         }
         if (mainloop) {
@@ -92,8 +92,14 @@ VVVVContext.init('./', 'full', function (vvvv) {
       }
 
       if (req.command) {
-        console.log('receiving patch update ...');
-        patch.doLoad(req.command);
+        console.log(req.patch);
+        console.log('receiving patch update for '+vvvv.Helpers.prepareFilePath(req.patch));
+        var patches = VVVVContext.Patches[vvvv.Helpers.prepareFilePath(req.patch)];
+        var i = patches.length;
+        while (i--) {
+          patches[i].doLoad(req.command)
+          patches[i].afterUpdate();
+        }
       }
   	})
   	conn.on("close", function (code, reason) {

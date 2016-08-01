@@ -802,7 +802,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           return 'rgba(0,0,0,0)';
         else if (d.not_implemented)
           return 'rgba(255,0,0,1)';
-        else if (d.cluster)
+        else if (d.inCluster)
           return 'rgba(255, 255, 0, 1)';
         else
           return '#cdcdcd';
@@ -1410,10 +1410,10 @@ BrowserEditor.Interface = function() {
     var n = patches[path].length;
     for (var i=0; i<n; i++) {
       patches[path][i].doLoad(cmd);
-      if (patches[path][i].serverSync) {
-        patches[path][i].serverSync.sendPatchUpdate(patches[path][i], cmd);
-      }
       patches[path][i].afterUpdate();
+    }
+    if (patches[path][0].serverSync.isConnected()) {
+      patches[path][0].serverSync.sendPatchUpdate(patches[path][0], cmd);
     }
   }
 

@@ -23,8 +23,8 @@ define(function(require,exports) {
       }
 
       this.socket.onmessage = function(str) {
-        var patch = root_patch; // TODO: get the concerning patch from the JSON message, instead of assuming it's the root patch
         var msg = JSON.parse(str.data);
+        var p = VVVVContext.Patches[msg.patch];
         console.log("-> "+str.data);
         if (msg.nodes) {
           var i=msg.nodes.length;
@@ -34,7 +34,7 @@ define(function(require,exports) {
             for (var pinname in node.pinValues) {
               var j=node.pinValues[pinname].length;
               while (j--) {
-                patch.nodeMap[node.node_id].outputPins[pinname].setValue(j, node.pinValues[pinname][j]);
+                p.nodeMap[node.node_id].outputPins[pinname].setValue(j, node.pinValues[pinname][j]);
               }
             }
 
