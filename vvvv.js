@@ -125,11 +125,10 @@ VVVVNodeContext.loadFile = function(filename, opts) {
   } catch (e) {
     if (typeof opts.error === 'function')
       opts.error.call();
+    return;
   }
-  if (data) {
-    if (typeof opts.success === 'function')
-      opts.success.call(window, data);
-  }
+  if (typeof opts.success === 'function')
+    opts.success.call(window, data);
 }
 
 VVVVNodeContext.getRelativeRequire = function(system_require) {
