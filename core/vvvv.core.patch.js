@@ -320,7 +320,7 @@ define(function(require,exports) {
               VVVVContext.Patches[path].splice(VVVVContext.Patches[path].indexOf(n), 1);
               if (VVVVContext.Patches[path].length == 0)
                 delete VVVVContext.Patches[path];
-              delete VVVVContext.Patches[n.getPatchIdentifier()];
+              thisPatch.serverSync.unregisterPatch(subpatches[i]);
             }
           }
           if (n.definingNode) { // remove connection to related DefineNode node
@@ -840,13 +840,13 @@ define(function(require,exports) {
       var path = ressource;
       path = VVVV.Helpers.prepareFilePath(ressource, this.parentPatch)
       if (!VVVVContext.Patches[path]) {
+        console.log('yeah?');
         VVVVContext.loadFile(path, {
           success: function(r) {
             that.doLoad(r, function() {
               VVVVContext.Patches[path] = VVVVContext.Patches[path] || [];
               VVVVContext.Patches[path].push(that);
-              VVVVContext.Patches[that.getPatchIdentifier()]
-              VVVVContext.Patches[that.getPatchIdentifier()] = that;
+              that.serverSync.registerPatch(that);
               if (that.success)
                 that.success();
               that.afterUpdate();
@@ -861,6 +861,7 @@ define(function(require,exports) {
       else {
         that.doLoad(VVVVContext.Patches[path][0].toXML(), function() {
           VVVVContext.Patches[path].push(that);
+          that.serverSync.registerPatch(that);
           if (that.success)
             that.success();
           that.afterUpdate();

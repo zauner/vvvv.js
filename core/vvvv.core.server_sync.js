@@ -11,11 +11,14 @@ define(function(require,exports) {
 
   var ServerSync = function(root_patch) {
     this.socket = null;
+    this.patchRegistry = {};
 
     this.connect = function() {
       if (VVVVContext.name!="browser" || this.socket!==null)
         return;
-      this.socket = new WebSocket("ws://localhost:5001");
+      this.socket = new WebSocket("ws://"+location.hostname+":5001");
+
+      var that = this;
 
       this.socket.onopen = function() {
         var msg = {app_root: location.pathname, patch: root_patch.nodename};
@@ -24,7 +27,7 @@ define(function(require,exports) {
 
       this.socket.onmessage = function(str) {
         var msg = JSON.parse(str.data);
-        var p = VVVVContext.Patches[msg.patch];
+        var p = that.patchRegistry[msg.patch];
         console.log("-> "+str.data);
         if (msg.nodes) {
           var i=msg.nodes.length;
@@ -51,6 +54,14 @@ define(function(require,exports) {
       console.log('patch update ....');
       var msg = {patch: patch.nodename, command: command};
       this.socket.send(JSON.stringify(msg));
+    }
+
+    this.registerPatch = function(p) {
+      this.patchRegistry[p.getPatchIdentifier()] = p;
+    }
+
+    this.unregisterPatch = function(p) {
+      delete this.patchRegistry[p.getPatchIdentifier()];
     }
 
   }

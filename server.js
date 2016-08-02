@@ -60,7 +60,6 @@ VVVVContext.init('./', 'full', function (vvvv) {
       var req = JSON.parse(str);
 
   		if (patch==null) {
-        console.log(req);
         console.log("Spawning patch "+req.patch+" in "+req.app_root);
         VVVVContext.AppRoot = req.app_root;
         patch = new vvvv.Patch(req.patch, function() {
@@ -75,7 +74,7 @@ VVVVContext.init('./', 'full', function (vvvv) {
         //console.log(str);
         var i=req.nodes.length;
         var node = null;
-        var p = VVVVContext.Patches[req.patch];
+        var p = patch.serverSync.patchRegistry[req.patch];
         while (i--) {
           node = req.nodes[i];
           if (!patch.nodeMap[node.node_id]) // TODO: this handles the case when a synced nodes is created on the client side, and pin values are sent before the actual update arrived. Should be handled cleaner
@@ -103,7 +102,9 @@ VVVVContext.init('./', 'full', function (vvvv) {
       }
   	})
   	conn.on("close", function (code, reason) {
-  		console.log("Connection closed")
+      delete patch;
+      delete mainloop;
+  		console.log("Connection closed");
   	})
   }).listen(5001)
 

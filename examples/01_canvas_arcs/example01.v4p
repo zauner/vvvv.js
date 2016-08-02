@@ -1,6 +1,6 @@
 <!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta28.1.dtd" >
   <PATCH>
-  <BOUNDS type="Window" width="7005" height="7605">
+  <BOUNDS type="Window" width="10125" height="9360">
   </BOUNDS>
   <NODE id="0" nodename="Renderer (Canvas VVVVjs)" systemname="Renderer (Canvas VVVVjs)" componentmode="Hidden">
   <BOUNDS type="Node" left="1320" top="6105" width="100" height="100">
@@ -46,20 +46,6 @@
   <PIN pinname="Descriptive Name" visible="0" values="||">
   </PIN>
   <PIN pinname="Line Width" visible="0">
-  </PIN>
-  </NODE>
-  <NODE id="2" nodename="RGB (Color Join)" systemname="RGB (Color Join)" componentmode="Hidden">
-  <BOUNDS type="Node" left="3075" top="5460" width="100" height="100">
-  </BOUNDS>
-  <PIN pinname="Red" visible="1" values="|0.81|">
-  </PIN>
-  <PIN pinname="Green" visible="1" values="|0.89|">
-  </PIN>
-  <PIN pinname="Blue" visible="1" values="|0.81|">
-  </PIN>
-  <PIN pinname="Alpha" visible="1">
-  </PIN>
-  <PIN pinname="Descriptive Name" visible="0" values="||">
   </PIN>
   </NODE>
   <NODE id="6" nodename="LFO (Animation)" systemname="LFO (Animation)" componentmode="Hidden">
@@ -233,11 +219,11 @@
   </PIN>
   </NODE>
   <NODE id="20" nodename="Writer (String)" systemname="Writer (String)" componentmode="Hidden">
-  <BOUNDS type="Node" left="4275" top="4020" width="100" height="100">
+  <BOUNDS type="Node" left="5895" top="4065" width="100" height="100">
   </BOUNDS>
-  <PIN pinname="Content" visible="1">
+  <PIN pinname="Content" visible="1" values="|YEAH|">
   </PIN>
-  <PIN pinname="Filename" visible="1">
+  <PIN pinname="Filename" visible="1" values="|file_schubert.txt|">
   </PIN>
   <PIN pinname="Write" visible="1" values="|0|">
   </PIN>
@@ -246,57 +232,81 @@
   <PIN pinname="Descriptive Name" visible="0" values="||">
   </PIN>
   </NODE>
-  <NODE id="21" nodename="LFO (Animation)" systemname="LFO (Animation)" componentmode="Hidden">
-  <BOUNDS type="Node" left="5850" top="2160" width="100" height="100">
+  <NODE id="25" nodename="Mouse (System Global)" systemname="Mouse (System Global)" componentmode="Hidden">
+  <BOUNDS type="Node" left="6525" top="930" width="100" height="100">
   </BOUNDS>
-  <PIN pinname="Period" visible="1">
-  </PIN>
-  <PIN pinname="Pause" visible="1" values="|1|">
-  </PIN>
-  <PIN pinname="Reverse" visible="1">
-  </PIN>
-  <PIN pinname="Reset" visible="1">
-  </PIN>
-  <PIN pinname="Phase" visible="1">
+  <PIN pinname="Maximum Touch Points" visible="1">
   </PIN>
   <PIN pinname="Descriptive Name" visible="0" values="||">
   </PIN>
   </NODE>
-  <NODE id="22" nodename="AsString (Value)" systemname="AsString (Value)" componentmode="Hidden">
-  <BOUNDS type="Node" left="5280" top="2955" width="100" height="100">
+  <NODE id="26" nodename="TogEdge (Animation)" systemname="TogEdge (Animation)" componentmode="Hidden">
+  <BOUNDS type="Node" left="6390" top="1710" width="100" height="100">
   </BOUNDS>
   <PIN pinname="Input" visible="1">
   </PIN>
-  <PIN pinname="SubType" visible="1">
+  <PIN pinname="Descriptive Name" visible="0" values="||">
+  </PIN>
+  </NODE>
+  <NODE id="27" nodename="ADSR (Animation)" systemname="ADSR (Animation)" componentmode="Hidden">
+  <BOUNDS type="Node" left="5340" top="5040" width="100" height="100">
+  </BOUNDS>
+  <PIN pinname="Input" visible="1">
+  </PIN>
+  <PIN pinname="Attack Time" visible="1">
+  </PIN>
+  <PIN pinname="Decay Time" visible="1">
+  </PIN>
+  <PIN pinname="Sustain Level" visible="1">
+  </PIN>
+  <PIN pinname="Release Time" visible="1">
   </PIN>
   <PIN pinname="Descriptive Name" visible="0" values="||">
   </PIN>
   </NODE>
-  <NODE id="23" nodename="sub.v4p" systemname="sub" filename="sub.v4p" componentmode="Hidden">
-  <BOUNDS type="Node" left="4965" top="4860" width="100" height="100">
+  <NODE id="28" nodename="IOBox (Value Advanced)" systemname="IOBox (Value Advanced)" componentmode="InABox">
+  <BOUNDS type="Box" left="5355" top="5895" width="0" height="0">
   </BOUNDS>
-  <PIN pinname="aaa" visible="1">
+  <PIN pinname="Y Input Value" visible="1">
+  </PIN>
+  <PIN pinname="Rows" visible="0" values="|1|">
   </PIN>
   <PIN pinname="Descriptive Name" visible="0" values="||">
   </PIN>
   </NODE>
-  <NODE id="24" nodename="Writer (String)" systemname="Writer (String)" componentmode="Hidden">
-  <BOUNDS type="Node" left="5310" top="5985" width="100" height="100">
+  <NODE id="32" nodename="HSV (Color Join)" systemname="HSV (Color Join)" componentmode="Hidden">
+  <BOUNDS type="Node" left="3690" top="5370" width="100" height="100">
   </BOUNDS>
-  <PIN pinname="Content" visible="1">
+  <PIN pinname="Hue" visible="1">
   </PIN>
-  <PIN pinname="Filename" visible="1">
+  <PIN pinname="Saturation" visible="1" values="|0.21999999999999978|">
   </PIN>
-  <PIN pinname="Write" visible="1">
+  <PIN pinname="Value" visible="1">
   </PIN>
-  <PIN pinname="Append" visible="1">
+  <PIN pinname="Alpha" visible="1">
+  </PIN>
+  <PIN pinname="Descriptive Name" visible="0" values="||">
+  </PIN>
+  </NODE>
+  <NODE id="33" nodename="Map (Value)" systemname="Map (Value)" componentmode="Hidden">
+  <BOUNDS type="Node" left="4755" top="6495" width="100" height="100">
+  </BOUNDS>
+  <PIN pinname="Input" visible="1">
+  </PIN>
+  <PIN pinname="Source Minimum" visible="1">
+  </PIN>
+  <PIN pinname="Source Maximum" visible="1">
+  </PIN>
+  <PIN pinname="Destination Minimum" visible="1" values="|0.5100000000000001|">
+  </PIN>
+  <PIN pinname="Destination Maximum" visible="1" values="|0.8700000000000002|">
+  </PIN>
+  <PIN pinname="Mapping" visible="1">
   </PIN>
   <PIN pinname="Descriptive Name" visible="0" values="||">
   </PIN>
   </NODE>
   <LINK srcnodeid="1" srcpinname="Layer" dstnodeid="0" dstpinname="Layers">
-  </LINK>
-  <LINK srcnodeid="2" srcpinname="Output" dstnodeid="0" dstpinname="Background Color">
   </LINK>
   <LINK srcnodeid="14" srcpinname="Render State Out" dstnodeid="1" dstpinname="Render State">
   </LINK>
@@ -330,14 +340,18 @@
   </LINK>
   <LINK srcnodeid="19" srcpinname="Y Output Value" dstnodeid="18" dstpinname="Y">
   </LINK>
-  <LINK srcnodeid="22" srcpinname="Output" dstnodeid="20" dstpinname="Content">
+  <LINK srcnodeid="25" srcpinname="Left Button" dstnodeid="26" dstpinname="Input">
   </LINK>
-  <LINK srcnodeid="21" srcpinname="Change" dstnodeid="20" dstpinname="Append">
+  <LINK srcnodeid="26" srcpinname="Up Edge" dstnodeid="20" dstpinname="Append">
   </LINK>
-  <LINK srcnodeid="21" srcpinname="Output" dstnodeid="22" dstpinname="Input">
+  <LINK srcnodeid="20" srcpinname="Success" dstnodeid="27" dstpinname="Input">
   </LINK>
-  <LINK srcnodeid="20" srcpinname="Success" dstnodeid="23" dstpinname="aaa">
+  <LINK srcnodeid="27" srcpinname="Output" dstnodeid="28" dstpinname="Y Input Value">
   </LINK>
-  <LINK srcnodeid="23" srcpinname="sdfsdf" dstnodeid="24" dstpinname="Append">
+  <LINK srcnodeid="32" srcpinname="Output" dstnodeid="0" dstpinname="Background Color">
+  </LINK>
+  <LINK srcnodeid="27" srcpinname="Output" dstnodeid="33" dstpinname="Input">
+  </LINK>
+  <LINK srcnodeid="33" srcpinname="Output" dstnodeid="32" dstpinname="Value">
   </LINK>
   </PATCH>
