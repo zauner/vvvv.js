@@ -19,14 +19,14 @@ define(function(require,exports) {
         if (node.inCluster)
           return;
         node.inCluster = false;
-        if (node.environments && node.environments[0]=='nodejs')
+        if (node.environments && node.environments.indexOf('nodejs')>=0)
           node.inCluster = true;
         for (var pinname in node.inputPins) {
           if (node.inputPins[pinname].links.length>0) {
             var fromPin = node.inputPins[pinname].links[0].fromPin;
-            findCluster(fromPin.node, (clusterActive || node.inCluster) && (!node.environments || node.environments[0]!='browser') && !node.isSubpatch);
-            if ((!node.environments || node.environments[0]!='browser') && !node.isSubpatch)
-              node.inCluster |= fromPin.node.inCluster && clusterActive;
+            findCluster(fromPin.node, node.inCluster ||  (clusterActive && !node.environments && !node.isSubpatch));
+            if (clusterActive && !node.environments && !node.isSubpatch)
+              node.inCluster |= fromPin.node.inCluster;
           }
         }
         for (var pinname in node.inputPins) {
@@ -35,7 +35,7 @@ define(function(require,exports) {
             if (node.inCluster)
               fromPin.edgeLinkCount--;
             if (fromPin.edgeLinkCount<=0)
-              fromPin.inClusterEdge = false;
+              fromPin.clusterEdge = false;
           }
         }
 
@@ -58,7 +58,7 @@ define(function(require,exports) {
         patch.nodeList[i].inCluster = false;
       }
       for (var i=0; i<patch.nodeList.length; i++) {
-        if (patch.nodeList[i].environments && patch.nodeList[i].environments[0]=="nodejs") {
+        if (patch.nodeList[i].environments && patch.nodeList[i].environments.indexOf("nodejs")>=0) {
           if (!patch.nodeList[i].inCluster) // the node would have been marked as cluster node if it had already been visited
             findCluster(patch.nodeList[i], true);
         }

@@ -724,7 +724,7 @@ define(function(require,exports) {
           lostLoopRoots.push(node);
 
         if ((!loop_detected && nodeStack.indexOf(node.id)<0) || node.delays_output) {
-          if ((node.inCluster && VVVVContext.name=="nodejs") || (!node.inCluster && VVVVContext.name=="browser") || node.isSubpatch) {
+          if ((node.inCluster && VVVVContext.name=="nodejs") || (!node.inCluster && VVVVContext.name=="browser") || node.isSubpatch || (node.environments && node.environments.length>1)) {
             if (node.getCode) {
               node.outputPins["Output"].values.incomingPins = [];
               var nodecode = "("+node.getCode()+")";
@@ -840,7 +840,6 @@ define(function(require,exports) {
       var path = ressource;
       path = VVVV.Helpers.prepareFilePath(ressource, this.parentPatch)
       if (!VVVVContext.Patches[path]) {
-        console.log('yeah?');
         VVVVContext.loadFile(path, {
           success: function(r) {
             that.doLoad(r, function() {

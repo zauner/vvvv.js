@@ -4,7 +4,7 @@ var path = require('path');
 var finalhandler = require('finalhandler')
 var serveStatic = require('serve-static')
 require('./vvvv.js')
-var ws = require("nodejs-websocket")
+var ws = require("nodejs-websocket");
 
 var serve = serveStatic(path.join(__dirname));
 
@@ -12,42 +12,6 @@ var server = http.createServer(function(req, res){
   var done = finalhandler(req, res)
   serve(req, res, done);
 });
-
-function roughSizeOfObject( object ) {
-
-    var objectList = [];
-    var stack = [ object ];
-    var bytes = 0;
-
-    while ( stack.length ) {
-        var value = stack.pop();
-
-        if ( typeof value === 'boolean' ) {
-            bytes += 4;
-        }
-        else if ( typeof value === 'string' ) {
-            bytes += value.length * 2;
-        }
-        else if ( typeof value === 'number' ) {
-            bytes += 8;
-        }
-        else if
-        (
-            typeof value === 'object'
-            && objectList.indexOf( value ) === -1
-        )
-        {
-            objectList.push( value );
-
-            for( var i in value ) {
-                stack.push( value[ i ] );
-            }
-        }
-    }
-    return bytes;
-}
-
-// Listen
 server.listen(5000)
 
 VVVVContext.init('./', 'full', function (vvvv) {
@@ -66,8 +30,6 @@ VVVVContext.init('./', 'full', function (vvvv) {
           this.serverSync.socket = conn;
           mainloop = new vvvv.MainLoop(this, 0.2);
         });
-
-        console.log("PATCH SIZE:", roughSizeOfObject(patch));
       }
 
       if (req.nodes) {
@@ -99,6 +61,12 @@ VVVVContext.init('./', 'full', function (vvvv) {
           patches[i].doLoad(req.command)
           patches[i].afterUpdate();
         }
+      }
+
+      if (req.message) {
+        var p = patch.serverSync.patchRegistry[req.patch]
+        if (typeof p.nodeMap[req.node].handleBackendMessage === 'function')
+          p.nodeMap[req.node].handleBackendMessage(req.message);
       }
   	})
   	conn.on("close", function (code, reason) {

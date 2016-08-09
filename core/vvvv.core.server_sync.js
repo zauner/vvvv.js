@@ -43,6 +43,10 @@ define(function(require,exports) {
 
           }
         }
+        if (msg.message) {
+          if (typeof p.nodeMap[msg.node].handleBackendMessage === 'function')
+            p.nodeMap[msg.node].handleBackendMessage(msg.message);
+        }
       };
     }
 
