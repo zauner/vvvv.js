@@ -268,4 +268,157 @@ VVVV.Nodes.AudioOutHTML5 = function(id, graph) {
 }
 VVVV.Nodes.AudioOutHTML5.prototype = new Node();
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: StoreFile (HTML5)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.StoreFile = function(id, graph) {
+  this.constructor(id, "StoreFile (HTML5)", graph);
+
+  this.environments = ['browser'];
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var fileIn = this.addInputPin('File In', [], VVVV.PinTypes.Node);
+  var destFileNameIn = this.addInputPin('Destination Path', ['file.dat'], VVVV.PinTypes.String);
+  var doWriteIn = this.addInputPin('DoWrite', [0], VVVV.PinTypes.Value);
+
+  var progressOut = this.addOutputPin('Progress', [0.0], VVVV.PinTypes.Value);
+
+  var fs = undefined;
+  this.initialize = function() {
+    fs = window.server_req('fs');
+  }
+
+  var that = this;
+  var offset = 0;
+  var file = undefined;
+  var fileIdx = 0;
+  var chunkIdx;
+  function processNextChunk() {
+    if (offset>=file.size) {
+      fileIdx++;
+      transferNextFile();
+      return;
+    }
+    var fr = new FileReader();
+    fr.onloadend = function() {
+      that.parentPatch.serverSync.sendBinaryBackendMessage(that, this.result, {fileIdx: fileIdx, filename: destFileNameIn.getValue(fileIdx), offset: offset});
+      if (offset < file.size) {
+        offset += 1024 * 1024;
+      }
+    }
+    fr.readAsArrayBuffer(file.slice(offset, offset + 1024*1024));
+  }
+
+  function transferNextFile() {
+    if (fileIdx>=fileIn.getSliceCount())
+      return;
+    file = fileIn.getValue(fileIdx);
+    offset = 0;
+    chunkIdx = 0;
+    processNextChunk();
+  }
+
+  this.evaluate = function() {
+    var that = this;
+    if (fileIn.isConnected() && doWriteIn.getValue(0)>=0.5) {
+      progressOut.setSliceCount(fileIn.getSliceCount());
+      for (var i=0; i<fileIn.getSliceCount(); i++) {
+        progressOut.setValue(i, 0);
+      }
+      fileIdx = 0;
+      transferNextFile();
+    }
+    else {
+      //progressOut.setValue(0, 0);
+      //progressOut.setSliceCount(1);
+    }
+  }
+
+
+  this.handleBackendMessage = function(message, meta_data) {
+    if (VVVVContext.name=='nodejs') {
+      var that = this;
+      var f;
+      if (meta_data.offset>0)
+        f = fs.appendFile;
+      else
+        f = fs.writeFile;
+      f(VVVV.Helpers.prepareFilePath(meta_data.filename, this.parentPatch), new Buffer(message.buffer), function() {
+        that.parentPatch.serverSync.socket.send(JSON.stringify({patch: that.parentPatch.getPatchIdentifier(), node: that.id, message: "OK"}));
+      });
+    }
+    else {
+      progressOut.setValue(fileIdx, Math.min(1.0, offset/file.size));
+      processNextChunk();
+    }
+  }
+  }
+  VVVV.Nodes.StoreFile.prototype = new Node();
+
+
+
+  /*
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   NODE: Directory (HTML5)
+   Author(s): Matthias Zauner
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  */
+
+  VVVV.Nodes.Directory = function(id, graph) {
+    this.constructor(id, "Directory (HTML5)", graph);
+
+    this.environments = ['nodejs'];
+
+    this.meta = {
+      authors: ['Matthias Zauner'],
+      original_authors: ['woei'],
+      credits: [],
+      compatibility_issues: []
+    };
+
+    var directoryIn = this.addInputPin('Directory Name', [''], VVVV.PinTypes.String);
+    var createIn = this.addInputPin('Create', [0], VVVV.PinTypes.Value);
+    var removeIn = this.addInputPin('Remove', [0], VVVV.PinTypes.Value);
+    var newNameIn = this.addInputPin('New Name', [''], VVVV.PinTypes.String);
+    var renameIn = this.addInputPin('Rename', [0], VVVV.PinTypes.Value);
+
+    var successOut = this.addOutputPin('Success', [0], VVVV.PinTypes.Value);
+    var errorOut = this.addOutputPin('Error', [0], VVVV.PinTypes.Value);
+
+    var fs = undefined;
+    this.initialize = function() {
+      fs = window.server_req('fs');
+    }
+
+    this.evaluate = function() {
+      errorOut.setValue(0, 0);
+      successOut.setValue(0, 0);
+      var that = this;
+      if (createIn.getValue(0)>=0.5 && directoryIn.getValue(0)!='') {
+        fs.mkdir(VVVV.Helpers.prepareFilePath(directoryIn.getValue(0), this.parentPatch), function(err) {
+          if (err) {
+            errorOut.setValue(0, 1);
+          }
+          else {
+            successOut.setValue(0, 1);
+          }
+          that.parentPatch.serverSync.requestEvaluate();
+        });
+      }
+    }
+
+  }
+  VVVV.Nodes.Directory.prototype = new Node();
+
 });
