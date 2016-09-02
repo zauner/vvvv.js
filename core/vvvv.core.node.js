@@ -3,7 +3,7 @@
 if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
 
 define(function(require,exports) {
-  
+
 
   var _ = require('underscore');
   var $ = require('jquery');
@@ -413,7 +413,7 @@ define(function(require,exports) {
           var pinname = this.invisiblePins["Descriptive Name"].getValue(0);
           this.IOBoxInputPin().connectionChangedHandlers['subpatchpins'] = function() {
             if (this.links.length>0 && this.masterPin) {
-               if (VVVV_ENV=='development') console.log('deleting '+pinname+' input pin because node has input connection...');
+               //if (VVVV_ENV=='development') console.log('deleting '+pinname+' input pin because node has input connection...');
                for (var i=0; i<this.masterPin.links.length; i++) {
                  this.masterPin.links[i].destroy();
                }
@@ -423,7 +423,7 @@ define(function(require,exports) {
             }
             if (that.IOBoxOutputPin().links.length==0) {
               if (!that.IOBoxOutputPin().slavePin) {
-                if (VVVV_ENV=='development') console.log('interfacing output pin detected: '+pinname);
+                //if (VVVV_ENV=='development') console.log('interfacing output pin detected: '+pinname);
                 var pin = that.parentPatch.outputPins[pinname];
                 if (pin==undefined) {
                   var pin = that.parentPatch.addOutputPin(pinname, that.IOBoxOutputPin().values);
@@ -448,7 +448,7 @@ define(function(require,exports) {
 
           this.IOBoxOutputPin().connectionChangedHandlers['subpatchpins'] = function() {
             if (this.links.length>0 && this.slavePin) {
-               if (VVVV_ENV=='development') console.log('deleting '+pinname+' output pin because node '+that.id+' has output connection...');
+               //if (VVVV_ENV=='development') console.log('deleting '+pinname+' output pin because node '+that.id+' has output connection...');
                for (var i=0; i<this.slavePin.links.length; i++) {
                  this.slavePin.links[i].destroy();
                }
@@ -458,10 +458,10 @@ define(function(require,exports) {
             }
             if (that.IOBoxInputPin().links.length==0) {
               if (!that.IOBoxInputPin().masterPin) {
-                if (VVVV_ENV=='development') console.log('interfacing input pin detected: '+pinname);
+                //if (VVVV_ENV=='development') console.log('interfacing input pin detected: '+pinname);
                 var pin = that.parentPatch.inputPins[pinname];
                 if (pin==undefined) {
-                  if (VVVV_ENV=='development') console.log('creating new input pin at parent patch, using IOBox values');
+                  //if (VVVV_ENV=='development') console.log('creating new input pin at parent patch, using IOBox values');
                   var pin = that.parentPatch.addInputPin(pinname, that.IOBoxInputPin().values);
                 }
 

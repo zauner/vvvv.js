@@ -151,13 +151,15 @@ define(function(require,exports) {
 
     var thisPatch = this;
 
+    var ready_callback = undefined;
     /**
      * Takes a patch XML string, parses it, and applies it to the patch. This method is called once by the constructor, passing the complete patch code, and
      * frequently by an editor, passing in XML snippets. This is the only method you should use to manipulate a patch.
      * @param {String} xml VVVV Patch XML
      * @param {Function} ready_callback called after the XML code has been completely processed, and the patch is fully loaded and ready again
      */
-    this.doLoad = function(xml, ready_callback) {
+    this.doLoad = function(xml, rb) {
+      ready_callback = rb;
       var p = this;
       do {
         p.dirty = true;
@@ -703,7 +705,12 @@ define(function(require,exports) {
 
       this.cluster.detect();
       if (this.cluster.hasNodes && !this.serverSync.isConnected())
-        this.serverSync.connect();
+        this.serverSync.connect(function() {
+          if (this.resourcesPending==0 && ready_callback) {
+            ready_callback();
+            ready_callback = undefined;
+          }
+        });
 
       var compiledCode = "";
 
