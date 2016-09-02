@@ -165,7 +165,8 @@ var element_node_defs = [
   {nodename: "RangeSlider", tagname: "input type='range'", pins:[{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: 0, type: VVVV.PinTypes.Value, attribute: true}, {name: 'min', value: 0, type: VVVV.PinTypes.Value, attribute: true}, {name: 'max', value: 10, type: VVVV.PinTypes.Value, attribute: true}, {name: 'step', value: 1, type: VVVV.PinTypes.Value, attribute: true}]},
   //{nodename: "SelectBox", tagname: "select", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'Option Labels', value: 'Option 1', type: VVVV.PinTypes.String}, {name: 'Option Values', value: '1', type: VVVV.PinTypes.String}, {name: 'Selected Index', value: 0, type: VVVV.PinTypes.Value}]}
   {nodename: "SelectBox", tagname: "select", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}]},
-  {nodename: "SelectOption", tagname: "option", pins: [{name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]}
+  {nodename: "SelectOption", tagname: "option", pins: [{name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]},
+  {nodename: "FileInput", tagname: "input type='file' multiple", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}]}
 ]
 
 element_node_defs.forEach(function(element_node_def) {
@@ -725,6 +726,142 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
   }
 }
 VVVV.Nodes.GetValueHTML.prototype = new Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: SetValue (HTML)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.SetValueHTML = function(id, graph) {
+  this.constructor(id, "SetVAlue (HTML)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
+  var valueIn = this.addInputPin("Value", [''], VVVV.PinTypes.String);
+  var doSetIn = this.addInputPin("DoSet", [0], VVVV.PinTypes.Value);
+
+  this.evaluate = function() {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+
+    var thatNode = this;
+
+    if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
+
+      for (var i=0; i<maxSpreadSize; i++) {
+        elementIn.getValue(i).element.val(valueIn.getValue(i));
+      }
+    }
+  }
+
+  this.destroy = function() {
+
+  }
+}
+VVVV.Nodes.SetValueHTML.prototype = new Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: GetFile (HTML)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.GetFileHTML = function(id, graph) {
+  this.constructor(id, "GetFile (HTML)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
+
+  var fileOut = this.addOutputPin("File", [], VVVV.PinTypes.Node);
+  var filenameOut = this.addOutputPin("Filename", [''], VVVV.PinTypes.String);
+  var filesizeOut = this.addOutputPin("File Size", [0], VVVV.PinTypes.Value);
+
+  var handlers = [];
+  var targets = [];
+
+  var setSlices = [];
+
+  this.evaluate = function() {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+
+    var thatNode = this;
+
+    if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
+      for (var i=0; i<1; i++) { // TODO: make it work with more than one input element
+        if (targets[i]!=undefined && (targets[i]!=elementIn.getValue(i).element[0])) {
+          $(targets[i]).unbind("change", handlers[i]);
+          handlers[i] = undefined;
+        }
+        if (handlers[i]==undefined) {
+          targets[i] = elementIn.getValue(i).element[0];
+          (function(j) {
+            handlers[j] = function(e) {
+              for (var k=0; k<this.files.length; k++) {
+                setSlices.push({sliceIdx: k, file: this.files[k], name: this.files[k].name, size: this.files[k].size});
+              }
+              thatNode.dirty = true;
+            }
+          }(i));
+          $(targets[i]).bind("change", handlers[i]);
+          handlers[i].call(targets[i]);
+        }
+      }
+
+      handlers.length = 1;
+      targets.length = 1;
+    }
+    else {
+      for (var i=0; i<targets.length; i++) {
+        $(targets[i]).unbind("change", handlers[i]);
+      }
+      handlers.length = 0;
+      targets.length = 0;
+      fileOut.setValue(0, undefined);
+      fileOut.setSliceCount(0);
+      filenameOut.setValue(0, '');
+      filenameOut.setSliceCount(1);
+      filesizeOut.setValue(0, 0);
+      filesizeOut.setSliceCount(1);
+    }
+
+    if (setSlices.length>0) {
+      var i = setSlices.length;
+      while (i--) {
+        fileOut.setValue(setSlices[i].sliceIdx, setSlices[i].file);
+        filenameOut.setValue(setSlices[i].sliceIdx, setSlices[i].name);
+        filesizeOut.setValue(setSlices[i].sliceIdx, setSlices[i].size);
+      }
+      fileOut.setSliceCount(setSlices.length);
+      filenameOut.setSliceCount(setSlices.length);
+      filesizeOut.setSliceCount(setSlices.length);
+      setSlices.length = 0;
+      thatNode.dirty = false;
+    }
+  }
+
+  this.destroy = function() {
+    for (var i=0; i<targets.length; i++) {
+      $(targets[i]).unbind("change", handlers[i]);
+    }
+  }
+}
+VVVV.Nodes.GetFileHTML.prototype = new Node();
 
 
 /*
