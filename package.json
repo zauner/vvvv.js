@@ -10,7 +10,8 @@
     "amdefine": "=1.0.0",
     "jsdom": "=7.0.2",
     "nodejs-websocket": "*",
-    "browser-launcher2": "*"
+    "browser-launcher2": "*",
+    "sqlite3": "*"
   },
   "version": "2.0.0-alpha.1"
 }
