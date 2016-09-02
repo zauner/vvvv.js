@@ -24,7 +24,8 @@ define(function(require,exports) {
         for (var pinname in node.inputPins) {
           if (node.inputPins[pinname].links.length>0) {
             var fromPin = node.inputPins[pinname].links[0].fromPin;
-            findCluster(fromPin.node, node.inCluster ||  (clusterActive && !node.environments && !node.isSubpatch));
+            if (!node.delays_output)
+              findCluster(fromPin.node, node.inCluster ||  (clusterActive && !node.environments && !node.isSubpatch));
             if (clusterActive && !node.environments && !node.isSubpatch)
               node.inCluster |= fromPin.node.inCluster;
           }
