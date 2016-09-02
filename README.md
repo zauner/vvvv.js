@@ -1,3 +1,5 @@
+** WARNING: THIS IS A VERY INSTABLE EXPERIMENTAL BRANCH, TAILORED TO A VERY SPECIFIC WIP PROJECT. DO NOT USE THIS, IT WILL NOT MAKE YOU HAPPY UNLESS YOU KNOW EXACTLY WHAT YOU ARE DOING!**
+
 VVVV.js - Visual Web Client Programming
 =======================================
 
@@ -49,23 +51,23 @@ index.html:
 
     <head>
     ...
-    <script language="JavaScript" src="javascripts/vvvv_js/lib/jquery/jquery-1.8.2.min.js"></script> 
+    <script language="JavaScript" src="javascripts/vvvv_js/lib/jquery/jquery-1.8.2.min.js"></script>
     <script language="JavaScript" src="javascripts/vvvv_js/vvvv.js"></script>
     <link rel="VVVV" href="mypatch.v4p"/>
     <script language="JavaScript">
       $(document).ready(function() {
         VVVV.init("javascripts/vvvv_js/", 'full', function() {
-          console.log('VVVV.js initialized'); 
+          console.log('VVVV.js initialized');
         });
       });
     </script>
     ...
     </head>
-    
+
 All the patches (and subpatches) loaded are stored in the VVVV.Patches object. You can access the VVVV.Core.Patch object created above for further processing via
 
     VVVV.Patches[0];
-    
+
 ### Launching the patch editor
 
 1. Launch the editor by appending #edit/mypatch.v4p to the URL in the address bar. This will launch the editor in a popup, make sure your browser allows it.
@@ -79,13 +81,13 @@ the VVVV.Core.Patch object yourself like so:
 
     <head>
     ...
-    <script language="JavaScript" src="javascripts/vvvv_js/lib/jquery/jquery-1.8.2.min.js"></script> 
+    <script language="JavaScript" src="javascripts/vvvv_js/lib/jquery/jquery-1.8.2.min.js"></script>
     <script language="JavaScript" src="javascripts/vvvv_js/vvvv.js"></script>
     <script language="JavaScript">
       $(document).ready(function() {
         VVVV.init("javascripts/vvvv_js/", 'full', function() {
           console.log('VVVV.js initialized');
-          
+
           var patch = new VVVV.Core.Patch("mypatch.v4p", function() {
             var mainloop = new VVVV.MainLoop(p);
             console.log('patch loaded and started');
@@ -104,11 +106,11 @@ You can load and render a patch embedded in a web site by first creating a Patch
     var mypatch = new VVVV.Core.Patch("mypatch.v4p", function() {
       myvvvviewer = new VVVV.VVVViewer(this, '#patch');
     });
-    
+
 This is the corresponding HTML code:
 
     <div id='patch'>Your browser does not support the VVVViewer</div>
-    
+
 While in the example above the Patch constructor new VVVV.Core.Patch("mypatch.v4p", ...) loads a VVVV patch file from the remote server,
 it is also possible to just pass actual VVVV XML Code to the constructor instead of a filename.
 This might be the case, when you display VVVV Code which comes from a forum post or a blog entry.
