@@ -108,7 +108,7 @@ VVVV.Nodes.AddString = function(id, graph) {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
-    compatibility_issues: ['No dynamic pin count yet', 'Intersperse *Enum* not implemented']
+    compatibility_issues: ['Intersperse *Enum* not implemented']
   };
 
   var inputCountIn = this.addInvisiblePin("Input Count", [2], VVVV.PinTypes.Value);
@@ -883,6 +883,57 @@ VVVV.Nodes.ConsString = function(id, graph) {
 }
 VVVV.Nodes.ConsString.prototype = new Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Add (String Spectral)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.AddStringSpectral = function(id, graph) {
+  this.constructor(id, "Add (String Spectral)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var inputIn = this.addInputPin("Input", ['text'], VVVV.PinTypes.String);
+  var binSizeIn = this.addInputPin("Bin Size", [-1], VVVV.PinTypes.Value);
+  var intersperseStringIn = this.addInputPin("Intersperse String", [""], VVVV.PinTypes.String);
+
+  var outputOut = this.addOutputPin("Output", ['text'], VVVV.PinTypes.String);
+
+  this.evaluate = function() {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+
+    var binNum = 0;
+    var subIndex = 0;
+    for (var j=0; j<maxSpreadSize || (binSizeIn.getValue(0)>0 && (subIndex>0 || binNum%binSizeIn.getSliceCount()!=0)); j++) {
+      if (subIndex == 0)
+        var sum = [];
+
+      sum.push(inputIn.getValue(j));
+
+      subIndex++;
+      if (binSizeIn.getValue(0)>0) {
+        if (subIndex>=binSizeIn.getValue(binNum)) {
+          outputOut.setValue(binNum, sum.join(intersperseStringIn.getValue(0)));
+          binNum++;
+          subIndex = 0;
+        }
+      }
+      else
+        this.outputPins["Output"].setValue(0, sum.join(intersperseStringIn.getValue(0)));
+    }
+    this.outputPins["Output"].setSliceCount(binNum+(subIndex>0));
+  }
+}
+VVVV.Nodes.AddStringSpectral.prototype = new Node();
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -939,5 +990,59 @@ VVVV.Nodes.WriterString = function(id, graph) {
 
 }
 VVVV.Nodes.WriterString.prototype = new Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Reader (String)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.ReaderString = function(id, graph) {
+  this.constructor(id, "Reader (String)", graph);
+
+  this.environments = ['nodejs'];
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var filenameIn = this.addInputPin("Filename", ["file.txt"], VVVV.PinTypes.String);
+  var doReadIn = this.addInputPin("DoRead", [0], VVVV.PinTypes.Value);
+
+  // output pins
+  var contentOut = this.addOutputPin('Content', [''], VVVV.PinTypes.String);
+  var successOut = this.addOutputPin('Success', [0], VVVV.PinTypes.Value);
+
+  var content;
+
+  // initialize() will be called after node creation
+  var fs;
+  this.initialize = function() {
+    fs = window.server_req('fs');
+  }
+
+  this.evaluate = function() {
+    successOut.setValue(0, 0);
+    if (doReadIn.getValue(0)>=0.5) {
+      try {
+        content = fs.readFileSync(VVVV.Helpers.prepareFilePath(filenameIn.getValue(0), this.patch), 'utf-8');
+        successOut.setValue(0, 1);
+        contentOut.setValue(0, content)
+      }
+      catch (e) {
+        successOut.setValue(0, 0);
+        contentOut.setValue(0, '');
+      }
+    }
+  }
+
+}
+VVVV.Nodes.ReaderString.prototype = new Node();
 
 });
