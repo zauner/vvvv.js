@@ -159,6 +159,7 @@ var element_node_defs = [
   {nodename: "Link", tagname: "a", pins: [{name: 'href', type: VVVV.PinTypes.String, value: '#', attribute: true}]},
   {nodename: "Image", tagname: "img", pins: [{name: 'src', type: VVVV.PinTypes.String, value: '', attribute: true}]},
   {nodename: "TextInput", tagname: "input type='text'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]},
+  {nodename: "TextArea", tagname: "textarea", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}]},
   {nodename: "Checkbox", tagname: "input type='checkbox'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true, attribute: true}, {name: 'value', value: '1', type: VVVV.PinTypes.String, attribute: true}]},
   {nodename: "RadioButton", tagname: "input type='radio'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: '1', type: VVVV.PinTypes.String, attribute: true}]},
   {nodename: "Button", tagname: "input type='button'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: 'Push me', type: VVVV.PinTypes.String, attribute: true}]},
@@ -682,7 +683,7 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
                 v = $(this).is(":checked") ? $(this).attr('value') : "";
               else if ($(this).prop('tagName')=="INPUT" && $(this).prop('type')=="radio")
                 v = $(this).is(":checked") ? $(this).attr('value') : "";
-              else if ($(this).prop('tagName')=="INPUT")
+              else if ($(this).prop('tagName')=="INPUT" || $(this).prop('tagName')=="TEXTAREA")
                 v = $(this).val();
               if (v==undefined)
                 v = "";
