@@ -688,6 +688,22 @@ define(function(require,exports) {
     }
     this.cluster = new Cluster(this);
 
+    var autoResetPins = [];
+    this.resetAutoResetPins = function() {
+      var i = autoResetPins.length;
+      var j = 0;
+      while (i--) {
+        if (autoResetPins[i].values.changedAt<this.mainloop.frameNum) {
+          j = autoResetPins[i].values.length;
+          while (j--) {
+            if (autoResetPins[i].values[j]>=0.5)
+              autoResetPins[i].values[j] = 0;
+          }
+          autoResetPins[i].markPinAsChanged();
+        }
+      }
+    }
+
     /**
      * Assemples the {@link VVVV.Core.Patch.compiledFunc} function, which is called each frame, and subsequently calls all nodes in the correct order. This method is invoked automatically each time the patch has been changed.
      */
@@ -702,6 +718,8 @@ define(function(require,exports) {
       var pinList = this.pinList;
       var regex = new RegExp(/\{([^\}]+)\}/g);
       var thisPatch = this;
+
+      autoResetPins = [];
 
       this.cluster.detect();
       if (this.cluster.hasNodes && !this.serverSync.isConnected())
@@ -777,6 +795,8 @@ define(function(require,exports) {
           }
           for (var pinname in node.outputPins) {
             pinList.push(node.outputPins[pinname]);
+            if (node.outputPins[pinname].auto_reset)
+              autoResetPins.push(node.outputPins[pinname]);
           }
           addedNodes[node.id] = node;
           return false;
@@ -795,7 +815,7 @@ define(function(require,exports) {
         addSubGraphToRecipe(lostLoopRoots[i]);
       }
 
-      compiledCode = "try {\n"+compiledCode+"\n} catch (e) { console.error(e.message); console.log(e.stack); }";
+      compiledCode = "try {\n"+compiledCode+"\npatch.resetAutoResetPins();\n} catch (e) { console.error(e.message); console.log(e.stack); }";
 
       this.compiledFunc = new Function('patch', compiledCode);
       //console.log(this.compiledFunc.toString());

@@ -3,7 +3,7 @@
 if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
 
 define(function(require,exports) {
-  
+
 
   var _ = require('underscore');
   var $ = require('jquery');
@@ -41,6 +41,8 @@ define(function(require,exports) {
     this.connectionChangedHandlers = {};
     /** contains the options used if the pin is of type {@link VVVV.PinTypes.Enum} */
     this.enumOptions = [];
+
+    this.auto_reset = false;
 
     /**
      * retreives pin's slices
