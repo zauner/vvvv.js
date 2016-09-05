@@ -394,7 +394,9 @@ VVVV.Nodes.StoreFile = function(id, graph) {
     var renameIn = this.addInputPin('Rename', [0], VVVV.PinTypes.Value);
 
     var successOut = this.addOutputPin('Success', [0], VVVV.PinTypes.Value);
+    successOut.auto_reset = true;
     var errorOut = this.addOutputPin('Error', [0], VVVV.PinTypes.Value);
+    errorOut.auto_reset = true;
 
     var fs = undefined;
     this.initialize = function() {
@@ -402,18 +404,17 @@ VVVV.Nodes.StoreFile = function(id, graph) {
     }
 
     this.evaluate = function() {
-      errorOut.setValue(0, 0);
-      successOut.setValue(0, 0);
       var that = this;
       if (createIn.getValue(0)>=0.5 && directoryIn.getValue(0)!='') {
         fs.mkdir(VVVV.Helpers.prepareFilePath(directoryIn.getValue(0), this.parentPatch), function(err) {
           if (err) {
+            console.log(err);
             errorOut.setValue(0, 1);
           }
           else {
             successOut.setValue(0, 1);
           }
-          that.parentPatch.serverSync.requestEvaluate();
+          that.parentPatch.mainloop.requestEvaluate();
         });
       }
     }

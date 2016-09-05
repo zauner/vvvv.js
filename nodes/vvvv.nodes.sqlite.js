@@ -121,6 +121,7 @@ VVVV.Nodes.SelectSQLite = function(id, graph) {
   var statementOut = this.addOutputPin('Statement', [''], VVVV.PinTypes.String);
   var statusOut = this.addOutputPin('Status', [''], VVVV.PinTypes.String);
   var onDataOut = this.addOutputPin('OnData', [0], VVVV.PinTypes.Value);
+  onDataOut.auto_reset = true;
   var outputPins = {};
 
   function createResultFieldPins(fieldString) {
@@ -151,7 +152,6 @@ VVVV.Nodes.SelectSQLite = function(id, graph) {
   var query = "";
 
   this.evaluate = function() {
-    onDataOut.setValue(0, 0);
 
     if (fieldsCfgIn.pinIsChanged())
       createResultFieldPins.call(this, fieldsCfgIn.getValue(0));
@@ -192,7 +192,7 @@ VVVV.Nodes.SelectSQLite = function(id, graph) {
             outputPins[pinname].setSliceCount(0);
           }
         }
-        that.parentPatch.serverSync.requestEvaluate();
+        that.parentPatch.mainloop.requestEvaluate();
       })
     }
   }
@@ -233,6 +233,7 @@ VVVV.Nodes.InsertSQLite = function(id, graph) {
   var statementOut = this.addOutputPin('Statement', [''], VVVV.PinTypes.String);
   var statusOut = this.addOutputPin('Status', [''], VVVV.PinTypes.String);
   var insertedOut = this.addOutputPin('Inserted', [0], VVVV.PinTypes.Value);
+  insertedOut.auto_reset = true;
 
   var sqlite3 = undefined;
   var db = undefined;
@@ -247,7 +248,6 @@ VVVV.Nodes.InsertSQLite = function(id, graph) {
   var q = ["INSERT INTO", "", "", "VALUES ", ""];
 
   this.evaluate = function() {
-    //insertedOut.setValue(0, 0);
 
     q[1] = tableIn.getValue(0);
     q[2] = "("+fieldsIn.getValue(0)+")";
@@ -267,7 +267,7 @@ VVVV.Nodes.InsertSQLite = function(id, graph) {
         else {
           statusOut.setValue(0, err.message);
         }
-        that.parentPatch.serverSync.requestEvaluate();
+        that.parentPatch.mainloop.requestEvaluate();
       })
     }
   }
@@ -338,7 +338,7 @@ VVVV.Nodes.UpdateSQLite = function(id, graph) {
         else {
           statusOut.setValue(0, err.message);
         }
-        that.parentPatch.serverSync.requestEvaluate();
+        that.parentPatch.mainloop.requestEvaluate();
       })
     }
   }
