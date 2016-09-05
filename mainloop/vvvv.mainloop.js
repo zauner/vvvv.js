@@ -27,7 +27,7 @@ var MainLoop = function(patch, frames_per_second) {
     var dom = new DOMInterface(patch);
   var run = true;
   var start = undefined;
-  var animFrameRequested = false;
+  var evaluateRequested = false;
 
   this.lowFrameRateCount = 0;
   var measureStart = 0;
@@ -42,6 +42,8 @@ var MainLoop = function(patch, frames_per_second) {
 
   var nodeEnvTimer = null;
 
+  var isIdle = true;
+
   var that = this;
 
   /**
@@ -50,6 +52,7 @@ var MainLoop = function(patch, frames_per_second) {
    */
   function update() {
     if (patch.resourcesPending==0) {
+      isIdle = false;
       framecount ++;
       var now = new Date().getTime();
       if (start)
@@ -76,6 +79,9 @@ var MainLoop = function(patch, frames_per_second) {
       else
         lowFrameRateCount = 0;
     }
+
+    isIdle = true;
+
     if (run) // && framecount<1)
       if (VVVVContext.name=='browser') {
         window.setTimeout(function() {
@@ -83,7 +89,8 @@ var MainLoop = function(patch, frames_per_second) {
         }, Math.max(0, Math.round(1000/VVVVContext.fps-elapsed)));
       }
       else if (VVVVContext.name=='nodejs') {
-        nodeEnvTimer = setTimeout(update, Math.max(0, Math.round(1000/VVVVContext.fps-elapsed)))
+        nodeEnvTimer = setTimeout(update, Math.max(0, evaluateRequested ? 1000/60 : Math.round(1000/VVVVContext.fps-elapsed)));
+        evaluateRequested = false;
       }
 
   }
@@ -112,6 +119,15 @@ var MainLoop = function(patch, frames_per_second) {
    */
   this.isRunning = function() {
     return run;
+  }
+
+  this.requestEvaluate = function() {
+    if (isIdle) {
+      this.stop();
+      this.start();
+    }
+    else
+      evaluateRequested = true;
   }
 
   update();

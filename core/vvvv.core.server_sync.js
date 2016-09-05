@@ -94,18 +94,6 @@ define(function(require,exports) {
       this.socket.send(message);
     }
 
-    var evaluateRequested = false;
-    this.requestEvaluate = function() {
-      evaluateRequested = true;
-    }
-    setInterval(function() {
-      if (evaluateRequested) {
-        root_patch.mainloop.stop();
-        root_patch.mainloop.start();
-        evaluateRequested = false;
-      }
-    }, 1000);
-
   }
 
   return ServerSync;
