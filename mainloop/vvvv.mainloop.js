@@ -89,7 +89,7 @@ var MainLoop = function(patch, frames_per_second) {
         }, Math.max(0, Math.round(1000/VVVVContext.fps-elapsed)));
       }
       else if (VVVVContext.name=='nodejs') {
-        nodeEnvTimer = setTimeout(update, Math.max(0, evaluateRequested ? 1000/60 : Math.round(1000/VVVVContext.fps-elapsed)));
+        nodeEnvTimer = setTimeout(update, Math.max(0, evaluateRequested ? 1000/5 : Math.round(1000/VVVVContext.fps-elapsed)));
         evaluateRequested = false;
       }
 

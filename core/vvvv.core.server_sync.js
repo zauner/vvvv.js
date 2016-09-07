@@ -29,11 +29,14 @@ define(function(require,exports) {
           success_callback.call(root_patch);
       }
 
-      this.socket.onmessage = function(str) {
-        var msg = JSON.parse(str.data);
-        var p = that.patchRegistry[msg.patch];
-        //console.log("-> "+str.data);
-        if (msg.nodes) {
+      var messageQueue = {};
+      this.processMessage = function(patchIdentifier) {
+        var p = that.patchRegistry[patchIdentifier];
+        if (!messageQueue[patchIdentifier])
+          return;
+        if ((msg = messageQueue[patchIdentifier].shift())!==undefined) {
+          console.log('->');
+          console.log(msg);
           var i=msg.nodes.length;
           var node = null;
           while (i--) {
@@ -47,6 +50,17 @@ define(function(require,exports) {
             }
 
           }
+        }
+      }
+
+      this.socket.onmessage = function(str) {
+        var msg = JSON.parse(str.data);
+        var p = that.patchRegistry[msg.patch];
+        //console.log("-> "+str.data);
+        if (msg.nodes) {
+          if (!messageQueue[msg.patch])
+            messageQueue[msg.patch] = [];
+          messageQueue[msg.patch].push(msg);
         }
         if (msg.message) {
           if (typeof p.nodeMap[msg.node].handleBackendMessage === 'function')

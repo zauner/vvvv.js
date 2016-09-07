@@ -692,14 +692,19 @@ define(function(require,exports) {
     this.resetAutoResetPins = function() {
       var i = autoResetPins.length;
       var j = 0;
+      var resetted;
       while (i--) {
+        resetted = false;
         if (autoResetPins[i].values.changedAt<this.mainloop.frameNum) {
           j = autoResetPins[i].values.length;
           while (j--) {
-            if (autoResetPins[i].values[j]>=0.5)
+            if (autoResetPins[i].values[j]>=0.5) {
               autoResetPins[i].values[j] = 0;
+              resetted = true;
+            }
           }
-          autoResetPins[i].markPinAsChanged();
+          if (resetted)
+            autoResetPins[i].markPinAsChanged();
         }
       }
     }
@@ -832,6 +837,9 @@ define(function(require,exports) {
         var start = new Date().getTime();
         var elapsed = 0;
       }
+
+      if (this.serverSync.processMessage)
+        this.serverSync.processMessage(this.getPatchIdentifier());
 
       this.compiledFunc(this);
 
