@@ -307,6 +307,8 @@ VVVV.Nodes.UpdateSQLite = function(id, graph) {
   // output pins
   var statementOut = this.addOutputPin('Statement', [''], VVVV.PinTypes.String);
   var statusOut = this.addOutputPin('Status', [''], VVVV.PinTypes.String);
+  var updatedOut = this.addOutputPin('Updated', [0], VVVV.PinTypes.Value);
+  updatedOut.auto_reset = true;
 
   var sqlite3 = undefined;
   var db = undefined;
@@ -334,6 +336,7 @@ VVVV.Nodes.UpdateSQLite = function(id, graph) {
       db.exec(query, function(err) {
         if (!err) {
           statusOut.setValue(0, 'OK');
+          updatedOut.setValue(0, 1);
         }
         else {
           statusOut.setValue(0, err.message);
