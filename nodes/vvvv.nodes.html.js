@@ -14,19 +14,39 @@ VVVV.Types.HTMLLayer = function(tagName) {
   this.tagName = tagName;
   this.styles = {};
   this.attributes = {};
-  if (this.tagName) {
-    this.element = $('<'+this.tagName+'>');
-    this.element.data('vvvvjslayer', this);
-  }
-  else
-    this.element = undefined;
   this.children = [emptyHTMLLayer];
   this.parent = emptyHTMLLayer;
   this.text = "";
   this.position = 0;
   this.style = defaultHTMLStyle;
+  this.enabled = true;
 
   this.set_style_properties = {};
+
+  this.enable = function() {
+    this.element = $('<'+this.tagName+'>');
+    this.element.data('vvvvjslayer', this);
+    this.enabled = true;
+  }
+
+  this.disable = function() {
+    for (var i=0; i<this.children.length; i++) {
+      if (this.children[i].tagName)
+        this.children[i].disable();
+    }
+    this.children = [emptyHTMLLayer];
+    this.parent = emptyHTMLLayer;
+    this.attributes = {};
+    this.element.remove();
+    this.element = null;
+    this.enabled = false;
+  }
+
+  if (this.tagName) {
+    this.enable();
+  }
+  else
+    this.element = undefined;
 
   this.setText = function(text) {
     if (!this.element || this.element.prop("tagName")=="IFRAME")
@@ -204,6 +224,7 @@ element_node_defs.forEach(function(element_node_def) {
       else
         this.addInputPin(element_node_def.pins[i].name, [element_node_def.pins[i].value], element_node_def.pins[i].type)
     }
+    var enabledIn = this.addInputPin("Enabled", [1], VVVV.PinTypes.Value);
 
     var layersOut = this.addOutputPin("Layers Out", [], VVVV.PinTypes.HTMLLayer);
 
@@ -247,30 +268,48 @@ element_node_defs.forEach(function(element_node_def) {
 
       for (var i=0; i<maxSpreadSize; i++) {
         var fresh = false;
+
         if (layers[i]==undefined) {
           layers[i] = new VVVV.Types.HTMLLayer(nameIn ? nameIn.getValue(i) : tagName);
           fresh = true;
         }
 
-        if (nameIn && layers[i].tagName!=nameIn.getValue(i))
-          layers[i].changeTagName(nameIn.getValue(i));
+        if (enabledIn.getValue(i)>=0.5) {
 
-        if (fresh || textIn.pinIsChanged())
-          layers[i].setText(textIn.getValue(i));
-        if (fresh || parentIn.pinIsChanged())
-          layers[i].setParent(parentIn.getValue(i));
-        for (var j=0; j<attributePins.length; j++) {
-          if (fresh || attributePins[j].pinIsChanged())
-            layers[i].setAttribute(attributePins[j].pinname, attributePins[j].getValue(i));
+          if (layers[i].enabled==false && parentIn.getValue(i).enabled) {
+            layers[i].enable();
+            fresh = true;
+          }
+
+          if (layers[i].enabled && !parentIn.getValue(i).enabled)
+            layers[i].disable();
+
+          if (layers[i].enabled) {
+            if (nameIn && layers[i].tagName!=nameIn.getValue(i))
+              layers[i].changeTagName(nameIn.getValue(i));
+
+            if (fresh || textIn.pinIsChanged())
+              layers[i].setText(textIn.getValue(i));
+            if (fresh || parentIn.pinIsChanged())
+              layers[i].setParent(parentIn.getValue(i));
+            for (var j=0; j<attributePins.length; j++) {
+              if (fresh || attributePins[j].pinIsChanged())
+                layers[i].setAttribute(attributePins[j].pinname, attributePins[j].getValue(i));
+            }
+            for (var j=0; j<staticAttributePins.length; j++) {
+              if (fresh || staticAttributePins[j].pinIsChanged())
+                layers[i].setAttribute(staticAttributePins[j].pinname, staticAttributePins[j].getValue(i));
+            }
+
+            if (fresh || styleIn.pinIsChanged())
+              layers[i].setStyle(styleIn.getValue(i));
+          }
         }
-        for (var j=0; j<staticAttributePins.length; j++) {
-          if (fresh || staticAttributePins[j].pinIsChanged())
-            layers[i].setAttribute(staticAttributePins[j].pinname, staticAttributePins[j].getValue(i));
+        else {
+          if (layers[i] && layers[i].enabled==true) {
+            layers[i].disable();
+          }
         }
-
-        if (fresh || styleIn.pinIsChanged())
-          layers[i].setStyle(styleIn.getValue(i));
-
         layersOut.setValue(i, layers[i]);
       }
 
@@ -342,6 +381,10 @@ VVVV.Nodes.GroupHTML = function(id, graph) {
         var layer = outPins[j].values[i];
         if (!layer)
           layer = new VVVV.Types.HTMLLayer("span");
+        if (layer.enabled && !parentIn.getValue(i).enabled)
+          layer.disable();
+        else if (!layer.enabled && parentIn.getValue(i).enabled)
+          layer.enable();
         layer.setParent(parentIn.getValue(i));
         outPins[j].setValue(i, layer);
       }
@@ -668,11 +711,13 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
 
     if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
       for (var i=0; i<maxSpreadSize; i++) {
-        if (targets[i]!=undefined && (targets[i]!=elementIn.getValue(i).element[0])) {
+        if (targets[i]!=undefined && (!elementIn.getValue(i).enabled || targets[i]!=elementIn.getValue(i).element[0])) {
           $(targets[i]).unbind("change input paste keyup", handlers[i]);
           handlers[i] = undefined;
         }
-        if (handlers[i]==undefined) {
+        if (!elementIn.getValue(i).enabled)
+          targets[i] = undefined;
+        if (elementIn.getValue(i).enabled && handlers[i]==undefined) {
           targets[i] = elementIn.getValue(i).element[0];
           (function(j) {
             handlers[j] = function(e) {
@@ -797,6 +842,7 @@ VVVV.Nodes.GetFileHTML = function(id, graph) {
   var targets = [];
 
   var setSlices = [];
+  var needsUpdate = false;
 
   this.evaluate = function() {
     var maxSpreadSize = this.getMaxInputSliceCount();
@@ -805,17 +851,20 @@ VVVV.Nodes.GetFileHTML = function(id, graph) {
 
     if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
       for (var i=0; i<1; i++) { // TODO: make it work with more than one input element
-        if (targets[i]!=undefined && (targets[i]!=elementIn.getValue(i).element[0])) {
+        if (targets[i]!=undefined && (!elementIn.getValue(i).enabled || targets[i]!=elementIn.getValue(i).element[0])) {
           $(targets[i]).unbind("change", handlers[i]);
           handlers[i] = undefined;
         }
-        if (handlers[i]==undefined) {
+        if (!elementIn.getValue(i).enabled)
+          targets[i] = undefined;
+        if (elementIn.getValue(i).enabled && handlers[i]==undefined) {
           targets[i] = elementIn.getValue(i).element[0];
           (function(j) {
             handlers[j] = function(e) {
               for (var k=0; k<this.files.length; k++) {
                 setSlices.push({sliceIdx: k, file: this.files[k], name: this.files[k].name, size: this.files[k].size});
               }
+              needsUpdate = true;
               thatNode.dirty = true;
             }
           }(i));
@@ -841,7 +890,7 @@ VVVV.Nodes.GetFileHTML = function(id, graph) {
       filesizeOut.setSliceCount(1);
     }
 
-    if (setSlices.length>0) {
+    if (needsUpdate) {
       var i = setSlices.length;
       while (i--) {
         fileOut.setValue(setSlices[i].sliceIdx, setSlices[i].file);
@@ -852,6 +901,7 @@ VVVV.Nodes.GetFileHTML = function(id, graph) {
       filenameOut.setSliceCount(setSlices.length);
       filesizeOut.setSliceCount(setSlices.length);
       setSlices.length = 0;
+      needsUpdate = false;
       thatNode.dirty = false;
     }
   }
@@ -924,11 +974,13 @@ event_node_defs.forEach(function(event_node_def) {
         for (var i=0; i<maxSpreadSize; i++) {
           if (eventIn)
             eventCode = eventIn.getValue(i);
-          if (targets[i]!=undefined && (targets[i]!=elementIn.getValue(i).element[0] || eventTypes[i]!=eventCode)) {
+          if (targets[i]!=undefined && (!elementIn.getValue(i).enabled || targets[i]!=elementIn.getValue(i).element[0] || eventTypes[i]!=eventCode)) {
             $(targets[i]).unbind(eventTypes[i], handlers[i]);
             handlers[i] = undefined;
           }
-          if (handlers[i]==undefined) {
+          if (!elementIn.getValue(i).enabled)
+            targets[i] = undefined;
+          if (elementIn.getValue(i).enabled && handlers[i]==undefined) {
             targets[i] = elementIn.getValue(i).element[0];
             eventTypes[i] = eventCode;
             (function(j) {
