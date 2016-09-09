@@ -392,7 +392,9 @@ VVVV.Nodes.StoreFile = function(id, graph) {
     var removeIn = this.addInputPin('Remove', [0], VVVV.PinTypes.Value);
     var newNameIn = this.addInputPin('New Name', [''], VVVV.PinTypes.String);
     var renameIn = this.addInputPin('Rename', [0], VVVV.PinTypes.Value);
+    var checkExistenceIn = this.addInputPin('Check Existence', [0], VVVV.PinTypes.Value);
 
+    var existsOut = this.addOutputPin("Exists", [0], VVVV.PinTypes.Value);
     var successOut = this.addOutputPin('Success', [0], VVVV.PinTypes.Value);
     successOut.auto_reset = true;
     var errorOut = this.addOutputPin('Error', [0], VVVV.PinTypes.Value);
@@ -417,9 +419,151 @@ VVVV.Nodes.StoreFile = function(id, graph) {
           that.parentPatch.mainloop.requestEvaluate();
         });
       }
+
+      if (checkExistenceIn.getValue(0)>=0.5 && directoryIn.getValue(0)!='') {
+        try {
+          if (fs.statSync(VVVV.Helpers.prepareFilePath(directoryIn.getValue(0), this.parentPatch)).isDirectory())
+            existsOut.setValue(0, 1);
+        } catch (e) {
+          if (e.code === 'ENOENT') {
+            existsOut.setValue(0, 0);
+          }
+        }
+      }
     }
 
   }
   VVVV.Nodes.Directory.prototype = new Node();
+
+
+  /*
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   NODE: File (HTML5)
+   Author(s): Matthias Zauner
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  */
+
+  VVVV.Nodes.File = function(id, graph) {
+    this.constructor(id, "File (HTML5)", graph);
+
+    this.environments = ['nodejs'];
+
+    this.meta = {
+      authors: ['Matthias Zauner'],
+      original_authors: [],
+      credits: [],
+      compatibility_issues: []
+    };
+
+    var filenameIn = this.addInputPin('File Name', [''], VVVV.PinTypes.String);
+    var removeIn = this.addInputPin('Remove', [0], VVVV.PinTypes.Value);
+    var newNameIn = this.addInputPin('New Name', [''], VVVV.PinTypes.String);
+    var renameIn = this.addInputPin('Rename', [0], VVVV.PinTypes.Value);
+    var checkExistenceIn = this.addInputPin('Check Existence', [0], VVVV.PinTypes.Value);
+
+    var existsOut = this.addOutputPin("Exists", [0], VVVV.PinTypes.Value);
+    var successOut = this.addOutputPin('Success', [0], VVVV.PinTypes.Value);
+    successOut.auto_reset = true;
+    var errorOut = this.addOutputPin('Error', [0], VVVV.PinTypes.Value);
+    errorOut.auto_reset = true;
+
+    var fs = undefined;
+    this.initialize = function() {
+      fs = window.server_req('fs');
+    }
+
+    this.evaluate = function() {
+      var that = this;
+
+      for (var i=0; i<filenameIn.getSliceCount(); i++) {
+        if (removeIn.getValue(i)>=0.5 && filenameIn.getValue(i)!='') {
+          (function(j) {
+            fs.unlink(VVVV.Helpers.prepareFilePath(filenameIn.getValue(j), this.parentPatch), function(err) {
+              if (err) {
+                console.log(err);
+                errorOut.setValue(j, 1);
+              }
+              else {
+                successOut.setValue(j, 1);
+              }
+              that.parentPatch.mainloop.requestEvaluate();
+            });
+          })(i);
+        }
+
+        if (checkExistenceIn.getValue(i)>=0.5 && filenameIn.getValue(i)!='') {
+          try {
+            if (fs.statSync(VVVV.Helpers.prepareFilePath(filenameIn.getValue(i), this.parentPatch)).isFile())
+              existsOut.setValue(i, 1);
+          } catch (e) {
+            if (e.code === 'ENOENT') {
+              existsOut.setValue(i, 0);
+            }
+          }
+        }
+      }
+      successOut.setSliceCount(filenameIn.getSliceCount());
+      errorOut.setSliceCount(filenameIn.getSliceCount());
+      existsOut.setSliceCount(filenameIn.getSliceCount());
+    }
+
+  }
+  VVVV.Nodes.File.prototype = new Node();
+
+
+  /*
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   NODE: Dir (HTML5)
+   Author(s): Matthias Zauner
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  */
+
+  VVVV.Nodes.Dir = function(id, graph) {
+    this.constructor(id, "Dir (HTML5)", graph);
+
+    this.environments = ['nodejs'];
+
+    this.meta = {
+      authors: ['Matthias Zauner'],
+      original_authors: ['VVVV Group'],
+      credits: [],
+      compatibility_issues: []
+    };
+
+    //var maskIn = this.addInputPin('Mask', ['*.*'], VVVV.PinTypes.String);
+    var directoryIn = this.addInputPin('Directory', ['.'], VVVV.PinTypes.String);
+    //var inclideSubDirsIn = this.addInputPin('Include Subdirectories', [0], VVVV.PinTypes.Value);
+    var updateIn = this.addInputPin('Update', [0], VVVV.PinTypes.Value);
+
+    var filenamesOut = this.addOutputPin("Filenames", [''], VVVV.PinTypes.String);
+    var shortFilenamesOut = this.addOutputPin('Short Filenames', [''], VVVV.PinTypes.String);
+    var fileCountOut = this.addOutputPin('File Count', [0], VVVV.PinTypes.Value);
+
+    var fs = undefined;
+    var path = undefined;
+    this.initialize = function() {
+      fs = window.server_req('fs');
+    }
+
+    this.evaluate = function() {
+      if (updateIn.getValue(0)>0.5) {
+        var files = fs.readdirSync(VVVV.Helpers.prepareFilePath(directoryIn.getValue(0), this.parentPatch));
+        var sliceIdx = 0;
+        for (var i=0; i<files.length; i++) {
+          var stats = fs.statSync(VVVV.Helpers.prepareFilePath(directoryIn.getValue(0), this.parentPatch)+'/'+files[i]);
+          if (stats.isFile()) {
+            filenamesOut.setValue(sliceIdx, directoryIn.getValue(0)+'/'+files[i]);
+            shortFilenamesOut.setValue(sliceIdx, files[i]);
+            sliceIdx++;
+          }
+        }
+        filenamesOut.setSliceCount(sliceIdx);
+        shortFilenamesOut.setSliceCount(sliceIdx);
+        fileCountOut.setValue(0, sliceIdx);
+      }
+    }
+
+  }
+  VVVV.Nodes.Dir.prototype = new Node();
 
 });
