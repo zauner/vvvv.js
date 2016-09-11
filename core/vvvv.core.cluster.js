@@ -112,9 +112,13 @@ define(function(require,exports) {
         var i=edgePins[node_id].length;
         var changedPins = 0;
         while (i--) {
-          if (edgePins[node_id][i].pinIsChanged()) {
+          if (edgePins[node_id][i].pinIsChanged() || !edgePins[node_id][i].syncInitialized) {
             pinValues[edgePins[node_id][i].pinname] = edgePins[node_id][i].values;
+            if (pinValues[edgePins[node_id][i].pinname].length==0) {
+              console.log('WTF?');
+            }
             changedPins++;
+            edgePins[node_id][i].syncInitialized = true;
           }
         }
         if (changedPins>0)
