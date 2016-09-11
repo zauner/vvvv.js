@@ -703,8 +703,9 @@ define(function(require,exports) {
               resetted = true;
             }
           }
-          if (resetted)
+          if (resetted) {
             autoResetPins[i].markPinAsChanged();
+          }
         }
       }
     }
@@ -820,7 +821,7 @@ define(function(require,exports) {
         addSubGraphToRecipe(lostLoopRoots[i]);
       }
 
-      compiledCode = "try {\n"+compiledCode+"\npatch.resetAutoResetPins();\n} catch (e) { console.error(e.message); console.log(e.stack); }";
+      compiledCode = "try {\npatch.resetAutoResetPins();\n"+compiledCode+"\n} catch (e) { console.error(e.message); console.log(e.stack); }";
 
       this.compiledFunc = new Function('patch', compiledCode);
       //console.log(this.compiledFunc.toString());
