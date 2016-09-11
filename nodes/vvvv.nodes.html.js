@@ -195,6 +195,8 @@ element_node_defs.forEach(function(element_node_def) {
   VVVV.Nodes[element_node_def.nodename+"HTML"] = function(id, graph) {
     this.constructor(id, element_node_def.nodename+" (HTML)", graph);
 
+    this.environments = ['browser'];
+
     this.meta = {
       authors: ['Matthias Zauner'],
       original_authors: [],
@@ -315,7 +317,8 @@ element_node_defs.forEach(function(element_node_def) {
 
       // remove untracked elements
       for (var i=maxSpreadSize; i<layers.length; i++) {
-        layers[i].element.remove();
+        if (layers[i].element)
+          layers[i].element.remove();
       }
 
       layers.length = maxSpreadSize;
@@ -392,7 +395,8 @@ VVVV.Nodes.GroupHTML = function(id, graph) {
 
     for (var i=0; i<outPins.length; i++) {
       for (var j=outPins[i].values.length-1; j>=sliceCount; j--) {
-        outPins[i].values[j].element.remove();
+        if (outPins[i].values[j].element)
+          outPins[i].values[j].element.remove();
       }
       outPins[i].setSliceCount(sliceCount);
     }
@@ -418,6 +422,8 @@ VVVV.Nodes.GroupHTML.prototype = new Node();
 
 VVVV.Nodes.GetElementHTML = function(id, graph) {
   this.constructor(id, "GetElement (HTML)", graph);
+
+  this.environments = ['browser'];
 
   this.meta = {
     authors: ['Matthias Zauner'],
