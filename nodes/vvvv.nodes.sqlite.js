@@ -349,5 +349,42 @@ VVVV.Nodes.UpdateSQLite = function(id, graph) {
 }
 VVVV.Nodes.UpdateSQLite.prototype = new Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Escape (SQLite String)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): ''
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.EscapeSQLite = function(id, graph) {
+  this.constructor(id, "Escape (SQLite String)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['vux'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  this.auto_evaluate = false;
+
+  // input pins
+  var inputIn = this.addInputPin('Input', [''], VVVV.PinTypes.String);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [''], VVVV.PinTypes.String);
+
+
+  this.evaluate = function() {
+
+  }
+
+  this.getCode = function() {
+    return "{Input}.replace(/'/g, \"''\")";
+  }
+
+}
+VVVV.Nodes.EscapeSQLite.prototype = new Node();
 
 });
