@@ -1,0 +1,196 @@
+<html>
+<head>
+<title>VVVViewer Demo Page</title>
+<link rel="stylesheet" type="text/css" href="../vvvviewer/vvvv.css"/>
+<script language="JavaScript" src="../lib/jquery/jquery-1.4.2.min.js"></script>
+
+<script language="JavaScript" src="../lib/underscore/underscore-min.js"></script>
+<script language="JavaScript" src="../lib/d3-v1.14/d3.min.js"></script>
+<script language="JavaScript" src="../lib/glMatrix-0.9.5.min.js"></script>
+
+<script language="JavaScript" src="../core/vvvv.core.js"></script>
+<script language="JavaScript" src="../core/vvvv.core.clientbridge.js"></script>
+
+<script language="JavaScript" src="../mainloop/vvvv.mainloop.js"></script>
+<script language="JavaScript" src="../mainloop/vvvv.dominterface.js"></script>
+  
+<script language="JavaScript" src="../nodes/vvvv.nodes.value.js"></script>
+<script language="JavaScript" src="../nodes/vvvv.nodes.string.js"></script>
+<script language="JavaScript" src="../nodes/vvvv.nodes.boolean.js"></script>
+<script language="JavaScript" src="../nodes/vvvv.nodes.color.js"></script>
+<script language="JavaScript" src="../nodes/vvvv.nodes.spreads.js"></script>
+<script language="JavaScript" src="../nodes/vvvv.nodes.animation.js"></script>
+<script language="JavaScript" src="../nodes/vvvv.nodes.network.js"></script>
+<script language="JavaScript" src="../nodes/vvvv.nodes.system.js"></script>
+<script language="JavaScript" src="../nodes/vvvv.nodes.transform.js"></script>
+<script language="JavaScript" src="../nodes/vvvv.nodes.canvas.js"></script>
+<script language="JavaScript" src="../nodes/vvvv.nodes.html5.js"></script>
+<script language="JavaScript" src="../nodes/vvvv.nodes.webgl.js"></script>
+<script language="JavaScript" src="../nodes/vvvv.nodes.vectors.js"></script>
+<script language="JavaScript" src="../vvvviewer/vvvv.vvvviewer.js"></script>
+
+<script language="JavaScript" src="../vvvv.js"></script>
+<script language="JavaScript" src="demo.js"></script>
+</head>
+<body>
+
+<p>
+VVVV.js is an experimental approach to displaying VVVV patches (or better: the XML code they're base on) within your browser.
+</p>
+
+<p>
+On the internet, discussions about <i>textual programming problems</i> usually include snippets of sourcecode, placed right in the middle of running text. With VVVV patches, it is not that easy.
+Describing patching problems often involves either a verbal description of a patch, or attached resources like screenshots or the actual .v4p file.
+</p>
+
+<p>
+While the initial goal was to evaluate the possibilities of <i>displaying VVVV patches</i> on the client side, right now this proof of concept also features basic graph evaluation and a really small set of
+common VVVV nodes, ported to Javascript.
+</p>
+
+<p>
+Tested with Google Chrome and Firefox 4.
+</p>
+
+<h1>1. Render VVVV XML within page</h1>
+
+Here is some VVVV XML Code, which shows a way to shuffle a spread:
+<input type="button" id="visualizecode" value="View it!"/><br/>
+Hit reload and run again to see, that it's actually evaluated.
+
+<pre id="patch1">
+&lt;!DOCTYPE PATCH  SYSTEM "D:\charanim\movvvve2\vvvv_40beta23.3\bin\40alpha23.dtd" &gt;
+   &lt;PATCH&gt;
+   &lt;NODE componentmode="InABox" id="6" nodename="IOBox (Value Advanced)" systemname="IOBox (Value Advanced)"&gt;
+   &lt;BOUNDS height="100" left="1395" top="870" type="Node" width="100"&gt;
+   &lt;/BOUNDS&gt;
+   &lt;BOUNDS height="1365" left="1395" top="870" type="Box" width="795"&gt;
+   &lt;/BOUNDS&gt;
+   &lt;PIN pinname="Rows" slicecount="1" values="5"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="SliceCount Mode" slicecount="1" values="ColsRowsPages"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="Y Output Value" visible="1"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="Y Input Value" slicecount="5" values="1,2,3,4,5"&gt;
+   &lt;/PIN&gt;
+   &lt;/NODE&gt;
+   &lt;NODE componentmode="InABox" id="5" nodename="IOBox (String)" systemname="IOBox (String)"&gt;
+   &lt;BOUNDS height="270" left="1260" top="510" type="Node" width="945"&gt;
+   &lt;/BOUNDS&gt;
+   &lt;BOUNDS height="270" left="1260" top="510" type="Box" width="945"&gt;
+   &lt;/BOUNDS&gt;
+   &lt;PIN pinname="Input String" slicecount="1" visible="0" values="|the spread:|"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="Output String" visible="0"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="Show Grid" slicecount="1" values="0"&gt;
+   &lt;/PIN&gt;
+   &lt;/NODE&gt;
+   &lt;NODE componentmode="Hidden" id="4" nodename="GetSlice (Spreads)" systemname="GetSlice (Spreads)"&gt;
+   &lt;BOUNDS height="100" left="2145" top="4215" type="Node" width="100"&gt;
+   &lt;/BOUNDS&gt;
+   &lt;PIN pinname="Input" visible="1"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="Bin Size" slicecount="1" values="1"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="Index" visible="1"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="Output" visible="1"&gt;
+   &lt;/PIN&gt;
+   &lt;/NODE&gt;
+   &lt;LINK dstnodeid="4" dstpinname="Input" srcnodeid="6" srcpinname="Y Output Value"&gt;
+   &lt;/LINK&gt;
+   &lt;NODE componentmode="Hidden" id="3" nodename="Count (Value)" systemname="Count (Value)"&gt;
+   &lt;BOUNDS height="100" left="3510" top="2655" type="Node" width="100"&gt;
+   &lt;/BOUNDS&gt;
+   &lt;PIN pinname="Input" visible="1"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="Count" visible="1"&gt;
+   &lt;/PIN&gt;
+   &lt;/NODE&gt;
+   &lt;LINK dstnodeid="3" dstpinname="Input" srcnodeid="6" srcpinname="Y Output Value"&gt;
+   &lt;/LINK&gt;
+   &lt;NODE componentmode="Hidden" id="2" nodename="RandomSpread (Spreads)" systemname="RandomSpread (Spreads)"&gt;
+   &lt;BOUNDS height="100" left="2400" top="3135" type="Node" width="100"&gt;
+   &lt;/BOUNDS&gt;
+   &lt;PIN pinname="Input" slicecount="1" visible="1" values="0"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="Width" slicecount="1" values="1"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="Random Seed" slicecount="1" values="0"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="Spread Count" visible="1"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="Output" visible="1"&gt;
+   &lt;/PIN&gt;
+   &lt;/NODE&gt;
+   &lt;LINK dstnodeid="2" dstpinname="Spread Count" srcnodeid="3" srcpinname="Count"&gt;
+   &lt;/LINK&gt;
+   &lt;NODE componentmode="Hidden" id="1" nodename="Sort (Spreads)" systemname="Sort (Spreads)"&gt;
+   &lt;BOUNDS height="100" left="2400" top="3630" type="Node" width="100"&gt;
+   &lt;/BOUNDS&gt;
+   &lt;PIN pinname="Input" visible="1"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="Former Index" visible="1"&gt;
+   &lt;/PIN&gt;
+   &lt;/NODE&gt;
+   &lt;LINK dstnodeid="1" dstpinname="Input" srcnodeid="2" srcpinname="Output"&gt;
+   &lt;/LINK&gt;
+   &lt;LINK dstnodeid="4" dstpinname="Index" srcnodeid="1" srcpinname="Former Index"&gt;
+   &lt;/LINK&gt;
+   &lt;NODE componentmode="InABox" id="7" nodename="IOBox (Value Advanced)" systemname="IOBox (Value Advanced)"&gt;
+   &lt;BOUNDS height="100" left="1410" top="4890" type="Node" width="100"&gt;
+   &lt;/BOUNDS&gt;
+   &lt;BOUNDS height="1365" left="1410" top="4890" type="Box" width="795"&gt;
+   &lt;/BOUNDS&gt;
+   &lt;PIN pinname="Rows" slicecount="1" values="5"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="SliceCount Mode" slicecount="1" values="ColsRowsPages"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="Y Output Value" visible="1"&gt;
+   &lt;/PIN&gt;
+   &lt;PIN pinname="Y Input Value" visible="1"&gt;
+   &lt;/PIN&gt;
+   &lt;/NODE&gt;
+   &lt;LINK srcnodeid="4" srcpinname="Output" dstnodeid="7" dstpinname="Y Input Value"&gt;
+   &lt;/LINK&gt;
+   &lt;/PATCH&gt;
+</pre>
+
+<h1 style="clear:both">2. Load and display remote file</h1>
+
+<div style="float:left"><a href="rotating_quads.v4p" id="patch3">rotatings_quad.v4p</a> (<a href="#" id="loadpatchfile">display</a>)</div>
+
+<div style="margin-left:520px">
+  #renderer-2:<br/>
+  <canvas id="renderer-2" width="256" height="256" style="border:1px solid black;"></canvas>
+</div>
+
+<h1 style="clear:both">3. Paste VVVV Code</h1>
+
+#Input1: <input type="text" id="Input1" value="640"/><br/>
+#Input2: <input type="text" id="Input2" value="480"/><br/>
+#Checkbox1: <input type="checkbox" id="Checkbox1" value="0"/><br/>
+#Button1: <input type="button" id="Button1" value="Click"/><br/>
+#Output1.Output: <span id="Output1" class="Output"></span><br/>
+#Output2.Output: <span id="Output2" class="Output"></span><br/>
+#Output3.Output: <span id="Output3" class="Output"></span><br/>
+
+<div style="float:left;">
+  Paste your VVVV here:
+  <form action="#" id="patchxmlform" method="post">
+  <textarea name="patchxml" id="patchxml">
+  </textarea>
+  </form>
+  <div id="patch2"></div>
+</div>
+
+<div style="margin-left:520px">
+  #renderer:<br/>
+  <canvas id="renderer" width="300" height="300" style="border:1px solid black;"></canvas>
+</div>
+
+
+</body>
+</html>

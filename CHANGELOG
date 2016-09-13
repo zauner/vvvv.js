@@ -1,0 +1,377 @@
+v1.1 / 2015-04-21
+
+This release comes with a revamped evaluation logic, which continously 'compiles' patches to actual JavaScript code. Besides
+ a bunchload of brandnew WebAudio nodes, v1.1 also comes with a set of DOM/Style/Event nodes and the possibility to write your own
+ inline nodes using the built in Node Editor.
+
+Nodes
+-----
+
+new:
+
+* DefineNode (System)
+* ConnectAll (2d)
+* Differential (Spreads)
+* Transform (Transform 2d)
+* GridSegment (DX9)
+* AspectRatio (Transform)
+* Simplex (2-4d)
+* MonoFlop (Animation)
+* Trapeze (Transform)
+* Multiply (Transform)
+* UniformScale (Transform)
+* ApplyTransform (Transform)
+* Integrate (Differential)
+* Cull (EX9.RenderState)
+* WebSocket (Network Client)
+* S+H (String)
+* AsElement (XElement JSON)
+* Element (XElement Split)
+* GetElements (XElement ByName)
+* GetSlice (Node)
+* Select (Node)
+* Cons (String)
+* Gregorian (Astronomy Join)
+* CanvasTexture (EX9.Texture)
+* ADSR (Animation)
+
+* AudioDestination (HTML5 Audio)
+* Oscillator (HTML5 Audio)
+* Delay (HTML5 Audio)
+* Gain (HTML5 Audio)
+* DynamicsProcessor (HTML5 Audio)
+* BiquadFilter (HTML5 Audio)
+* FileAudioBuffer (HTML5 Audio)
+* Convolver (HTML5 Audio)
+* BeatDetector (HTML5 Audio)
+* WaveShaper (HTML5 Audio)
+* AudioIn (HTML5 Audio)
+* Add (HTML5 Audio)
+* FFT (HTML5 Audio)
+* Add (HTML5 Audio Spectral)
+
+* Element (HTML) node and lots of generated element helper nodes
+* Style (HTML) node and lots of generated style helper nodes
+* OnEvent (HTML) node and lots of generated event helper nodes
+* GetValue (HTML)
+* GetText (HTML)
+* SetText (HTML)
+* GetAttribute (HTML)
+* SetAttribute (HTML)
+* ApplyStyle (HTML)
+* GetPosition (HTML)
+* Position (HTML)
+* Transform (HTML)
+
+improved/fixed:
+
+* Mouse (System Window) and Mouse (System Global) have now multi touch support
+* fixed CircularSpread compatibility issues
+* added Multiply option to BlendMode (EX9)
+* fixed I (Spreads) compatibility issues
+* fixed LinearSpread spreadability
+* added BinSize to Differential
+* added Change output to LFO (Animation)
+* added Input BinSize to Integral (Spreads)
+* refactored Transform nodes for performance improvements
+
+Core
+----
+
+* You can define your own inline nodes using the DefineNode node
+* Color input pins can now be modulated using HSV color sliders
+* Spreads are not stored multiple times in each connected output AND input pin, so only one spread has to be modified on Pin#setValue()
+* Replaces dirty-flagging with Pin#changedAt property
+* VVVV.js' mainloop now makes use of window.requestAnimationFrame()
+* All code is now scoped to avoid conflicts with other jQuery versions
+* The Color pin type now uses Float32Array instead of a string representation
+* Fixed bug where red nodes could not be deleted
+* Patches are now compiled to JavaScript code continuously
+* Static Nodes: nodes can now return actual JavaScript code which can be chained/nested with other static nodes
+
+API
+---
+
+* introduced Node#isDirty() method as a replacement for Node#dirty flag
+* PinDirection enum is now VVVV.PinDirection
+* added <link rel="VVVV"> method for loading patches; made <script language="VVVV"> method deprecated
+* Static Nodes: nodes can now implement a getCode() method instead of evaluate(), which returns actual JavaScript code as a string
+* added VVVV.onLowFrameRate callback
+
+
+
+v1.0 / 2014-05-09
+=================
+
+The VVVVJsConnector and the VVVV.js SDK for VVVV has been dropped. From this
+version on, the web-based patch editor is the recommended way to edit patches.
+
+Nodes
+-----
+
+new:
+
+* Switch (Color)
+* AvoidNil (String)
+* Bounds (Spectral)
+* Rectangle (Canvas VVVVjs)
+* * (3d Vector)
+* Inverse (Transform)
+* FormatValue (String)
+* DefineEffect (EX9.Effect)
+* Damper (Animation)
+* LookAt (Transform)
+* Attractor (2d)
+
+
+improved/fixed:
+
+* LFO (Animation): reset pin works now when paused
+* FileTexture (HTML): fixed bug where images where not reloaded on spread change; adds support for Cube Textures
+* LinearSpread (Spreads): fixed crash on width 0.0 and block alignment, changes alignment to Enum
+* Divide (Value): fixed division by zero behaviour
+* added 'Clipping Layer' input pin to Canvas Layer Nodes
+* Arc (Canvas VVVVjs): added 'Draw Segment' and 'Radius' input pins
+* Cylinder (EX9.Geometry): fixes wrong indices
+* LinearFilter (Animation): makes use of MainLoop.deltaT to avoid glitch on window refocus
+* GetSlice (Spreads): got working BinSize pin
+* BezierCurve (Canvas VVVVjs): fixes not working bin size of -1
+
+
+Core
+----
+
+* added built-in/browser-based/cross-platform patch editor
+* added support for inline shader code using DefineEffect node and the built-in shader editor
+* added VVVV.Core.Patch.toXML() function, so VVVV.js patches can be saved
+* added support for loading patches and subpatches from subdirectories
+* only downlaods subpatch once when used multiple times
+* added new CanvasLayer and HTML5 Texture Pin Types
+* fixed bug where | characters in spread values made trouble
+
+API
+---
+
+* added VVVV.Core.Node.auto_nil flag;
+* added VVVV.Core.Node.destroy() callback
+* added VVVV.Core.Node.openGUIWindow() callback
+* added MainLoop.deltaT variable
+* addded VVVV.Helpers.dynamicPins method
+* changed signature of Node.addInputPin, Node.addOutputPin and Node.addInvisiblePin; this breaks backwards compatibility
+
+
+
+v0.3.0 / 2013-08-13
+===================
+
+Recommended VVVV version for this VVVV.js release is 45beta28
+
+Nodes
+-----
+
+new:
+
+Separate (String)
+Count (String)
+= (String)
+Select (String)
+Clean (String)
+IOBox (Node)
+Switch (Node)
+Queue (Spreads)
+CurrentTime (Astronomy)
+Gregorian (Astronomy Split)
+XPath (XML)
+SetAlpha (Color)
+
+improved:
+
+* I (Spreads) works now with From > To values
+* AsValue (String) works with negative values
+* Renderer (HTML5 Canvas) only renders when input pins change
+* DX9Texture (EX9) enables linear filtering for Canvas Texture
+
+Core
+----
+
+* Interpretation of spreads in XML fixed
+* Supports loading of subpatches
+* VVVVJsConnector can deal with subpatches
+* Replaced some underscore.js loops with native loops
+* VVVViewer now opens subpatch when a subpatch node is double-clicked. Returns to parent patch when background is double-clicked
+* Introduced VVVV.PinTypes
+* New PinTypes: WebGlResource, WebGlTexture, Node, Transform, CanvasRenderState
+* VVVViewer displays actual colors in IOBox (Color)
+* adds VVVV.Editors and makes VVVVJsConnector an 'Editor' in VVVV.Editors["Connector"]
+
+
+Node Interface Changes
+----------------------
+
+* VVVV.Core.Pin.connectionChanged() handler has been replaced by the hash VVVV.Core.Pin.connectionChangedHandlers, to allow multiple named callbacks
+
+v0.2.0 / 2013-02-04
+===================
+
+From this version on, VVVV.js is only tested with VVVV versions >= beta27.
+
+Nodes
+-----
+
+new:
+
+* Constant (EX9.Effect)
+* GouroudDirectional (EX9.Effect)
+* PhongDirectional (EX9.Effect)
+* VertexBuffer (EX9.Geometry Join)
+* Mesh (EX9.Geometry Join)
+* Blend (EX9.RenderState)
+* Fill (EX9.RenderState)
+* ZWriteEnable (EX9.RenderState)
+* DX9Texture (EX9.Texture)
+* AsValue (String)
+* String2Enum (Enumerations)
+* Group (EX9)
+* VideoTexture (EX9.Texture VMR9)
+* Cons (Spreads)
+* Sort (String)
+* Length (String)
+* Sift (String)
+* Cross (2d)
+* SetSlice (Spreads)
+* WaveShaper (Value)
+* Map (Value)
+* IOBox (Color)
+* Min (Value)
+* Max (Value)
+* Mod (Value)
+* Power (Value)
+* Random (Value)
+* Sign (Value)
+* InputMorph (Value)
+* Sift (Value)
+* Polar (2d)
+* Polar (3d)
+* Cartesian (2d)
+* Cartesian (3d)
+* Normalize (2d)
+* Normalize (3d)
+* Multiply (3d Cross)
+* Multiply (3d Dot)
+* Points2Vector (2d)
+* Vector2Points (2d)
+* Reverse (Spreads)
+* Integral (Spreads)
+* Interval (Spreads)
+
+improved:
+
+* Mouse (Global) got Y coordinate inverted; got Button Click output pins
+* Renderer (EX9) got View and Perspective pins renamed to match VVVV >= beta26
+* Renderer (EX9) got Background Color, Clear, Depth Buffer Format input pins and Actual Backbuffer and EX9 output pins
+* Renderer (EX9) supports multiple renderer instances
+* Renderer (Canvas VVVVJs) got Canvas Out pin, View Transform Input Pin
+* LFO (Animation) is now spreadable
+* Text (Canvas VVVVjs) got a little better looking rendering
+* LinearSpread (Spreads) got alignment pin
+
+
+Core
+----
+
+* Switched to jQuery 1.8.2
+* supports loading shader codes stored in .vvvvjs.fx files
+* VVVVJs-to-VVVV-Connector for realtime patching
+* Added shortcuts: Ctrl+F to display framerate, Ctrl+T to display node execution times
+* Not implemented nodes appear red in VVVViewer
+* Added onNotImplemented callback to define what happens, if there's a non-implemented node
+* Dynamic script loading on init got reworked; Line numbers show up correctly in javascript console now
+* Added compiled script vvvv.min.js
+* 3rd party libraries can now be added to nodes as "required libraries" and will then be loaded on demand
+* window and document element can now be accessed by the DOM interface
+
+
+Node Interface Changes
+----------------------
+
+* added optional binSize parameter to VVVV.Core.Pin.getValue()
+* added findDownstreamNodes() function to VVVV.Core.Node
+* added connectionChanged() callback to VVVV.Core.Ping
+
+v0.1.2-alpha / 2011-09-16
+=========================
+
+Besides some major changes under the hood (mostly regarding graph evaluation), this release introduces lots of nodes for canvas 2d drawing.
+
+From this version on, VVVV.js is only tested with VVVV versions >= beta26.
+
+Nodes
+-----
+
+new:
+
+* Vector (2d Join)
+* Vector (3d Join)
+* Vector (4d Join)
+* Vector (2d Split)
+* Vector (3d Split)
+* Vector (4d Split)
+* Fill (Canvas VVVVjs RenderState)
+* Stroke (Canvas VVVVjs RenderState)
+* LinearGradient (Canvas VVVVjs RenderState)
+* Shadow (Canvas VVVVjs RenderState)
+* Blend (Canvas VVVVjs RenderState)
+* Group (Canvas VVVVjs)
+* Quad (Canvas VVVVjs)
+* Text (Canvas VVVVjs)
+* FileStream (HTML5 VVVVjs)
+* FileTexture (HTML5 VVVVjs)
+* AudioOut (HTML5 VVVVjs)
+* Abs (Complex)
+* I (Spreads)
+* CircularSpread (Spreads)
+* Toggle (Animation)
+* Add (Value Spectral)
+* Counter (Animation)
+* FrameDelay (Animation)
+
+
+
+improved:
+
+* EQ (Value) has Epsilon pin
+* +, -, * (Value) have dynamic input pin count
+* Arc (Canvas VVVVjs) and BezierCurve (Canvas VVVVjs) use RenderState nodes for styling
+* LinearSpread (Spreads): fixed bug where node crashed on phase!=0
+
+
+
+
+Core Changes
+------------
+
+* "Descriptive Name" and "Rows" pin are now invisible (doesn't show up in VVVViewer)
+* only nodes with changed pins or nodes with auto_evaluate-flag is set to true are evaluated. this makes a lot of pinIsChanged() checks obsolete.
+* Graph evaluation now works bottom up, instead of top down
+* Graph evaluation now support frame-delayed nodes
+* improved/simplified patch loading
+* examples added
+* Systemname and nodename XML attributes are now case-insensitive, to keep compatible with VVVV 45beta26
+* DOM input connectors now respond to input slice count changes
+* added Ctrl+Alt+F Shortcut to log frame rate
+
+
+
+Node Interface Changes
+----------------------
+
+* Pin.setSliceCount() function added
+* Pin.isConnected() function added
+* Node.auto_evaluate flag added
+* Node.delays_output flag added, to flag nodes with frame-delayed output pins (e.g. FrameDelay)
+
+
+v0.1.1-alpha / 2011-07-21
+=========================
+
+* first alpha release

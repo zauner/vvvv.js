@@ -1,0 +1,66 @@
+<html>
+<head>
+  <title>VVVV.js Example #8: 2-pass Rendering + Height Map Shader</title>
+  <link rel="stylesheet" type="text/css" href="../../vvvviewer/vvvv.css"/>
+  <script language="JavaScript" src="../../lib/jquery/jquery-1.8.2.min.js"></script> 
+  <script language="JavaScript" src="../../vvvv.js"></script>
+  <script language="JavaScript">
+    var patch;
+    var mainloop;
+    $(document).ready(function() {
+      // initialize vvvv.js; this loads the rest of the .js files
+      // first argument is the path to the vvvv_js folder
+      // second argument is either 'run', to load only run components, 'view' to load only vvvviewer, or 'full' to load both
+      VVVV.init("../../", 'full', function () {
+        // load the .v4p file and run the mainloop. this paragraph is basically all you need to run a vvvv patch
+        patch = new VVVV.Core.Patch("example08.v4p", function() {
+          mainloop = new VVVV.Core.MainLoop(this);
+        });
+        
+        // register button events
+
+        $('#start_button').click(function() {
+          mainloop.start();
+          $(this).attr('disabled', true);
+          $('#stop_button').attr('disabled',null);
+        });
+        
+        $('#stop_button').click(function() {
+          mainloop.stop();
+          $(this).attr('disabled', true);
+          $('#start_button').attr('disabled',null);
+        });
+        
+        $('#show_button').click(function() {
+          var vvvviewer = new VVVV.VVVViewer(patch, '#viewer_pane');
+          $(this).attr('disabled', true);
+        });
+      });
+    });
+    
+  </script>
+</head>
+<body>
+<input type="button" id="start_button" value="Resume" disabled="disabled"/>
+<input type="button" id="stop_button" value="Pause"/>
+<input type="button" id="show_button" value="Show Patch"/>
+<br/>
+<p>
+This example takes the contents of the Canvas Renderer (left), and uses it as a heightmap for the GLSL shader effect, which is rendered to the WebGL
+render (right). Display the patch to see that there are two renderers, one somehow flowing into the other. View the (HLSL flavoured) GLSL source here: <a href="DeformByHeightMap.vvvvjs.fx">DeformByHeightMap.vvvvjs.fx</a>.
+</p>
+<div style="margin-top:30px">
+  <div style="float:left">
+    <h2 style="font-size:inherit;margin-top:0">1st pass: the height-map texture</h2>
+    <canvas id="texrenderer" width="256" height="256"></canvas>
+  </div>
+  <div style="margin-left:300px">
+    <h2 style="font-size:inherit;margin-top:0">2nd pass: the WebGL renderer using the GLSL shader effect</h2>
+    <canvas id="renderer" width="500" height="500"></canvas>
+  </div>
+</div>
+
+<div id="viewer_pane"></div>
+
+</body>
+</html>

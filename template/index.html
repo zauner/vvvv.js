@@ -1,0 +1,36 @@
+<html>
+<head>
+  <title>VVVV.js Template</title>
+  <link rel="stylesheet" type="text/css" href="../vvvviewer/vvvv.css"/>
+  <script language="JavaScript" src="../lib/jquery/jquery-1.8.2.min.js"></script> 
+  <script language="JavaScript" src="../vvvv.js"></script>
+  <script language="VVVV" type="text/xml" src="template_patch.v4p"></script>
+  <script language="JavaScript">
+    $(document).ready(function() {
+      // initialize vvvv.js; this loads the rest of the .js files
+      // first argument is the path to the vvvv_js folder
+      // second argument is either 'run', to load only run components, 'view' to load only vvvviewer, or 'full' to load both
+      VVVV.init("..", 'full', function() {
+        console.log("VVVV.js successfully initialized.")
+      });
+    });
+  </script>
+  <style>
+    body{font-family:"Lucida Sans", sans-serif; color:#333; background:#CCC}
+  </style>
+</head>
+<body>
+<h1>VVVV.js Template Page</h1>
+<p>
+This is a very basic template page which runs the VVVV.js patch <a href="template_patch.v4p">template_patch.v4p</a>. The patch is included having <pre>&lt;script language="VVVV" src="template_patch.v4p"&gt;&lt;/script&gt;</pre>
+in the HTML head.
+</p>
+<p>
+Add the string <a href="#edit/template_patch.v4p">#edit/template_patch.v4p</a> to the URL to launch the patch editor. It will open in a popup window,
+so make sure popups are allowed for this page.
+</p>
+
+<canvas id="renderer" width="500" height="500"></canvas>
+
+</body>
+</html>

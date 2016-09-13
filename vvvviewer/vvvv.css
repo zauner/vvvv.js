@@ -1,0 +1,66 @@
+h1{
+  font-size:14pt;
+}
+
+.background{
+  fill: #e6e6e6; 
+}
+
+.vvvv-node.selected .vvvv-node-background{
+  fill: #9a9a9a;
+}
+
+
+/* Interactive Elements */
+
+.pininputbox{
+  position:absolute;
+  border:0px;
+  font-size:10px;
+  height:2em;
+}
+
+.pininputbox.color{
+  padding-left:6px;
+  border:1px solid #555;
+}
+
+.pininputbox.color input[type=range]{
+  -webkit-appearance: none;
+  width:104px;
+}
+
+.pininputbox.color input[type=range]::-webkit-slider-runnable-track {
+    width: 110px;
+    height: 2px;
+    background: #555;
+    border: none;
+}
+
+.pininputbox.color input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    border: none;
+    height: 5px;
+    width: 12px;
+    background: #555;
+    margin-top: -5px;
+    border-radius: 2px 2px 0px 0px;
+}
+
+.pininputbox.color .color-component{
+  font-family:"Lucida Sans Unicode";
+  font-size:10px;
+  width:10px;
+  display:inline-block;
+}
+
+#node_selection{
+  position:absolute;
+  width: 300px;
+}
+
+#node_selection #new_node, #node_selection #node_filter{
+  width:300px;
+  border:1px solid black;
+  margin: 0;
+}

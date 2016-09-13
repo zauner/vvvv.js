@@ -1,0 +1,60 @@
+<html>
+<head>
+  <title>VVVV.js Example #5: Canvas Rotating Lolcat Viewer</title>
+  <link rel="stylesheet" type="text/css" href="../../vvvviewer/vvvv.css"/>
+  <script language="JavaScript" src="../../lib/jquery/jquery-1.8.2.min.js"></script> 
+
+  <script language="JavaScript" src="../../vvvv.js"></script>
+  <script language="JavaScript">
+    var patch;
+    var mainloop;
+    $(document).ready(function() {
+      // initialize vvvv.js; this loads the rest of the .js files
+      // first argument is the path to the vvvv_js folder
+      // second argument is either 'run', to load only run components, 'view' to load only vvvviewer, or 'full' to load both
+      VVVV.init("../../", 'full', function () {
+        // load the .v4p file and run the mainloop. this paragraph is basically all you need to run a vvvv patch
+        patch = new VVVV.Core.Patch("example05.v4p", function() {
+          mainloop = new VVVV.Core.MainLoop(this);
+        });
+        
+        // register button events
+
+        $('#start_button').click(function() {
+          mainloop.start();
+          $(this).attr('disabled', true);
+          $('#stop_button').attr('disabled',null);
+        });
+        
+        $('#stop_button').click(function() {
+          mainloop.stop();
+          $(this).attr('disabled', true);
+          $('#start_button').attr('disabled',null);
+        });
+        
+        $('#show_button').click(function() {
+          var vvvviewer = new VVVV.VVVViewer(patch, '#viewer_pane');
+          $(this).attr('disabled', true);
+        });
+      });
+    });
+    
+  </script>
+</head>
+<body>
+<input type="button" id="start_button" value="Resume" disabled="disabled"/>
+<input type="button" id="stop_button" value="Pause"/>
+<input type="button" id="show_button" value="Show Patch"/>
+<input type="checkbox" class="catcheckbox" value="http://icanhascheezburger.files.wordpress.com/2007/01/funny-pictures-monorail-cat1.jpg?w=400&h=300" checked="checked"/> Monorail Cat
+<input type="checkbox" class="catcheckbox" value="http://icanhascheezburger.files.wordpress.com/2007/01/2002181591103321863_rs.jpg"/>Indian Cat
+<input type="checkbox" class="catcheckbox" value="http://icanhascheezburger.files.wordpress.com/2010/09/funny-pictures-cat-asks-what-is-up.jpg"/>Sup Cat
+<input type="checkbox" class="catcheckbox" value="http://icanhascheezburger.files.wordpress.com/2007/01/1159587965947.jpg"/>Invisible Bike Cat
+
+<br/>
+
+<canvas id="renderer" width="500" height="500"></canvas>
+
+<div id="viewer_pane"></div>
+
+</body>
+</html>

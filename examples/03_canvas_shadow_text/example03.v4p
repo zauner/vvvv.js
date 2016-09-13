@@ -1,0 +1,237 @@
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta26.dtd" >
+   <PATCH nodename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\vvvv_js_page\vvvv_js\examples\03_canvas_shadow_text\example03.v4p" filename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\vvvv_js_page\vvvv_js\examples\03_canvas_shadow_text\example03.v4p" systemname="example03">
+   <BOUNDS height="7785" left="7455" top="4215" type="Window" width="6765">
+   </BOUNDS>
+   <NODE componentmode="Hidden" filename="%VVVV%\modules\vvvv_js_modules\Renderer (Canvas VVVVjs).v4p" id="0" nodename="Renderer (Canvas VVVVjs)" systemname="Renderer (Canvas VVVVjs)">
+   <BOUNDS height="100" left="2385" top="6315" type="Node" width="100">
+   </BOUNDS>
+   <BOUNDS height="9855" left="11745" top="4035" type="Window" width="10500">
+   </BOUNDS>
+   <PIN pinname="Layers" visible="1">
+   </PIN>
+   <PIN pinname="Background Color" slicecount="1" visible="1" values="|0.93327,0.93327,0.93327,1.00000|">
+   </PIN>
+   <PIN pinname="Clear" slicecount="1" values="1">
+   </PIN>
+   <PIN encoded="0" pinname="Descriptive Name" slicecount="1" values="#renderer">
+   </PIN>
+   </NODE>
+   <NODE componentmode="Hidden" filename="%VVVV%\modules\vvvv_js_modules\Text (Canvas VVVVjs).v4p" id="20" nodename="%VVVV%\modules\vvvv_js_modules\Text (Canvas VVVVjs).v4p" systemname="Text (Canvas VVVVjs)">
+   <BOUNDS height="100" left="2385" top="5760" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Layer" visible="1">
+   </PIN>
+   <PIN pinname="Font" visible="1">
+   </PIN>
+   <PIN pinname="Text" visible="1">
+   </PIN>
+   <PIN pinname="Render State" slicecount="1" visible="1" values="||">
+   </PIN>
+   <PIN pinname="Transform" visible="1">
+   </PIN>
+   <PIN pinname="Align" slicecount="1" values="center">
+   </PIN>
+   <PIN pinname="Baseline" slicecount="1" values="middle">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="0" dstpinname="Layers" srcnodeid="20" srcpinname="Layer">
+   </LINK>
+   <NODE componentmode="InABox" id="21" nodename="IOBox (String)" systemname="IOBox (String)">
+   <BOUNDS height="100" left="2880" top="5100" type="Node" width="100">
+   </BOUNDS>
+   <BOUNDS height="285" left="2880" top="5100" type="Box" width="2670">
+   </BOUNDS>
+   <PIN encoded="0" pinname="Input String" slicecount="1" values="|Helvetica Neue, Arial, sans-serif|">
+   </PIN>
+   <PIN pinname="Output String" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="20" dstpinname="Font" srcnodeid="21" srcpinname="Output String">
+   </LINK>
+   <NODE componentmode="InABox" id="22" nodename="IOBox (String)" systemname="IOBox (String)">
+   <BOUNDS height="100" left="2715" top="4635" type="Node" width="100">
+   </BOUNDS>
+   <BOUNDS height="240" left="2715" top="4635" type="Box" width="795">
+   </BOUNDS>
+   <PIN pinname="Input String" visible="1">
+   </PIN>
+   <PIN pinname="Output String" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="20" dstpinname="Text" srcnodeid="22" srcpinname="Output String">
+   </LINK>
+   <NODE componentmode="Hidden" filename="%VVVV%\modules\vvvv_js_modules\Fill (Canvas VVVVjs RenderState).v4p" id="24" nodename="%VVVV%\modules\vvvv_js_modules\Fill (Canvas VVVVjs RenderState).v4p" systemname="Fill (Canvas VVVVjs RenderState)">
+   <BOUNDS height="100" left="450" top="4140" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Render State Out" visible="1">
+   </PIN>
+   <PIN pinname="Color" slicecount="1" values="|0.00000,0.68343,0.84747,1.00000|">
+   </PIN>
+   <PIN pinname="Render State In" slicecount="1" visible="1" values="||">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="20" dstpinname="Render State" srcnodeid="24" srcpinname="Render State Out">
+   </LINK>
+   <NODE componentmode="Hidden" id="25" nodename="Scale (Transform)" systemname="Scale (Transform)">
+   <BOUNDS height="100" left="2550" top="4230" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Transform Out" visible="1">
+   </PIN>
+   <PIN pinname="Y" visible="1">
+   </PIN>
+   <PIN pinname="X" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="20" dstpinname="Transform" srcnodeid="25" srcpinname="Transform Out">
+   </LINK>
+   <NODE componentmode="InABox" id="26" nodename="IOBox (Value Advanced)" systemname="IOBOX (VALUE ADVANCED)">
+   <BOUNDS height="100" left="2205" top="3675" type="Node" width="100">
+   </BOUNDS>
+   <BOUNDS height="240" left="2205" top="3675" type="Box" width="795">
+   </BOUNDS>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   <PIN pinname="Y Input Value" slicecount="1" values="0.5">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="25" dstpinname="Y" srcnodeid="26" srcpinname="Y Output Value">
+   </LINK>
+   <NODE componentmode="Hidden" filename="%VVVV%\modules\vvvv_js_modules\Shadow (Canvas VVVVjs RenderState).v4p" id="27" nodename="Shadow (Canvas VVVVjs RenderState)" systemname="Shadow (Canvas VVVVjs RenderState)">
+   <BOUNDS height="100" left="450" top="3510" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Render State Out" visible="1">
+   </PIN>
+   <PIN pinname="Blur" visible="1">
+   </PIN>
+   <PIN pinname="Offset Y" visible="1">
+   </PIN>
+   <PIN pinname="Offset X" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="24" dstpinname="Render State In" srcnodeid="27" srcpinname="Render State Out">
+   </LINK>
+   <NODE componentmode="InABox" id="28" nodename="IOBox (Value Advanced)" systemname="IOBOX (VALUE ADVANCED)">
+   <BOUNDS height="100" left="2115" top="2940" type="Node" width="100">
+   </BOUNDS>
+   <BOUNDS height="240" left="2115" top="2940" type="Box" width="795">
+   </BOUNDS>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   <PIN pinname="Y Input Value" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="27" dstpinname="Blur" srcnodeid="28" srcpinname="Y Output Value">
+   </LINK>
+   <LINK dstnodeid="25" dstpinname="X" srcnodeid="26" srcpinname="Y Output Value">
+   </LINK>
+   <NODE componentmode="Hidden" id="-2" nodename="Mouse (System Global)" systemname="Mouse (System Global)">
+   <BOUNDS height="100" left="900" top="135" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="X" visible="1">
+   </PIN>
+   <PIN pinname="Y" visible="1">
+   </PIN>
+   </NODE>
+   <NODE componentmode="Hidden" id="29" nodename="Multiply (Value)" systemname="Multiply (Value)">
+   <BOUNDS height="100" left="870" top="1740" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Input 1" visible="1">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   <PIN pinname="Input 2" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="29" dstpinname="Input 1" srcnodeid="-2" srcpinname="X">
+   </LINK>
+   <NODE componentmode="Hidden" id="30" nodename="Multiply (Value)" systemname="Multiply (Value)">
+   <BOUNDS height="100" left="1305" top="1740" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Input 1" visible="1">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   <PIN pinname="Input 2" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="30" dstpinname="Input 1" srcnodeid="-2" srcpinname="Y">
+   </LINK>
+   <LINK dstnodeid="27" dstpinname="Offset X" srcnodeid="29" srcpinname="Output">
+   </LINK>
+   <LINK dstnodeid="27" dstpinname="Offset Y" srcnodeid="30" srcpinname="Output">
+   </LINK>
+   <NODE componentmode="InABox" id="31" nodename="IOBox (Value Advanced)" systemname="IOBOX (VALUE ADVANCED)">
+   <BOUNDS height="100" left="1560" top="915" type="Node" width="100">
+   </BOUNDS>
+   <BOUNDS height="240" left="1560" top="915" type="Box" width="795">
+   </BOUNDS>
+   <PIN pinname="Y Input Value" slicecount="1" values="-10">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="30" dstpinname="Input 2" srcnodeid="31" srcpinname="Y Output Value">
+   </LINK>
+   <LINK dstnodeid="29" dstpinname="Input 2" srcnodeid="31" srcpinname="Y Output Value">
+   </LINK>
+   <NODE componentmode="InABox" id="33" nodename="IOBox (String)" systemname="IOBox (String)">
+   <BOUNDS height="100" left="3450" top="3945" type="Node" width="100">
+   </BOUNDS>
+   <BOUNDS height="240" left="3450" top="3945" type="Box" width="795">
+   </BOUNDS>
+   <PIN encoded="0" pinname="Descriptive Name" slicecount="1" values="#the-text">
+   </PIN>
+   <PIN pinname="Output String" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="22" dstpinname="Input String" srcnodeid="33" srcpinname="Output String">
+   </LINK>
+   <NODE componentmode="Hidden" id="34" nodename="Add (Value)" systemname="Add (Value)">
+   <BOUNDS height="100" left="2145" top="1905" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Input 1" visible="1">
+   </PIN>
+   <PIN pinname="Input 2" visible="1">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <NODE componentmode="Hidden" id="35" nodename="Multiply (Value)" systemname="Multiply (Value)">
+   <BOUNDS height="100" left="2130" top="2355" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Input 2" slicecount="1" values="10">
+   </PIN>
+   <PIN pinname="Input 1" visible="1">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="35" dstpinname="Input 1" srcnodeid="34" srcpinname="Output">
+   </LINK>
+   <LINK dstnodeid="28" dstpinname="Y Input Value" srcnodeid="35" srcpinname="Output">
+   </LINK>
+   <NODE systemname="Abs (Complex)" nodename="Abs (Complex)" componentmode="Hidden" id="43">
+   <BOUNDS type="Node" left="2160" top="1395" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Input Real" visible="1">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="-2" srcpinname="X" dstnodeid="43" dstpinname="Input Real">
+   </LINK>
+   <NODE componentmode="Hidden" id="44" nodename="Abs (Complex)" systemname="Abs (Complex)">
+   <BOUNDS height="100" left="2760" top="1395" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Input Real" visible="1">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="-2" srcpinname="Y" dstnodeid="44" dstpinname="Input Real">
+   </LINK>
+   <LINK srcnodeid="43" srcpinname="Output" dstnodeid="34" dstpinname="Input 1">
+   </LINK>
+   <LINK srcnodeid="44" srcpinname="Output" dstnodeid="34" dstpinname="Input 2">
+   </LINK>
+   </PATCH>

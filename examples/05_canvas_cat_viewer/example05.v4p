@@ -1,0 +1,269 @@
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta26.dtd" >
+   <PATCH nodename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\vvvv_js_page\vvvv_js\examples\05_canvas_cat_viewer\example05.v4p" filename="C:\Dokumente und Einstellungen\Matthias\Eigene Dateien\My Dropbox\vvvv_js_page\vvvv_js\examples\05_canvas_image\example05.v4p" locked="0" systemname="example05">
+   <BOUNDS height="9330" left="9435" top="3825" type="Window" width="8985">
+   </BOUNDS>
+   <NODE componentmode="InAWindow" filename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\Renderer (Canvas VVVVjs).v4p" id="0" nodename="Renderer (Canvas VVVVjs)" systemname="Renderer (Canvas VVVVjs)">
+   <BOUNDS height="100" left="1935" top="8340" type="Node" width="100">
+   </BOUNDS>
+   <PIN encoded="0" pinname="Descriptive Name" slicecount="1" values="#renderer">
+   </PIN>
+   <PIN pinname="Layers" slicecount="1" visible="1" values="||">
+   </PIN>
+   <BOUNDS height="9855" left="795" top="2190" type="Window" width="9645">
+   </BOUNDS>
+   </NODE>
+   <NODE componentmode="Hidden" filename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\Quad (Canvas VVVVjs).v4p" id="1" nodename="Quad (Canvas VVVVjs)" systemname="Quad (Canvas VVVVjs)">
+   <BOUNDS height="100" left="1950" top="7620" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Layer" visible="1">
+   </PIN>
+   <PIN pinname="Texture" visible="1">
+   </PIN>
+   <PIN pinname="Transform" visible="1">
+   </PIN>
+   <PIN pinname="Color" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="0" dstpinname="Layers" srcnodeid="1" srcpinname="Layer">
+   </LINK>
+   <NODE componentmode="InABox" id="3" nodename="IOBox (String)" systemname="IOBox (String)">
+   <BOUNDS height="100" left="525" top="120" type="Node" width="100">
+   </BOUNDS>
+   <BOUNDS height="240" left="525" top="120" type="Box" width="8055">
+   </BOUNDS>
+   <PIN pinname="Output String" visible="1">
+   </PIN>
+   <PIN encoded="0" pinname="Input String" slicecount="1" values="http://icanhascheezburger.files.wordpress.com/2007/01/funny-pictures-monorail-cat1.jpg?w=400&amp;h=300">
+   </PIN>
+   <PIN encoded="0" pinname="Descriptive Name" slicecount="2" values=".catcheckbox:checked/attribute/value,.catcheckbox:checked/attribute/value">
+   </PIN>
+   </NODE>
+   <NODE componentmode="Hidden" id="4" nodename="Scale (Transform)" systemname="Scale (Transform)">
+   <BOUNDS height="100" left="1935" top="6780" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Transform Out" visible="1">
+   </PIN>
+   <PIN pinname="Y" visible="1">
+   </PIN>
+   <PIN pinname="Transform In" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="1" dstpinname="Transform" srcnodeid="4" srcpinname="Transform Out">
+   </LINK>
+   <NODE componentmode="Hidden" id="5" nodename="Divide (Value)" systemname="Divide (Value)">
+   <BOUNDS height="100" left="3150" top="5775" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Input 2" visible="1">
+   </PIN>
+   <PIN pinname="Input" visible="1">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="4" dstpinname="Y" srcnodeid="5" srcpinname="Output">
+   </LINK>
+   <NODE componentmode="Hidden" id="8" nodename="Rotate (Transform)" systemname="Rotate (Transform)">
+   <BOUNDS height="100" left="1245" top="4005" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Transform Out" visible="1">
+   </PIN>
+   <PIN pinname="Z" visible="1">
+   </PIN>
+   <PIN pinname="Transform In" visible="1">
+   </PIN>
+   </NODE>
+   <NODE componentmode="Hidden" id="9" nodename="Scale (Transform)" systemname="Scale (Transform)">
+   <BOUNDS height="100" left="1260" top="6075" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Transform In" visible="1">
+   </PIN>
+   <PIN pinname="Transform Out" visible="1">
+   </PIN>
+   <PIN pinname="X" visible="1">
+   </PIN>
+   <PIN pinname="Y" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="9" dstpinname="Transform In" srcnodeid="8" srcpinname="Transform Out">
+   </LINK>
+   <LINK dstnodeid="4" dstpinname="Transform In" srcnodeid="9" srcpinname="Transform Out">
+   </LINK>
+   <NODE componentmode="Hidden" id="10" nodename="LFO (Animation)" systemname="LFO (Animation)">
+   <BOUNDS height="100" left="1845" top="3540" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   <PIN pinname="Period" slicecount="1" values="10">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="8" dstpinname="Z" srcnodeid="10" srcpinname="Output">
+   </LINK>
+   <NODE componentmode="InABox" id="11" nodename="IOBox (Value Advanced)" systemname="IOBox (Value Advanced)">
+   <BOUNDS height="100" left="1470" top="4560" type="Node" width="100">
+   </BOUNDS>
+   <BOUNDS height="240" left="1470" top="4560" type="Box" width="795">
+   </BOUNDS>
+   <PIN pinname="Y Input Value" slicecount="1" values="2">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   </NODE>
+   <NODE componentmode="InABox" id="12" nodename="IOBox (String)" systemname="IOBox (String)">
+   <BOUNDS height="270" left="1935" top="8925" type="Node" width="225">
+   </BOUNDS>
+   <BOUNDS height="270" left="1935" top="8925" type="Box" width="225">
+   </BOUNDS>
+   <PIN encoded="0" pinname="Input String" slicecount="1" visible="0" values="a">
+   </PIN>
+   <PIN pinname="Output String" visible="0">
+   </PIN>
+   <PIN pinname="Show Grid" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="String Type" slicecount="1" values="MultiLine">
+   </PIN>
+   </NODE>
+   <NODE componentmode="Hidden" id="13" nodename="RGB (Color Join)" systemname="RGB (Color Join)">
+   <BOUNDS height="100" left="3015" top="6810" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   <PIN pinname="Alpha" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="1" dstpinname="Color" srcnodeid="13" srcpinname="Output">
+   </LINK>
+   <NODE componentmode="Hidden" id="14" nodename="LinearFilter (Animation)" systemname="LinearFilter (Animation)">
+   <BOUNDS height="100" left="3570" top="6150" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Go To Position" visible="1">
+   </PIN>
+   <PIN pinname="Position Out" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="13" dstpinname="Alpha" srcnodeid="14" srcpinname="Position Out">
+   </LINK>
+   <NODE componentmode="InABox" id="17" nodename="IOBox (Value Advanced)" systemname="IOBox (Value Advanced)">
+   <BOUNDS height="100" left="2790" top="750" type="Node" width="100">
+   </BOUNDS>
+   <BOUNDS height="240" left="2790" top="750" type="Box" width="795">
+   </BOUNDS>
+   <PIN encoded="0" pinname="Descriptive Name" slicecount="1" values=".catcheckbox">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   <PIN pinname="Y Input Value" slicecount="1" values="1">
+   </PIN>
+   </NODE>
+   <NODE componentmode="Hidden" id="18" nodename="Select (Value)" systemname="Select (Value)">
+   <BOUNDS height="100" left="2790" top="1410" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Input" visible="1">
+   </PIN>
+   <PIN pinname="Select" visible="1">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="18" dstpinname="Input" srcnodeid="17" srcpinname="Y Output Value">
+   </LINK>
+   <LINK dstnodeid="18" dstpinname="Select" srcnodeid="17" srcpinname="Y Output Value">
+   </LINK>
+   <NODE componentmode="Hidden" id="19" nodename="Count (Value)" systemname="Count (Value)">
+   <BOUNDS height="100" left="2805" top="1845" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Input" visible="1">
+   </PIN>
+   <PIN pinname="Count" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="19" dstpinname="Input" srcnodeid="18" srcpinname="Output">
+   </LINK>
+   <NODE componentmode="Hidden" id="21" nodename="Translate (Transform)" systemname="Translate (Transform)">
+   <BOUNDS height="100" left="465" top="3480" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Transform Out" visible="1">
+   </PIN>
+   <PIN pinname="X" visible="1">
+   </PIN>
+   </NODE>
+   <NODE componentmode="Hidden" id="22" nodename="LinearSpread (Spreads)" systemname="LinearSpread (Spreads)">
+   <BOUNDS height="100" left="720" top="2520" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Spread Count" visible="1">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="22" dstpinname="Spread Count" srcnodeid="19" srcpinname="Count">
+   </LINK>
+   <NODE componentmode="Hidden" id="23" nodename="Divide (Value)" systemname="Divide (Value)">
+   <BOUNDS height="100" left="1470" top="4980" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Input" visible="1">
+   </PIN>
+   <PIN pinname="Input 2" visible="1">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="23" dstpinname="Input" srcnodeid="11" srcpinname="Y Output Value">
+   </LINK>
+   <LINK dstnodeid="23" dstpinname="Input 2" srcnodeid="19" srcpinname="Count">
+   </LINK>
+   <NODE componentmode="Hidden" id="24" nodename="LinearFilter (Animation)" systemname="LinearFilter (Animation)">
+   <BOUNDS height="100" left="720" top="2970" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Go To Position" visible="1">
+   </PIN>
+   <PIN pinname="Position Out" visible="1">
+   </PIN>
+   <PIN pinname="FilterTime" slicecount="1" values="0.5">
+   </PIN>
+   </NODE>
+   <NODE componentmode="Hidden" id="25" nodename="LinearFilter (Animation)" systemname="LinearFilter (Animation)">
+   <BOUNDS height="100" left="1470" top="5460" type="Node" width="100">
+   </BOUNDS>
+   <PIN pinname="Go To Position" visible="1">
+   </PIN>
+   <PIN pinname="Position Out" visible="1">
+   </PIN>
+   <PIN pinname="FilterTime" slicecount="1" values="0.5">
+   </PIN>
+   </NODE>
+   <LINK dstnodeid="25" dstpinname="Go To Position" srcnodeid="23" srcpinname="Output">
+   </LINK>
+   <LINK dstnodeid="9" dstpinname="X" srcnodeid="25" srcpinname="Position Out">
+   </LINK>
+   <LINK dstnodeid="9" dstpinname="Y" srcnodeid="25" srcpinname="Position Out">
+   </LINK>
+   <LINK dstnodeid="24" dstpinname="Go To Position" srcnodeid="22" srcpinname="Output">
+   </LINK>
+   <LINK dstnodeid="21" dstpinname="X" srcnodeid="24" srcpinname="Position Out">
+   </LINK>
+   <LINK dstnodeid="8" dstpinname="Transform In" srcnodeid="21" srcpinname="Transform Out">
+   </LINK>
+   <NODE systemname="FileTexture (HTML5 VVVVjs)" filename="E:\vvvvnodes\vvvvtools\modules\vvvv_js_modules\FileTexture (HTML5 VVVVjs).v4p" nodename="FileTexture (HTML5 VVVVjs)" componentmode="Hidden" id="26">
+   <BOUNDS type="Node" left="2895" top="5040" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Up and Running" visible="1">
+   </PIN>
+   <PIN pinname="Filename" visible="1">
+   </PIN>
+   <PIN pinname="Height" visible="1">
+   </PIN>
+   <PIN pinname="Width" visible="1">
+   </PIN>
+   <PIN pinname="Texture Out" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="26" srcpinname="Up and Running" dstnodeid="14" dstpinname="Go To Position">
+   </LINK>
+   <LINK srcnodeid="3" srcpinname="Output String" dstnodeid="26" dstpinname="Filename">
+   </LINK>
+   <LINK srcnodeid="26" srcpinname="Height" dstnodeid="5" dstpinname="Input">
+   </LINK>
+   <LINK srcnodeid="26" srcpinname="Width" dstnodeid="5" dstpinname="Input 2">
+   </LINK>
+   <LINK srcnodeid="26" srcpinname="Texture Out" dstnodeid="1" dstpinname="Texture">
+   </LINK>
+   </PATCH>
