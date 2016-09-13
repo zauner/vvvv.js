@@ -166,6 +166,17 @@ define(function(require,exports) {
       }
       while (p=p.parentPatch);
 
+      var $xml;
+      if (VVVVContext.name == "browser") {
+        var $ = require('jquery');
+        $xml = $(xml);
+      }
+      else {
+        var $ = window.server_req('cheerio').load(xml, {xmlMode: true});
+        $xml = $('PATCH');
+        console.log($xml.children().length);
+      }
+
       var version_match = /^<!DOCTYPE\s+PATCH\s+SYSTEM\s+"(.+)\\(.+)\.dtd/.exec(xml);
       if (version_match)
         thisPatch.vvvv_version = version_match[2].replace(/[a-zA-Z]+/, '_');
@@ -177,7 +188,7 @@ define(function(require,exports) {
         if (VVVV_ENV=='development') console.log('complete: '+this.nodename);
       }
 
-      var $windowBounds = $(xml).find('bounds[type="Window"]').first();
+      var $windowBounds = $xml.find('BOUNDS[type="Window"]').first();
       if ($windowBounds.length>0) {
         thisPatch.windowWidth = $windowBounds.attr('width')/15;
         thisPatch.windowHeight = $windowBounds.attr('height')/15;
@@ -188,7 +199,7 @@ define(function(require,exports) {
 
       var nodesLoading = 0;
 
-      $(xml).find('node').each(function() {
+      $xml.find('NODE').each(function() {
 
         // in case the node's id is already present
         var nodeToReplace = undefined;
@@ -202,9 +213,9 @@ define(function(require,exports) {
 
         var $bounds;
         if ($(this).attr('componentmode')=="InABox")
-          $bounds = $(this).find('bounds[type="Box"]').first();
+          $bounds = $(this).find('BOUNDS[type="Box"]').first();
         else
-          $bounds = $(this).find('bounds[type="Node"]').first();
+          $bounds = $(this).find('BOUNDS[type="Node"]').first();
 
         if (!nodeExists) {
           var nodename = $(this).attr('systemname')!="" ? $(this).attr('systemname') : $(this).attr('nodename');
@@ -356,7 +367,7 @@ define(function(require,exports) {
         var that = this;
 
         // PINS
-        $(this).find('pin').each(function() {
+        $(this).find('PIN').each(function() {
           var pinname = $(this).attr('pinname');
           var values = splitValues($(this).attr('values'));
 
@@ -392,7 +403,7 @@ define(function(require,exports) {
 
           //Check for non implemented nodes
           if (($(this).attr('visible')==1 && $(this).attr('pintype')!='Configuration') || n.isSubpatch) {
-            if ($(this).attr('pintype')=="Output" || $(xml).find('link[srcnodeid='+n.id+']').filter("link[srcpinname='"+pinname.replace(/[\[\]]/,'')+"']").length > 0) {
+            if ($(this).attr('pintype')=="Output" || $xml.find('LINK[srcnodeid='+n.id+']').filter("LINK[srcpinname='"+pinname.replace(/[\[\]]/,'')+"']").length > 0) {
               if (n.outputPins[pinname] == undefined) {
                 //Add as output list if not already there
                 n.addOutputPin(pinname, values);
@@ -517,7 +528,7 @@ define(function(require,exports) {
           newLinks = {};
 
         // first delete marked links
-        $(xml).find('link[deleteme="pronto"]').each(function() {
+        $xml.find('LINK[deleteme="pronto"]').each(function() {
           var link = false;
           for (var i=0; i<thisPatch.linkList.length; i++) {
             if (thisPatch.linkList[i].fromPin.node.id==$(this).attr('srcnodeid') &&
@@ -538,7 +549,7 @@ define(function(require,exports) {
           toPin.markPinAsChanged();
         });
 
-        $(xml).find('link[deleteme!="pronto"]').each(function() {
+        $xml.find('LINK[deleteme!="pronto"]').each(function() {
           var srcPin = thisPatch.pinMap[$(this).attr('srcnodeid')+'_out_'+$(this).attr('srcpinname')];
           var dstPin = thisPatch.pinMap[$(this).attr('dstnodeid')+'_in_'+$(this).attr('dstpinname')];
 

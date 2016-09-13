@@ -9,6 +9,7 @@
     "serve-static": "*",
     "amdefine": "=1.0.0",
     "jsdom": "=7.0.2",
+    "cheerio": "=0.22.0",
     "nodejs-websocket": "*",
     "browser-launcher2": "*",
     "sqlite3": "*"
