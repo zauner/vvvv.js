@@ -295,12 +295,18 @@ element_node_defs.forEach(function(element_node_def) {
             if (fresh || parentIn.pinIsChanged())
               layers[i].setParent(parentIn.getValue(i));
             for (var j=0; j<attributePins.length; j++) {
-              if (fresh || attributePins[j].pinIsChanged())
+              if (fresh || attributePins[j].pinIsChanged()) {
                 layers[i].setAttribute(attributePins[j].pinname, attributePins[j].getValue(i));
+                if (attributePins[j].pinname=="value" && $(layers[i].element).prop('tagName')=="INPUT")
+                  $(layers[i].element).change();
+              }
             }
             for (var j=0; j<staticAttributePins.length; j++) {
-              if (fresh || staticAttributePins[j].pinIsChanged())
+              if (fresh || staticAttributePins[j].pinIsChanged()) {
                 layers[i].setAttribute(staticAttributePins[j].pinname, staticAttributePins[j].getValue(i));
+                if (staticAttributePins[j].pinname=="value" && $(layers[i].element).prop('tagName')=="INPUT")
+                  $(layers[i].element).change();
+              }
             }
 
             if (fresh || styleIn.pinIsChanged())
