@@ -349,6 +349,78 @@ VVVV.Nodes.UpdateSQLite = function(id, graph) {
 }
 VVVV.Nodes.UpdateSQLite.prototype = new Node();
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Delete (SQLite Network)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'vux'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.DeleteSQLite = function(id, graph) {
+  this.constructor(id, "Delete (SQLite Network)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['vux'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  this.auto_evaluate = false;
+  this.environments = ['nodejs'];
+
+  // input pins
+  var connectionIn = this.addInputPin('Connection', [], VVVV.PinTypes.Node);
+  var tableIn = this.addInputPin('Table', [''], VVVV.PinTypes.String);
+  var whereIn = this.addInputPin('Where', ['1=0'], VVVV.PinTypes.String);
+  var sendQueryIn = this.addInputPin('SendQuery', [0], VVVV.PinTypes.Value);
+
+  // output pins
+  var statementOut = this.addOutputPin('Statement', [''], VVVV.PinTypes.String);
+  var statusOut = this.addOutputPin('Status', [''], VVVV.PinTypes.String);
+  var deletedOut = this.addOutputPin('Deleted', [0], VVVV.PinTypes.Value);
+  deletedOut.auto_reset = true;
+
+  var sqlite3 = undefined;
+  var db = undefined;
+  this.initialize = function() {
+    sqlite3 = window.server_req('sqlite3');
+    if (sqlite3)
+      sqlite3 = sqlite3.verbose();
+    fs = window.server_req('fs');
+  }
+
+  var query = "";
+  var q = ["DELETE FROM ", "", "WHERE", ""];
+
+  this.evaluate = function() {
+    q[1] = tableIn.getValue(0);
+    q[3] = whereIn.getValue(0);
+
+    query = q.join(' ');
+    statementOut.setValue(0, query);
+
+    if (sendQueryIn.getValue(0)>=0.5) {
+      var db = connectionIn.getValue(0);
+      var that = this;
+      db.exec(query, function(err) {
+        if (!err) {
+          statusOut.setValue(0, 'OK');
+          deletedOut.setValue(0, 1);
+        }
+        else {
+          statusOut.setValue(0, err.message);
+        }
+        that.parentPatch.mainloop.requestEvaluate();
+      })
+    }
+  }
+
+}
+VVVV.Nodes.DeleteSQLite.prototype = new Node();
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Escape (SQLite String)
