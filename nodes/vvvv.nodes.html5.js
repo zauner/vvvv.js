@@ -405,6 +405,26 @@ VVVV.Nodes.StoreFile = function(id, graph) {
       fs = window.server_req('fs');
     }
 
+    // taken from http://stackoverflow.com/a/32197381
+    var deleteFolderRecursive = function(path) {
+      if (path=="/" || path=="")
+        return;
+      if( fs.existsSync(path) ) {
+        fs.readdirSync(path).forEach(function(file,index){
+          var curPath = path + "/" + file;
+          if(fs.lstatSync(curPath).isDirectory()) { // recurse
+            deleteFolderRecursive(curPath);
+          } else { // delete file
+            fs.unlinkSync(curPath);
+          }
+        });
+        fs.rmdirSync(path);
+        return true;
+      }
+      else
+        return false;
+    };
+
     this.evaluate = function() {
       var that = this;
       if (createIn.getValue(0)>=0.5 && directoryIn.getValue(0)!='') {
@@ -418,6 +438,15 @@ VVVV.Nodes.StoreFile = function(id, graph) {
           }
           that.parentPatch.mainloop.requestEvaluate();
         });
+      }
+
+      if (removeIn.getValue(0)>=0.5 && directoryIn.getValue(0)!='') {
+        if (deleteFolderRecursive(VVVV.Helpers.prepareFilePath(directoryIn.getValue(0), this.parentPatch))) {
+          successOut.setValue(0, 1);
+          that.parentPatch.mainloop.requestEvaluate();
+        }
+        else
+          errorOut.setValue(i, 1);
       }
 
       if (checkExistenceIn.getValue(0)>=0.5 && directoryIn.getValue(0)!='') {
@@ -474,6 +503,14 @@ VVVV.Nodes.StoreFile = function(id, graph) {
 
     this.evaluate = function() {
       var that = this;
+
+      if (filenameIn.pinIsChanged()) {
+        for (var i=0; i<filenameIn.getSliceCount(); i++) {
+          successOut.setValue(i, 0);
+          errorOut.setValue(i, 0);
+          existsOut.setValue(i, 0);
+        }
+      }
 
       for (var i=0; i<filenameIn.getSliceCount(); i++) {
         if (removeIn.getValue(i)>=0.5 && filenameIn.getValue(i)!='') {
@@ -546,21 +583,26 @@ VVVV.Nodes.StoreFile = function(id, graph) {
     }
 
     this.evaluate = function() {
-      if (updateIn.getValue(0)>0.5) {
-        var files = fs.readdirSync(VVVV.Helpers.prepareFilePath(directoryIn.getValue(0), this.parentPatch));
-        var sliceIdx = 0;
-        for (var i=0; i<files.length; i++) {
-          var stats = fs.statSync(VVVV.Helpers.prepareFilePath(directoryIn.getValue(0), this.parentPatch)+'/'+files[i]);
-          if (stats.isFile()) {
-            filenamesOut.setValue(sliceIdx, directoryIn.getValue(0)+'/'+files[i]);
-            shortFilenamesOut.setValue(sliceIdx, files[i]);
-            sliceIdx++;
+      var sliceIdx = 0;
+      for (var i=0; i<directoryIn.getSliceCount(); i++) {
+        if (updateIn.getValue(i)>0.5) {
+          var files = fs.readdirSync(VVVV.Helpers.prepareFilePath(directoryIn.getValue(i), this.parentPatch));
+          var fileCount = 0;
+          for (var j=0; j<files.length; j++) {
+            var stats = fs.statSync(VVVV.Helpers.prepareFilePath(directoryIn.getValue(i), this.parentPatch)+'/'+files[j]);
+            if (stats.isFile()) {
+              filenamesOut.setValue(sliceIdx, directoryIn.getValue(i)+'/'+files[j]);
+              shortFilenamesOut.setValue(sliceIdx, files[j]);
+              sliceIdx++;
+              fileCount = 0;
+            }
           }
+          fileCountOut.setValue(i, fileCount);
         }
-        filenamesOut.setSliceCount(sliceIdx);
-        shortFilenamesOut.setSliceCount(sliceIdx);
-        fileCountOut.setValue(0, sliceIdx);
       }
+      filenamesOut.setSliceCount(sliceIdx);
+      shortFilenamesOut.setSliceCount(sliceIdx);
+      fileCountOut.setSliceCount(directoryIn.getSliceCount());
     }
 
   }
