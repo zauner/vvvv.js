@@ -174,7 +174,6 @@ define(function(require,exports) {
       else {
         var $ = window.server_req('cheerio').load(xml, {xmlMode: true});
         $xml = $('PATCH');
-        console.log($xml.children().length);
       }
 
       var version_match = /^<!DOCTYPE\s+PATCH\s+SYSTEM\s+"(.+)\\(.+)\.dtd/.exec(xml);
