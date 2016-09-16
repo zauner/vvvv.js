@@ -453,6 +453,8 @@ VVVV.Nodes.StoreFile = function(id, graph) {
         try {
           if (fs.statSync(VVVV.Helpers.prepareFilePath(directoryIn.getValue(0), this.parentPatch)).isDirectory())
             existsOut.setValue(0, 1);
+          else
+            existsOut.setValue(0, 0);
         } catch (e) {
           if (e.code === 'ENOENT') {
             existsOut.setValue(0, 0);
