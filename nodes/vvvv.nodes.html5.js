@@ -446,7 +446,7 @@ VVVV.Nodes.StoreFile = function(id, graph) {
           that.parentPatch.mainloop.requestEvaluate();
         }
         else
-          errorOut.setValue(i, 1);
+          errorOut.setValue(0, 1);
       }
 
       if (checkExistenceIn.getValue(0)>=0.5 && directoryIn.getValue(0)!='') {
