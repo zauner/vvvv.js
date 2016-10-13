@@ -54,6 +54,8 @@ define(function(require,exports) {
 
     this.editor = undefined;
 
+    this.isPersisted = true;
+
     this.setupObject();
 
     if (parentPatch)
@@ -195,6 +197,8 @@ define(function(require,exports) {
 
       if (syncmode=='complete')
         newNodes = {};
+      else
+        this.isPersisted = false;
 
       var nodesLoading = 0;
 

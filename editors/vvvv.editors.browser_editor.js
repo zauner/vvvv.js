@@ -699,7 +699,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
         }
         // CTRL + S / Save
         else if ((e.which==115 || e.which==83) && e.ctrlKey) {
-          editor.save(patch.nodename, patch.toXML());
+          editor.save(patch);
           e.preventDefault();
           return false;
         }
@@ -1355,6 +1355,10 @@ BrowserEditor.Interface = function() {
           opts.error();
       }
     }
+
+    if (!p.serverSync.isConnected()) {
+      p.serverSync.connect();
+    }
   }
 
   this.openInspector = function(VVVVRoot, node) {
@@ -1426,13 +1430,29 @@ BrowserEditor.Interface = function() {
     $(window).unbind('beforeunload', confirmLeave);
   }
 
-  this.save = function(nodename, xml) {
-    var $dl = $("<a>save</a>");
-    $('body').append($dl);
-    $dl.attr('href', "data:application/octet-stream;charset=utf-8,"+encodeURIComponent(xml));
-    $dl.attr('download', nodename.replace( /.*\//, ''));
-    $dl[0].click();
-    $dl.remove();
+  this.save = function(node) {
+    var path = VVVV.Helpers.prepareFilePath(node.nodename, node.parentPatch)
+    if (patches[path][0].serverSync.isConnected()) {
+      if (!patches[path][0].isPersisted && window.confirm("Do you want to save the patch "+node.nodename+"?")) {
+        patches[path][0].serverSync.sendPatchSave(patches[path][0]);
+        for (var i=0; i<patches[path].length; i++) {
+          patches[path][i].isPersisted = true;
+        }
+      }
+      var i = patches[path][0].nodeList.length;
+      while (i--) {
+        if (patches[path][0].nodeList[i].isSubpatch)
+          this.save(patches[path][0].nodeList[i]);
+      }
+    }
+    else {
+      var $dl = $("<a>save</a>");
+      $('body').append($dl);
+      $dl.attr('href', "data:application/octet-stream;charset=utf-8,"+encodeURIComponent(node.toXML()));
+      $dl.attr('download', node.nodename.replace( /.*\//, ''));
+      $dl[0].click();
+      $dl.remove();
+    }
   }
 
   this.sendUndo = function() {

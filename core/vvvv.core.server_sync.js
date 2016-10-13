@@ -79,6 +79,11 @@ define(function(require,exports) {
       this.socket.send(JSON.stringify(msg));
     }
 
+    this.sendPatchSave = function(patch) {
+      var msg = {patch: patch.nodename, save: true};
+      this.socket.send(JSON.stringify(msg));
+    }
+
     this.registerPatch = function(p) {
       this.patchRegistry[p.getPatchIdentifier()] = p;
     }

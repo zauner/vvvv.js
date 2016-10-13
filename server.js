@@ -5,6 +5,7 @@ var finalhandler = require('finalhandler')
 var serveStatic = require('serve-static')
 require('./vvvv.js')
 var ws = require("nodejs-websocket");
+var fs = require("fs");
 
 var documentRoot = __dirname;
 if (process.argv.length>=3) {
@@ -67,6 +68,13 @@ VVVVContext.init('./', 'full', function (vvvv) {
           patches[i].doLoad(req.command)
           patches[i].afterUpdate();
         }
+      }
+
+      if (req.save) {
+        var p = VVVVContext.Patches[vvvv.Helpers.prepareFilePath(req.patch)][0];
+        fs.writeFile(vvvv.Helpers.prepareFilePath(req.patch), p.toXML(), function() {
+          console.log('saved '+req.patch);
+        });
       }
 
       if (req.message) {
