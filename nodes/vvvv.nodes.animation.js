@@ -687,47 +687,54 @@ VVVV.Nodes.SampleAndHold.prototype = new Node();
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-VVVV.Nodes.FrameDelay = function(id, graph) {
-  this.constructor(id, "FrameDelay (Animation)", graph);
+var frameDelayTypes = [
+  {category: "Animation", pintype: VVVV.PinTypes.Value, value: 0.0, defaultValue: 0.0},
+  {category: "String", pintype: VVVV.PinTypes.String, value: '', defaultValue: ''},
+]
 
-  this.meta = {
-    authors: ['Matthias Zauner'],
-    original_authors: ['VVVV Group'],
-    credits: [],
-    compatibility_issues: ['no dynamice pin count']
-  };
+frameDelayTypes.forEach(function(frameDelayType) {
+  VVVV.Nodes['FrameDelay'+frameDelayType.category] = function(id, graph) {
+    this.constructor(id, "FrameDelay ("+frameDelayType.category+")", graph);
 
-  this.delays_output = true;
-  this.auto_evaluate = true;
+    this.meta = {
+      authors: ['Matthias Zauner'],
+      original_authors: ['VVVV Group'],
+      credits: [],
+      compatibility_issues: ['no dynamice pin count']
+    };
 
-  var input1In = this.addInputPin("Input 1", [0.0], VVVV.PinTypes.Value);
-  var default1In = this.addInputPin("Default 1", [0.0], VVVV.PinTypes.Value);
-  var initIn = this.addInputPin("Initialize", [0], VVVV.PinTypes.Value);
+    this.delays_output = true;
+    this.auto_evaluate = true;
 
-  var output1Out = this.addOutputPin("Output 1", [0.0], VVVV.PinTypes.Value);
-  var buf = [];
+    var input1In = this.addInputPin("Input 1", [frameDelayType.value],frameDelayType.pintype);
+    var default1In = this.addInputPin("Default 1", [frameDelayType.defaultValue], frameDelayType.pintype);
+    var initIn = this.addInputPin("Initialize", [0], VVVV.PinTypes.Value);
 
-  this.evaluate = function() {
+    var output1Out = this.addOutputPin("Output 1", [frameDelayType.value], frameDelayType.pintype);
+    var buf = [];
 
-    var maxSize = this.getMaxInputSliceCount();
+    this.evaluate = function() {
 
-    for (var i=0; i<maxSize; i++) {
-      if (initIn.getValue(i)>0.5 || buf[i]==undefined)
-        output1Out.setValue(i, default1In.getValue(i));
-      else
-        output1Out.setValue(i, buf[i]);
+      var maxSize = this.getMaxInputSliceCount();
+
+      for (var i=0; i<maxSize; i++) {
+        if (initIn.getValue(i)>0.5 || buf[i]==undefined)
+          output1Out.setValue(i, default1In.getValue(i));
+        else
+          output1Out.setValue(i, buf[i]);
+      }
+
+      for (var i=0; i<maxSize; i++) {
+        buf[i] = input1In.getValue(i);
+      }
+
+      output1Out.setSliceCount(maxSize);
+
     }
-
-    for (var i=0; i<maxSize; i++) {
-      buf[i] = input1In.getValue(i);
-    }
-
-    output1Out.setSliceCount(maxSize);
 
   }
-
-}
-VVVV.Nodes.FrameDelay.prototype = new Node();
+  VVVV.Nodes['FrameDelay'+frameDelayType.category].prototype = new Node();
+});
 
 
 /*
