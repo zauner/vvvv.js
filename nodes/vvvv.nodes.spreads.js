@@ -880,4 +880,70 @@ VVVV.Nodes.QueueSpreads = function(id, graph) {
 }
 VVVV.Nodes.QueueSpreads.prototype = new Node();
 
+var spreadable_types = [
+  {category: "Spreads", pintype: VVVV.PinTypes.Value, defaultValue: 0.0},
+]
+
+spreadable_types.forEach(function(type) {
+
+  /*
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   NODE: InsertSlice (*)
+   Author(s): 'Zauner'
+   Original Node Author(s): 'VVVV Group'
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  */
+
+  VVVV.Nodes["InsertSlice"+type.category] = function(id, graph) {
+    this.constructor(id, "InsertSlice ("+type.category+")", graph);
+
+    this.meta = {
+      authors: ['Zauner'],
+      original_authors: ['VVVV Group'],
+      credits: [],
+      compatibility_issues: ['no bin size']
+    };
+
+    this.auto_evaluate = false;
+    this.auto_nil = false;
+
+    var spreadIn = this.addInputPin("Spread", [type.defaultValue], type.pintype);
+    var inputIn = this.addInputPin("Input", [type.defaultValue], type.pintype);
+    var indexIn = this.addInputPin("Index", [0], VVVV.PinTypes.Value);
+
+    var outputOut = this.addOutputPin("Output", [type.defaultValue], type.pintype);
+
+    this.evaluate = function() {
+      var spreadSize = spreadIn.getSliceCount();
+      var indexSize = indexIn.getSliceCount();
+      var outIdx = 0;
+      var toInsert = -1;
+      var skip = inputIn.getSliceCount()==0 || indexIn.getSliceCount()==0;
+      for (var i=0; i<=spreadSize; i++) {
+        if (!skip) {
+          for (var j=0; j<indexSize; j++) {
+            if (indexIn.getValue(j)==i) {
+              outputOut.setValue(outIdx, inputIn.getValue(j));
+              outIdx++;
+            }
+          }
+        }
+        if (i<spreadSize) {
+          outputOut.setValue(outIdx, spreadIn.getValue(i));
+          outIdx++;
+        }
+      }
+
+
+
+      outputOut.setSliceCount(outIdx);
+    }
+
+  }
+  VVVV.Nodes["InsertSlice"+type.category].prototype = new Node();
+
+});
+
+
+
 });
