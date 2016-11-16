@@ -1045,4 +1045,52 @@ VVVV.Nodes.ReaderString = function(id, graph) {
 }
 VVVV.Nodes.ReaderString.prototype = new Node();
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Replace (String)
+ Author(s): 'Matthias Zauner'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.ReplaceString = function(id, graph) {
+  this.constructor(id, "Replace (String RegExp)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [''],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var inputIn = this.addInputPin("Input", [""], VVVV.PinTypes.String);
+  var regexpIn = this.addInputPin("Regular Expression", [""], VVVV.PinTypes.String);
+  var replaceIn = this.addInputPin("Replacement", [""], VVVV.PinTypes.String);
+  var caseSensitiveIn = this.addInputPin("Case Sensitive", [0], VVVV.PinTypes.Value);
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [''], VVVV.PinTypes.String);
+  var successOut = this.addOutputPin('Success', [0], VVVV.PinTypes.Value);
+
+  this.evaluate = function() {
+    var sliceCount = this.getMaxInputSliceCount();
+    var regex;
+    for (var i=0; i<sliceCount; i++) {
+      try {
+        regex = new RegExp(regexpIn.getValue(i), caseSensitiveIn.getValue(i)>=0.5 ? "g" : "gi");
+        outputOut.setValue(i, inputIn.getValue(i).replace(regex, replaceIn.getValue(i)));
+        successOut.setValue(i, 1);
+      }
+      catch (e) {
+        outputOut.setValue(i, "");
+        successOut.setValue(i, 0);
+      }
+    }
+    outputOut.setSliceCount(sliceCount);
+  }
+
+}
+VVVV.Nodes.ReplaceString.prototype = new Node();
+
 });
