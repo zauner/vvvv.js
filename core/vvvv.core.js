@@ -43,6 +43,7 @@ define(function(require, exports) {
   require('nodes/vvvv.nodes.node');
   require('nodes/vvvv.nodes.astronomy');
   require('nodes/vvvv.nodes.xml');
+  require('nodes/vvvv.nodes.sendandreceive');
   require('nodes/vvvv.nodes.differential');
   require('nodes/vvvv.nodes.xelement');
   require('nodes/vvvv.nodes.html');
