@@ -969,6 +969,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   var bgColorIn = this.addInputPin("Background Color", [new VVVV.Types.Color("0.0, 0.0, 0.0, 1.0")], VVVV.PinTypes.Color);
   var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], VVVV.PinTypes.Value);
   var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], VVVV.PinTypes.Value);
+  var parentIn = this.addInputPin("Parent Element", [], VVVV.PinTypes.HTMLLayer);
   var viewIn = this.addInputPin("View", [], VVVV.PinTypes.Transform);
 
   var canvasOut = this.addOutputPin("Canvas Out", [], VVVV.PinTypes.CanvasGraphics);
@@ -1059,13 +1060,19 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
 
     var selector = this.invisiblePins["Descriptive Name"].getValue(0);
     var targetElement = $(selector).get(0);
+
     if (!targetElement || targetElement.nodeName!='CANVAS') {
       var w = parseInt(bufferWidthIn.getValue(0));
       var h = parseInt(bufferHeightIn.getValue(0));
       w = w > 0 ? w : 512;
       h = h > 0 ? h : 512;
       canvas = $('<canvas width="'+w+'" height="'+h+'" id="vvvv-js-generated-renderer-'+(new Date().getTime())+'" class="vvvv-js-generated-renderer"></canvas>');
-      if (!targetElement) targetElement = 'body';
+      if (!targetElement) {
+        if (parentIn.isConnected() && parentIn.getValue(0))
+          targetElement = parentIn.getValue(0).element;
+        else
+          targetElement = 'body';
+      }
       $(targetElement).append(canvas);
       canvas = canvas.get(0);
     }
@@ -1095,7 +1102,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
 
   this.evaluate = function() {
 
-    if (this.invisiblePins["Descriptive Name"].pinIsChanged()) {
+    if (this.invisiblePins["Descriptive Name"].pinIsChanged() || parentIn.pinIsChanged()) {
       if ($(canvas).hasClass('vvvv-js-generated-renderer'))
         $(canvas).remove();
       this.getContext();
