@@ -9,164 +9,6 @@ define(function(require,exports) {
 var Node = require('core/vvvv.core.node');
 var VVVV = require('core/vvvv.core.defines');
 
-VVVV.Types.HTMLLayer = function(tagName) {
-
-  this.tagName = tagName;
-  this.styles = {};
-  this.attributes = {};
-  this.children = [emptyHTMLLayer];
-  this.parent = emptyHTMLLayer;
-  this.text = "";
-  this.position = 0;
-  this.style = defaultHTMLStyle;
-  this.enabled = true;
-
-  this.set_style_properties = {};
-
-  this.enable = function() {
-    this.element = $('<'+this.tagName+'>');
-    this.element.data('vvvvjslayer', this);
-    this.enabled = true;
-  }
-
-  this.disable = function() {
-    for (var i=0; i<this.children.length; i++) {
-      if (this.children[i].tagName)
-        this.children[i].disable();
-    }
-    this.children = [emptyHTMLLayer];
-    this.parent = emptyHTMLLayer;
-    this.attributes = {};
-    this.element.remove();
-    this.element = null;
-    this.enabled = false;
-  }
-
-  if (this.tagName) {
-    this.enable();
-  }
-  else
-    this.element = undefined;
-
-  this.setText = function(text) {
-    if (!this.element || this.element.prop("tagName")=="IFRAME")
-      return;
-    this.text = text;
-    var $el = $(this.element);
-    if ($el.contents().length>0 && $el.contents().first()[0].nodeType==3)
-      $el.contents().first()[0].data = this.text;
-    else
-      $el.prepend(document.createTextNode(this.text));
-  }
-
-  this.setAttribute = function(name, value) {
-    if (!this.element)
-      return;
-    if (this.attributes[name]==value)
-      return;
-    this.attributes[name] = value;
-    this.element.attr(name, value);
-  }
-
-  this.setStyle = function(style) {
-    if (!this.element)
-      return;
-    this.style = style;
-    for (var stylename in this.set_style_properties) {
-      if (this.set_style_properties[stylename]==true && !this.style.style_properties[stylename]) {
-        this.element.css(stylename, "");
-        this.set_style_properties[stylename] = false;
-      }
-    }
-    this.style.apply(this);
-  }
-
-  this.setParent = function(parent) {
-    if (!this.element)
-      return;
-    if ((this.parent.element && parent.element && this.parent.element[0] == parent.element[0]) || (this.parent.element==undefined && parent.element==undefined && this.element.parent().length!=0))
-      return;
-    this.parent = parent;
-    if (this.parent.tagName) {
-      if (this.parent.element[0]!=this.element[0].parentElement) {
-        this.parent.element.append(this.element);
-      }
-    }
-    else if (this.element[0].parentElement!=document.body) {
-      $('body').append(this.element);
-    }
-  }
-
-  this.changeTagName = function(tagName) {
-    if (!this.element)
-      return;
-    if (this.tagName == tagName)
-      return;
-    this.tagName = tagName;
-    var $newElement = $('<'+this.tagName+'>');
-    this.element.before($newElement);
-    this.element.contents().detach().appendTo($newElement);
-    this.element.remove();
-    this.element = $newElement;
-    this.style.apply(this);
-  }
-}
-
-var emptyHTMLLayer = new VVVV.Types.HTMLLayer();
-
-VVVV.PinTypes.HTMLLayer = {
-  typeName: "HTMLLayer",
-  reset_on_disconnect: true,
-  defaultValue: function() {
-    return emptyHTMLLayer
-  }
-}
-
-VVVV.Types.HTMLStyle = function() {
-  this.style_properties = {};
-  this.inherited_properties = {};
-
-  this.set_properties = {};
-
-  this.apply = function(layer) {
-    var $el = $(layer.element);
-    for (var stylename in this.inherited_properties) {
-      $el.css(stylename, this.inherited_properties[stylename]);
-      layer.set_style_properties[stylename] = true;
-    }
-    for (var stylename in this.style_properties) {
-      $el.css(stylename, this.style_properties[stylename]);
-      layer.set_style_properties[stylename] = true;
-    }
-  }
-
-  this.copy_properties = function(other_style) {
-    for (var stylename in other_style.style_properties) {
-      this.inherited_properties[stylename] = other_style.style_properties[stylename];
-    }
-    for (var stylename in other_style.inherited_properties) {
-      this.inherited_properties[stylename] = other_style.inherited_properties[stylename];
-    }
-
-    // clear inherited properties which have been removed upstream
-    for (var stylename in this.inherited_properties) {
-      if (!other_style.style_properties[stylename] && !other_style.inherited_properties[stylename]) {
-        delete this.inherited_properties[stylename];
-      }
-    }
-  }
-}
-
-var defaultHTMLStyle = new VVVV.Types.HTMLStyle();
-
-VVVV.PinTypes.HTMLStyle = {
-  typeName: "HTMLStyle",
-  reset_on_disconnect: true,
-  defaultValue: function() {
-    return defaultHTMLStyle;
-  }
-}
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Element (HTML)
@@ -187,7 +29,8 @@ var element_node_defs = [
   //{nodename: "SelectBox", tagname: "select", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'Option Labels', value: 'Option 1', type: VVVV.PinTypes.String}, {name: 'Option Values', value: '1', type: VVVV.PinTypes.String}, {name: 'Selected Index', value: 0, type: VVVV.PinTypes.Value}]}
   {nodename: "SelectBox", tagname: "select", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}]},
   {nodename: "SelectOption", tagname: "option", pins: [{name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]},
-  {nodename: "FileInput", tagname: "input type='file' multiple", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}]}
+  {nodename: "FileInput", tagname: "input type='file' multiple", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}]},
+  {nodename: "ColorInput", tagname: "input type='color'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]}
 ]
 
 element_node_defs.forEach(function(element_node_def) {
@@ -738,8 +581,12 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
                 v = $(this).find("option:selected").attr('value');
               else if ($(this).prop('tagName')=="INPUT" && $(this).prop('type')=="checkbox")
                 v = $(this).is(":checked") ? $(this).attr('value') : "";
-              else if ($(this).prop('tagName')=="INPUT" && $(this).prop('type')=="radio")
+              else if ($(this).prop('tagName')=="INPUT" && $(this).prop('type')=="radio") {
+                if ($(this).attr('name')!="" && $(this).is(':checked')) {
+                  $("input[type='radio'][name='"+$(this).attr('name')+"']").not(':checked').trigger('change')
+                }
                 v = $(this).is(":checked") ? $(this).attr('value') : "";
+              }
               else if ($(this).prop('tagName')=="INPUT" || $(this).prop('tagName')=="TEXTAREA")
                 v = $(this).val();
               if (v==undefined)
@@ -813,9 +660,37 @@ VVVV.Nodes.SetValueHTML = function(id, graph) {
     var thatNode = this;
 
     if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
-
       for (var i=0; i<maxSpreadSize; i++) {
-        elementIn.getValue(i).element.val(valueIn.getValue(i));
+        if (doSetIn.getValue(i)<0.5)
+          continue;
+        var $el = elementIn.getValue(i);
+        if (!$el.enabled)
+          continue;
+        if ($el.element.prop("type")=="radio") {
+          var radiobuttons = undefined;
+          if ($el.element.attr('name')!="")
+            radiobuttons = $("input[type='radio'][name='"+$el.element.attr('name')+"']");
+          else
+            radiobuttons = $el.element;
+          radiobuttons.each(function() {
+            if ($(this).attr('value')==valueIn.getValue(i))
+              $(this).attr('checked', 'checked');
+            else
+              $(this).removeAttr('checked');
+            $(this).trigger('change');
+          });
+        }
+        else if ($el.element.prop("type")=="checkbox") {
+          if ($el.element.attr('value')==valueIn.getValue(i))
+            $el.element.attr('checked', 'checked');
+          else
+            $el.element.removeAttr('checked');
+          $el.element.trigger('change');
+        }
+        else {
+          $el.element.val(valueIn.getValue(i));
+          $el.element.trigger('change');
+        }
       }
     }
   }
@@ -846,14 +721,14 @@ VVVV.Nodes.GetFileHTML = function(id, graph) {
 
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
 
-  var fileOut = this.addOutputPin("File", [], VVVV.PinTypes.Node);
+  var fileOut = this.addOutputPin("File", ['No File'], VVVV.PinTypes.Node);
   var filenameOut = this.addOutputPin("Filename", [''], VVVV.PinTypes.String);
   var filesizeOut = this.addOutputPin("File Size", [0], VVVV.PinTypes.Value);
+  var fileCountOut = this.addOutputPin("File Count", [1], VVVV.PinTypes.Value);
 
   var handlers = [];
   var targets = [];
 
-  var setSlices = [];
   var needsUpdate = false;
 
   this.evaluate = function() {
@@ -861,8 +736,8 @@ VVVV.Nodes.GetFileHTML = function(id, graph) {
 
     var thatNode = this;
 
-    if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
-      for (var i=0; i<1; i++) { // TODO: make it work with more than one input element
+    if (elementIn.isConnected()) {
+      for (var i=0; i<maxSpreadSize; i++) {
         if (targets[i]!=undefined && (!elementIn.getValue(i).enabled || targets[i]!=elementIn.getValue(i).element[0])) {
           $(targets[i]).unbind("change", handlers[i]);
           handlers[i] = undefined;
@@ -873,9 +748,6 @@ VVVV.Nodes.GetFileHTML = function(id, graph) {
           targets[i] = elementIn.getValue(i).element[0];
           (function(j) {
             handlers[j] = function(e) {
-              for (var k=0; k<this.files.length; k++) {
-                setSlices.push({sliceIdx: k, file: this.files[k], name: this.files[k].name, size: this.files[k].size});
-              }
               needsUpdate = true;
               thatNode.dirty = true;
             }
@@ -885,8 +757,8 @@ VVVV.Nodes.GetFileHTML = function(id, graph) {
         }
       }
 
-      handlers.length = 1;
-      targets.length = 1;
+      handlers.length = maxSpreadSize;
+      targets.length = maxSpreadSize;
     }
     else {
       for (var i=0; i<targets.length; i++) {
@@ -894,25 +766,42 @@ VVVV.Nodes.GetFileHTML = function(id, graph) {
       }
       handlers.length = 0;
       targets.length = 0;
-      fileOut.setValue(0, undefined);
-      fileOut.setSliceCount(0);
+      fileOut.setValue(0, "No File");
+      fileOut.setSliceCount(1);
       filenameOut.setValue(0, '');
       filenameOut.setSliceCount(1);
       filesizeOut.setValue(0, 0);
       filesizeOut.setSliceCount(1);
+      fileCountOut.setValue(0, 0);
+      fileCountOut.setSliceCount(1);
     }
 
     if (needsUpdate) {
-      var i = setSlices.length;
-      while (i--) {
-        fileOut.setValue(setSlices[i].sliceIdx, setSlices[i].file);
-        filenameOut.setValue(setSlices[i].sliceIdx, setSlices[i].name);
-        filesizeOut.setValue(setSlices[i].sliceIdx, setSlices[i].size);
+      var outIdx = 0;
+      for (var i=0; i<maxSpreadSize; i++) {
+        var fileList = elementIn.getValue(i).element[0].files;
+        if (elementIn.getValue(i).enabled && fileList.length>0) {
+          var k;
+          for (k=0; k<fileList.length; k++) {
+            fileOut.setValue(outIdx, fileList[k]);
+            filenameOut.setValue(outIdx, fileList[k].name);
+            filesizeOut.setValue(outIdx, fileList[k].size);
+            outIdx++;
+          }
+          fileCountOut.setValue(i, k);
+        }
+        else {
+          fileOut.setValue(outIdx, "No File");
+          filenameOut.setValue(outIdx, "");
+          filesizeOut.setValue(outIdx, 0);
+          fileCountOut.setValue(i, 0);
+          outIdx++;
+        }
       }
-      fileOut.setSliceCount(setSlices.length);
-      filenameOut.setSliceCount(setSlices.length);
-      filesizeOut.setSliceCount(setSlices.length);
-      setSlices.length = 0;
+      fileOut.setSliceCount(outIdx);
+      filenameOut.setSliceCount(outIdx);
+      filesizeOut.setSliceCount(outIdx);
+      fileCountOut.setSliceCount(maxSpreadSize);
       needsUpdate = false;
       thatNode.dirty = false;
     }
@@ -1114,6 +1003,7 @@ var style_node_definitions = [
   {name: "Margin", pins: [{name: "margin-left", value: 1, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, {name: "margin-top", value: 1, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, {name: "margin-right", value: 1, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, {name: "margin-bottom", value: 1, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, ]},
   {name: "Font", pins: [{name: "color", type: VVVV.PinTypes.Color, is_property: true}, {name: "font-family", value: "inherit", type: VVVV.PinTypes.String, is_property: true}, {name: "font-weight", value: "inherit", type: VVVV.PinTypes.Enum, is_property: true, enumOptions: ["inherit", "normal", "light", "bold"]}, {name: "text-decoration", value: "inherit", type: VVVV.PinTypes.Enum, is_property: true, enumOptions: ["inherit", "none", "underline", "line-through"]}]},
   {name: "FontSize", pins: [{name: "font-size", value: 12, unit: "px", type: VVVV.PinTypes.Value, is_property: true}]},
+  {name: "InlineBox", pins: [{name: "width", value: 100, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, {name: "height", value: 100, unit: "px", type: VVVV.PinTypes.Value, is_property: true},{name: "display", value: "inline-block", type: VVVV.PinTypes.String, is_property: true}]},
 ]
 
 style_node_definitions.forEach(function(style_node_def) {
