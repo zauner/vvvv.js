@@ -337,7 +337,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
         for (var i=0; i<links.length; i++) {
           $patch.append(links[i].serialize());
         }
-        var xml = '<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta28.1.dtd" >\r\n'+$patch.wrapAll('<d></d>').parent().html();
+        var xml = '<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta28.1.dtd" >'+$patch.wrapAll('<d></d>').parent().html();
         xml = xml.replace(/<patch/g, "<PATCH");
         xml = xml.replace(/<\/patch>/g, "\n  </PATCH>");
         xml = xml.replace(/<node/g, "\n  <NODE");
@@ -397,6 +397,16 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
         });
 
         var xml = $patch.wrapAll('<d></d>').parent().html();
+        xml = xml.replace(/<patch/g, "<PATCH");
+        xml = xml.replace(/<\/patch>/g, "\n  </PATCH>");
+        xml = xml.replace(/<node/g, "\n  <NODE");
+        xml = xml.replace(/<\/node>/g, "\n  </NODE>");
+        xml = xml.replace(/<bounds/g, "\n  <BOUNDS");
+        xml = xml.replace(/<\/bounds>/g, "\n  </BOUNDS>");
+        xml = xml.replace(/<pin/g, "\n  <PIN");
+        xml = xml.replace(/<\/pin>/g, "\n  </PIN>");
+        xml = xml.replace(/<link/g, "\n  <LINK");
+        xml = xml.replace(/<\/link>/g, "\n  </LINK>");
         editor.update(patch, xml);
 
         resetSelection();
