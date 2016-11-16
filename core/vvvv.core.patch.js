@@ -153,15 +153,15 @@ define(function(require,exports) {
 
     var thisPatch = this;
 
-    var ready_callback = undefined;
+    this.ready_callback = undefined;
     /**
      * Takes a patch XML string, parses it, and applies it to the patch. This method is called once by the constructor, passing the complete patch code, and
      * frequently by an editor, passing in XML snippets. This is the only method you should use to manipulate a patch.
      * @param {String} xml VVVV Patch XML
-     * @param {Function} ready_callback called after the XML code has been completely processed, and the patch is fully loaded and ready again
+     * @param {Function} rb called after the XML code has been completely processed, and the patch is fully loaded and ready again
      */
     this.doLoad = function(xml, rb) {
-      ready_callback = rb;
+      this.ready_callback = rb;
       var p = this;
       do {
         p.dirty = true;
@@ -245,9 +245,9 @@ define(function(require,exports) {
                     updateLinks(xml);
                     thisPatch.afterUpdate();
                     thisPatch.compile();
-                    if (thisPatch.resourcesPending<=0 && ready_callback) {
-                      ready_callback();
-                      ready_callback = undefined;
+                    if (thisPatch.resourcesPending<=0 && thisPatch.ready_callback) {
+                      thisPatch.ready_callback();
+                      thisPatch.ready_callback = undefined;
                     }
                   });
                 }
@@ -281,9 +281,9 @@ define(function(require,exports) {
                   this.setMainloop(thisPatch.mainloop);
                   thisPatch.afterUpdate();
                   thisPatch.compile();
-                  if (thisPatch.resourcesPending<=0 && ready_callback) {
-                    ready_callback();
-                    ready_callback = undefined;
+                  if (thisPatch.resourcesPending<=0 && thisPatch.ready_callback) {
+                    thisPatch.ready_callback();
+                    thisPatch.ready_callback = undefined;
                   }
                 },
                 function() {
@@ -293,9 +293,9 @@ define(function(require,exports) {
                   updateLinks(xml);
                   thisPatch.afterUpdate();
                   thisPatch.compile();
-                  if (thisPatch.resourcesPending<=0 && ready_callback) {
-                    ready_callback();
-                    ready_callback = undefined;
+                  if (thisPatch.resourcesPending<=0 && thisPatch.ready_callback) {
+                    thisPatch.ready_callback();
+                    thisPatch.ready_callback = undefined;
                   }
                 },
                 thisPatch, $(that).attr('id')
@@ -608,9 +608,9 @@ define(function(require,exports) {
       }
 
       this.compile();
-      if (this.resourcesPending<=0 && ready_callback) {
-        ready_callback();
-        ready_callback = undefined;
+      if (this.resourcesPending<=0 && this.ready_callback) {
+        this.ready_callback();
+        this.ready_callback = undefined;
       }
     }
 
@@ -744,9 +744,9 @@ define(function(require,exports) {
       this.cluster.detect();
       if (this.cluster.hasNodes && !this.serverSync.isConnected())
         this.serverSync.connect(function() {
-          if (this.resourcesPending==0 && ready_callback) {
-            ready_callback();
-            ready_callback = undefined;
+          if (this.resourcesPending==0 && this.ready_callback) {
+            this.ready_callback();
+            this.ready_callback = undefined;
           }
         });
 
