@@ -850,6 +850,7 @@ VVVV.Nodes.ConsString = function(id, graph) {
   };
 
   this.auto_evaluate = false;
+  this.auto_nil = false;
 
   var inputPins = [];
 
@@ -873,6 +874,8 @@ VVVV.Nodes.ConsString = function(id, graph) {
 
     var idx = 0;
     for (var i=0; i<inputPins.length; i++) {
+      if (inputPins[i].getSliceCount()==0)
+        continue;
       for (var j=0; j<inputPins[i].getSliceCount(); j++) {
         outputOut.setValue(idx++, inputPins[i].getValue(j));
       }
