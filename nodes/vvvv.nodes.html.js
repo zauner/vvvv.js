@@ -30,7 +30,8 @@ var element_node_defs = [
   {nodename: "SelectBox", tagname: "select", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}]},
   {nodename: "SelectOption", tagname: "option", pins: [{name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]},
   {nodename: "FileInput", tagname: "input type='file' multiple", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}]},
-  {nodename: "ColorInput", tagname: "input type='color'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]}
+  {nodename: "ColorInput", tagname: "input type='color'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]},
+  {nodename: "DateInput", tagname: "input type='date'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]}
 ]
 
 element_node_defs.forEach(function(element_node_def) {
