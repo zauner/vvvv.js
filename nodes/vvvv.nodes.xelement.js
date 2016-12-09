@@ -194,6 +194,8 @@ VVVV.Nodes.GetElementsByName = function(id, graph) {
 
   var matchCount = 0;
   function findElementByName(element, name) {
+    if (!element || !element.data)
+      return;
     if (element.data instanceof Array) {
       for (var i=0; i<element.data.length; i++) {
         findElementByName(element.data[i], name);
