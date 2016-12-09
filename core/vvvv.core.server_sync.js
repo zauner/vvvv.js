@@ -16,7 +16,7 @@ define(function(require,exports) {
     this.connect = function(success_callback) {
       if (VVVVContext.name!="browser" || this.socket!==null)
         return;
-      this.socket = new WebSocket("ws://"+location.hostname+":5001");
+      this.socket = new WebSocket("ws://"+location.hostname+":5001/vvvvjs-rt");
       root_patch.resourcesPending++;
 
       var that = this;
