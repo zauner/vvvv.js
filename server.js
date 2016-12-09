@@ -7,14 +7,32 @@ require('./vvvv.js')
 var ws = require("nodejs-websocket");
 var fs = require("fs");
 
-var documentRoot = __dirname;
+var documentRoot = "." //__dirname;
 if (process.argv.length>=3) {
   documentRoot = process.argv[2];
 }
 
 var serve = serveStatic(path.join(documentRoot));
 
+VVVVContext.externalHandlers = [];
+try {
+  var appconf = JSON.parse(fs.readFileSync(process.cwd()+"/vvvvjsapp.json"));
+  if (appconf.externalHandlers) {
+    for (var i=0; i<appconf.externalHandlers.length; i++) {
+        VVVVContext.externalHandlers.push(require(process.cwd()+"/"+appconf.externalHandlers[i]));
+    }
+  }
+}
+catch (e) { console.error(e.message)};
+
 var server = http.createServer(function(req, res) {
+  var match;
+  for (var i=0; i<VVVVContext.externalHandlers.length; i++) {
+    if (VVVVContext.externalHandlers[i].process(req,res)) {
+      return;
+    }
+  }
+  // only if not processed by external handler
   var done = finalhandler(req, res)
   serve(req, res, done);
 });
@@ -22,6 +40,7 @@ server.listen(5000)
 
 VVVVContext.init('./', 'full', function (vvvv) {
   VVVVContext.DocumentRoot = documentRoot;
+
   var websocket_server = ws.createServer(function (conn) {
   	console.log("New connection");
     var patch = null;
@@ -127,6 +146,11 @@ VVVVContext.init('./', 'full', function (vvvv) {
       delete mainloop;
   		console.log("Connection closed");
   	})
+    conn.on("error", function(err) {
+      delete patch;
+      delete mainloop;
+      console.log("Connection closed/reset");
+    })
   }).listen(5001)
 
 
