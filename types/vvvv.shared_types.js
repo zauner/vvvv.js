@@ -106,7 +106,8 @@ VVVV.Types.HTMLLayer = function(tagName) {
     this.children = [emptyHTMLLayer];
     this.parent = emptyHTMLLayer;
     this.attributes = {};
-    this.element.remove();
+    if (this.element)
+      this.element.remove();
     this.element = null;
     this.enabled = false;
   }
@@ -159,6 +160,10 @@ VVVV.Types.HTMLLayer = function(tagName) {
     if (this.parent.tagName) {
       if (this.parent.element[0]!=this.element[0].parentElement) {
         this.parent.element.append(this.element);
+        if (this.parent.children[0]==emptyHTMLLayer && this.parent.children.length==1)
+          this.parent.children[0] = this;
+        else
+          this.parent.children.push(this);
       }
     }
     else if (this.element[0].parentElement!=document.body) {
