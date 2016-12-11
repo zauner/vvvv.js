@@ -32,6 +32,8 @@ VVVV.Nodes.MouseGlobal = function(id, graph) {
   this.auto_evaluate = true;
 
   var maxTouchPointsIn = this.addInputPin("Maximum Touch Points", [1], VVVV.PinTypes.Value);
+  var spaceIn = this.addInputPin("Space", ["Document [-1, +1]"], VVVV.PinTypes.Enum);
+  spaceIn.enumOptions = ["Document Pixels", "Document [-1, +1]"];
 
   var xOut = this.addOutputPin("X", [0], VVVV.PinTypes.Value);
   var yOut = this.addOutputPin("Y", [0], VVVV.PinTypes.Value);
@@ -49,8 +51,8 @@ VVVV.Nodes.MouseGlobal = function(id, graph) {
   var touchCount = 1;
 
   $(document).mousemove(function(e) {
-    x[0] = e.pageX*2/parseInt($('body').css('width')) - 1;
-    y[0] = -(e.pageY*2/parseInt($('body').css('height')) - 1);
+    x[0] = convertXToTargetSpace(e.pageX);
+    y[0] = convertYToTargetSpace(e.pageY);
   });
 
   $(document).bind('mousewheel', function(e) {
@@ -76,11 +78,23 @@ VVVV.Nodes.MouseGlobal = function(id, graph) {
     }
   });
 
+  function convertXToTargetSpace(x) {
+    if (spaceIn.getValue(0)=="Document Pixels")
+      return x;
+    return x * 2/parseInt($('body').css('width')) - 1;
+  }
+
+  function convertYToTargetSpace(y) {
+    if (spaceIn.getValue(0)=="Document Pixels")
+      return y;
+    return -(y * 2/parseInt($('body').css('width')) - 1);
+  }
+
   function setTouchPositions(e) {
     var i = e.originalEvent.changedTouches.length;
     while (i--) {
-      x[e.originalEvent.changedTouches[i].identifier] = e.originalEvent.changedTouches[i].pageX*2/parseInt($('body').css('width')) - 1;
-      y[e.originalEvent.changedTouches[i].identifier] = -(e.originalEvent.changedTouches[i].pageY*2/parseInt($('body').css('height')) - 1);
+      x[e.originalEvent.changedTouches[i].identifier] = convertXToTargetSpace(e.originalEvent.changedTouches[i].pageX);
+      y[e.originalEvent.changedTouches[i].identifier] = convertYToTargetSpace(e.originalEvent.changedTouches[i].pageY);
     }
   }
 
