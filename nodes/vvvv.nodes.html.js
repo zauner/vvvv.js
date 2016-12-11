@@ -204,6 +204,7 @@ VVVV.Nodes.GroupHTML = function(id, graph) {
   };
 
   var parentIn = this.addInputPin("Parent", [], VVVV.PinTypes.HTMLLayer);
+  var slotStyleIn = this.addInputPin("Slot Style In", [], VVVV.PinTypes.HTMLStyle);
   var outputCountIn = this.addInvisiblePin("Output Count", [2], VVVV.PinTypes.Value);
 
   var outPins = [];
@@ -238,6 +239,8 @@ VVVV.Nodes.GroupHTML = function(id, graph) {
           layer.disable();
         else if (!layer.enabled && parentIn.getValue(i).enabled)
           layer.enable();
+        if (layer.enabled)
+          layer.setStyle(slotStyleIn.getValue(0));
         layer.setParent(parentIn.getValue(i));
         outPins[j].setValue(i, layer);
       }
@@ -375,11 +378,11 @@ VVVV.Nodes.GetPositionHTML = function(id, graph) {
 
     if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
       for (var i=0; i<maxSpreadSize; i++) {
-        if (targets[i]!=undefined && targets[i]!=elementIn.getValue(i).element[0]) {
+        if (targets[i]!=undefined && elementIn.getValue(i).enabled && targets[i]!=elementIn.getValue(i).element[0]) {
           observers[i].disconnect();
           observers[i] = undefined;
         }
-        if (observers[i]==undefined) {
+        if (observers[i]==undefined && elementIn.getValue(i).enabled) {
           (function(j) {
             observers[j] = new MutationObserver(function(mutations) {
               updatePosition(targets[j], j);
@@ -852,6 +855,7 @@ event_node_defs.forEach(function(event_node_def) {
     this.auto_evaluate = true;
 
     var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
+    var preventDefaultIn = this.addInputPin("Prevent Default", [0], VVVV.PinTypes.Value);
 
     var eventCode = '';
     var eventIn = undefined;
@@ -889,6 +893,10 @@ event_node_defs.forEach(function(event_node_def) {
               handlers[j] = function(e) {
                 setSlices.push(j);
                 doReset = false;
+                if (preventDefaultIn.getValue(j)>.5) {
+                  e.preventDefault();
+                  return false;
+                }
               }
             }(i));
             $(targets[i]).bind(eventTypes[i], handlers[i]);
