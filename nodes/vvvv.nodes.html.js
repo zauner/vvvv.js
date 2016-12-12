@@ -156,6 +156,7 @@ element_node_defs.forEach(function(element_node_def) {
             if (fresh || styleIn.pinIsChanged())
               layers[i].setStyle(styleIn.getValue(i));
           }
+          layers[i].freshlyEnabled = fresh;
         }
         else {
           if (layers[i] && layers[i].enabled==true) {
@@ -742,9 +743,10 @@ VVVV.Nodes.GetFileHTML = function(id, graph) {
 
     if (elementIn.isConnected()) {
       for (var i=0; i<maxSpreadSize; i++) {
-        if (targets[i]!=undefined && (!elementIn.getValue(i).enabled || targets[i]!=elementIn.getValue(i).element[0])) {
+        if (targets[i]!=undefined && (!elementIn.getValue(i).enabled || targets[i]!=elementIn.getValue(i).element[0]) || elementIn.getValue(i).freshlyEnabled) {
           $(targets[i]).unbind("change", handlers[i]);
           handlers[i] = undefined;
+          elementIn.getValue(i).freshlyEnabled = false;
         }
         if (!elementIn.getValue(i).enabled)
           targets[i] = undefined;
@@ -757,6 +759,7 @@ VVVV.Nodes.GetFileHTML = function(id, graph) {
             }
           }(i));
           $(targets[i]).bind("change", handlers[i]);
+          $(targets[i]).data("check", "brock");
           handlers[i].call(targets[i]);
         }
       }
