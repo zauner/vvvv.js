@@ -96,6 +96,7 @@ VVVV.Types.HTMLLayer = function(tagName) {
     this.element = $('<'+this.tagName+'>');
     this.element.data('vvvvjslayer', this);
     this.enabled = true;
+    this.freshlyEnabled = true;
   }
 
   this.disable = function() {

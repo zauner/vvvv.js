@@ -40,6 +40,7 @@ element_node_defs.forEach(function(element_node_def) {
     this.constructor(id, element_node_def.nodename+" (HTML)", graph);
 
     this.environments = ['browser'];
+    this.auto_nil = false;
 
     this.meta = {
       authors: ['Matthias Zauner'],
@@ -112,11 +113,22 @@ element_node_defs.forEach(function(element_node_def) {
 
       var maxSpreadSize = this.getMaxInputSliceCount();
 
+      if (this.hasNilInputs()) {
+        for (var i=0; i<layers.length; i++) {
+          if (layers[i].element)
+            layers[i].element.remove();
+        }
+        layers.length = 0;
+        layersOut.setSliceCount(0);
+        return;
+      }
+
       for (var i=0; i<maxSpreadSize; i++) {
         var fresh = false;
 
         if (layers[i]==undefined) {
           layers[i] = new VVVV.Types.HTMLLayer(nameIn ? nameIn.getValue(i) : tagName);
+          layers[i].originNode = this;
           fresh = true;
         }
 
@@ -350,6 +362,8 @@ VVVV.Nodes.GetPositionHTML = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.auto_nil = false;
+
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
   var spaceIn = this.addInputPin("Space", ["Document Pixels"], VVVV.PinTypes.Enum);
   spaceIn.enumOptions = ["Document Pixels", "Document [-1, +1]", "Parent Element Pixels"];
@@ -377,7 +391,7 @@ VVVV.Nodes.GetPositionHTML = function(id, graph) {
   this.evaluate = function() {
     var maxSpreadSize = this.getMaxInputSliceCount();
 
-    if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
+    if (elementIn.isConnected() && !this.hasNilInputs() && elementIn.getValue(0).tagName!='') {
       for (var i=0; i<maxSpreadSize; i++) {
         if (targets[i]!=undefined && elementIn.getValue(i).enabled && targets[i]!=elementIn.getValue(i).element[0]) {
           observers[i].disconnect();
@@ -555,6 +569,8 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.auto_nil = false;
+
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
 
   var valueOut = this.addOutputPin("Output", [0], VVVV.PinTypes.String);
@@ -569,11 +585,12 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
 
     var thatNode = this;
 
-    if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
+    if (elementIn.isConnected() && !this.hasNilInputs() && elementIn.getValue(0).tagName!='') {
       for (var i=0; i<maxSpreadSize; i++) {
-        if (targets[i]!=undefined && (!elementIn.getValue(i).enabled || targets[i]!=elementIn.getValue(i).element[0])) {
+        if (targets[i]!=undefined && (!elementIn.getValue(i).enabled || targets[i]!=elementIn.getValue(i).element[0]) || elementIn.getValue(i).freshlyEnabled) {
           $(targets[i]).unbind("change input paste keyup", handlers[i]);
           handlers[i] = undefined;
+          elementIn.getValue(i).freshlyEnabled = false;
         }
         if (!elementIn.getValue(i).enabled)
           targets[i] = undefined;
@@ -724,6 +741,8 @@ VVVV.Nodes.GetFileHTML = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.auto_nil = false;
+
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
 
   var fileOut = this.addOutputPin("File", ['No File'], VVVV.PinTypes.Node);
@@ -741,7 +760,7 @@ VVVV.Nodes.GetFileHTML = function(id, graph) {
 
     var thatNode = this;
 
-    if (elementIn.isConnected()) {
+    if (elementIn.isConnected() && !this.hasNilInputs()) {
       for (var i=0; i<maxSpreadSize; i++) {
         if (targets[i]!=undefined && (!elementIn.getValue(i).enabled || targets[i]!=elementIn.getValue(i).element[0]) || elementIn.getValue(i).freshlyEnabled) {
           $(targets[i]).unbind("change", handlers[i]);
@@ -856,6 +875,7 @@ event_node_defs.forEach(function(event_node_def) {
     };
 
     this.auto_evaluate = true;
+    this.auto_nil = false;
 
     var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
     var preventDefaultIn = this.addInputPin("Prevent Default", [0], VVVV.PinTypes.Value);
@@ -879,7 +899,7 @@ event_node_defs.forEach(function(event_node_def) {
     this.evaluate = function() {
       var maxSpreadSize = this.getMaxInputSliceCount();
 
-      if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
+      if (elementIn.isConnected() && !this.hasNilInputs() && elementIn.getValue(0).tagName!='') {
         for (var i=0; i<maxSpreadSize; i++) {
           if (eventIn)
             eventCode = eventIn.getValue(i);
