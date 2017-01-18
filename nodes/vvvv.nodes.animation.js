@@ -394,53 +394,61 @@ VVVV.Nodes.Delay.prototype = new Node();
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-VVVV.Nodes.Change = function(id, graph) {
-  this.constructor(id, "Change (Animation)", graph);
+var changeTypes = [
+  {category: "Animation", pintype: VVVV.PinTypes.Value, value: 0.0, defaultValue: 0.0},
+  {category: "String", pintype: VVVV.PinTypes.String, value: '', defaultValue: ''},
+]
 
-  this.meta = {
-    authors: ['Matthias Zauner'],
-    original_authors: ['VVVV Group'],
-    credits: [],
-    compatibility_issues: []
-  };
+changeTypes.forEach(function(changeType) {
 
-  this.auto_evaluate = true;
+  VVVV.Nodes['Change'+changeType.category] = function(id, graph) {
+    this.constructor(id, "Change ("+changeType.category+")", graph);
 
-  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
+    this.meta = {
+      authors: ['Matthias Zauner'],
+      original_authors: ['VVVV Group'],
+      credits: [],
+      compatibility_issues: []
+    };
 
-  var changeOut = this.addOutputPin("OnChange", [0], VVVV.PinTypes.Value);
+    this.auto_evaluate = true;
 
-  var values = [];
+    var inputIn = this.addInputPin("Input", [changeType.defaultValue], changeType.pintype);
 
-  this.evaluate = function() {
-    var maxSize = this.getMaxInputSliceCount();
+    var changeOut = this.addOutputPin("OnChange", [changeType.defaultValue], VVVV.PinTypes.Value);
 
-    if (inputIn.pinIsChanged()) {
-      for (var i=0; i<maxSize; i++) {
-        if (values[i]!=inputIn.getValue(i)) {
-          changeOut.setValue(i, 1);
+    var values = [];
+
+    this.evaluate = function() {
+      var maxSize = this.getMaxInputSliceCount();
+
+      if (inputIn.pinIsChanged()) {
+        for (var i=0; i<maxSize; i++) {
+          if (values[i]!=inputIn.getValue(i)) {
+            changeOut.setValue(i, 1);
+          }
+          else if (changeOut.getValue(i)==1)
+            changeOut.setValue(i, 0);
+          values[i] = inputIn.getValue(i);
         }
-        else if (changeOut.getValue(i)==1)
-          changeOut.setValue(i, 0);
+        changeOut.setSliceCount(maxSize);
+      }
+      else {
+        for (var i=0; i<maxSize; i++) {
+          if (changeOut.getValue(i)==1) {
+            changeOut.setValue(i, 0);
+            changeOut.setSliceCount(maxSize);
+          }
+        }
         values[i] = inputIn.getValue(i);
       }
-      changeOut.setSliceCount(maxSize);
-    }
-    else {
-      for (var i=0; i<maxSize; i++) {
-        if (changeOut.getValue(i)==1) {
-          changeOut.setValue(i, 0);
-          changeOut.setSliceCount(maxSize);
-        }
-      }
-      values[i] = inputIn.getValue(i);
-    }
 
+
+    }
 
   }
-
-}
-VVVV.Nodes.Change.prototype = new Node();
+  VVVV.Nodes['Change'+changeType.category].prototype = new Node();
+});
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
