@@ -116,7 +116,7 @@ element_node_defs.forEach(function(element_node_def) {
       if (this.hasNilInputs()) {
         for (var i=0; i<layers.length; i++) {
           if (layers[i].element)
-            layers[i].element.remove();
+            layers[i].disable();
         }
         layers.length = 0;
         layersOut.setSliceCount(0);
@@ -180,8 +180,9 @@ element_node_defs.forEach(function(element_node_def) {
 
       // remove untracked elements
       for (var i=maxSpreadSize; i<layers.length; i++) {
-        if (layers[i].element)
-          layers[i].element.remove();
+        if (layers[i].element) {
+          layers[i].disable();
+        }
       }
 
       layers.length = maxSpreadSize;
