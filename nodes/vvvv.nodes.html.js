@@ -189,7 +189,8 @@ element_node_defs.forEach(function(element_node_def) {
 
     this.destroy = function() {
       for (var i=0; i<layers.length; i++) {
-        layers[i].element.remove();
+        if (layers[i].enabled)
+          layers[i].element.remove();
       }
     }
   }
