@@ -72,7 +72,7 @@ VVVV.Nodes.SwitchStringInput = function(id, graph) {
 
   var outputOut = this.addOutputPin("Output", ["text"], VVVV.PinTypes.String);
 
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = Math.max(2, inputCountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputIn, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), ['text'], VVVV.PinTypes.String);
@@ -80,8 +80,6 @@ VVVV.Nodes.SwitchStringInput = function(id, graph) {
   }
 
   this.evaluate = function() {
-    if (inputCountIn.pinIsChanged())
-      this.initialize();
     var maxSize = this.getMaxInputSliceCount();
 
     for (var i=0; i<maxSize; i++) {
@@ -119,7 +117,7 @@ VVVV.Nodes.AddString = function(id, graph) {
 
   var outputOut = this.addOutputPin("Output", ["texttext"], VVVV.PinTypes.String);
 
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = Math.max(2, inputCountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputIn, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), ['text'], VVVV.PinTypes.String);
@@ -127,8 +125,6 @@ VVVV.Nodes.AddString = function(id, graph) {
   }
 
   this.evaluate = function() {
-    if (inputCountIn.pinIsChanged())
-      this.initialize();
     var maxSize = this.getMaxInputSliceCount();
 
     for (var i=0; i<maxSize; i++) {
@@ -250,14 +246,6 @@ VVVV.Nodes.SortString = function(id, graph) {
   // output pins
   var outputOut = this.addOutputPin('Output', ['text'], VVVV.PinTypes.String);
   var formerindexOut = this.addOutputPin('Former Index', [0], VVVV.PinTypes.Value);
-
-  // invisible pins
-
-
-  // initialize() will be called after node creation
-  this.initialize = function() {
-
-  }
 
   // evaluate() will be called each frame
   // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
@@ -860,8 +848,7 @@ VVVV.Nodes.ConsString = function(id, graph) {
   // invisible pins
   var inputcountIn = this.addInvisiblePin('Input Count', [2], VVVV.PinTypes.Value);
 
-  // initialize() will be called after node creation
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = Math.max(2, inputcountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), ["text"], VVVV.PinTypes.String);
@@ -869,9 +856,6 @@ VVVV.Nodes.ConsString = function(id, graph) {
   }
 
   this.evaluate = function() {
-    if (inputcountIn.pinIsChanged())
-      this.initialize();
-
     var idx = 0;
     for (var i=0; i<inputPins.length; i++) {
       if (inputPins[i].getSliceCount()==0)

@@ -670,8 +670,7 @@ VVVV.Nodes.ConsSpreads = function(id, graph) {
   // invisible pins
   var inputcountIn = this.addInvisiblePin('Input Count', [2], VVVV.PinTypes.Value);
 
-  // initialize() will be called after node creation
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = Math.max(2, inputcountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
@@ -679,9 +678,6 @@ VVVV.Nodes.ConsSpreads = function(id, graph) {
   }
 
   this.evaluate = function() {
-    if (inputcountIn.pinIsChanged())
-      this.initialize();
-
     var idx = 0;
     for (var i=0; i<inputPins.length; i++) {
       if (inputPins[i].getSliceCount()==0)

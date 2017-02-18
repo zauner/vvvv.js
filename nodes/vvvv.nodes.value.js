@@ -34,7 +34,7 @@ VVVV.Nodes.AddValue = function(id, graph) {
   var inputPins = [];
   var outPin = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);;
 
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = Math.max(2, cntCfg.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
@@ -44,8 +44,6 @@ VVVV.Nodes.AddValue = function(id, graph) {
 
   this.evaluate = function()
   {
-    if (cntCfg.pinIsChanged())
-      this.initialize();
   	var maxSpreadSize = this.getMaxInputSliceCount();
 
   	outPin.setSliceCount(maxSpreadSize);
@@ -62,9 +60,6 @@ VVVV.Nodes.AddValue = function(id, graph) {
   }
 
   this.getCode = function() {
-    if (cntCfg.pinIsChanged())
-      this.initialize();
-
     var pinnames = [];
     for (var i=0; i<inputPins.length; i++) {
       pinnames.push("{Input "+(i+1)+"}")
@@ -97,7 +92,7 @@ VVVV.Nodes.SubtractValue = function(id, graph) {
   var inputPins = [];
   var outPin = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);;
 
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = Math.max(2, cntCfg.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
@@ -107,8 +102,6 @@ VVVV.Nodes.SubtractValue = function(id, graph) {
 
   this.evaluate = function()
   {
-    if (cntCfg.pinIsChanged())
-      this.initialize();
   	var maxSpreadSize = this.getMaxInputSliceCount();
 
   	outPin.setSliceCount(maxSpreadSize);
@@ -125,9 +118,6 @@ VVVV.Nodes.SubtractValue = function(id, graph) {
   }
 
   this.getCode = function() {
-    if (cntCfg.pinIsChanged())
-      this.initialize();
-
     var pinnames = [];
     for (var i=0; i<inputPins.length; i++) {
       pinnames.push("{Input "+(i+1)+"}")
@@ -288,7 +278,7 @@ VVVV.Nodes.MultiplyValue = function(id, graph) {
   var inputPins = [];
   var outPin = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);;
 
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = Math.max(2, cntCfg.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), [1.0], VVVV.PinTypes.Value);
@@ -298,8 +288,6 @@ VVVV.Nodes.MultiplyValue = function(id, graph) {
 
   this.evaluate = function()
   {
-    if (cntCfg.pinIsChanged())
-      this.initialize();
   	var maxSpreadSize = this.getMaxInputSliceCount();
 
   	outPin.setSliceCount(maxSpreadSize);
@@ -316,9 +304,6 @@ VVVV.Nodes.MultiplyValue = function(id, graph) {
   }
 
   this.getCode = function() {
-    if (cntCfg.pinIsChanged())
-      this.initialize();
-
     var pinnames = [];
     for (var i=0; i<inputPins.length; i++) {
       pinnames.push("{Input "+(i+1)+"}")
@@ -480,7 +465,7 @@ VVVV.Nodes.SwitchValueInput = function(id, graph) {
   var switchIn = this.addInputPin("Switch", [0], VVVV.PinTypes.Value);
   var inputIn = [];
 
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = Math.max(2, inputCountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputIn, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
@@ -490,8 +475,6 @@ VVVV.Nodes.SwitchValueInput = function(id, graph) {
   var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
-    if (inputCountIn.pinIsChanged())
-      this.initialize();
     var maxSize = this.getMaxInputSliceCount();
 
     for (var i=0; i<maxSize; i++) {
@@ -706,10 +689,6 @@ VVVV.Nodes.WaveShaperValue = function(id, graph) {
   // output pins
   var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
 
-  // initialize() will be called after node creation
-  this.initialize = function() {
-  }
-
   // evaluate() will be called each frame
   // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
   this.evaluate = function() {
@@ -872,8 +851,7 @@ VVVV.Nodes.MinValue = function(id, graph) {
 
   var inputPins = [];
 
-  // initialize() will be called after node creation
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = Math.max(2, inputcountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
@@ -881,9 +859,6 @@ VVVV.Nodes.MinValue = function(id, graph) {
   }
 
   this.evaluate = function() {
-    if (inputcountIn.pinIsChanged())
-      this.initialize();
-
     var maxSize = this.getMaxInputSliceCount();
 
     for (var i=0; i<maxSize; i++) {
@@ -931,8 +906,7 @@ VVVV.Nodes.MaxValue = function(id, graph) {
 
   var inputPins = [];
 
-  // initialize() will be called after node creation
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = Math.max(2, inputcountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
@@ -940,9 +914,6 @@ VVVV.Nodes.MaxValue = function(id, graph) {
   }
 
   this.evaluate = function() {
-    if (inputcountIn.pinIsChanged())
-      this.initialize();
-
     var maxSize = this.getMaxInputSliceCount();
 
     for (var i=0; i<maxSize; i++) {
@@ -990,8 +961,7 @@ VVVV.Nodes.ModValue = function(id, graph) {
 
   var inputPins = [];
 
-  // initialize() will be called after node creation
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = Math.max(2, inputcountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
@@ -999,9 +969,6 @@ VVVV.Nodes.ModValue = function(id, graph) {
   }
 
   this.evaluate = function() {
-    if (inputcountIn.pinIsChanged())
-      this.initialize();
-
     var maxSize = this.getMaxInputSliceCount();
 
     for (var i=0; i<maxSize; i++) {
@@ -1051,8 +1018,7 @@ VVVV.Nodes.PowerValue = function(id, graph) {
 
   var inputPins = [];
 
-  // initialize() will be called after node creation
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = Math.max(2, inputcountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
@@ -1060,9 +1026,6 @@ VVVV.Nodes.PowerValue = function(id, graph) {
   }
 
   this.evaluate = function() {
-    if (inputcountIn.pinIsChanged())
-      this.initialize();
-
     var maxSize = this.getMaxInputSliceCount();
 
     for (var i=0; i<maxSize; i++) {
@@ -1219,7 +1182,7 @@ VVVV.Nodes.InputMorphValue = function(id, graph) {
 
   var inputPins = [];
 
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = Math.max(2, inputcountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
@@ -1227,9 +1190,6 @@ VVVV.Nodes.InputMorphValue = function(id, graph) {
   }
 
   this.evaluate = function() {
-    if (inputcountIn.pinIsChanged())
-      this.initialize();
-
     var maxSize = this.getMaxInputSliceCount();
 
     var s;

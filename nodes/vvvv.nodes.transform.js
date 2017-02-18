@@ -747,7 +747,7 @@ VVVV.Nodes.MultiplyTransform = function(id, graph) {
 
   var inputPins = [];
 
-  this.initialize = function() {
+  this.configure = function() {
    	inputCount = Math.max(2, inputcountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
       return this.addInputPin('Transform In '+(i+1), [], VVVV.PinTypes.Transform);
@@ -755,9 +755,6 @@ VVVV.Nodes.MultiplyTransform = function(id, graph) {
   }
 
   this.evaluate = function() {
-  	if (inputcountIn.pinIsChanged())
-      this.initialize();
-
 	  var maxSize = this.getMaxInputSliceCount();
 
 	  if (maxSize>transforms.length) {

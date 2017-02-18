@@ -77,7 +77,7 @@ element_node_defs.forEach(function(element_node_def) {
 
     var layers = [];
 
-    this.initialize = function() {
+    this.configure = function() {
       var attribNames = [];
       var regex = new RegExp(/([a-z]+)/g);
       var match;
@@ -108,9 +108,6 @@ element_node_defs.forEach(function(element_node_def) {
     }
 
     this.evaluate = function() {
-      if (attributeNamesIn.pinIsChanged())
-        this.initialize();
-
       var maxSpreadSize = this.getMaxInputSliceCount();
 
       if (this.hasNilInputs()) {
@@ -225,7 +222,7 @@ VVVV.Nodes.GroupHTML = function(id, graph) {
 
   var layers = [];
 
-  this.initialize = function() {
+  this.configure = function() {
     var outputCount = Math.max(2, outputCountIn.getValue(0));
     for (var i=outPins.length; i<outputCount; i++) {
       outPins.push(this.addOutputPin("Element Slot "+(i+1), [], VVVV.PinTypes.HTMLLayer));
@@ -237,10 +234,6 @@ VVVV.Nodes.GroupHTML = function(id, graph) {
   }
 
   this.evaluate = function() {
-    if (outputCountIn.pinIsChanged()) {
-      this.initialize();
-      this.parentPatch.afterUpdate();
-    }
 
     var sliceCount = parentIn.getSliceCount();
 

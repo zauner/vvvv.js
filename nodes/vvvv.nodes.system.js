@@ -323,11 +323,7 @@ VVVV.Nodes.DefineNode = function(id, graph) {
 
   this.relatedNodes = [];
 
-  this.initialize = function() {
-    this.evaluate();
-  }
-
-  this.evaluate = function() {
+  this.configure = function() {
     if (nameIn.getValue(0)!='') {
       if (nameIn.pinIsChanged()) {
         var descriptor = nameIn.getValue(0);
@@ -349,7 +345,10 @@ VVVV.Nodes.DefineNode = function(id, graph) {
 
       if (sourceCodeIn.pinIsChanged() || nameIn.pinIsChanged()) {
         try {
-          f = new Function("id", "graph", 'var VVVV = require("core/vvvv.core"); this.constructor(id, "'+currentName+'", graph); '+sourceCodeIn.getValue(0));
+          if (VVVVContext.name=='browser')
+            f = new Function("id", "graph", 'var VVVV = require("core/vvvv.core"); this.constructor(id, "'+currentName+'", graph); '+sourceCodeIn.getValue(0));
+          else
+            f = new Function("id", "graph", 'var VVVV = window.server_req("./core/vvvv.core"); this.constructor(id, "'+currentName+'", graph); '+sourceCodeIn.getValue(0));
           f.prototype = new Node();
           f.definingNode = this;
           VVVV.NodeLibrary[currentName.toLowerCase()] = f;
@@ -364,12 +363,19 @@ VVVV.Nodes.DefineNode = function(id, graph) {
           this.not_implemented = false;
         }
         catch (e) {
-          this.showStatus('error', e.message);
+          if (VVVVContext.name=="browser")
+            this.showStatus('error', e.message);
+          else
+            console.log("DefineNode parsing error:\n", e.message);
           this.not_implemented = true;
         }
 
       }
     }
+  }
+
+  this.evaluate = function() {
+    // nix
   }
 
   this.openUIWindow = function() {
@@ -382,13 +388,15 @@ VVVV.Nodes.DefineNode = function(id, graph) {
       $('#path', w.document).text(definingNodeName+' / '+nodeName);
       $('textarea', w.document).text(sourceCodeIn.getValue(0));
       $('#compile_button', w.document).click(function() {
+        if ($('textarea', w.document).val()==sourceCodeIn.values[0])
+          return;
         if (currentName=='') {
           thatNode.showStatus('error', 'Please provide a name for this node first');
           return;
         }
-        sourceCodeIn.setValue(0, $('textarea', w.document).val());
         thatNode.showStatus('notice', 'Compiling ...');
-        thatNode.evaluate();
+        sourceCodeIn.setValue(0, $('textarea', w.document).val()); // setValue implicitly calls configure
+        thatNode.parentPatch.editor.update(thatNode.parentPatch, "<PATCH><NODE id='"+thatNode.id+"'><PIN pinname='Source Code' values='|"+$('textarea', w.document).val().replace(/\|/g, "||").replace(/'/g, '&apos;').replace(/</g, '&lt;').replace(/>/g, '&gt;')+"|'/></NODE></PATCH>");
       });
       w.focus();
     }, 500);

@@ -910,7 +910,7 @@ VVVV.Nodes.GroupCanvas = function(id, graph) {
 
   var layerOut = this.addOutputPin("Layer", [], VVVV.PinTypes.CanvasLayer);
 
-  this.initialize = function() {
+  this.configure = function() {
     var layerCount = Math.max(2, layerCountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, layerIns, layerCount, function(i) {
       return this.addInputPin("Layer "+(i+1), [], VVVV.PinTypes.CanvasLayer);
@@ -918,8 +918,6 @@ VVVV.Nodes.GroupCanvas = function(id, graph) {
   }
 
   this.evaluate = function() {
-    if (layerCountIn.pinIsChanged())
-      this.initialize();
     var outSliceIdx = 0;
     var layerCount = layerIns.length;
     var sliceCount;

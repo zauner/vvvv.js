@@ -507,6 +507,13 @@ define(function(require,exports) {
     }
 
     /**
+    * @abstract
+    */
+    this.configure = function() {
+
+    }
+
+    /**
      * Method called AFTER a node's pins have been created and populated with values from patch XML, and BEFORE node links are created.
      * This method should be overwritten by any Node implementation and is useful for e.g. creating dynamic number of input pins and
      * other initialising code which should run before first call of {@link VVVV.Core.Node.evaluate}.

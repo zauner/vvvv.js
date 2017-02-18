@@ -149,7 +149,7 @@ VVVV.Nodes.SwitchNodeInput = function(id, graph) {
 
   var outputOut = this.addOutputPin("Output", [], VVVV.PinTypes.Node);
 
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = inputcountIn.getValue(0);
     for (var i=inputIn.length; i<inputCount; i++) {
       inputIn[i] = this.addInputPin("Input "+(i+1), [], VVVV.PinTypes.Node);
@@ -158,11 +158,6 @@ VVVV.Nodes.SwitchNodeInput = function(id, graph) {
   }
 
   this.evaluate = function() {
-
-    if (inputcountIn.pinIsChanged()) {
-      this.initialize();
-    }
-
     if (switchIn.getValue(0)==undefined) {
       outputOut.setValue(0, undefined);
       return;

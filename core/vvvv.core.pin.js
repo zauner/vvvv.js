@@ -79,6 +79,10 @@ define(function(require,exports) {
         else if (this.node.parentPatch.parentPatch)
           this.node.registerInterfacePin();
       }
+
+      if (this.direction==VVVV.PinDirection.Configuration) {
+        this.node.configure();
+      }
     }
 
     /**

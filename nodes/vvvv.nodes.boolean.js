@@ -34,7 +34,7 @@ VVVV.Nodes.And = function(id, graph) {
 
   var outputOut = this.addOutputPin("Output", [1], VVVV.PinTypes.Value);
 
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = Math.max(2, inputCountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), [1], VVVV.PinTypes.Value);
@@ -42,8 +42,6 @@ VVVV.Nodes.And = function(id, graph) {
   }
 
   this.evaluate = function() {
-    if (inputCountIn.pinIsChanged())
-      this.initialize();
     var maxSliceCount = this.getMaxInputSliceCount();
     var inputCount = inputPins.length;
     var res;
@@ -84,7 +82,7 @@ VVVV.Nodes.Or = function(id, graph) {
 
   var outputOut = this.addOutputPin("Output", [1], VVVV.PinTypes.Value);
 
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = Math.max(2, inputCountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), [1], VVVV.PinTypes.Value);
@@ -92,8 +90,6 @@ VVVV.Nodes.Or = function(id, graph) {
   }
 
   this.evaluate = function() {
-    if (inputCountIn.pinIsChanged())
-      this.initialize();
     var maxSliceCount = this.getMaxInputSliceCount();
     var inputCount = inputPins.length;
     var res;

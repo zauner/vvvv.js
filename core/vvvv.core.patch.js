@@ -443,7 +443,9 @@ define(function(require,exports) {
             });
           }
 
-          n.initialize();
+          n.configure();
+          if (!n.environments || n.environments.indexOf(VVVVContext.name)>=0)
+            n.initialize();
 
           if (nodeToReplace) { // copy in- and output pins from node which is being replaced
             _(nodeToReplace.inputPins).each(function(p, name) {
@@ -563,6 +565,9 @@ define(function(require,exports) {
             dstPin = thisPatch.nodeMap[$(this).attr('dstnodeid')].addInputPin($(this).attr('dstpinname'), undefined);
 
           if (srcPin && dstPin) {
+            if (srcPin.node.isSubpatch && dstPin.node.isSubpatch)
+              console.warn("WARNING: directly connecting subpatches is buggy and should be avoided ("+srcPin.node.nodename+" -> "+dstPin.node.nodename+")");
+
             var link = false;
             for (var i=0; i<thisPatch.linkList.length; i++) {
               if (thisPatch.linkList[i].fromPin.node.id==srcPin.node.id &&
@@ -767,7 +772,6 @@ define(function(require,exports) {
 
         if (loop_detected && node.delays_output)
           lostLoopRoots.push(node);
-
         if ((!loop_detected && nodeStack.indexOf(node.id)<0) || node.delays_output) {
           if ((node.inCluster && VVVVContext.name=="nodejs") || (!node.inCluster && VVVVContext.name=="browser") || node.isSubpatch || (node.environments && node.environments.length>1)) {
             if (node.getCode) {
