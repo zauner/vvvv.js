@@ -142,6 +142,8 @@ VVVV.Nodes.IOBoxColor = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.isIOBox = true;
+
   this.auto_evaluate = false;
 
   // input pins

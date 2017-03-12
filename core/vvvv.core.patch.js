@@ -201,6 +201,7 @@ define(function(require,exports) {
         this.isPersisted = false;
 
       var nodesLoading = 0;
+      var parsingComplete = false;
 
       $xml.find('NODE').each(function() {
 
@@ -245,7 +246,7 @@ define(function(require,exports) {
                     updateLinks(xml);
                     thisPatch.afterUpdate();
                     thisPatch.compile();
-                    if (thisPatch.resourcesPending<=0 && thisPatch.ready_callback) {
+                    if (thisPatch.resourcesPending<=0 && thisPatch.ready_callback && parsingComplete) {
                       thisPatch.ready_callback();
                       thisPatch.ready_callback = undefined;
                     }
@@ -281,7 +282,7 @@ define(function(require,exports) {
                   this.setMainloop(thisPatch.mainloop);
                   thisPatch.afterUpdate();
                   thisPatch.compile();
-                  if (thisPatch.resourcesPending<=0 && thisPatch.ready_callback) {
+                  if (thisPatch.resourcesPending<=0 && thisPatch.ready_callback && parsingComplete) {
                     thisPatch.ready_callback();
                     thisPatch.ready_callback = undefined;
                   }
@@ -293,7 +294,7 @@ define(function(require,exports) {
                   updateLinks(xml);
                   thisPatch.afterUpdate();
                   thisPatch.compile();
-                  if (thisPatch.resourcesPending<=0 && thisPatch.ready_callback) {
+                  if (thisPatch.resourcesPending<=0 && thisPatch.ready_callback && parsingComplete) {
                     thisPatch.ready_callback();
                     thisPatch.ready_callback = undefined;
                   }
@@ -613,6 +614,7 @@ define(function(require,exports) {
       }
 
       this.compile();
+      parsingComplete = true;
       if (this.resourcesPending<=0 && this.ready_callback) {
         this.ready_callback();
         this.ready_callback = undefined;
@@ -732,7 +734,9 @@ define(function(require,exports) {
     /**
      * Assemples the {@link VVVV.Core.Patch.compiledFunc} function, which is called each frame, and subsequently calls all nodes in the correct order. This method is invoked automatically each time the patch has been changed.
      */
-    this.compile = function() {
+    this.compile = function(cname) {
+      var context_name = cname ? cname : VVVVContext.name;
+
       this.evaluationRecipe = [];
       this.pinList = [];
       var addedNodes = {};
@@ -773,7 +777,7 @@ define(function(require,exports) {
         if (loop_detected && node.delays_output)
           lostLoopRoots.push(node);
         if ((!loop_detected && nodeStack.indexOf(node.id)<0) || node.delays_output) {
-          if ((node.inCluster && VVVVContext.name=="nodejs") || (!node.inCluster && VVVVContext.name=="browser") || node.isSubpatch || (node.environments && node.environments.length>1)) {
+          if ((node.inCluster && context_name=="nodejs") || (!node.inCluster && context_name=="browser") || node.isSubpatch || (node.environments && node.environments.length>1)) {
             if (node.getCode) {
               node.outputPins["Output"].values.incomingPins = [];
               var nodecode = "("+node.getCode()+")";
@@ -892,7 +896,7 @@ define(function(require,exports) {
       this.nodename = ressource;
       var that = this;
       var path = ressource;
-      path = VVVV.Helpers.prepareFilePath(ressource, this.parentPatch)
+      path = VVVV.Helpers.prepareFilePath(ressource, this.parentPatch);
       if (!VVVVContext.Patches[path]) {
         VVVVContext.loadFile(path, {
           success: function(r) {

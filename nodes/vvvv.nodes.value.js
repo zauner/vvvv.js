@@ -382,6 +382,8 @@ VVVV.Nodes.IOBoxValueAdvanced = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.isIOBox = true;
+
   //this.addInputPin("SliceOffset", [0], this);
   //this.addInputPin("X Input Value", [0.0], this);
   this.addInputPin("Y Input Value", [0.0], VVVV.PinTypes.Value);

@@ -30,6 +30,8 @@ VVVV.Nodes.IOBoxString = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.isIOBox = true;
+
   this.addInvisiblePin("Rows",[1.0],VVVV.PinTypes.Value);
 
   this.addInputPin("SliceOffset", [0], VVVV.PinTypes.Value);
