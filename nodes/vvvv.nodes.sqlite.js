@@ -138,6 +138,10 @@ VVVV.Nodes.SelectSQLite = function(id, graph) {
     }
   }
 
+  this.configure = function() {
+    createResultFieldPins.call(this, fieldsCfgIn.getValue(0));
+  }
+
   var sqlite3 = undefined;
   var db = undefined;
   this.initialize = function() {
@@ -145,8 +149,6 @@ VVVV.Nodes.SelectSQLite = function(id, graph) {
     if (sqlite3)
       sqlite3 = sqlite3.verbose();
     fs = window.server_req('fs');
-
-    createResultFieldPins.call(this, fieldsCfgIn.getValue(0));
   }
 
   var query = "";
@@ -453,7 +455,7 @@ VVVV.Nodes.EscapeSQLite = function(id, graph) {
   }
 
   this.getCode = function() {
-    return "{Input}.replace(/'/g, \"''\")";
+    return "({Input}+\"\").replace(/'/g, \"''\")";
   }
 
 }
