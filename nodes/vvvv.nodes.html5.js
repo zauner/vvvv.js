@@ -294,11 +294,6 @@ VVVV.Nodes.StoreFile = function(id, graph) {
 
   var progressOut = this.addOutputPin('Progress', [0.0], VVVV.PinTypes.Value);
 
-  var fs = undefined;
-  this.initialize = function() {
-    fs = window.server_req('fs');
-  }
-
   var that = this;
   var offset = 0;
   var file = undefined;
@@ -324,6 +319,8 @@ VVVV.Nodes.StoreFile = function(id, graph) {
     if (fileIdx>=fileIn.getSliceCount())
       return;
     file = fileIn.getValue(fileIdx);
+    if (file=="No File")
+      return;
     offset = 0;
     chunkIdx = 0;
     processNextChunk();
@@ -331,6 +328,10 @@ VVVV.Nodes.StoreFile = function(id, graph) {
 
   this.evaluate = function() {
     var that = this;
+    if (fileIn.pinIsChanged()) {
+      progressOut.setValue(0, 0);
+      progressOut.setSliceCount(fileIn.getSliceCount());
+    }
     if (fileIn.isConnected() && doWriteIn.getValue(0)>=0.5) {
       progressOut.setSliceCount(fileIn.getSliceCount());
       for (var i=0; i<fileIn.getSliceCount(); i++) {
@@ -347,6 +348,7 @@ VVVV.Nodes.StoreFile = function(id, graph) {
 
 
   this.handleBackendMessage = function(message, meta_data) {
+    fs = window.server_req('fs');
     if (VVVVContext.name=='nodejs') {
       var that = this;
       var f;
@@ -585,9 +587,9 @@ VVVV.Nodes.StoreFile = function(id, graph) {
     }
 
     this.evaluate = function() {
-      var sliceIdx = 0;
-      for (var i=0; i<directoryIn.getSliceCount(); i++) {
-        if (updateIn.getValue(i)>0.5) {
+      if (updateIn.getValue(0)>0.5) {
+        var sliceIdx = 0;
+        for (var i=0; i<directoryIn.getSliceCount(); i++) {
           var files = fs.readdirSync(VVVV.Helpers.prepareFilePath(directoryIn.getValue(i), this.parentPatch));
           var fileCount = 0;
           for (var j=0; j<files.length; j++) {
@@ -596,15 +598,15 @@ VVVV.Nodes.StoreFile = function(id, graph) {
               filenamesOut.setValue(sliceIdx, directoryIn.getValue(i)+'/'+files[j]);
               shortFilenamesOut.setValue(sliceIdx, files[j]);
               sliceIdx++;
-              fileCount = 0;
+              fileCount++;
             }
           }
           fileCountOut.setValue(i, fileCount);
         }
+        filenamesOut.setSliceCount(sliceIdx);
+        shortFilenamesOut.setSliceCount(sliceIdx);
+        fileCountOut.setSliceCount(directoryIn.getSliceCount());
       }
-      filenamesOut.setSliceCount(sliceIdx);
-      shortFilenamesOut.setSliceCount(sliceIdx);
-      fileCountOut.setSliceCount(directoryIn.getSliceCount());
     }
 
   }
