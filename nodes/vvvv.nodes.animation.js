@@ -1012,3 +1012,55 @@ VVVV.Nodes.ADSR = function(id, graph) {
 VVVV.Nodes.ADSR.prototype = new VVVV.Core.Node();
 
 }(vvvvjs_jquery));
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: FrameDifference (Animation)
+ Author(s): David Gann
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.FrameDifference = function(id, graph) {
+  this.constructor(id, "FrameDifference (Animation)", graph);
+  
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['no dynamic pin count']
+  };
+  
+  this.delays_output = true;
+  this.auto_evaluate = true;
+  
+  var input1In = this.addInputPin("Input 1", [0.0], VVVV.PinTypes.Value);
+
+  
+  var output1Out = this.addOutputPin("Output 1", [0.0], VVVV.PinTypes.Value);
+  var buf = [];
+
+  this.evaluate = function() {
+    
+    var maxSize = this.getMaxInputSliceCount();
+    
+    for (var i=0; i<maxSize; i++) {
+      if (buf[i]==undefined)
+        output1Out.setValue(i, 0);
+      else
+        var framedifference = buf[i] - input1In.getValue(i);
+    
+        output1Out.setValue(i, framedifference);
+    }
+    
+    for (var i=0; i<maxSize; i++) {
+      buf[i] = input1In.getValue(i);
+    }
+    
+    output1Out.setSliceCount(maxSize);
+    
+  }
+
+}
+VVVV.Nodes.FrameDifference.prototype = new VVVV.Core.Node();

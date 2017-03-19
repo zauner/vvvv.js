@@ -933,10 +933,16 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
 
           d3.select(this).append('svg:text')
             .text(function(d) {
+                //Truncate preview string to avoid crashes with big strings
+               LabelContent = d.getValue(0); 
+                if(LabelContent.length > 30)
+                         LabelContent = LabelContent.substring(0,30)+'...';
+                else
+                         LabelContent = LabelContent;  
               if (d.getSliceCount()>1)
-                return d.pinname+"("+d.getSliceCount()+"): "+d.getValue(0);
+                return d.pinname+"("+d.getSliceCount()+"): "+LabelContent;
               else
-                return d.pinname+": "+d.getValue(0);
+                return d.pinname+": "+LabelContent;
             })
             .attr('dy', 30)
             .attr('font-size', 10)
@@ -984,10 +990,16 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
 
           d3.select(this).append('svg:text')
             .text(function(d) {
+                //Truncate preview string to avoid crashes with big strings
+               LabelContent = d.getValue(0); 
+                if(LabelContent.length > 30)
+                         LabelContent = LabelContent.substring(0,30)+'...';
+                else
+                         LabelContent = LabelContent;                       
               if (d.getSliceCount()>1)
-                return d.pinname+"("+d.getSliceCount()+"): "+d.getValue(0);
+                return d.pinname+"("+d.getSliceCount()+"): "+LabelContent;
               else
-                return d.pinname+": "+d.getValue(0);
+                return d.pinname+": "+LabelContent;
             })
             .attr('dy', 30)
             .attr('font-size', 10)
