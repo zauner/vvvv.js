@@ -139,6 +139,7 @@ VVVV.init = function (path_to_vvvv, mode, callback) {
         VVVV.loadScript('nodes/vvvv.nodes.differential.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.xelement.js', loadMonitor);
         VVVV.loadScript('nodes/vvvv.nodes.html.js', loadMonitor);
+        VVVV.loadScript('nodes/vvvv.nodes.game.js', loadMonitor);
         
         VVVV.loadScript('vvvv.makros.js', loadMonitor);
       }

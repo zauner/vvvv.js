@@ -10,7 +10,9 @@
  */
 VVVV.ThirdPartyLibs = {
   //"exampleLib": "lib/examplelib.js"
-  "beatdetektor": "lib/beatdetektor.js"
+  "beatdetektor": "lib/beatdetektor.js",
+  "GLUtil": "lib/gl-util.js",
+  "meshUtils": "lib/mesh-utils.js"
 }
 
 // ... and just leave this
