@@ -51,6 +51,7 @@ define(function(require, exports) {
   require('nodes/vvvv.nodes.html');
   require('nodes/vvvv.nodes.sqlite');
   require('nodes/vvvv.nodes.buffer');
+  require('nodes/vvvv.nodes.game');
 
   exports.MainLoop = require('mainloop/vvvv.mainloop');
   exports.Pin = require('core/vvvv.core.pin');

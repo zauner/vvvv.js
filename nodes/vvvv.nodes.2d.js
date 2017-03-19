@@ -428,4 +428,70 @@ VVVV.Nodes.ConnectAll2d = function(id, graph) {
 }
 VVVV.Nodes.ConnectAll2d.prototype = new Node();
 
+/////////////////////////////////////////////////////////
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: distance (2d)
+ Author(s): David Gann
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Distance2d = function(id, graph) {
+  this.constructor(id, "Distance (2d)", graph);
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+
+  var xy1In = this.addInputPin("XY1", [0.0], VVVV.PinTypes.Value);
+  var xy2In = this.addInputPin("XY2", [0.0], VVVV.PinTypes.Value);
+
+
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+
+  var xs = 0;
+  var ys = 0;
+  var idx = 0;
+
+
+  this.evaluate = function() {
+     var maxSize = this.getMaxInputSliceCount();
+
+
+      for (var i=0; i<maxSize/2; i++)
+	  {
+
+               // var distance = lineDistance(xy1In, xy2In);
+
+
+                 xs = xy2In.getValue(idx) - xy1In.getValue(idx);
+                 xs = xs * xs;
+
+                 ys = xy2In.getValue(idx+1) - xy1In.getValue(idx+1);
+                 ys = ys * ys;
+
+                 var distance = Math.sqrt( xs + ys );
+
+                 idx=idx+2;
+
+
+
+		outputOut.setValue(i,distance);
+
+      }
+     outputOut.setSliceCount(maxSize/2);
+    }
+
+  }
+
+
+VVVV.Nodes.Distance2d.prototype = new VVVV.Core.Node();
+
+
+
 });

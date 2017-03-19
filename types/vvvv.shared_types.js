@@ -259,4 +259,20 @@ VVVV.PinTypes.Buffer = {
   defaultValue: function() { return "EMPTY BUFFER"; }
 }
 
+VVVV.Types.Buffer = function(vectorSize, data, offset, count, id) {
+  this.VectorSize = vectorSize;
+  this.data = data;
+  this.offset = offset;
+  this.count = count;
+  this.id = id;
+  }
+
+VVVV.PinTypes.Buffer = {
+  typeName: "Buffer",
+  reset_on_disconnect: true,
+  defaultValue: function() {
+    return "No Buffer"
+  }
+}
+
 });

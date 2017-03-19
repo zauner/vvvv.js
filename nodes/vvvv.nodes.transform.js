@@ -837,4 +837,110 @@ VVVV.Nodes.ApplyTransform = function(id, graph) {
 }
 VVVV.Nodes.ApplyTransform.prototype = new Node();
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Ortho (Transform)
+ Author(s): David Gann
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Ortho = function(id, graph) {
+  this.constructor(id, "Ortho (Transform)", graph);
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Not spreadable']
+  };
+
+  var ident = mat4.identity(mat4.create());
+
+
+  this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
+  this.addInputPin("ResolutionXY", [1024], VVVV.PinTypes.Value);
+  this.addInputPin("Zoom", [16], VVVV.PinTypes.Value);
+  this.addInputPin("Near Plane", [0.05], VVVV.PinTypes.Value);
+  this.addInputPin("Far Plane", [100.0], VVVV.PinTypes.Value);
+
+  this.addOutputPin("Transform Out", [], VVVV.PinTypes.Transform);
+
+  this.evaluate = function() {
+
+    var ResX = this.inputPins["ResolutionXY"].getValue(0);
+    var ResY = this.inputPins["ResolutionXY"].getValue(1);
+    var z = this.inputPins["Zoom"].getValue(0);
+    var near = this.inputPins["Near Plane"].getValue(0);
+    var far = this.inputPins["Far Plane"].getValue(0);
+
+    var t = mat4.create();
+    mat4.identity(t);
+    mat4.ortho(-1*z,1*z,-1*z,1*z,near,far,t);
+    if (this.inputPins["Transform In"].isConnected())
+    {
+     	var transformin = this.inputPins["Transform In"].getValue(0);
+     	mat4.multiply(transformin, t, t);
+    }
+
+    this.outputPins["Transform Out"].setValue(0, t);
+  }
+
+}
+VVVV.Nodes.Ortho.prototype = new VVVV.Core.Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: GetMatrix (Transform)
+ Author(s): David Gann
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.GetMatrix = function(id, graph) {
+  this.constructor(id, "GetMatrix (Transform)", graph);
+
+  this.meta = {
+    authors: ['woei'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+
+
+  var trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
+
+  var matOut = this.addOutputPin("Matrix Out", [], VVVV.PinTypes.Value);
+  var transforms = [];
+  var matrix_array = [];
+  this.evaluate = function() {
+
+    var maxSize = this.getMaxInputSliceCount();
+
+    if (maxSize>transforms.length) {
+      var i=transforms.length;
+      while (i++<maxSize) {
+        transforms.push(mat4.create());
+      }
+    }
+    else if (maxSize<transforms.length) {
+      transforms.length = maxSize;
+    }
+
+    for (var i=0; i<maxSize; i++) {
+      var matrix = trIn.getValue(i);
+      for (var j=0; j<16; j++) {
+         matOut.setValue(j+i*16, matrix[j]);
+      }
+    }
+    var matrix_values = [].concat.apply([], matrix_array);
+
+    matOut.setSliceCount(maxSize*16);
+  }
+
+}
+VVVV.Nodes.GetMatrix.prototype = new VVVV.Core.Node();
+
 });
