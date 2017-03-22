@@ -15,6 +15,8 @@ if (process.argv.length>=3) {
 var serve = serveStatic(path.join(documentRoot));
 
 VVVVContext.externalHandlers = [];
+var http_hostname = "0.0.0.0";
+var http_port = 5000;
 try {
   var appconf = JSON.parse(fs.readFileSync(process.cwd()+"/vvvvjsapp.json"));
   if (appconf.externalHandlers) {
@@ -22,6 +24,10 @@ try {
         VVVVContext.externalHandlers.push(require(process.cwd()+"/"+appconf.externalHandlers[i]));
     }
   }
+  if (appconf.httpHostname)
+    http_hostname = appconf.httpHostname;
+  if (appconf.httpPort)
+    http_port = appconf.httpPort;
 }
 catch (e) { console.error(e.message)};
 
@@ -36,7 +42,8 @@ var server = http.createServer(function(req, res) {
   var done = finalhandler(req, res)
   serve(req, res, done);
 });
-server.listen(5000)
+server.listen(http_port, http_hostname);
+console.log("HTTP Server listening on "+http_hostname+":"+http_port);
 
 VVVVContext.init('./', 'full', function (vvvv) {
   VVVVContext.DocumentRoot = documentRoot;
