@@ -7,10 +7,16 @@ require('./vvvv.js')
 var ws = require("nodejs-websocket");
 var fs = require("fs");
 
+var argv = require('minimist')(process.argv);
+
 var documentRoot = "." //__dirname;
-if (process.argv.length>=3) {
-  documentRoot = process.argv[2];
+if (argv._.length>2) {
+  documentRoot = argv._[2];
 }
+
+var edit_mode = false;
+if (argv.e)
+  edit_mode = true;
 
 var serve = serveStatic(path.join(documentRoot));
 
@@ -44,6 +50,8 @@ var server = http.createServer(function(req, res) {
 });
 server.listen(http_port, http_hostname);
 console.log("HTTP Server listening on "+http_hostname+":"+http_port);
+if (edit_mode)
+  console.log("EDIT MODE IS ENABLED.");
 
 VVVVContext.init('./', 'full', function (vvvv) {
   VVVVContext.DocumentRoot = documentRoot;
@@ -86,7 +94,8 @@ VVVVContext.init('./', 'full', function (vvvv) {
       }
 
       if (req.command) {
-        //console.log(req.patch);
+        if (!edit_mode)
+          return;
         console.log('receiving patch update for '+vvvv.Helpers.prepareFilePath(req.patch));
         var patches = VVVVContext.Patches[vvvv.Helpers.prepareFilePath(req.patch)];
         var i = patches.length;
@@ -97,6 +106,8 @@ VVVVContext.init('./', 'full', function (vvvv) {
       }
 
       if (req.save) {
+        if (!edit_mode)
+          return;
         var p = VVVVContext.Patches[vvvv.Helpers.prepareFilePath(req.patch)][0];
         fs.writeFile(vvvv.Helpers.prepareFilePath(req.patch)+".xml", p.toXML(), function() {
           console.log('saved '+req.patch+".xml");

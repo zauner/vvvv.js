@@ -5,6 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "amdefine": "=1.0.0",
+    "minimist": "*",
     "browser-launcher2": "*",
     "cheerio": "=0.22.0",
     "express": "*",
