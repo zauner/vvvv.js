@@ -59,7 +59,7 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
       pin.setValue(sliceIdx, $(this).val());
     var cmd = {syncmode: 'diff', nodes: {}, links: []};
     cmd.nodes[pin.node.id] = {pins: {}};
-    cmd.nodes[pin.node.id].pins[pin.pinname] = pin.values;
+    cmd.nodes[pin.node.id].pins[pin.pinname] = {values: pin.values};
     pin.node.parentPatch.editor.update(pin.node.parentPatch, cmd);
     //pin.node.parentPatch.afterUpdate();
   });
@@ -162,7 +162,7 @@ VVVV.PinTypes.Enum.openInputBox = function(win, $element, pin, sliceIdx) {
     pin.setValue(sliceIdx, $(this).val());
     var cmd = {syncmode: 'diff', nodes: {}, links: []};
     cmd.nodes[pin.node.id] = {pins: {}};
-    cmd.nodes[pin.node.id].pins[pin.pinname] = pin.values;
+    cmd.nodes[pin.node.id].pins[pin.pinname] = {values: pin.values};
     pin.node.parentPatch.editor.update(pin.node.parentPatch, cmd);
     //pin.node.parentPatch.afterUpdate();
     $(this).remove();
@@ -264,7 +264,7 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
     pin.setValue(sliceIdx, col);
     var cmd = {syncmode: 'diff', nodes: {}, links: []};
     cmd.nodes[pin.node.id] = {pins: {}};
-    cmd.nodes[pin.node.id].pins[pin.pinname] = _(pin.values).map(function(v) { return v.toString() });
+    cmd.nodes[pin.node.id].pins[pin.pinname] = {values: _(pin.values).map(function(v) { return v.toString() }) };
     pin.node.parentPatch.editor.update(pin.node.parentPatch, cmd);
   }
 
