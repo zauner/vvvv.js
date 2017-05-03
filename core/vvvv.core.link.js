@@ -3,7 +3,7 @@
 if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
 
 define(function(require,exports) {
-  
+
 
   var $ = require('jquery');
 
@@ -52,6 +52,10 @@ define(function(require,exports) {
       $link.attr("dstnodeid", this.toPin.node.id);
       $link.attr("dstpinname", this.toPin.pinname);
       return $link;
+    }
+
+    this.toJSON = function() {
+      return {srcnodeid: this.fromPin.node.id, srcpinname: this.fromPin.pinname, dstnodeid: this.toPin.node.id, dstpinname: this.toPin.pinname};
     }
   }
 

@@ -113,6 +113,8 @@ define(function(require,exports) {
         var changedPins = 0;
         while (i--) {
           if (edgePins[node_id][i].pinIsChanged() || !edgePins[node_id][i].syncInitialized) {
+            if (!VVVV.PinTypes[edgePins[node_id][i].typeName].primitive)
+              continue;
             pinValues[edgePins[node_id][i].pinname] = edgePins[node_id][i].values;
             if (pinValues[edgePins[node_id][i].pinname].length==0) {
               console.log('WTF?');

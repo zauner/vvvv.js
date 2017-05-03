@@ -625,6 +625,42 @@ define(function(require,exports) {
       return $node;
     }
 
+    this.toJSON = function() {
+      var obj = {pins: {}};
+      var that = this;
+      for ( var prop in this ) {
+        switch (prop) {
+          case "width":
+          case "height":
+          case "nodename": obj[prop] = this[prop]; break;
+          case "x": obj.x = this.x * 15; break;
+          case "y": obj.y = this.y * 15; break;
+          case "inputPins":
+            for (pinname in this.inputPins) {
+              var p = this.inputPins[pinname];
+              obj.pins[pinname] = {};
+              if ((!p.isConnected() || p.masterPin) && VVVV.PinTypes[p.typeName].primitive && that.defaultPinValues[p.pinname])
+                obj.pins[pinname].values = that.defaultPinValues[p.pinname];
+            }
+            break;
+          case "invisiblePins":
+            for (pinname in this.invisiblePins) {
+              var p = this.invisiblePins[pinname];
+              obj.pins[pinname] =  {values: p.values, visible: 0};
+            }
+            break;
+          default:
+        }
+      }
+      if (this.shaderFile) {
+        obj.filename = this.shaderFile.replace(".vvvvjs.fx", ".fx").replace("%VVVV%/effects", "%VVVV%/lib/nodes/effects");
+      }
+      if (this.isSubpatch) {
+        obj.filename = this.nodename;
+      }
+      return obj;
+    }
+
   }
 
 

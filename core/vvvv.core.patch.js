@@ -81,7 +81,7 @@ define(function(require,exports) {
      * @return {String} the patch's path relative to its parent patch
      */
     this.getRelativePath = function() {
-      var match = this.nodename.match(/(.*\/)?[^/]+\.v4p/);
+      var match = this.nodename.match(/(.*\/)?[^/]+\.v4p(\.json)?/);
       return match[1] || '';
     }
 
@@ -161,12 +161,23 @@ define(function(require,exports) {
      * @param {Function} rb called after the XML code has been completely processed, and the patch is fully loaded and ready again
      */
     this.doLoad = function(xml, rb) {
-      this.ready_callback = rb;
-      var p = this;
-      do {
-        p.dirty = true;
+      if (typeof xml == 'object') {
+        cmd = xml;
+        if (cmd.syncmode!="diff")
+          cmd.syncmode = "complete"
+        this.execute(cmd,rb);
+        return;
       }
-      while (p=p.parentPatch);
+
+      if (xml.indexOf("{")==0) {
+        var cmd = JSON.parse(xml);
+        if (cmd.syncmode!="diff")
+          cmd.syncmode = "complete"
+        this.execute(cmd, rb);
+        return;
+      }
+
+      var cmd = {nodes: {}, links: []};
 
       var $xml;
       if (VVVVContext.name == "browser") {
@@ -183,37 +194,23 @@ define(function(require,exports) {
         thisPatch.vvvv_version = version_match[2].replace(/[a-zA-Z]+/, '_');
 
       // this is kind of a hacky way to determine, if the incoming XML is the complete patch, or a patch change
-      var syncmode = 'diff';
+      cmd.syncmode = 'diff';
       if (/\s<PATCH/.test(xml) || thisPatch.vvvv_version<="45_26") {
-        syncmode = 'complete';
-        if (VVVV_ENV=='development') console.log('complete: '+this.nodename);
+        cmd.syncmode = 'complete';
       }
 
       var $windowBounds = $xml.find('BOUNDS[type="Window"]').first();
       if ($windowBounds.length>0) {
-        thisPatch.windowWidth = $windowBounds.attr('width')/15;
-        thisPatch.windowHeight = $windowBounds.attr('height')/15;
+        cmd.width = $windowBounds.attr('width');
+        cmd.height = $windowBounds.attr('height');
       }
-
-      if (syncmode=='complete')
-        newNodes = {};
-      else
-        this.isPersisted = false;
-
-      var nodesLoading = 0;
-      var parsingComplete = false;
 
       $xml.find('NODE').each(function() {
 
-        // in case the node's id is already present
-        var nodeToReplace = undefined;
-        var nodeExists = false;
-        if (thisPatch.nodeMap[$(this).attr('id')]!=undefined) {
-          if ($(this).attr('createme')=='pronto') // renaming node ...
-            nodeToReplace = thisPatch.nodeMap[$(this).attr('id')];
-          else // just moving it ...
-            nodeExists = true;
-        }
+        var nodecmd = {nodename: $(this).attr('systemname')!="" ? $(this).attr('systemname') : $(this).attr('nodename'), pins: {}};
+
+        if ($(this).attr('filename'))
+          nodecmd.filename = $(this).attr('filename');
 
         var $bounds;
         if ($(this).attr('componentmode')=="InABox")
@@ -221,12 +218,97 @@ define(function(require,exports) {
         else
           $bounds = $(this).find('BOUNDS[type="Node"]').first();
 
+
+
+        if ($(this).attr('deleteme')=='pronto') {
+          nodecmd.delete = true;
+        }
+
+        if ($(this).attr('createme')=='pronto') {
+          nodecmd.create = true;
+        }
+
+        if ($bounds.length>0) {
+          if ($bounds.attr('left')) {
+            nodecmd.x = $bounds.attr('left');
+            nodecmd.y = $bounds.attr('top');
+          }
+          if ($bounds.attr('width')) {
+            nodecmd.width = $bounds.attr('width');
+            nodecmd.height = $bounds.attr('height');
+          }
+        }
+
+        var that = this;
+
+        // PINS
+        $(this).find('PIN').each(function() {
+          var pinname = $(this).attr('pinname');
+          var values = splitValues($(this).attr('values'));
+
+          nodecmd.pins[pinname] = {visible: $(this).attr('visible'), values: values};
+        });
+
+        cmd.nodes[$(this).attr('id')] = nodecmd;
+      });
+
+      $xml.find('LINK').each(function() {
+        lnkcmd = {};
+        lnkcmd.srcnodeid = $(this).attr('srcnodeid');
+        lnkcmd.srcpinname = $(this).attr('srcpinname');
+        lnkcmd.dstnodeid = $(this).attr('dstnodeid');
+        lnkcmd.dstpinname = $(this).attr('dstpinname');
+        if ($(this).attr('deleteme')=='pronto')
+          lnkcmd.delete = true;
+        cmd.links.push(lnkcmd);
+      });
+      console.warn(this.nodename, " will be converted from legacy XML to VVVV.js JSON format");
+      this.isPersisted = false;
+      this.execute(cmd, rb);
+    }
+
+    this.execute = function(cmd, rb) {
+
+      this.ready_callback = rb;
+      var p = this;
+      do {
+        p.dirty = true;
+      }
+      while (p=p.parentPatch);
+
+      //syncmode = "complete";
+
+      if (cmd.width) {
+        thisPatch.windowWidth = cmd.width / 15;
+        thisPatch.windowHeight = cmd.height / 15;
+      }
+
+      if (cmd.syncmode=='complete')
+        newNodes = {};
+      else
+        this.isPersisted = false;
+
+      var nodesLoading = 0;
+      var parsingComplete = false;
+
+      for (var id in cmd.nodes) {
+
+        // in case the node's id is already present
+        var nodeToReplace = undefined;
+        var nodeExists = false;
+        if (thisPatch.nodeMap[id]!=undefined) {
+          if (cmd.nodes[id].create) // renaming node ...
+            nodeToReplace = thisPatch.nodeMap[id];
+          else // just moving it ...
+            nodeExists = true;
+        }
+
         if (!nodeExists) {
-          var nodename = $(this).attr('systemname')!="" ? $(this).attr('systemname') : $(this).attr('nodename');
+          var nodename = cmd.nodes[id].nodename;
           if (nodename==undefined)
             return;
           if (VVVV.NodeLibrary[nodename.toLowerCase()]!=undefined) {
-            var n = new VVVV.NodeLibrary[nodename.toLowerCase()]($(this).attr('id'), thisPatch);
+            var n = new VVVV.NodeLibrary[nodename.toLowerCase()](id, thisPatch);
             if (VVVV.NodeLibrary[nodename.toLowerCase()].definingNode) {
               n.definingNode = VVVV.NodeLibrary[nodename.toLowerCase()].definingNode;
               if (nodeToReplace)
@@ -243,7 +325,7 @@ define(function(require,exports) {
                   VVVV.loadScript(VVVV.ThirdPartyLibs[libname], function() {
                     thisPatch.resourcesPending--; // resume patch evaluation
                     VVVV.LoadedLibs[libname]=VVVV.ThirdPartyLibs[libname];
-                    updateLinks(xml);
+                    updateLinks(cmd);
                     thisPatch.afterUpdate();
                     thisPatch.compile();
                     if (thisPatch.resourcesPending<=0 && thisPatch.ready_callback && parsingComplete) {
@@ -255,21 +337,20 @@ define(function(require,exports) {
               });
             }
           }
-          else if (/.fx$/.test($(this).attr('filename'))) {
-            var n = new VVVV.Nodes.GenericShader($(this).attr('id'), thisPatch);
+          else if (/.fx$/.test(cmd.nodes[id].filename)) {
+            var n = new VVVV.Nodes.GenericShader(id, thisPatch);
             n.isShader = true;
-            n.shaderFile = $(this).attr('filename').replace(/\\/g, '/').replace(/\.fx$/, '.vvvvjs.fx').replace('lib/nodes/', '');
+            n.shaderFile = cmd.nodes[id].filename.replace(/\\/g, '/').replace(/\.fx$/, '.vvvvjs.fx').replace('lib/nodes/', '');
             n.nodename = nodename;
           }
           else {
-            if (/.v4p$/.test($(this).attr('filename'))) {
+            if (/.v4p(\.json)?$/.test(cmd.nodes[id].filename)) {
               thisPatch.resourcesPending++;
               var that = this;
-              var n = new Patch($(this).attr('filename'),
+              var n = new Patch(cmd.nodes[id].filename,
                 function() {
                   thisPatch.resourcesPending--;
-                  if (VVVV_ENV=='development') console.log(this.nodename+'invoking update links')
-                  updateLinks(xml);
+                  updateLinks(cmd);
                   if (thisPatch.editor)
                     thisPatch.editor.addPatch(this);
                   if (this.auto_evaluate) {
@@ -291,7 +372,7 @@ define(function(require,exports) {
                   thisPatch.resourcesPending--;
                   this.not_implemented = true;
                   VVVVContext.onNotImplemented(nodename);
-                  updateLinks(xml);
+                  updateLinks(cmd);
                   thisPatch.afterUpdate();
                   thisPatch.compile();
                   if (thisPatch.resourcesPending<=0 && thisPatch.ready_callback && parsingComplete) {
@@ -299,7 +380,7 @@ define(function(require,exports) {
                     thisPatch.ready_callback = undefined;
                   }
                 },
-                thisPatch, $(that).attr('id')
+                thisPatch, id
               );
               n.isSubpatch = true;
               if (thisPatch.editor && !n.editor)
@@ -307,15 +388,15 @@ define(function(require,exports) {
               thisPatch.nodeMap[n.id] = n;
             }
             else {
-              var n = new Node($(this).attr('id'), nodename, thisPatch);
+              var n = new Node(id, nodename, thisPatch);
               n.not_implemented = true;
               VVVVContext.onNotImplemented(nodename);
             }
           }
-          if (VVVV_ENV=='development' && syncmode!='complete') console.log(thisPatch.nodename+': inserted new node '+n.nodename);
+          if (VVVV_ENV=='development' && cmd.syncmode!='complete') console.log(thisPatch.nodename+': inserted new node '+n.nodename);
         }
         else
-          n = thisPatch.nodeMap[$(this).attr('id')];
+          n = thisPatch.nodeMap[id];
 
         if (n.auto_evaluate) { // as soon as the patch contains a single auto-evaluate node, it is also an auto evaluating subpatch
           var p = thisPatch;
@@ -325,7 +406,7 @@ define(function(require,exports) {
           while (p = p.parentPatch);
         }
 
-        if ($(this).attr('deleteme')=='pronto') {
+        if (cmd.nodes[id].delete) {
           if (VVVV_ENV=='development') console.log('removing node '+n.id);
           if (n.isSubpatch && !n.not_implemented) {
             if (n.editor) n.editor.removePatch(n);
@@ -348,17 +429,15 @@ define(function(require,exports) {
           delete thisPatch.nodeMap[n.id];
         }
 
-        if ($bounds.length>0) {
-          if ($bounds.attr('left')) {
-            n.x = $bounds.attr('left')/15;
-            n.y = $bounds.attr('top')/15;
-            thisPatch.boundingBox.width = Math.max(thisPatch.boundingBox.width, n.x+100);
-            thisPatch.boundingBox.height = Math.max(thisPatch.boundingBox.height, n.y+100);
-          }
-          if ($bounds.attr('width')) {
-            n.width = $bounds.attr('width');
-            n.height = $bounds.attr('height');
-          }
+        if (cmd.nodes[id].x) {
+          n.x = cmd.nodes[id].x/15;
+          n.y = cmd.nodes[id].y/15;
+          thisPatch.boundingBox.width = Math.max(thisPatch.boundingBox.width, n.x+100);
+          thisPatch.boundingBox.height = Math.max(thisPatch.boundingBox.height, n.y+100);
+        }
+        if (cmd.nodes[id].width) {
+          n.width = cmd.nodes[id].width;
+          n.height = cmd.nodes[id].height;
         }
 
         if (/^iobox/.test(n.nodename.toLowerCase()))
@@ -371,9 +450,8 @@ define(function(require,exports) {
         var that = this;
 
         // PINS
-        $(this).find('PIN').each(function() {
-          var pinname = $(this).attr('pinname');
-          var values = splitValues($(this).attr('values'));
+        for (var pinname in cmd.nodes[id].pins) {
+          var values = cmd.nodes[id].pins[pinname].values;
 
           //Get all defaults from xml
           if (values!=undefined) {
@@ -383,14 +461,14 @@ define(function(require,exports) {
 
           // if the output pin already exists (because the node created it), skip
           if (n.outputPins[pinname]!=undefined)
-            return;
+            continue;
 
           // the input pin already exists (because the node created it), don't add it, but set values, if present in the xml
           if (n.inputPins[pinname]!=undefined) {
             if (!n.inputPins[pinname].isConnected()) {
               n.applyPinValuesFromXML(pinname);
             }
-            return;
+            continue;
           }
 
           // the input pin already exists (because the node created it), don't add it, but set values, if present in the xml
@@ -402,12 +480,17 @@ define(function(require,exports) {
               }
               n.invisiblePins[pinname].setSliceCount(values.length);
             }
-            return;
+            continue;
           }
 
           //Check for non implemented nodes
-          if (($(this).attr('visible')==1 && $(this).attr('pintype')!='Configuration') || n.isSubpatch) {
-            if ($(this).attr('pintype')=="Output" || $xml.find('LINK[srcnodeid='+n.id+']').filter("LINK[srcpinname='"+pinname.replace(/[\[\]]/,'')+"']").length > 0) {
+          if (cmd.nodes[id].pins[pinname].visible!=0 || n.isSubpatch) {
+            var outgoing_link_found = false;
+            for (var i=0; i<cmd.links.length; i++) {
+              if (cmd.links[i].srcnodeid==n.id && cmd.links[i].pinname==pinname.replace(/[\[\]]/,''))
+                outgoing_link_found = true;
+            }
+            if (outgoing_link_found) {
               if (n.outputPins[pinname] == undefined) {
                 //Add as output list if not already there
                 n.addOutputPin(pinname, values);
@@ -427,7 +510,7 @@ define(function(require,exports) {
             }
           }
 
-        });
+        }
 
         //Initialize node
         if (!nodeExists) {
@@ -507,12 +590,12 @@ define(function(require,exports) {
           thisPatch.nodeList.push(n);
         }
 
-        if (syncmode=='complete')
+        if (cmd.syncmode=='complete')
           newNodes[n.id] = n;
 
-      });
+      }
 
-      if (syncmode=='complete') {
+      if (cmd.syncmode=='complete') {
         _(oldNodes).each(function(n, id) {
           if (newNodes[id]==undefined) {
             if (VVVV_ENV=='development') console.log('removing node '+n.id);
@@ -527,20 +610,22 @@ define(function(require,exports) {
       }
 
       if (this.resourcesPending===0)
-        updateLinks(xml);
+        updateLinks(cmd);
 
-      function updateLinks(xml) {
-        if (syncmode=='complete')
+      function updateLinks(cmd) {
+        if (cmd.syncmode=='complete')
           newLinks = {};
 
         // first delete marked links
-        $xml.find('LINK[deleteme="pronto"]').each(function() {
+        cmd.links.forEach(function(lnkcmd) {
+          if (!lnkcmd.delete)
+            return;
           var link = false;
           for (var i=0; i<thisPatch.linkList.length; i++) {
-            if (thisPatch.linkList[i].fromPin.node.id==$(this).attr('srcnodeid') &&
-                thisPatch.linkList[i].fromPin.pinname==$(this).attr('srcpinname') &&
-                thisPatch.linkList[i].toPin.node.id==$(this).attr('dstnodeid') &&
-                thisPatch.linkList[i].toPin.pinname==$(this).attr('dstpinname')) {
+            if (thisPatch.linkList[i].fromPin.node.id==lnkcmd.srcnodeid &&
+                thisPatch.linkList[i].fromPin.pinname==lnkcmd.srcpinname &&
+                thisPatch.linkList[i].toPin.node.id==lnkcmd.dstnodeid &&
+                thisPatch.linkList[i].toPin.pinname==lnkcmd.dstpinname) {
               link = thisPatch.linkList[i];
             }
           }
@@ -555,15 +640,17 @@ define(function(require,exports) {
           toPin.markPinAsChanged();
         });
 
-        $xml.find('LINK[deleteme!="pronto"]').each(function() {
-          var srcPin = thisPatch.pinMap[$(this).attr('srcnodeid')+'_out_'+$(this).attr('srcpinname')];
-          var dstPin = thisPatch.pinMap[$(this).attr('dstnodeid')+'_in_'+$(this).attr('dstpinname')];
+        cmd.links.forEach(function(lnkcmd) {
+          if (lnkcmd.delete)
+            return;
+          var srcPin = thisPatch.pinMap[lnkcmd.srcnodeid+'_out_'+lnkcmd.srcpinname];
+          var dstPin = thisPatch.pinMap[lnkcmd.dstnodeid+'_in_'+lnkcmd.dstpinname];
 
           // add pins which are neither defined in the node, nor defined in the xml, but only appeare in the links (this is the case with shaders)
-          if (srcPin==undefined && thisPatch.nodeMap[$(this).attr('srcnodeid')])
-            srcPin = thisPatch.nodeMap[$(this).attr('srcnodeid')].addOutputPin($(this).attr('srcpinname'), undefined);
-          if (dstPin==undefined && thisPatch.nodeMap[$(this).attr('dstnodeid')])
-            dstPin = thisPatch.nodeMap[$(this).attr('dstnodeid')].addInputPin($(this).attr('dstpinname'), undefined);
+          if (srcPin==undefined && thisPatch.nodeMap[lnkcmd.srcnodeid])
+            srcPin = thisPatch.nodeMap[lnkcmd.srcnodeid].addOutputPin(lnkcmd.srcpinname, undefined);
+          if (dstPin==undefined && thisPatch.nodeMap[lnkcmd.dstnodeid])
+            dstPin = thisPatch.nodeMap[lnkcmd.dstnodeid].addInputPin(lnkcmd.dstpinname, undefined);
 
           if (srcPin && dstPin) {
             if (srcPin.node.isSubpatch && dstPin.node.isSubpatch)
@@ -587,12 +674,12 @@ define(function(require,exports) {
               dstPin.connect(srcPin);
             }
 
-            if (syncmode=='complete')
+            if (cmd.syncmode=='complete')
               newLinks[srcPin.node.id+'_'+srcPin.pinname+'-'+dstPin.node.id+'_'+dstPin.pinname] = link;
           }
         });
 
-        if (syncmode=='complete') {
+        if (cmd.syncmode=='complete') {
           _(oldLinks).each(function(l, key) {
             if (newLinks[key]==undefined) {
               if (VVVV_ENV=='development') console.log('removing '+l.fromPin.pinname+' -> '+l.toPin.pinname);
@@ -619,6 +706,8 @@ define(function(require,exports) {
         this.ready_callback();
         this.ready_callback = undefined;
       }
+
+
     }
 
     /**
@@ -699,6 +788,26 @@ define(function(require,exports) {
       xml = xml.replace(/<lonk/g, "\n  <LINK");
       xml = xml.replace(/<\/lonk>/g, "\n  </LINK>");
       return xml;
+    }
+
+    this.exportJSON = function() {
+      var patch = this;
+      var obj = {};
+      for ( var prop in this ) {
+        switch (prop) {
+          case "width":
+          case "height":
+          case "nodename": obj[prop] = this[prop]; break;
+          case "x": obj.left = this.x; break;
+          case "y": obj.top = this.y; break;
+          case "windowWidth": obj.width = parseInt(patch.windowWidth * 15); break;
+          case "windowHeight": obj.height = parseInt(patch.windowHeight * 15); break;
+          case "linkList": obj.links = this.linkList; break;
+          case "nodeMap": obj.nodes = this.nodeMap; break;
+          default:
+        }
+      }
+      return JSON.stringify(obj);
     }
 
     this.remotePatchConnection = null;
@@ -916,7 +1025,7 @@ define(function(require,exports) {
         });
       }
       else {
-        that.doLoad(VVVVContext.Patches[path][0].toXML(), function() {
+        that.doLoad(VVVVContext.Patches[path][0].exportJSON(), function() {
           VVVVContext.Patches[path].push(that);
           that.serverSync.registerPatch(that);
           if (that.success)

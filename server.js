@@ -98,9 +98,12 @@ VVVVContext.init('./', 'full', function (vvvv) {
 
       if (req.save) {
         var p = VVVVContext.Patches[vvvv.Helpers.prepareFilePath(req.patch)][0];
-        fs.writeFile(vvvv.Helpers.prepareFilePath(req.patch), p.toXML(), function() {
-          console.log('saved '+req.patch);
+        fs.writeFile(vvvv.Helpers.prepareFilePath(req.patch)+".xml", p.toXML(), function() {
+          console.log('saved '+req.patch+".xml");
         });
+        fs.writeFile(vvvv.Helpers.prepareFilePath(req.patch), p.exportJSON(), function() {
+          console.log('saved '+req.patch);
+        })
       }
 
       if (req.message) {

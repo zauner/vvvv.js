@@ -57,9 +57,10 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
       pin.setValue(sliceIdx, parseFloat($(this).val()));
     else
       pin.setValue(sliceIdx, $(this).val());
-    var valstr = _(pin.values).map(function(v) { return '|'+v.toString().replace(/\|/g, "||").replace(/'/g, '&apos;').replace(/</g, '&lt;').replace(/>/g, '&gt;')+'|'});
-    valstr.length = pin.getSliceCount();
-    pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+valstr.join(',')+"'/></NODE>");
+    var cmd = {syncmode: 'diff', nodes: {}, links: []};
+    cmd.nodes[pin.node.id] = {pins: {}};
+    cmd.nodes[pin.node.id].pins[pin.pinname] = pin.values;
+    pin.node.parentPatch.editor.update(pin.node.parentPatch, cmd);
     //pin.node.parentPatch.afterUpdate();
   });
   $inputbox.keydown(function(e) {
@@ -158,11 +159,11 @@ VVVV.PinTypes.Enum.openInputBox = function(win, $element, pin, sliceIdx) {
   $element.replaceWith($inputbox);
 
   $inputbox.change(function() {
-    //pin.node.parentPatch.doLoad("<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+$(this).val()+"'/></NODE>");
     pin.setValue(sliceIdx, $(this).val());
-    var valstr = _(pin.values).map(function(v) { return '|'+v+'|'});
-    valstr.length = pin.getSliceCount();
-    pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+valstr.join(',')+"'/></NODE>");
+    var cmd = {syncmode: 'diff', nodes: {}, links: []};
+    cmd.nodes[pin.node.id] = {pins: {}};
+    cmd.nodes[pin.node.id].pins[pin.pinname] = pin.values;
+    pin.node.parentPatch.editor.update(pin.node.parentPatch, cmd);
     //pin.node.parentPatch.afterUpdate();
     $(this).remove();
   });
@@ -261,9 +262,10 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
     ibx = $inputbox;
     //var cmd = "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='|"+col.toString()+"|'/></NODE></PATCH>";
     pin.setValue(sliceIdx, col);
-    var valstr = _(pin.values).map(function(v) { return '|'+v.toString()+'|'});
-    valstr.length = pin.getSliceCount();
-    pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+valstr.join(',')+"'/></NODE>");
+    var cmd = {syncmode: 'diff', nodes: {}, links: []};
+    cmd.nodes[pin.node.id] = {pins: {}};
+    cmd.nodes[pin.node.id].pins[pin.pinname] = _(pin.values).map(function(v) { return v.toString() });
+    pin.node.parentPatch.editor.update(pin.node.parentPatch, cmd);
   }
 
   $inputbox.on('mousewheel', function(e) {
@@ -507,12 +509,11 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           thatWin.state=UIState.Idle;
           var dx = d3.event.pageX - dragStart.x;
           var dy = d3.event.pageY - dragStart.y;
-          var cmd = "<PATCH>";
+          var cmd = {syncmode: 'diff', nodes: {}, links: []};
           for (var i=0; i<selectedNodes.length; i++) {
             var n = selectedNodes[i];
-            cmd += "<NODE componentmode='Node' id='"+n.id+"'><BOUNDS type='Node' left='"+(dx+n.x)*15+"' top='"+(dy+n.y)*15+"' width='"+n.width+"' height='"+n.height+"'/></NODE>";
+            cmd.nodes[n.id] = {x: (dx+n.x)*15, y: (dy+n.y)*15, width: n.width, height: n.height};
           }
-          cmd += "</PATCH>";
           editor.update(patch, cmd);
         }
         if (thatWin.state==UIState.AreaSelecting) {
@@ -590,10 +591,10 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
             }
 
             maxNodeId++;
-            var cmd = "<PATCH>";
-            cmd += "<NODE componentmode='Hidden' id='"+maxNodeId+"' nodename='"+nodename+"' systemname='"+nodename+"' "+(filename!=""?"filename='"+filename+"'":"")+">";
-            cmd += "<BOUNDS type='Node' left='"+x*15+"' top='"+y*15+"' width='100' height='100'/>";
-            cmd += "</NODE>";
+            var cmd = {syncmode: 'diff', nodes: {}, links: []};
+            cmd.nodes[maxNodeId] = {nodename: nodename, x: x*15, y: y*15, width: 100, height: 100};
+            if (filename!="")
+              cmd.nodes[maxNodeId].filename = filename;
             editor.update(patch, cmd);
 
             $nodeselection.remove();
@@ -605,6 +606,10 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
             cmd += "<BOUNDS type='Node' left='"+x*15+"' top='"+y*15+"' width='100' height='100'/>";
             cmd += "<PIN pinname='Input String' values='|"+filtertext+"|'/>";
             cmd += "</NODE>";
+            // TODO: Why does this not work with a cmd object?
+            //var cmd = {syncmode: 'diff', nodes: {}, links: []};
+            //cmd.nodes[maxNodeId] = {nodename: "IOBox (String)", x: x*15, y: y*15, width: 100, height: 100};
+            //cmd.nodes[maxNodeId].pins = {"Input String": filtertext};
             editor.update(patch, cmd);
 
             $nodeselection.remove();
@@ -687,22 +692,21 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
       $(thatWin.window.document).keydown(function(e) {
         // DELETE key
         if (e.which==46 && selectedNodes.length>0) {
-          var cmd = "<PATCH>";
+          var cmd = {syncmode: 'diff', nodes: {}, links: []};
           for (var i=0; i<selectedNodes.length; i++) {
             var n = selectedNodes[i];
-            cmd += "<NODE id='"+selectedNodes[i].id+"' deleteme='pronto'/>";
+            cmd.nodes[selectedNodes[i].id] = {delete: true};
             _(n.inputPins).each(function(pin) {
               _(pin.links).each(function(l) {
-                cmd += "<LINK deleteme='pronto' srcnodeid='"+l.fromPin.node.id+"' srcpinname='"+l.fromPin.pinname+"' dstnodeid='"+l.toPin.node.id+"' dstpinname='"+l.toPin.pinname+"'/>";
+                cmd.links.push({delete: true, srcnodeid: l.fromPin.node.id, srcpinname: l.fromPin.pinname, dstnodeid: l.toPin.node.id, dstpinname: l.toPin.pinname})
               });
             })
             _(n.outputPins).each(function(pin) {
               _(pin.links).each(function(l) {
-                cmd += "<LINK deleteme='pronto' srcnodeid='"+l.fromPin.node.id+"' srcpinname='"+l.fromPin.pinname+"' dstnodeid='"+l.toPin.node.id+"' dstpinname='"+l.toPin.pinname+"'/>";
+                cmd.links.push({delete: true, srcnodeid: l.fromPin.node.id, srcpinname: l.fromPin.pinname, dstnodeid: l.toPin.node.id, dstpinname: l.toPin.pinname})
               });
             })
           }
-          cmd += "</PATCH>";
 
           editor.update(patch, cmd);
           selectedNodes = [];
@@ -1134,12 +1138,11 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           }
 
           if ($(this).find('.vvvv-connection-highlight').length==1) {
-            var cmd = "<PATCH>";
+            var cmd = {syncmode: 'diff', nodes: {}, links: []};
             _(dstPin.links).each(function(l) {
-              cmd += "<LINK deleteme='pronto' srcnodeid='"+l.fromPin.node.id+"' srcpinname='"+l.fromPin.pinname+"' dstnodeid='"+l.toPin.node.id+"' dstpinname='"+l.toPin.pinname+"'/>";
+              cmd.links.push({delete: true, srcnodeid: l.fromPin.node.id, srcpinname: l.fromPin.pinname, dstnodeid: l.toPin.node.id, dstpinname: l.toPin.pinname});
             });
-            cmd += "<LINK createme='pronto' srcnodeid='"+srcPin.node.id+"' srcpinname='"+srcPin.pinname+"' dstnodeid='"+dstPin.node.id+"' dstpinname='"+dstPin.pinname+"'/>";
-            cmd += "</PATCH>";
+            cmd.links.push({srcnodeid: srcPin.node.id, srcpinname: srcPin.pinname, dstnodeid: dstPin.node.id, dstpinname: dstPin.pinname});
 
             editor.update(patch, cmd);
 
@@ -1158,7 +1161,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
       chart.selectAll('g.vvvv-link')
         .on("contextmenu", function(d) {
           if (thatWin.state == UIState.Idle)
-            editor.update(patch, "<PATCH><LINK deleteme='pronto' srcnodeid='"+d.fromPin.node.id+"' srcpinname='"+d.fromPin.pinname+"' dstnodeid='"+d.toPin.node.id+"' dstpinname='"+d.toPin.pinname+"'/></PATCH>")
+            editor.update(patch, {syncmode: 'diff', nodes: {}, links: [{delete: true, srcnodeid: d.fromPin.node.id, srcpinname: d.fromPin.pinname, dstnodeid: d.toPin.node.id, dstpinname: d.toPin.pinname}]});
 
           d3.event.preventDefault();
         })
@@ -1427,6 +1430,8 @@ BrowserEditor.Interface = function() {
       patches[path][i].afterUpdate();
     }
     if (patches[path][0].serverSync.isConnected()) {
+      if (typeof cmd == 'object')
+        cmd = JSON.stringify(cmd);
       patches[path][0].serverSync.sendPatchUpdate(patches[path][0], cmd);
     }
   }

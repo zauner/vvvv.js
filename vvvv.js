@@ -106,7 +106,7 @@ VVVVNodeContext.init = function (path_to_vvvv, mode, callback) {
   VVVVContext.DocumentRoot = path.resolve(path.dirname(process.mainModule.filename));
   VVVVContext.ServerRoot = path.resolve(path.dirname(process.mainModule.filename));
   VVVVContext.Root = VVVVContext.ServerRoot+'/'+VVVVContext.Root; // TODO: ServerRoot or DocumentRoot ?
-  var jsdom = require(VVVVContext.Root+'/node_modules/jsdom');
+  var jsdom = require('jsdom');
   jsdom.env('<html></html>', function(err, w) {
     global.window = w;
     global.document = w.document;

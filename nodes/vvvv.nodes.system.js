@@ -354,7 +354,9 @@ VVVV.Nodes.DefineNode = function(id, graph) {
           VVVV.NodeLibrary[currentName.toLowerCase()] = f;
           for (var i=0; i<this.relatedNodes.length; i++) {
             var n = this.relatedNodes[i];
-            n.parentPatch.doLoad("<PATCH><NODE id='"+n.id+"' systemname='"+currentName+"' createme='pronto'><BOUNDS type='Node' left='"+(n.x*15)+"' top='"+(n.y*15)+"'></BOUNDS></NODE></PATCH>", function() { n.parentPatch.afterUpdate(); });
+            var cmd = {syncmode: 'diff', nodes: {}, links: []};
+            cmd.nodes[n.id] = {create: true, nodename: currentName, x: n.x*15, y: n.y*15}
+            n.parentPatch.doLoad(cmd, function() { n.parentPatch.afterUpdate(); });
           }
           if (VVVV.NodeNames.indexOf(currentName)>=0)
             VVVV.NodeNames.splice(VVVV.NodeNames.indexOf(currentName), 1);
