@@ -397,8 +397,11 @@ VVVV.Nodes.DefineNode = function(id, graph) {
           return;
         }
         thatNode.showStatus('notice', 'Compiling ...');
-        sourceCodeIn.setValue(0, $('textarea', w.document).val()); // setValue implicitly calls configure
-        thatNode.parentPatch.editor.update(thatNode.parentPatch, "<PATCH><NODE id='"+thatNode.id+"'><PIN pinname='Source Code' values='|"+$('textarea', w.document).val().replace(/\|/g, "||").replace(/'/g, '&apos;').replace(/</g, '&lt;').replace(/>/g, '&gt;')+"|'/></NODE></PATCH>");
+        //sourceCodeIn.setValue(0, $('textarea', w.document).val()); // setValue implicitly calls configure
+        var cmd = {syncmode: 'diff', nodes: {}, links: []};
+        cmd.nodes[thatNode.id] = {pins: {}};
+        cmd.nodes[thatNode.id].pins['Source Code'] = {values: [$('textarea', w.document).val()]};
+        thatNode.parentPatch.editor.update(thatNode.parentPatch, cmd);
       });
       w.focus();
     }, 500);
