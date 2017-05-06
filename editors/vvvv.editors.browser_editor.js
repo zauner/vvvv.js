@@ -849,7 +849,13 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
       .attr('fill', 'white')
 
     nodes.append('svg:text')
-      .text(function(d) { return (d.invisiblePins["Node Name"] && d.nodename=="DefineNode (System)") ? d.invisiblePins["Node Name"].getValue(0) : null })
+      .text(function(d) {
+        if (d.invisiblePins["Node Name"] && d.nodename=="DefineNode (System)")
+          return d.invisiblePins["Node Name"].getValue(0);
+        if (d.invisiblePins["Effect Descriptor"] && d.nodename=="DefineEffect (DX9)")
+          return d.invisiblePins["Effect Descriptor"].getValue(0);
+        return null;
+      })
       .attr('class', 'vvvv-node-descriptive-name')
       .attr('shape-rendering', 'crispEdges')
       .attr('dy', function(d) { return d.getHeight()+12 })

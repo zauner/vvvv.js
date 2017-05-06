@@ -1567,7 +1567,11 @@ VVVV.Nodes.GenericShader = function(id, graph) {
 
   var thatNode = this;
 
-  this.initialize = function() {
+  var configured_once = false;
+
+  this.configure = function() {
+    if (configured_once)
+      return;
 
     // add the pins which have already been added (by the patch XML) to the shaderPins array
     var defaultPins = ["Render State", "Mesh", "Transform", "Technique"];
@@ -1581,10 +1585,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     if (VVVV.ShaderCodeResources[thatNode.shaderFile]==undefined) {
       VVVV.ShaderCodeResources[thatNode.shaderFile] = new VVVV.Types.ShaderCodeResource();
       VVVV.ShaderCodeResources[thatNode.shaderFile].addRelatedNode(thatNode);
-      $.ajax({
-        url: VVVV.Helpers.prepareFilePath(thatNode.shaderFile, thatNode.parentPatch),
-        async: false,
-        dataType: 'text',
+      VVVVContext.loadFile(VVVV.Helpers.prepareFilePath(thatNode.shaderFile, thatNode.parentPatch), {
         success: function(response) {
           VVVV.ShaderCodeResources[thatNode.shaderFile].setSourceCode(response);
         },
@@ -1597,7 +1598,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     else {
       VVVV.ShaderCodeResources[thatNode.shaderFile].addRelatedNode(thatNode);
     }
-
+    configured_once = true;
 
   }
 
@@ -2714,13 +2715,13 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
 
   this.auto_evaluate = false;
 
-  var nameIn = this.addInputPin("Effect Descriptor", [''], VVVV.PinTypes.String);
+  var nameIn = this.addInvisiblePin("Effect Descriptor", [''], VVVV.PinTypes.String);
   var sourceCodeIn = this.addInvisiblePin("Source Code", ['#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform mat4 tW : WORLD;\nuniform mat4 tV : VIEW;\nuniform mat4 tP : PROJECTION;\n\nuniform vec4 Color : COLOR = {1.0, 1.0, 1.0, 1.0};\nuniform sampler2D Texture;\nuniform mat4 Texture_Transform;\nuniform float Alpha = 1.0;\n\nvarying vec2 vs2psTexCd;\n\nvertex_shader:\n\nattribute vec3 PosO : POSITION;\nattribute vec2 TexCd : TEXCOORD0;\n\nvoid main(void) {\n  gl_Position = tP * tV * tW * vec4(PosO, 1.0);\n  vs2psTexCd = (Texture_Transform * vec4(TexCd, 0, 1)).xy;\n}\n\n\nfragment_shader:\n\nvoid main(void) {\n  gl_FragColor = Color * texture2D(Texture, vs2psTexCd) * vec4(1.0, 1.0, 1.0, Alpha);\n}'], VVVV.PinTypes.String);
 
   var currentName = '';
   var w; // the UI window
 
-  this.evaluate = function() {
+  this.configure = function() {
     if (nameIn.getValue(0)!='') {
       if (nameIn.pinIsChanged()) {
         var descriptor = nameIn.getValue(0);
@@ -2746,6 +2747,10 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
     }
   }
 
+  this.evaluate = function() {
+    // nix
+  }
+
   this.openUIWindow = function() {
     w = window.open(location.protocol+'//'+location.host+(VVVVContext.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVVContext.Root+"/code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
     var thatNode = this;
@@ -2760,7 +2765,11 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
           thatNode.showStatus('error', 'Please provide a name for this shader first');
           return;
         }
-        sourceCodeIn.setValue(0, $('textarea', w.document).val());
+        //sourceCodeIn.setValue(0, $('textarea', w.document).val());
+        var cmd = {syncmode: 'diff', nodes: {}, links: []};
+        cmd.nodes[thatNode.id] = {pins: {}};
+        cmd.nodes[thatNode.id].pins['Source Code'] = {values: [$('textarea', w.document).val()]};
+        thatNode.parentPatch.editor.update(thatNode.parentPatch, cmd);
         if (VVVV.ShaderCodeResources[currentName].relatedNodes.length>0) {
           thatNode.showStatus('notice', 'Compiling ...');
           thatNode.evaluate();
