@@ -201,8 +201,8 @@ define(function(require,exports) {
 
       var $windowBounds = $xml.find('BOUNDS[type="Window"]').first();
       if ($windowBounds.length>0) {
-        cmd.width = $windowBounds.attr('width');
-        cmd.height = $windowBounds.attr('height');
+        cmd.windowWidth = $windowBounds.attr('width');
+        cmd.windowHeight = $windowBounds.attr('height');
       }
 
       $xml.find('NODE').each(function() {
@@ -278,9 +278,9 @@ define(function(require,exports) {
 
       //syncmode = "complete";
 
-      if (cmd.width) {
-        thisPatch.windowWidth = cmd.width / 15;
-        thisPatch.windowHeight = cmd.height / 15;
+      if (cmd.windowWidth) {
+        thisPatch.windowWidth = cmd.windowWidth / 15;
+        thisPatch.windowHeight = cmd.windowHeight / 15;
       }
 
       if (cmd.syncmode=='complete')
@@ -795,13 +795,11 @@ define(function(require,exports) {
       var obj = {};
       for ( var prop in this ) {
         switch (prop) {
-          case "width":
-          case "height":
           case "nodename": obj[prop] = this[prop]; break;
           case "x": obj.left = this.x; break;
           case "y": obj.top = this.y; break;
-          case "windowWidth": obj.width = parseInt(patch.windowWidth * 15); break;
-          case "windowHeight": obj.height = parseInt(patch.windowHeight * 15); break;
+          case "windowWidth": obj.windowWidth = parseInt(patch.windowWidth * 15); break;
+          case "windowHeight": obj.windowHeight = parseInt(patch.windowHeight * 15); break;
           case "linkList": obj.links = this.linkList; break;
           case "nodeMap": obj.nodes = this.nodeMap; break;
           default:
