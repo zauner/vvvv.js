@@ -75,12 +75,12 @@ define(function(require,exports) {
 
     this.sendPatchUpdate = function(patch, command) {
       console.log('patch update ....');
-      var msg = {patch: patch.nodename, command: command};
+      var msg = {patch: VVVV.Helpers.prepareFilePath(patch.nodename, patch.parentPatch), command: command};
       this.socket.send(JSON.stringify(msg));
     }
 
     this.sendPatchSave = function(patch) {
-      var msg = {patch: patch.nodename, save: true};
+      var msg = {patch: VVVV.Helpers.prepareFilePath(patch.nodename, patch.parentPatch), save: true};
       this.socket.send(JSON.stringify(msg));
     }
 
