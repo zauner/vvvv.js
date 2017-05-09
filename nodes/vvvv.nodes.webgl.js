@@ -1582,12 +1582,12 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       }
     })
 
-    if (VVVV.ShaderCodeResources[thatNode.shaderFile]==undefined) {
-      VVVV.ShaderCodeResources[thatNode.shaderFile] = new VVVV.Types.ShaderCodeResource();
-      VVVV.ShaderCodeResources[thatNode.shaderFile].addRelatedNode(thatNode);
+    if (thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile]==undefined) {
+      thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile] = new VVVV.Types.ShaderCodeResource();
+      thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].addRelatedNode(thatNode);
       VVVVContext.loadFile(VVVV.Helpers.prepareFilePath(thatNode.shaderFile, thatNode.parentPatch), {
         success: function(response) {
-          VVVV.ShaderCodeResources[thatNode.shaderFile].setSourceCode(response);
+          thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].setSourceCode(response);
         },
         error: function() {
           console.log('ERROR: Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVVContext.Root));
@@ -1596,7 +1596,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       });
     }
     else {
-      VVVV.ShaderCodeResources[thatNode.shaderFile].addRelatedNode(thatNode);
+      thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].addRelatedNode(thatNode);
     }
     configured_once = true;
 
@@ -1743,12 +1743,12 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     if (!shader.isSetup || this.contextChanged || techniqueIn.pinIsChanged()) {
       this.setupShader();
       if (shader.setup(gl)) {
-        if (VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode)
-          VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode.showStatus('success', "Successfully compiled");
+        if (thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].definingNode)
+          thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].definingNode.showStatus('success', "Successfully compiled");
       }
       else {
-        if (VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode)
-          VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode.showStatus('error', shader.log);
+        if (thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].definingNode)
+          thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].definingNode.showStatus('error', shader.log);
       }
     }
 
@@ -1839,8 +1839,8 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   }
 
   this.openUIWindow = function() {
-    if (VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode)
-      VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode.openUIWindow();
+    if (thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].definingNode)
+      thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].definingNode.openUIWindow();
   }
 
 
@@ -2720,6 +2720,7 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
 
   var currentName = '';
   var w; // the UI window
+  var thatNode = this;
 
   this.configure = function() {
     if (nameIn.getValue(0)!='') {
@@ -2728,21 +2729,21 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
         if (descriptor=='')
           return;
         if (currentName=='') { // if is set for the first time
-          if (VVVV.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx']==undefined)
-            VVVV.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx'] = new VVVV.Types.ShaderCodeResource();
+          if (thatNode.parentPatch.executionContext.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx']==undefined)
+            thatNode.parentPatch.executionContext.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx'] = new VVVV.Types.ShaderCodeResource();
         }
         else
-          VVVV.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx'] = VVVV.ShaderCodeResources[currentName];
+          thatNode.parentPatch.executionContext.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx'] = thatNode.parentPatch.executionContext.ShaderCodeResources[currentName];
         currentName = "./"+descriptor+'.vvvvjs.fx';
-        VVVV.ShaderCodeResources[currentName].definingNode = this;
-        VVVV.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(0));
+        thatNode.parentPatch.executionContext.ShaderCodeResources[currentName].definingNode = this;
+        thatNode.parentPatch.executionContext.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(0));
         if (w)
           $('#path', w.document).text((this.parentPatch.nodename || 'root')+' / '+(currentName!='' ? currentName : 'Untitled'));
       }
 
       if (sourceCodeIn.pinIsChanged()) {
-        if (VVVV.ShaderCodeResources[currentName])
-          VVVV.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(0));
+        if (thatNode.parentPatch.executionContext.ShaderCodeResources[currentName])
+          thatNode.parentPatch.executionContext.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(0));
       }
     }
   }
@@ -2770,7 +2771,7 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
         cmd.nodes[thatNode.id] = {pins: {}};
         cmd.nodes[thatNode.id].pins['Source Code'] = {values: [$('textarea', w.document).val()]};
         thatNode.parentPatch.editor.update(thatNode.parentPatch, cmd);
-        if (VVVV.ShaderCodeResources[currentName].relatedNodes.length>0) {
+        if (thatNode.parentPatch.executionContext.ShaderCodeResources[currentName].relatedNodes.length>0) {
           thatNode.showStatus('notice', 'Compiling ...');
           thatNode.evaluate();
         }

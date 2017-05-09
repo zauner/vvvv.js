@@ -117,7 +117,7 @@ define(function(require,exports) {
               continue;
             pinValues[edgePins[node_id][i].pinname] = edgePins[node_id][i].values;
             if (pinValues[edgePins[node_id][i].pinname].length==0) {
-              console.log('WTF?');
+              console.log('Glitch?');
             }
             changedPins++;
             edgePins[node_id][i].syncInitialized = true;

@@ -58,8 +58,17 @@ define(function(require,exports) {
 
     this.setupObject();
 
-    if (parentPatch)
+    if (parentPatch) {
       this.parentPatch = parentPatch;
+      this.executionContext = parentPatch.executionContext;
+    }
+    else {
+      this.executionContext = {ShaderCodeResources: {}};
+      // TODO: this is a hack to fill the shader code resources in the execution context with the ones defined in nodes.webgl.js; seems wrong though
+      for (var resourceId in VVVV.ShaderCodeResources) {
+        this.executionContext.ShaderCodeResources[resourceId] = VVVV.ShaderCodeResources[resourceId];
+      }
+    }
     if (id)
       this.id = id;
 

@@ -541,7 +541,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           var filter = $nodeselection.find('#node_filter').val().toLowerCase();
           if (filter!="")
             $('.makro', thatWin.window.document).remove();
-          var available_nodes = VVVV.NodeNames.concat(_(VVVV.ShaderCodeResources).map(function(s,k) { return k.replace("%VVVV%/effects/", ""); }));
+          var available_nodes = VVVV.NodeNames.concat(_(p.executionContext.ShaderCodeResources).map(function(s,k) { return k.replace("%VVVV%/effects/", ""); }));
           var matchingNodes = _(_(available_nodes).filter(function(n) { return VVVV.Helpers.translateOperators(n).toLowerCase().indexOf(filter)>=0 })).sortBy(function(n) { return n.toLowerCase().indexOf(filter);  });
           for (var i=0; i<matchingNodes.length; i++) {
             $nodeselectionlist.append($('<option>'+matchingNodes[i]+'</option>'));
