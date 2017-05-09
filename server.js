@@ -176,3 +176,15 @@ VVVVContext.init('./', 'full', function (vvvv) {
 
 
 });
+
+if (argv.mode=='app') {
+  var bl = require('james-browser-launcher');
+  bl(function(err, launch) {
+    launch('http://localhost:'+http_port, {browser: 'chrome'}, function(err, instance) {
+      console.log('Launched Chrome');
+      instance.on('stop', function(code) {
+        process.exit();
+      })
+    })
+  });
+}

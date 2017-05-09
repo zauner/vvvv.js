@@ -6,7 +6,7 @@
   "dependencies": {
     "amdefine": "=1.0.0",
     "minimist": "*",
-    "browser-launcher2": "*",
+    "james-browser-launcher": "*",
     "cheerio": "=0.22.0",
     "express": "*",
     "finalhandler": "*",
