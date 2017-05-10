@@ -93,6 +93,21 @@ VVVVBrowserContext.loadFile = function(filename, opts) {
   })
 }
 
+VVVVBrowserContext.loadDependency = function(name, callback) {
+  console.log('loading dependency ', name);
+  $.ajax({
+    url: name,
+    type: 'get',
+    dataType: 'script',
+    success: function() {
+      if (typeof callback == 'function') callback.call();
+    },
+    error: function() {
+      if (typeof callback == 'function') callback.call();
+    }
+  })
+}
+
 VVVVBrowserContext.getRelativeRequire = function(system_require) {
   return system_require;
 }
@@ -129,6 +144,25 @@ VVVVNodeContext.loadFile = function(filename, opts) {
   }
   if (typeof opts.success === 'function')
     opts.success.call(window, data);
+}
+
+VVVVNodeContext.loadDependency = function(name, callback) {
+  var npm = require('npm');
+  console.log('loading dependency ', name);
+  npm.load({loglevel: 'silent'}, function(err) {
+    if (err)
+      console.log(err);
+    else {
+      npm.commands.install([name], function(err) {
+        if (err)
+          console.log(err);
+        else {
+          if (typeof callback == 'function')
+            callback.call();
+        }
+      })
+    }
+  })
 }
 
 VVVVNodeContext.getRelativeRequire = function(system_require) {

@@ -19,6 +19,8 @@ define(function(require, exports) {
   exports.NodeNames = defs.NodeNames;
   exports.Editors = defs.Editors;
 
+  require('thirdparty.js');
+
   require('mainloop/vvvv.dominterface');
   require('types/vvvv.shared_types');
   require('nodes/vvvv.nodes.value');
@@ -32,7 +34,7 @@ define(function(require, exports) {
   require('nodes/vvvv.nodes.system');
   require('nodes/vvvv.nodes.canvas');
   require('nodes/vvvv.nodes.html5');
-  //require('nodes/vvvv.nodes.audio');
+  require('nodes/vvvv.nodes.audio');
   require('nodes/vvvv.nodes.transform');
   require('nodes/vvvv.nodes.vectors');
   require('nodes/vvvv.nodes.webgl');

@@ -329,19 +329,29 @@ define(function(require,exports) {
             // load 3rd party libs, if required for this node
             if (VVVV.NodeLibrary[nodename.toLowerCase()].requirements) {
               _(VVVV.NodeLibrary[nodename.toLowerCase()].requirements).each(function(libname) {
-                if (VVVV.LoadedLibs[libname]===undefined) {
-                  thisPatch.resourcesPending++; // pause patch evaluation
-                  VVVV.loadScript(VVVV.ThirdPartyLibs[libname], function() {
-                    thisPatch.resourcesPending--; // resume patch evaluation
-                    VVVV.LoadedLibs[libname]=VVVV.ThirdPartyLibs[libname];
-                    updateLinks(cmd);
-                    thisPatch.afterUpdate();
-                    thisPatch.compile();
-                    if (thisPatch.resourcesPending<=0 && thisPatch.ready_callback && parsingComplete) {
-                      thisPatch.ready_callback();
-                      thisPatch.ready_callback = undefined;
-                    }
-                  });
+                if (VVVVContext.LoadedLibs[libname]===undefined) {
+                  (function(node) {
+                    if (n.environments && n.environments.indexOf(VVVVContext.name)<0)
+                      return;
+                    var dep;
+                    if (VVVVContext.name=='nodejs')
+                      dep = libname;
+                    else if (VVVVContext.name=='browser')
+                      dep = VVVVContext.ThirdPartyLibs[libname]
+                    thisPatch.resourcesPending++; // pause patch evaluation
+                    VVVVContext.loadDependency(dep, function() {
+                      thisPatch.resourcesPending--; // resume patch evaluation
+                      node.initialize();
+                      VVVVContext.LoadedLibs[libname]=true;
+                      updateLinks(cmd);
+                      thisPatch.afterUpdate();
+                      thisPatch.compile();
+                      if (thisPatch.resourcesPending<=0 && thisPatch.ready_callback && parsingComplete) {
+                        thisPatch.ready_callback();
+                        thisPatch.ready_callback = undefined;
+                      }
+                    });
+                  })(n);
                 }
               });
             }
@@ -537,7 +547,7 @@ define(function(require,exports) {
           }
 
           n.configure();
-          if (!n.environments || n.environments.indexOf(VVVVContext.name)>=0)
+          if (!n.environments || n.environments.indexOf(VVVVContext.name)>=0 && thisPatch.resourcesPending==0)
             n.initialize();
 
           if (nodeToReplace) { // copy in- and output pins from node which is being replaced

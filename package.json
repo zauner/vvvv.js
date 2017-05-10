@@ -6,14 +6,13 @@
   "dependencies": {
     "amdefine": "=1.0.0",
     "minimist": "*",
+    "npm": "*",
     "james-browser-launcher": "*",
     "cheerio": "=0.22.0",
-    "express": "*",
     "finalhandler": "*",
     "jsdom": "=7.0.2",
     "nodejs-websocket": "*",
-    "serve-static": "*",
-    "sqlite3": "*"
+    "serve-static": "*"
   },
   "version": "2.0.0-alpha.1"
 }

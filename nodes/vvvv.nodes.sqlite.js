@@ -82,6 +82,7 @@ VVVV.Nodes.DatabaseSQLite = function(id, graph) {
 
 }
 VVVV.Nodes.DatabaseSQLite.prototype = new Node();
+VVVV.Nodes.DatabaseSQLite.requirements = ['sqlite3'];
 
 
 /*
@@ -201,6 +202,7 @@ VVVV.Nodes.SelectSQLite = function(id, graph) {
 
 }
 VVVV.Nodes.SelectSQLite.prototype = new Node();
+VVVV.Nodes.SelectSQLite.requirements = ['sqlite3'];
 
 
 /*
@@ -276,6 +278,7 @@ VVVV.Nodes.InsertSQLite = function(id, graph) {
 
 }
 VVVV.Nodes.InsertSQLite.prototype = new Node();
+VVVV.Nodes.InsertSQLite.requirements = ['sqlite3'];
 
 
 /*
@@ -350,6 +353,7 @@ VVVV.Nodes.UpdateSQLite = function(id, graph) {
 
 }
 VVVV.Nodes.UpdateSQLite.prototype = new Node();
+VVVV.Nodes.UpdateSQLite.requirements = ['sqlite3'];
 
 
 /*
@@ -422,6 +426,7 @@ VVVV.Nodes.DeleteSQLite = function(id, graph) {
 
 }
 VVVV.Nodes.DeleteSQLite.prototype = new Node();
+VVVV.Nodes.DeleteSQLite.requirements = ['sqlite3'];
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

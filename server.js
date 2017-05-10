@@ -174,6 +174,27 @@ VVVVContext.init('./', 'full', function (vvvv) {
     })
   }).listen(5001)
 
+  if (argv.e && VVVVContext.name=='nodejs')  {
+    var npm = require('npm');
+    console.log('Checking for installed Node.js packages ...')
+    npm.load({loglevel: 'silent', depth: 0}, function(err) {
+      if (err)
+        console.log(err);
+      else {
+        npm.commands.list([], function(err, res) {
+          if (err && err.indexOf("extraneous")!==0) {
+            console.log('Fehler',err);
+            return;
+          }
+          for (var package_name in res.dependencies) {
+            VVVVContext.LoadedLibs[package_name] = true;
+          }
+          console.log('done.\n');
+        })
+      }
+    })
+  }
+
 
 });
 
