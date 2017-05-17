@@ -3,7 +3,7 @@ h1{
 }
 
 .background{
-  fill: #e6e6e6; 
+  fill: #e6e6e6;
 }
 
 .vvvv-node.selected .vvvv-node-background{
@@ -63,4 +63,43 @@ h1{
   width:300px;
   border:1px solid black;
   margin: 0;
+}
+
+.modal{
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color:rgba(191, 191, 191, 0.88);
+  font-family: "Lucida Sans Unicode", sans-serif;
+}
+
+.modal .modal-contents{
+  width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 60px;
+}
+
+.modal label{
+  margin-right: 15px;
+}
+
+.modal input{
+  padding:4px;
+  border-radius:2px;
+  border: 0;
+}
+
+.modal input.button{
+  background: #888;
+  color:white;
+  width: 70px;
+  margin-left: 5px;
+}
+
+.modal input.button.cancel{
+  background:#c70000;
+  width: 30px;
 }

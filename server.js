@@ -6,6 +6,7 @@ var serveStatic = require('serve-static')
 require('./vvvv.js')
 var ws = require("nodejs-websocket");
 var fs = require("fs");
+var vvvvjsservices = require('./backend/vvvvjs-services');
 
 var argv = require('minimist')(process.argv);
 
@@ -27,7 +28,7 @@ try {
   var appconf = JSON.parse(fs.readFileSync(process.cwd()+"/vvvvjsapp.json"));
   if (appconf.externalHandlers) {
     for (var i=0; i<appconf.externalHandlers.length; i++) {
-        VVVVContext.externalHandlers.push(require(process.cwd()+"/"+appconf.externalHandlers[i]));
+      VVVVContext.externalHandlers.push(require(process.cwd()+"/"+appconf.externalHandlers[i]));
     }
   }
   if (appconf.httpHostname)
@@ -39,6 +40,12 @@ catch (e) { console.error(e.message)};
 
 var server = http.createServer(function(req, res) {
   var match;
+  if (match = /^\/vvvvjs-service\/([^\?]+)/.exec(req.url)) {
+    if (match[1]=="create_subpatch") {
+      vvvvjsservices.createSubpatch(req, res);
+      return;
+    }
+  }
   for (var i=0; i<VVVVContext.externalHandlers.length; i++) {
     if (VVVVContext.externalHandlers[i].process(req,res)) {
       return;

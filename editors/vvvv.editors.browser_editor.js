@@ -539,8 +539,10 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
         function filterNodes(e) {
           $nodeselectionlist.empty();
           var filter = $nodeselection.find('#node_filter').val().toLowerCase();
-          if (filter!="")
+          if (filter!="") {
             $('.makro', thatWin.window.document).remove();
+            $('.subpatch_controls', thatWin.window.document).remove();
+          }
           var available_nodes = VVVV.NodeNames.concat(_(p.executionContext.ShaderCodeResources).map(function(s,k) { return k.replace("%VVVV%/effects/", ""); }));
           var matchingNodes = _(_(available_nodes).filter(function(n) { return VVVV.Helpers.translateOperators(n).toLowerCase().indexOf(filter)>=0 })).sortBy(function(n) { return n.toLowerCase().indexOf(filter);  });
           for (var i=0; i<matchingNodes.length; i++) {
@@ -629,6 +631,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
 
               $nodeselection.remove();
               $('.makro', thatWin.window.document).remove();
+              $('.resettable', thatWin.window.document).remove();
             })
 
         makros.append('svg:rect')
@@ -644,6 +647,68 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           .attr('font-family', 'Lucida Sans Unicode')
           .attr('dy', 12)
           .attr('dx', 40)
+
+        if (patch.serverSync) {
+          var subpatch_controls = chart.selectAll('g.subpatch_controls')
+            .data(["New Subpatch ..."])
+            .enter().append('svg:g')
+              .attr('class', 'subpatch_controls resettable')
+              .attr('transform', function(d, i) { return 'translate('+x+', '+(y-25*(i+1))+')'; })
+              .on('click', function(d, i) {
+                $nodeselection.remove();
+                $('.resettable', thatWin.window.document).remove();
+                var modal = $('<div class="modal resettable"><div class="modal-contents"><h1>New Supatch</h1><label>Filename:</label><input onload="this.focus()" type="text" id="new_subpatch_name" value="supersubsub.v4p"/></div></div>');
+                var create_subpatch_button = $('<input class="button" type="button" value="OK"/>');
+                var cancel_button = $('<input class="button cancel" type="button" value="X"/>');
+                modal.find('.modal-contents').append(create_subpatch_button);
+                modal.find('.modal-contents').append(cancel_button);
+                $('body', thatWin.window.document).append(modal);
+                modal.find('#new_subpatch_name').on('focus', function() { this.setSelectionRange(0, 11) });
+
+                cancel_button.click(function(e) {
+                  $('.resettable', thatWin.window.document).remove();
+                });
+                create_subpatch_button.click(function() {
+                  $('.resettable', thatWin.window.document).remove();
+                  var filename = modal.find('#new_subpatch_name').val();
+                  if (filename=="")
+                    return;
+                  $.ajax({
+                    url: '/vvvvjs-service/create_subpatch',
+                    type: 'get',
+                    dataType: 'json',
+                    data: {filename: location.pathname+"/"+VVVV.Helpers.prepareFilePath(filename, patch)},
+                    success: function(response) {
+                      if (response.status!="OK") {
+                        alert(response.message);
+                        return;
+                      }
+                      maxNodeId++;
+                      var cmd = {syncmode: 'diff', nodes: {}, links: []};
+                      cmd.nodes[maxNodeId] = {nodename: filename, filename: filename, x: x*15, y: y*15, width: 100, height: 100};
+                      editor.update(patch, cmd);
+                    },
+                    error: function(response) {
+                      alert(response.message);
+                    }
+                  })
+                });
+              })
+
+            subpatch_controls.append('svg:rect')
+              .attr('width', 90)
+              .attr('height', 20)
+              .attr('fill', '#AAA')
+
+            subpatch_controls.append('svg:text')
+              .text(function(d) { return d })
+              .attr('text-anchor', 'middle')
+              .attr('fill', '#333')
+              .attr('font-size', 10)
+              .attr('font-family', 'Lucida Sans Unicode')
+              .attr('dy', 12)
+              .attr('dx', 43)
+        }
 
       })
       .on('mousedown', function() {

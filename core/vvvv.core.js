@@ -19,7 +19,7 @@ define(function(require, exports) {
   exports.NodeNames = defs.NodeNames;
   exports.Editors = defs.Editors;
 
-  require('thirdparty.js');
+  require('thirdparty');
 
   require('mainloop/vvvv.dominterface');
   require('types/vvvv.shared_types');
