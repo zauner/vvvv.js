@@ -29,6 +29,10 @@ define(function(require,exports) {
           success_callback.call(root_patch);
       }
 
+      this.socket.onclose = function() {
+        VVVVContext.onConnectionLost.call();
+      }
+
       var messageQueue = {};
       this.processMessage = function(patchIdentifier) {
         var p = that.patchRegistry[patchIdentifier];

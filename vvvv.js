@@ -195,6 +195,10 @@ VVVVContext.onLowFrameRate = function() {
 
 }
 
+VVVVContext.onConnectionLost = function() {
+  alert('Connection to backend process lost. Please reload');
+}
+
 /**
  * Fired when a node is being created that is not implemented
  * @param {String} nodename the name of the node which is not implemented
