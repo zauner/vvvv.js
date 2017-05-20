@@ -19,6 +19,37 @@ var UIState = {
   'PinDragging': 6
 }
 
+function getAllUpstreamNodes(origin_node, node) {
+  if (node==undefined)
+    node = origin_node;
+  var upnodes = [];
+  var u = node.getUpstreamNodes();
+  for (var j=0; j<u.length; j++) {
+    if (u[j]!=origin_node && !u[j].delays_output) {
+      upnodes.push(u[j]);
+      upnodes = upnodes.concat(getAllUpstreamNodes(origin_node, u[j]));
+    }
+  }
+  return upnodes;
+}
+
+function getAllDownstreamNodes(origin_node, node) {
+  if (node==undefined)
+    node = origin_node;
+  var upnodes = [];
+  var u = node.getDownstreamNodes();
+  for (var j=0; j<u.length; j++) {
+    if (u[j]!=origin_node && !u[j].delays_output) {
+      upnodes.push(u[j]);
+      upnodes = upnodes.concat(getAllDownstreamNodes(origin_node, u[j]));
+    }
+  }
+  return upnodes;
+}
+
+var defaultOpacity = 0.85;
+var blurredOpacity = 0.35;
+
 VVVV.PinTypes.Value.makeLabel = VVVV.PinTypes.String.makeLabel = function(element, node) {
   var rowCount = node.IOBoxRows();
   var sliceCount = node.IOBoxInputPin().getSliceCount();
@@ -297,9 +328,10 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
   var pageURL = location.protocol+'//'+location.host+(VVVVContext.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVVContext.Root+'/patch.html';
   var modKeyPressed = {CTRL: false, SHIFT: false, ALT: false};
   var selectionBB = {x1: 0, y1: 0, x2: 0, y2: 0};
+  var relatedNodes = [];
 
   if (!selector)
-    this.window = window.open(pageURL, p.nodename, "location=no, width="+p.windowWidth+", height="+p.windowHeight+", toolbar=no" );
+    this.window = window.open(pageURL, p.nodename, "location=no, left=250, width="+p.windowWidth+", height="+p.windowHeight+", toolbar=no" );
   else
     this.window = window;
 
@@ -307,6 +339,11 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
     chart.selectAll('.vvvv-node.selected')
       .attr('class', function(d) { return d.isIOBox? 'vvvv-node vvvv-iobox' : 'vvvv-node' })
     selectedNodes = [];
+    relatedNodes = [];
+    chart.selectAll('.vvvv-node')
+      .attr('opacity', defaultOpacity);
+    chart.selectAll('.vvvv-link')
+      .attr('opacity', 1.0);
   }
 
   var thatWin = this;
@@ -448,14 +485,25 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
             .attr('transform', function(d) { return 'translate('+(d.x+dx)+','+(d.y+dy)+')' })
           for (var i=0; i<selectedNodes.length; i++) {
             var n = selectedNodes[i];
-            chart.selectAll('.vvvv-link line')
-              .filter(function(d) { return d.fromPin.node.id == n.id })
-              .attr('x1', function(d) { return d.fromPin.x + d.fromPin.node.x + dx })
-              .attr('y1', function(d) { return d.fromPin.y + d.fromPin.node.y + dy })
-            chart.selectAll('.vvvv-link line')
-              .filter(function(d) { return d.toPin.node.id == n.id })
-              .attr('x2', function(d) { return d.toPin.x + d.toPin.node.x + dx })
-              .attr('y2', function(d) { return d.toPin.y + d.toPin.node.y + dy })
+            chart.selectAll('.vvvv-link path')
+              .filter(function(d) { return d.fromPin.node.id == n.id || d.toPin.node.id == n.id })
+              .attr('d', function(d) {
+                var dx1 = dx * (selectedNodes.indexOf(d.fromPin.node)>=0);
+                var dy1 = dy * (selectedNodes.indexOf(d.fromPin.node)>=0);
+                var dx2 = dx * (selectedNodes.indexOf(d.toPin.node)>=0);
+                var dy2 = dy * (selectedNodes.indexOf(d.toPin.node)>=0);
+                var deltaY = d.toPin.node.y + dy2 - (d.fromPin.node.y + dy1) - d.fromPin.node.getHeight();
+                var cy = Math.min(Math.max(deltaY * 0.2, 6), 30);
+                if (deltaY<12 && deltaY>3)
+                  cy = deltaY * 0.5;
+                var smooth = Math.max(0, Math.min(7, (deltaY - 2*cy)/2));
+                return 'M'+(d.fromPin.x + d.fromPin.node.x + 2 + .5 + dx1)+','+(d.fromPin.y + d.fromPin.node.y+ 4 + .5 + dy1)
+                      +' L'+(d.fromPin.x + d.fromPin.node.x + 2 + .5 + dx1)+','+(d.fromPin.y + d.fromPin.node.y + 4 + dy1 + cy)
+                      +' C'+(d.fromPin.x + d.fromPin.node.x + 2 + .5 + dx1)+','+(d.fromPin.y + d.fromPin.node.y + 4 + dy1 + cy + smooth)
+                      +' '+(d.toPin.x + d.toPin.node.x + 2 + .5 + dx2)+','+(d.toPin.y + d.toPin.node.y + dy2 - (cy + smooth))
+                      +' '+(d.toPin.x + d.toPin.node.x + 2 + .5 + dx2)+','+(d.toPin.y + d.toPin.node.y + .5 + dy2 -cy)
+                      +' L'+(d.toPin.x + d.toPin.node.x + 2 + .5 + dx2)+','+(d.toPin.y + d.toPin.node.y + .5 + dy2)
+              })
           }
         }
         else if (thatWin.state==UIState.AreaSelecting) {
@@ -871,23 +919,31 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
         })
         .attr('id', function(d) { return 'vvvv-node-'+d.id})
         .attr('transform', function(d) { return 'translate('+d.x+','+d.y+')' })
+        .attr('opacity', function(d) { return (relatedNodes.length>1 && relatedNodes.indexOf(d)<0) ? blurredOpacity : defaultOpacity })
 
     nodes.append('svg:rect')
       .attr('class', 'vvvv-node-background')
       .attr('height', function(d) { return d.getHeight(); })
-      .attr('width', function(d) { return d.getWidth(); })
+      .attr('width', function(d) { return d.getWidth() + 4; })
+      .attr('x', -2)
+      .attr('rx', 2)
+      .attr('ry', 2)
       .attr('fill', function(d) {
         if (d.isComment())
           return 'rgba(0,0,0,0)';
         else if (d.not_implemented)
           return 'rgba(255,0,0,1)';
-        else if (d.inCluster)
-          return 'rgba(255, 255, 0, 1)';
+        else if (d.isIOBox)
+          return '#ddd';
+        //else if (d.inCluster)
+          //return 'rgba(255, 255, 0, 1)';
         else
-          return '#cdcdcd';
+          return '#999';
       })
+      .attr('stroke', function(d) { return d.isIOBox ? '#999' : 'none'})
+      .attr('stroke-width', 1)
 
-    nodes.append('svg:rect')
+    /*nodes.append('svg:rect')
       .attr('class', 'vvvv-node-pinbar')
       .attr('height', function (d) { return d.isIOBox? 2 : 4 })
       .attr('fill', function(d) { return d.isIOBox? "#dddddd" : "#9a9a9a"; })
@@ -898,7 +954,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
       .attr('y',function(d) { return d.isIOBox? d.getHeight() -2 : d.getHeight()-4; })
       .attr('height', function (d) { return d.isIOBox? 2 : 4 })
       .attr('fill', function(d) { return d.isIOBox? "#dddddd" : "#9a9a9a"; })
-      .attr('width', function(d) { return d.getWidth(); })
+      .attr('width', function(d) { return d.getWidth(); })*/
 
     nodes.append('svg:g')
       .attr('class', 'descriptive-name-bg')
@@ -1006,16 +1062,18 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           pinOffset = 0;
           if (_(d.node.inputPins).size()>1)
             pinOffset = (d.node.getWidth()-4)/(_(d.node.inputPins).size()-1);
-          d.y = 0;
+          d.y = -1;
           d.x = i*pinOffset;
           //if (d.node.isIOBox)
           //  d.x = d.node.getWidth() - d.x - 4;
-          return 'translate('+d.x+', 0)';
+          return 'translate('+d.x+', '+d.y+')';
         })
 
     inputPins.append('svg:rect')
       .attr('width', 4)
       .attr('height', 4)
+      .attr('ry', 1)
+      .attr('rx', 1)
       .attr('fill', function(d) { return d.node.isComment() ? 'rgba(0,0,0,0)' : (d.clusterEdge ? '#FFFF00' : '#666666') })
       .on('mouseover', function(d, i) {
         chart.selectAll('#vvvv-node-'+d.node.id+' g.vvvv-input-pin').filter(function(d, j) { return j==i }).each(function() {
@@ -1052,7 +1110,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           pinOffset = 0;
           if (_(d.node.outputPins).size()>1)
             pinOffset = (d.node.getWidth()-4)/(_(d.node.outputPins).size()-1);
-          d.y = d.node.getHeight()-4;
+          d.y = d.node.getHeight()-4+1;
           d.x = i*pinOffset;
           //if (d.node.isIOBox)
           //  d.x = d.node.getWidth() - d.x - 4;
@@ -1062,6 +1120,8 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
     outputPins.append('svg:rect')
       .attr('width', 4)
       .attr('height', 4)
+      .attr('ry', 1)
+      .attr('rx', 1)
       .attr('fill', function(d) { return d.node.isComment() ? 'rgba(0,0,0,0)' : (d.clusterEdge ? '#FFFF00' : '#666666') })
       .on('mouseover', function(d, i) {
         chart.selectAll('#vvvv-node-'+d.node.id+' g.vvvv-output-pin').filter(function(d, j) { return j==i }).each(function() {
@@ -1100,22 +1160,53 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
       .data(patch.linkList)
       .enter().append('svg:g')
         .attr('class', 'vvvv-link')
+        .attr('opacity', function(d) { return (relatedNodes.length>0 && (relatedNodes.indexOf(d.fromPin.node)<0 || relatedNodes.indexOf(d.toPin.node)<0)) ? blurredOpacity : 1.0 })
 
-    links.append('svg:line')
+    links.append('svg:path')
       .attr('stroke', 'rgba(0, 0, 0, 0)')
+      .attr('fill', 'none')
       .attr('stroke-width', 4)
-      .attr('x1', function(d) { return d.fromPin.x + d.fromPin.node.x + 2 + .5 })
-      .attr('y1', function(d) { return d.fromPin.y + d.fromPin.node.y + 4 + .5 })
-      .attr('x2', function(d) { return d.toPin.x + d.toPin.node.x + 2 + .5 })
-      .attr('y2', function(d) { return d.toPin.y + d.toPin.node.y + .5 });
+      .attr('d', function(d) {
+        var deltaY = d.toPin.node.y - d.fromPin.node.y - d.fromPin.node.getHeight();
+        var cy = Math.min(Math.max(deltaY * 0.2, 6), 30);
+        if (deltaY<12 && deltaY>3)
+          cy = deltaY * 0.5;
+        var smooth = Math.max(0, Math.min(7, (deltaY - 2*cy)/2));
+        return 'M'+(d.fromPin.x + d.fromPin.node.x + 2 + .5)+','+(d.fromPin.y + d.fromPin.node.y+ 4 + .5)
+              +' L'+(d.fromPin.x + d.fromPin.node.x + 2 + .5)+','+(d.fromPin.y + d.fromPin.node.y + 4 + cy)
+              +' C'+(d.fromPin.x + d.fromPin.node.x + 2 + .5)+','+(d.fromPin.y + d.fromPin.node.y + 4 + cy + smooth)
+              +' '+(d.toPin.x + d.toPin.node.x + 2 + .5)+','+(d.toPin.y + d.toPin.node.y - (cy + smooth))
+              +' '+(d.toPin.x + d.toPin.node.x + 2 + .5)+','+(d.toPin.y + d.toPin.node.y + .5 - cy)
+              +' L'+(d.toPin.x + d.toPin.node.x + 2 + .5)+','+(d.toPin.y + d.toPin.node.y + .5)
+      })
+      .on('mouseenter', function() {
+        d3.select(this)
+          .attr('stroke-width', 4)
+          .attr('stroke', 'rgba(0, 0, 0, 0.35)')
+      })
+      .on('mouseleave', function() {
+        d3.select(this)
+          .attr('stroke-width', 4)
+          .attr('stroke', 'rgba(0, 0, 0, 0)')
+      })
 
-    links.append('svg:line')
+    links.append('svg:path')
       .attr('stroke', '#000')
+      .attr('fill', 'none')
       .attr('stroke-width', 1)
-      .attr('x1', function(d) { return d.fromPin.x + d.fromPin.node.x + 2 + .5 })
-      .attr('y1', function(d) { return d.fromPin.y + d.fromPin.node.y + 4 + .5 })
-      .attr('x2', function(d) { return d.toPin.x + d.toPin.node.x + 2 + .5 })
-      .attr('y2', function(d) { return d.toPin.y + d.toPin.node.y + .5 });
+      .attr('d', function(d) {
+        var deltaY = d.toPin.node.y - d.fromPin.node.y - d.fromPin.node.getHeight();
+        var cy = Math.min(Math.max(deltaY * 0.2, 6), 30);
+        if (deltaY<12 && deltaY>3)
+          cy = deltaY * 0.5;
+        var smooth = Math.max(0, Math.min(7, (deltaY - 2*cy)/2));
+        return 'M'+(d.fromPin.x + d.fromPin.node.x + 2 + .5)+','+(d.fromPin.y + d.fromPin.node.y+ 4 + .5)
+              +' L'+(d.fromPin.x + d.fromPin.node.x + 2 + .5)+','+(d.fromPin.y + d.fromPin.node.y + 4 + cy)
+              +' C'+(d.fromPin.x + d.fromPin.node.x + 2 + .5)+','+(d.fromPin.y + d.fromPin.node.y + 4 + cy + smooth)
+              +' '+(d.toPin.x + d.toPin.node.x + 2 + .5)+','+(d.toPin.y + d.toPin.node.y - (cy + smooth))
+              +' '+(d.toPin.x + d.toPin.node.x + 2 + .5)+','+(d.toPin.y + d.toPin.node.y + .5 - cy)
+              +' L'+(d.toPin.x + d.toPin.node.x + 2 + .5)+','+(d.toPin.y + d.toPin.node.y + .5)
+      })
 
     // set descriptive name widths after rendering
     $('.descriptive-name-bg rect', thatWin.window.document).each(function() {
@@ -1167,19 +1258,8 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
             var targetDir = 'output';
 
           var upnodes = [];
-          function getAllUpstreamNodes(node) {
-            var u = node.getUpstreamNodes();
-            for (var j=0; j<u.length; j++) {
-              if (u[j]!=linkStart.node && !u[j].delays_output) {
-                upnodes.push(u[j]);
-                getAllUpstreamNodes(u[j]);
-              }
-            }
-
-            return false;
-          }
           if (!linkStart.node.delays_output)
-            getAllUpstreamNodes(linkStart.node);
+            upnodes = getAllUpstreamNodes(linkStart.node);
 
           chart.selectAll('g.vvvv-'+targetDir+'-pin rect')
             .filter(function(d) {
@@ -1238,6 +1318,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
         })
 
       nodes
+        // node selection
         .on('mousedown', function(d) {
           $('.resettable', thatWin.window.document).remove();
           thatWin.state = UIState.Moving;
@@ -1252,10 +1333,23 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           dragStart.y = d3.event.pageY;
           if (editor.inspector)
             editor.inspector.setNode(d);
+
+          relatedNodes = [d].concat(getAllUpstreamNodes(d).concat(getAllDownstreamNodes(d)));
+          nodes.filter(function(d) {
+            return relatedNodes.indexOf(d)<0;
+          })
+          .attr('opacity', blurredOpacity);
+
+          links.filter(function(d) {
+            return relatedNodes.indexOf(d.fromPin.node)<0 || relatedNodes.indexOf(d.toPin.node)<0;
+          })
+          .attr('opacity', blurredOpacity);
+
           d3.event.preventDefault();
           d3.event.stopPropagation();
           return false;
         })
+        // open subpatch or UI window
         .on('contextmenu', function(d) {
           if (d.isSubpatch) {
             editor.openPatch(d);

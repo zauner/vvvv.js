@@ -7,7 +7,11 @@ h1{
 }
 
 .vvvv-node.selected .vvvv-node-background{
-  fill: #9a9a9a;
+  fill: #444;
+}
+
+.vvvv-node.selected text.vvvv-node-label{
+  fill: white;
 }
 
 
