@@ -16,7 +16,8 @@ var UIState = {
   'Creating': 3,
   'Changing': 4,
   'AreaSelecting': 5,
-  'PinDragging': 6
+  'PinDragging': 6,
+  'Resizing': 7
 }
 
 function getAllUpstreamNodes(origin_node, node) {
@@ -536,7 +537,6 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
             .attr('height', Math.abs(selectionBB.y2 - selectionBB.y1))
 
           resetSelection();
-          unfocusSubGraph();
           chart.selectAll('.vvvv-node').each(function(d) {
             var bounds = {x: [d.x, d.x + d.getWidth()], y: [d.y, d.y + d.getHeight()]};
             var inArea= false;
@@ -555,6 +555,15 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
               selectedNodes.push(d);
             }
           })
+        }
+        else if(thatWin.state==UIState.Resizing) {
+          var dx = d3.event.pageX - dragStart.x;
+          var cmd = {syncmode: 'diff', nodes: {}, links: []};
+          var n = selectedNodes[0];
+          var width = Math.max(n.getWidth()+dx, Math.max((_(n.inputPins).size()-1)*12+4, (n.label().length+2)*6))
+          cmd.nodes[n.id] = {x: n.x*15, y: n.y*15, width: width*15, height: n.height};
+          dragStart.x = d3.event.pageX;
+          editor.update(patch, cmd);
         }
       })
       .on('contextmenu', function() {
@@ -587,6 +596,9 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
         }
         if (thatWin.state==UIState.AreaSelecting) {
           chart.select('.selection-area').remove();
+          thatWin.state = UIState.Idle;
+        }
+        if (thatWin.state==UIState.Resizing) {
           thatWin.state = UIState.Idle;
         }
       })
@@ -966,6 +978,15 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
       })
       .attr('stroke', function(d) { return d.isIOBox ? '#999' : 'none'})
       .attr('stroke-width', 1)
+
+    nodes.append('svg:rect')
+      .attr('class', 'resize-handle')
+      .attr('height', function(d) { return d.getHeight() - 4; })
+      .attr('x', function(d) { return d.getWidth() - 2; })
+      .attr('y', 2)
+      .attr('width', 4)
+      .attr('fill', 'rgba(0,0,0,0)')
+      .attr('cursor', 'e-resize')
 
     /*nodes.append('svg:rect')
       .attr('class', 'vvvv-node-pinbar')
@@ -1374,6 +1395,18 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
             d.openUIWindow();
           }
           d3.event.preventDefault();
+          d3.event.stopPropagation();
+          return false;
+        })
+
+      nodes.selectAll('.resize-handle')
+        .on('mousedown', function(d) {
+          $('.resettable', thatWin.window.document).remove();
+          dragStart.x = d3.event.pageX;
+          dragStart.y = d3.event.pageY;
+          resetSelection();
+          selectedNodes.push(d);
+          thatWin.state = UIState.Resizing;
           d3.event.stopPropagation();
           return false;
         })
