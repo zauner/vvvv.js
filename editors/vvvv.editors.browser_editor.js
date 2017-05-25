@@ -328,7 +328,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
   var pageURL = location.protocol+'//'+location.host+(VVVVContext.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVVContext.Root+'/patch.html';
   var modKeyPressed = {CTRL: false, SHIFT: false, ALT: false};
   var selectionBB = {x1: 0, y1: 0, x2: 0, y2: 0};
-  var relatedNodes = [];
+  var focusedNodes = [];
 
   if (!selector)
     this.window = window.open(pageURL, p.nodename, "location=no, left=250, width="+p.windowWidth+", height="+p.windowHeight+", toolbar=no" );
@@ -339,11 +339,31 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
     chart.selectAll('.vvvv-node.selected')
       .attr('class', function(d) { return d.isIOBox? 'vvvv-node vvvv-iobox' : 'vvvv-node' })
     selectedNodes = [];
-    relatedNodes = [];
     chart.selectAll('.vvvv-node')
       .attr('opacity', defaultOpacity);
     chart.selectAll('.vvvv-link')
       .attr('opacity', 1.0);
+  }
+
+  function focusSubGraph(node) {
+    focusedNodes = [node].concat(getAllUpstreamNodes(node).concat(getAllDownstreamNodes(node)));
+    if (focusedNodes.length<=1)
+      return;
+    chart.selectAll('.vvvv-node').filter(function(d) {
+      return focusedNodes.indexOf(d)<0;
+    })
+    .attr('opacity', blurredOpacity);
+
+    chart.selectAll('.vvvv-link').filter(function(d) {
+      return focusedNodes.indexOf(d.fromPin.node)<0 || focusedNodes.indexOf(d.toPin.node)<0;
+    })
+    .attr('opacity', blurredOpacity);
+  }
+
+  function unfocusSubGraph() {
+    chart.selectAll('.vvvv-node').attr('opacity', defaultOpacity);
+    chart.selectAll('.vvvv-link').attr('opacity', defaultOpacity);
+    focusedNodes.length = 0;
   }
 
   var thatWin = this;
@@ -516,6 +536,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
             .attr('height', Math.abs(selectionBB.y2 - selectionBB.y1))
 
           resetSelection();
+          unfocusSubGraph();
           chart.selectAll('.vvvv-node').each(function(d) {
             var bounds = {x: [d.x, d.x + d.getWidth()], y: [d.y, d.y + d.getHeight()]};
             var inArea= false;
@@ -570,6 +591,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
         }
       })
       .on('dblclick', function() {
+        unfocusSubGraph();
         $('#node_selection', thatWin.window.document).remove();
         var x = d3.event.pageX;
         var y = d3.event.pageY;
@@ -777,6 +799,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           .attr('height', 0)
 
         resetSelection();
+        unfocusSubGraph();
       })
 
       background.on('click', function() {
@@ -790,6 +813,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           .attr('class', '')
         $('#node_selection', thatWin.window.document).remove();
         resetSelection();
+        unfocusSubGraph();
         linkStart = undefined;
       })
 
@@ -919,7 +943,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
         })
         .attr('id', function(d) { return 'vvvv-node-'+d.id})
         .attr('transform', function(d) { return 'translate('+d.x+','+d.y+')' })
-        .attr('opacity', function(d) { return (relatedNodes.length>1 && relatedNodes.indexOf(d)<0) ? blurredOpacity : defaultOpacity })
+        .attr('opacity', function(d) { return (focusedNodes.length>1 && focusedNodes.indexOf(d)<0) ? blurredOpacity : defaultOpacity })
 
     nodes.append('svg:rect')
       .attr('class', 'vvvv-node-background')
@@ -1160,7 +1184,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
       .data(patch.linkList)
       .enter().append('svg:g')
         .attr('class', 'vvvv-link')
-        .attr('opacity', function(d) { return (relatedNodes.length>0 && (relatedNodes.indexOf(d.fromPin.node)<0 || relatedNodes.indexOf(d.toPin.node)<0)) ? blurredOpacity : 1.0 })
+        .attr('opacity', function(d) { return (focusedNodes.length>0 && (focusedNodes.indexOf(d.fromPin.node)<0 || focusedNodes.indexOf(d.toPin.node)<0)) ? blurredOpacity : 1.0 })
 
     links.append('svg:path')
       .attr('stroke', 'rgba(0, 0, 0, 0)')
@@ -1240,6 +1264,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
       chart.selectAll('g.vvvv-input-pin, g.vvvv-output-pin')
       .on('click', function(d, i) {
         if (thatWin.state!=UIState.Connecting) {
+          unfocusSubGraph();
           linkStart = d;
           thatWin.state = UIState.Connecting;
           var that = this;
@@ -1334,16 +1359,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           if (editor.inspector)
             editor.inspector.setNode(d);
 
-          relatedNodes = [d].concat(getAllUpstreamNodes(d).concat(getAllDownstreamNodes(d)));
-          nodes.filter(function(d) {
-            return relatedNodes.indexOf(d)<0;
-          })
-          .attr('opacity', blurredOpacity);
-
-          links.filter(function(d) {
-            return relatedNodes.indexOf(d.fromPin.node)<0 || relatedNodes.indexOf(d.toPin.node)<0;
-          })
-          .attr('opacity', blurredOpacity);
+          focusSubGraph(d);
 
           d3.event.preventDefault();
           d3.event.stopPropagation();
