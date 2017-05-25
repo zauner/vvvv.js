@@ -104,7 +104,7 @@ VVVVContext.init('./', 'full', function (vvvv) {
         if (!edit_mode)
           return;
         console.log('receiving patch update for '+vvvv.Helpers.prepareFilePath(req.patch));
-        var patches = VVVVContext.Patches[vvvv.Helpers.prepareFilePath(req.patch)];
+        var patches = patch.executionContext.Patches[vvvv.Helpers.prepareFilePath(req.patch)];
         var i = patches.length;
         while (i--) {
           patches[i].doLoad(req.command)
@@ -115,7 +115,7 @@ VVVVContext.init('./', 'full', function (vvvv) {
       if (req.save) {
         if (!edit_mode)
           return;
-        var p = VVVVContext.Patches[vvvv.Helpers.prepareFilePath(req.patch)][0];
+        var p = patch.executionContext.Patches[vvvv.Helpers.prepareFilePath(req.patch)][0];
         fs.writeFile(vvvv.Helpers.prepareFilePath(req.patch)+".xml", p.toXML(), function() {
           console.log('saved '+req.patch+".xml");
         });
@@ -170,13 +170,13 @@ VVVVContext.init('./', 'full', function (vvvv) {
       })
     })
   	conn.on("close", function (code, reason) {
-      delete patch;
-      delete mainloop;
+      patch = undefined;
+      mainloop = undefined;
   		console.log("Connection closed");
   	})
     conn.on("error", function(err) {
-      delete patch;
-      delete mainloop;
+      patch = undefined;
+      mainloop = undefined;
       console.log("Connection closed/reset");
     })
   }).listen(5001)

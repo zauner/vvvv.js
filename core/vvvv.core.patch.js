@@ -63,7 +63,7 @@ define(function(require,exports) {
       this.executionContext = parentPatch.executionContext;
     }
     else {
-      this.executionContext = {ShaderCodeResources: {}};
+      this.executionContext = {ShaderCodeResources: {}, Patches: {}};
       // TODO: this is a hack to fill the shader code resources in the execution context with the ones defined in nodes.webgl.js; seems wrong though
       for (var resourceId in VVVV.ShaderCodeResources) {
         this.executionContext.ShaderCodeResources[resourceId] = VVVV.ShaderCodeResources[resourceId];
@@ -434,9 +434,9 @@ define(function(require,exports) {
             var path;
             for (var i=0; i<subpatches.length; i++) {
               path = VVVV.Helpers.prepareFilePath(subpatches[i].nodename, subpatches[i].parentPatch);
-              VVVVContext.Patches[path].splice(VVVVContext.Patches[path].indexOf(n), 1);
-              if (VVVVContext.Patches[path].length == 0)
-                delete VVVVContext.Patches[path];
+              thisPatch.executionContext.Patches[path].splice(thisPatch.executionContext.Patches[path].indexOf(n), 1);
+              if (thisPatch.executionContext.Patches[path].length == 0)
+                delete thisPatch.executionContext.Patches[path];
               thisPatch.serverSync.unregisterPatch(subpatches[i]);
             }
           }
@@ -1023,12 +1023,12 @@ define(function(require,exports) {
       var that = this;
       var path = ressource;
       path = VVVV.Helpers.prepareFilePath(ressource, this.parentPatch);
-      if (!VVVVContext.Patches[path]) {
+      if (!that.executionContext.Patches[path]) {
         VVVVContext.loadFile(path, {
           success: function(r) {
             that.doLoad(r, function() {
-              VVVVContext.Patches[path] = VVVVContext.Patches[path] || [];
-              VVVVContext.Patches[path].push(that);
+              that.executionContext.Patches[path] = that.executionContext.Patches[path] || [];
+              that.executionContext.Patches[path].push(that);
               that.serverSync.registerPatch(that);
               if (that.success)
                 that.success();
@@ -1042,8 +1042,8 @@ define(function(require,exports) {
         });
       }
       else {
-        that.doLoad(VVVVContext.Patches[path][0].exportJSON(), function() {
-          VVVVContext.Patches[path].push(that);
+        that.doLoad(that.executionContext.Patches[path][0].exportJSON(), function() {
+          that.executionContext.Patches[path].push(that);
           that.serverSync.registerPatch(that);
           if (that.success)
             that.success();
@@ -1062,7 +1062,7 @@ define(function(require,exports) {
     function checkLocationHash() {
       VVVV.Editors['edit'] = 'browser_editor';
       var match = window.location.hash.match('#([^\/]+)\/('+thisPatch.ressource+'|[0-9]+)$');
-      if (match && VVVV.Editors[match[1]] && (match[2]==thisPatch.ressource || VVVVContext.Patches[match[2]]==thisPatch || VVVVContext.Patches.length==match[2])) {
+      if (match && VVVV.Editors[match[1]] && (match[2]==thisPatch.ressource || thisPatch.executionContext.Patches[match[2]]==thisPatch || thisPatch.executionContext.Patches.length==match[2])) {
         var editor_name = VVVV.Editors[match[1]];
         console.log('launching editor '+editor_name+'...');
         require(['editors/vvvv.editors.'+editor_name], function(editorModule) {
