@@ -32,11 +32,16 @@ define(function(require,exports) {
       if (this.toPin.reset_on_disconnect)
         this.toPin.reset();
       else {
-        this.toPin.node.defaultPinValues[this.toPin.pinname] = [];
+        var cmd = {syncmode: 'diff', nodes: {}, links: []};
+        var pincmd = {}
+        pincmd[this.toPin.pinname] = {values: []};
+        cmd.nodes[this.toPin.node.id] = {pins: pincmd}
         var i = this.toPin.getSliceCount();
         while (i--) {
-          this.toPin.node.defaultPinValues[this.toPin.pinname][i] = this.toPin.values[i];
+          pincmd[this.toPin.pinname].values[i] = this.toPin.values[i];
         }
+        if (this.fromPin.node.parentPatch.editor)
+          this.fromPin.node.parentPatch.editor.update(this.fromPin.node.parentPatch, cmd);
       }
     }
 
