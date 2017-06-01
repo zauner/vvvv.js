@@ -100,6 +100,8 @@ var MainLoop = function(patch, frames_per_second) {
    */
   this.stop = function() {
     run = false;
+    if (nodeEnvTimer!==null)
+      clearTimeout(nodeEnvTimer);
   }
 
   /**
