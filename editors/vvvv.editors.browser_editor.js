@@ -54,6 +54,13 @@ var blurredOpacity = 0.35;
 VVVV.PinTypes.Value.makeLabel = VVVV.PinTypes.String.makeLabel = function(element, node) {
   var rowCount = node.IOBoxRows();
   var sliceCount = node.IOBoxInputPin().getSliceCount();
+  /*d3.select(element)
+  .append('svg:clipPath')
+    .attr('id', 'clip-path-'+node.id)
+    .append("svg:rect")
+      .attr('width', node.getWidth())
+      .attr('height', node.getHeight())*/
+
   d3.select(element).selectAll('.vvvv-node-label').remove();
   for (var i=0; i<rowCount; i++) {
     d3.select(element)
@@ -67,6 +74,7 @@ VVVV.PinTypes.Value.makeLabel = VVVV.PinTypes.String.makeLabel = function(elemen
       .attr('dx', 4)
       .attr('font-size', 10)
       .attr('font-family', 'Lucida Sans Unicode')
+      //.attr('clip-path', 'url(#clip-path-'+node.id+')')
   }
 }
 
@@ -982,7 +990,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
     nodes.append('svg:rect')
       .attr('class', 'resize-handle')
       .attr('height', function(d) { return d.getHeight() - 4; })
-      .attr('x', function(d) { return d.getWidth() - 2; })
+      .attr('x', function(d) { return d.getWidth(); })
       .attr('y', 2)
       .attr('width', 4)
       .attr('fill', 'rgba(0,0,0,0)')
@@ -1067,7 +1075,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
                   $inputbox.css('top', $(this).offset().top + 2);
                   $inputbox.css('width', d.getWidth());
                   $inputbox.css('height', d.getHeight()/rowCount-4);
-                  VVVV.PinTypes[d.IOBoxInputPin().typeName].openInputBox(thatWin.window, $inputbox, d.IOBoxInputPin(), j%sliceCount);
+                  VVVV.PinTypes[d.IOBoxInputPin().typeName].openInputBox(thatWin.window, $inputbox, d.IOBoxInputPin(), j);
                 }
                 d3.event.stopPropagation();
                 d3.event.preventDefault();
@@ -1239,6 +1247,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
       .attr('stroke', '#000')
       .attr('fill', 'none')
       .attr('stroke-width', 1)
+      .attr('stroke-dasharray', function(d) { return (d.fromPin.clusterEdge || d.toPin.clusterEdge) ? '2,2' : 'none' })
       .attr('d', function(d) {
         var deltaY = d.toPin.node.y - d.fromPin.node.y - d.fromPin.node.getHeight();
         var cy = Math.min(Math.max(deltaY * 0.2, 6), 30);
