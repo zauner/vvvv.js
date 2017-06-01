@@ -109,9 +109,17 @@ define(function(require,exports) {
      * Called when a patch is deleted. Deletes all containing nodes.
      */
     this.destroy = function() {
+      this.disposing = true;
+      path = VVVV.Helpers.prepareFilePath(this.nodename, this.parentPatch);
+      this.executionContext.Patches[path].splice(this.executionContext.Patches[path].indexOf(this), 1);
+      if (this.executionContext.Patches[path].length == 0)
+        delete this.executionContext.Patches[path];
+      this.serverSync.unregisterPatch(this);
       for (var i=0; i<this.nodeList.length; i++) {
-        this.nodeList[i].destroy();
-        delete this.nodeMap[this.nodeList[i].id];
+        var n = this.nodeList[i];
+        if ((n.inCluster && VVVVContext.name=='nodejs') || (!n.inCluster && VVVVContext.name=='browser'))
+          n.destroy();
+        delete this.nodeMap[n.id];
         delete this.nodeList[i];
       }
     }
@@ -427,24 +435,15 @@ define(function(require,exports) {
 
         if (cmd.nodes[id].delete) {
           if (VVVV_ENV=='development') console.log('removing node '+n.id);
-          if (n.isSubpatch && !n.not_implemented) {
-            if (n.editor) n.editor.removePatch(n);
-            var subpatches = n.getSubPatches();
-            subpatches.push(n);
-            var path;
-            for (var i=0; i<subpatches.length; i++) {
-              path = VVVV.Helpers.prepareFilePath(subpatches[i].nodename, subpatches[i].parentPatch);
-              thisPatch.executionContext.Patches[path].splice(thisPatch.executionContext.Patches[path].indexOf(n), 1);
-              if (thisPatch.executionContext.Patches[path].length == 0)
-                delete thisPatch.executionContext.Patches[path];
-              thisPatch.serverSync.unregisterPatch(subpatches[i]);
-            }
-          }
           if (n.definingNode) { // remove connection to related DefineNode node
             n.definingNode.relatedNodes.splice(n.definingNode.relatedNodes.indexOf(n), 1);
           }
           thisPatch.nodeList.splice(thisPatch.nodeList.indexOf(n),1);
-          n.destroy();
+          if (n.isSubpatch || (n.inCluster && VVVVContext.name=='nodejs') || (!n.inCluster && VVVVContext.name=='browser')) {
+            if (!n.not_implemented && n.editor)
+              n.editor.removePatch(n);
+            n.destroy();
+          }
           delete thisPatch.nodeMap[n.id];
         }
 
@@ -602,7 +601,8 @@ define(function(require,exports) {
               }
             });
             thisPatch.nodeList.splice(thisPatch.nodeList.indexOf(nodeToReplace),1);
-            nodeToReplace.destroy();
+            if ((nodeToReplace.inCluster && VVVVContext.name=='nodejs') || (!nodeToReplace.inCluster && VVVVContext.name=='browser'))
+              nodeToReplace.destroy();
             delete nodeToReplace;
             nodeToReplace = undefined;
           }

@@ -928,6 +928,8 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
   }
 
   this.drawComplete = function() {
+    if (patch.disposing)
+      return;
     if (nodes)
       nodes.remove();
     if (links)

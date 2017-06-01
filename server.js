@@ -170,12 +170,16 @@ VVVVContext.init('./', 'full', function (vvvv) {
       })
     })
   	conn.on("close", function (code, reason) {
+      if (patch) patch.destroy();
       patch = undefined;
+      mainloop.stop();
       mainloop = undefined;
   		console.log("Connection closed");
   	})
     conn.on("error", function(err) {
+      if (patch) patch.destroy();
       patch = undefined;
+      if (mainloop) mainloop.stop();
       mainloop = undefined;
       console.log("Connection closed/reset");
     })
