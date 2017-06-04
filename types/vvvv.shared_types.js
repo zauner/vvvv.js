@@ -242,4 +242,21 @@ VVVV.PinTypes.HTMLStyle = {
   }
 }
 
+/*VVVV.Types.Buffer = function(b) {
+  var data = b;
+
+  this.toString = function(encoding) {
+    if (VVVVContext.name=='nodejs')
+      return data.toString();
+    else
+      return String.fromCharCode.apply(null, data);
+  }
+}*/
+
+VVVV.PinTypes.Buffer = {
+  typeName: "Buffer",
+  reset_on_disconnect: true,
+  defaultValue: function() { return "EMPTY BUFFER"; }
+}
+
 });
