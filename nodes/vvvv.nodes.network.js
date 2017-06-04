@@ -10,6 +10,14 @@ var Node = require('core/vvvv.core.node');
 var VVVV = require('core/vvvv.core.defines');
 var $ = require('jquery');
 
+VVVV.PinTypes.Socket = {
+  typeName: "Socket",
+  reset_on_disconnect: true,
+  defaultValue: function() {
+    return "NONE";
+  }
+}
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: HTTP (Network Get)
@@ -273,5 +281,490 @@ VVVV.Nodes.WebsocketClient = function(id, graph) {
 
 }
 VVVV.Nodes.WebsocketClient.prototype = new Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: UDP (Network Server)
+ Author(s): 'Matthias Zauner'
+ Original Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.UDPServer = function(id, graph) {
+  this.constructor(id, "UDP (Network Server)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  this.auto_evaluate = false;
+  this.environments = ['nodejs'];
+
+  var portIn = this.addInputPin("Port", [8007], VVVV.PinTypes.Value);
+  var enabledIn = this.addInputPin("Enabled", [0], VVVV.PinTypes.Value);
+
+  var outputOut = this.addOutputPin("Output", [""], VVVV.PinTypes.Buffer);
+  var onDataOut = this.addOutputPin("OnData", [0], VVVV.PinTypes.Value);
+  onDataOut.auto_reset = true;
+
+  var server = undefined;
+  var state;
+  var thatNode = this;
+  var localqueue = [];
+  var currentPtr = 0;
+
+  function createSocket() {
+    var dgram = window.server_req('dgram');
+    server = dgram.createSocket('udp4');
+    server.on('listening', function() {
+      state.listening = true;
+      console.log('UDP Server listening on '+server.address().address+':'+server.address().port);
+    })
+    server.on('error', function(err) {
+      console.error('UDP Server Error: '+err.message);
+      state.listening = false;
+      server.close();
+    })
+    server.on('message', function(message, remote) {
+      state.queue.push(message);
+      if (state.queue.length>100) {
+        state.queue.shift();
+        state.queue_offset++;
+      }
+      thatNode.sharedRessources().markAsChanged();
+    })
+    return server;
+  }
+
+  this.initialize = function() {
+    this.sharedRessources().registerNode(this);
+  }
+
+  this.evaluate = function() {
+    if (portIn.getValue(0)==0)
+      return;
+    if (this.sharedRessources().has('server')) {
+      server = this.sharedRessources().get('server');
+      state = this.sharedRessources().get('state');
+    }
+    else {
+      state = {enabled: false, listening: false, port: undefined, queue: [], queue_offset: 0};
+      this.sharedRessources().share('state', state);
+    }
+
+    if ((!state.enabled && enabledIn.pinIsChanged() && enabledIn.getValue(0)>=0.5) || (enabledIn.getValue(0)>=0.5 && portIn.pinIsChanged())) {
+      if (state.listening && state.port!=portIn.getValue(0)) {
+        server.close();
+        server = undefined;
+        state.listening = false;
+      }
+      if (!state.listening) {
+        if (server==undefined) {
+          server = createSocket();
+          this.sharedRessources().share('server', server);
+          server.bind(portIn.getValue(0));
+          state.port = portIn.getValue(0);
+          state.enabled = true;
+        }
+      }
+    }
+
+    if (state.enabled && enabledIn.pinIsChanged() && enabledIn.getValue(0)<0.5) {
+      if (state.listening) {
+        server.close();
+        server = undefined;
+      }
+      state.enabled = false;
+      state.listening = false;
+      state.port = 0;
+      this.sharedRessources().share('server', server);
+    }
+
+    for (; currentPtr<state.queue.length+state.queue_offset; currentPtr++) {
+      localqueue.push(state.queue[currentPtr-state.queue_offset]);
+    }
+
+    var val;
+    if (val = localqueue.shift()) {
+      outputOut.setValue(0, val);
+      onDataOut.setValue(0, 1);
+    }
+
+  }
+
+  this.destroy = function() {
+    console.log('destroying UDP server');
+    this.sharedRessources().unregisterNode(this);
+    if (this.sharedRessources().registeredNodes.length==0) {
+      server.close();
+      VVVVContext.sharedRessourceStores[this.parentPatch.getPatchIdentifier()+"/"+this.id] = undefined;
+    }
+  }
+
+}
+VVVV.Nodes.UDPServer.prototype = new Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: UDP (Network Client)
+ Author(s): 'Matthias Zauner'
+ Original Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.UDPClient = function(id, graph) {
+  this.constructor(id, "UDP (Network Client)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  this.auto_evaluate = false;
+  this.environments = ['nodejs'];
+
+  var dataIn = this.addInputPin("Input", [], VVVV.PinTypes.Buffer);
+  var doSendIn = this.addInputPin("Do Send", [0], VVVV.PinTypes.Value);
+  var hostIn = this.addInputPin("Remote Host", ['localhost'], VVVV.PinTypes.String);
+  var portIn = this.addInputPin("Remote Port", [8007], VVVV.PinTypes.Value);
+
+  var client = undefined;
+  var thatNode = this;
+
+  this.initialize = function() {
+    var dgram = window.server_req('dgram');
+    client = dgram.createSocket('udp4');
+  }
+
+  this.evaluate = function() {
+    if (!dataIn.isConnected())
+      return;
+    var maxSliceCount = this.getMaxInputSliceCount();
+    for (var i=0; i<maxSliceCount; i++) {
+      if (doSendIn.getValue(i)>=.5)
+        client.send(dataIn.getValue(i), portIn.getValue(i), hostIn.getValue(i));
+    }
+  }
+
+  this.destroy = function() {
+    client.close();
+  }
+
+}
+VVVV.Nodes.UDPClient.prototype = new Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: TCP (Network Server)
+ Author(s): 'Matthias Zauner'
+ Original Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.TCPServer = function(id, graph) {
+  this.constructor(id, "TCP (Network Server)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  this.auto_evaluate = false;
+  this.environments = ['nodejs'];
+
+  var portIn = this.addInputPin("Port", [8007], VVVV.PinTypes.Value);
+  var enabledIn = this.addInputPin("Enabled", [0], VVVV.PinTypes.Value);
+
+  var outputOut = this.addOutputPin("Output", [""], VVVV.PinTypes.Buffer);
+  var onDataOut = this.addOutputPin("OnData", [0], VVVV.PinTypes.Value);
+  onDataOut.auto_reset = true;
+  var socketOut = this.addOutputPin("Remote Connection", [], VVVV.PinTypes.Socket);
+  var clientsOut = this.addOutputPin("Remote Host", [], VVVV.PinTypes.String);
+
+  var server = undefined;
+  var state;
+  var thatNode = this;
+  var localqueues = [];
+
+  function createServer(port, state) {
+    var net = window.server_req('net');
+    state.server = net.createServer(function(socket) {
+      console.log('New Connection from ', socket.remoteAddress);
+      var connection = {socket: socket, queue: [], queue_offset: 0};
+      state.connections.push(connection);
+
+      socket.on('data', function(data) {
+        connection.queue.push(data);
+        if (connection.queue.length>100) {
+          connection.queue.shift();
+          connection.queue_offset++;
+        }
+        thatNode.sharedRessources().markAsChanged();
+      });
+
+      socket.on('end', function() {
+        state.connections.splice(state.connections.indexOf(connection), 1);
+        console.log('Connection to ', socket.remoteAddress, ' closed.');
+        thatNode.sharedRessources().markAsChanged();
+      });
+
+      thatNode.sharedRessources().markAsChanged();
+    }).listen(port);
+
+    state.server.on('listening', function() {
+      console.log('TCP Server listening at port ', port);
+      state.listening = true;
+    });
+  }
+
+  this.initialize = function() {
+    this.sharedRessources().registerNode(this);
+  }
+
+  this.evaluate = function() {
+    if (portIn.getValue(0)==0)
+      return;
+    if (this.sharedRessources().has('state')) {
+      state = this.sharedRessources().get('state');
+    }
+    else {
+      state = {enabled: false, listening: false, port: undefined, server: undefined, connections: []};
+      this.sharedRessources().share('state', state);
+    }
+
+    if ((!state.enabled && enabledIn.pinIsChanged() && enabledIn.getValue(0)>=0.5) || (enabledIn.getValue(0)>=0.5 && portIn.pinIsChanged())) {
+      if (state.listening && state.port!=portIn.getValue(0)) {
+        for (var i=0; i<state.connections.length; i++) {
+          state.connections[i].socket.end();
+        }
+        state.server.close();
+        state.server = undefined;
+        state.listening = false;
+      }
+      if (!state.listening) {
+        if (state.server==undefined) {
+          createServer(portIn.getValue(0), state);
+          state.port = portIn.getValue(0);
+          state.enabled = true;
+        }
+      }
+    }
+
+    if (state.enabled && enabledIn.pinIsChanged() && enabledIn.getValue(0)<0.5) {
+      console.log('Disabling ...');
+      for (var i=0; i<state.connections.length; i++) {
+        state.connections[i].socket.end();
+      }
+      state.server.close();
+      state.server = undefined;
+      state.listening = false;
+      state.enabled = false;
+      state.port = 0;
+    }
+
+    var conn;
+    for (var i=0; i<state.connections.length; i++) {
+      conn = state.connections[i];
+      clientsOut.setValue(i, conn.socket.remoteAddress+':'+conn.socket.remotePort);
+      socketOut.setValue(i, conn.socket);
+      if (localqueues[i]==undefined) {
+        localqueues[i] = [];
+        localqueues[i].currentPtr = conn.queue.length+conn.queue_offset;
+      }
+      for (; localqueues[i].currentPtr<conn.queue.length+conn.queue_offset; localqueues[i].currentPtr++) {
+        localqueues[i].push(conn.queue[localqueues[i].currentPtr-conn.queue_offset]);
+      }
+    }
+    clientsOut.setSliceCount(state.connections.length);
+    socketOut.setSliceCount(state.connections.length);
+    localqueues.length = state.connections.length;
+
+    var val;
+    for (var i=0; i<localqueues.length; i++) {
+      if (val = localqueues[i].shift()) {
+        outputOut.setValue(i, val);
+        onDataOut.setValue(i, 1);
+      }
+      else {
+        outputOut.setValue(i, "");
+        onDataOut.setValue(i, 0);
+      }
+    }
+    outputOut.setSliceCount(localqueues.length);
+    onDataOut.setSliceCount(localqueues.length);
+
+  }
+
+  this.destroy = function() {
+    console.log('destroying TCP server');
+    this.sharedRessources().unregisterNode(this);
+    if (this.sharedRessources().registeredNodes.length==0) {
+      for (var i=0; i<state.connections.length; i++) {
+        state.connections[i].socket.end();
+      }
+      if (state.server)
+        state.server.close();
+      VVVVContext.sharedRessourceStores[this.parentPatch.getPatchIdentifier()+"/"+this.id] = undefined;
+    }
+  }
+
+}
+VVVV.Nodes.TCPServer.prototype = new Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: TCP (Network Client)
+ Author(s): 'Matthias Zauner'
+ Original Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.TCPClient = function(id, graph) {
+  this.constructor(id, "TCP (Network Client)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  this.auto_evaluate = false;
+  this.environments = ['nodejs'];
+
+  var hostIn = this.addInputPin("Host", ["localhost"], VVVV.PinTypes.String);
+  var portIn = this.addInputPin("Port", [8007], VVVV.PinTypes.Value);
+  var enabledIn = this.addInputPin("Enabled", [0], VVVV.PinTypes.Value);
+
+  var outputOut = this.addOutputPin("Output", [""], VVVV.PinTypes.Buffer);
+  var onDataOut = this.addOutputPin("OnData", [0], VVVV.PinTypes.Value);
+  onDataOut.auto_reset = true;
+  var socketOut = this.addOutputPin("Remote Connection", [], VVVV.PinTypes.Socket);
+  var connectedOut = this.addOutputPin("Connected", [0], VVVV.PinTypes.Value);
+
+  var client = undefined;
+  var socket = undefined;
+  var queue = [];
+  var thatNode = this;
+
+  function createClient(host, port) {
+    var net = window.server_req('net');
+    var s = new net.Socket();
+    s.connect(port, host, function() {
+      s.unref();
+      console.log("Established TCP Connection to ", s.remoteAddress, ":", s.remotePort);
+      s.on('data', function(d) {
+        queue.push(d);
+        thatNode.dirty = true;
+        thatNode.parentPatch.mainloop.requestEvaluate();
+      })
+      s.on('end', function() {
+        console.log("Closed connection to ", s.remoteAddress, ":", s.remotePort);
+        thatNode.dirty = true;
+        thatNode.parentPatch.mainloop.requestEvaluate();
+      })
+      thatNode.dirty = true;
+      thatNode.parentPatch.mainloop.requestEvaluate();
+    })
+    return s;
+  }
+
+  this.evaluate = function() {
+    if (portIn.getValue(0)==0)
+      return;
+    if ((enabledIn.pinIsChanged() && enabledIn.getValue(0)>=0.5) || (enabledIn.getValue(0)>=0.5 && (portIn.pinIsChanged() || hostIn.pinIsChanged()))) {
+      if (socket) {
+        socket.end();
+        socket = undefined;
+      }
+      socket = createClient(hostIn.getValue(0), portIn.getValue(0));
+    }
+
+    if (enabledIn.pinIsChanged() && enabledIn.getValue(0)<0.5) {
+      console.log('Disabling ...');
+      if (socket)
+        socket.end();
+      socket = undefined;
+    }
+
+    if (socket) {
+      connectedOut.setValue(0, 1);
+      socketOut.setValue(0, socket);
+    }
+    else {
+      connectedOut.setValue(0, 0);
+      socketOut.setSliceCount(0);
+    }
+
+    var val;
+    if (val = queue.shift()) {
+      outputOut.setValue(0, val);
+      onDataOut.setValue(0, 1);
+    }
+    else {
+      outputOut.setValue(0, VVVV.PinTypes.Buffer.defaultValue());
+      onDataOut.setValue(0, 0);
+    }
+  }
+
+  this.destroy = function() {
+    if (socket)
+      socket.end();
+  }
+
+}
+VVVV.Nodes.TCPClient.prototype = new Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: TCPSend (Network)
+ Author(s): 'Matthias Zauner'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.TCPSend = function(id, graph) {
+  this.constructor(id, "TCPSend (Network)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  this.auto_evaluate = false;
+  this.environments = ['nodejs'];
+
+  var socketIn = this.addInputPin("Connection", [], VVVV.PinTypes.Socket);
+  var dataIn = this.addInputPin("Input", [], VVVV.PinTypes.Buffer);
+  var doSendIn = this.addInputPin("Do Send", [0], VVVV.PinTypes.Value);
+
+  this.initialize = function() {
+  }
+
+  this.evaluate = function() {
+    if (!socketIn.isConnected() || !dataIn.isConnected())
+      return;
+    var i = this.getMaxInputSliceCount();
+    while (i--) {
+      if (doSendIn.getValue(i)>=.5)
+        socketIn.getValue(i).write(dataIn.getValue(i));
+    }
+  }
+
+}
+VVVV.Nodes.TCPSend.prototype = new Node();
 
 });
