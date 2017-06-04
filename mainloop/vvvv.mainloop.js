@@ -124,7 +124,7 @@ var MainLoop = function(patch, frames_per_second) {
   }
 
   this.requestEvaluate = function() {
-    if (isIdle) {
+    if (isIdle && !that.disposing) {
       this.stop();
       this.start();
     }

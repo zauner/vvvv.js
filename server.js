@@ -103,7 +103,7 @@ VVVVContext.init('./', 'full', function (vvvv) {
       if (req.command) {
         if (!edit_mode)
           return;
-        console.log('receiving patch update for '+vvvv.Helpers.prepareFilePath(req.patch));
+        //console.log('receiving patch update for '+vvvv.Helpers.prepareFilePath(req.patch));
         var patches = patch.executionContext.Patches[vvvv.Helpers.prepareFilePath(req.patch)];
         var i = patches.length;
         while (i--) {
@@ -173,6 +173,7 @@ VVVVContext.init('./', 'full', function (vvvv) {
       if (patch) patch.destroy();
       patch = undefined;
       mainloop.stop();
+      mainloop.disposing = true;
       mainloop = undefined;
   		console.log("Connection closed");
   	})
@@ -180,35 +181,39 @@ VVVVContext.init('./', 'full', function (vvvv) {
       if (patch) patch.destroy();
       patch = undefined;
       if (mainloop) mainloop.stop();
+      if (mainloop) mainloop.disposing = true;
       mainloop = undefined;
       console.log("Connection closed/reset");
     })
   }).listen(5001)
-
-  if (argv.e && VVVVContext.name=='nodejs')  {
-    var npm = require('npm');
-    console.log('Checking for installed Node.js packages ...')
-    npm.load({loglevel: 'silent', depth: 0}, function(err) {
-      if (err)
-        console.log(err);
-      else {
-        npm.commands.list([], function(err, res) {
-          if (err && err.indexOf("extraneous")!==0) {
-            console.log('Fehler',err);
-            return;
-          }
-          for (var package_name in res.dependencies) {
-            VVVVContext.LoadedLibs[package_name] = true;
-          }
-          console.log('done.\n');
-        })
-      }
-    })
-  }
-
-
 });
 
+// fetch and register installed node.js packages
+if (argv.e && VVVVContext.name=='nodejs')  {
+  var npm = require('npm');
+  console.log('Checking for installed Node.js packages ...')
+  npm.load({loglevel: 'silent', progress: false}, function(err) {
+    if (err)
+      console.log(err);
+    else {
+      npm.commands.list([], function(err, res) {
+        if (err && err.indexOf("extraneous")!==0) {
+          console.log(err);
+          return;
+        }
+        (function registerDeps(p) {
+          for (var package_name in p.dependencies) {
+            VVVVContext.LoadedLibs[package_name] = true;
+            registerDeps(p.dependencies[package_name]);
+          }
+        })(res);
+        console.log('Node.js packages scanned. Ready if you are.\n');
+      })
+    }
+  })
+}
+
+// launch browser window in app mode
 if (argv.mode=='app') {
   var bl = require('james-browser-launcher');
   bl(function(err, launch) {
