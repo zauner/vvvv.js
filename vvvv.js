@@ -207,4 +207,6 @@ VVVVContext.onNotImplemented = function(nodename) {
   console.log("Warning: "+nodename+" is not implemented.");
 };
 
+VVVVContext.sharedRessourceStores = {};
+
 }());

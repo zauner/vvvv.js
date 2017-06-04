@@ -661,6 +661,14 @@ define(function(require,exports) {
       return obj;
     }
 
+    this.sharedRessources = function() {
+      if (!VVVVContext.sharedRessourceStores[this.parentPatch.getPatchIdentifier()+"/"+this.id]) {
+        var SharedRessourceStore = require('core/vvvv.core.shared_ressources');
+        VVVVContext.sharedRessourceStores[this.parentPatch.getPatchIdentifier()+"/"+this.id] = new SharedRessourceStore();
+      }
+      return VVVVContext.sharedRessourceStores[this.parentPatch.getPatchIdentifier()+"/"+this.id];
+    }
+
   }
 
 
