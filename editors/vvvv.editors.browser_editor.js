@@ -73,7 +73,7 @@ VVVV.PinTypes.Value.makeLabel = VVVV.PinTypes.String.makeLabel = function(elemen
       })
       .attr('dx', 4)
       .attr('font-size', 10)
-      .attr('font-family', 'Lucida Sans Unicode')
+      .attr('font-family', "'Lucida Sans Unicode', sans-serif")
       //.attr('clip-path', 'url(#clip-path-'+node.id+')')
   }
 }
@@ -734,7 +734,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           .attr('text-anchor', 'middle')
           .attr('fill', '#333')
           .attr('font-size', 10)
-          .attr('font-family', 'Lucida Sans Unicode')
+          .attr('font-family', "'Lucida Sans Unicode', sans-serif")
           .attr('dy', 12)
           .attr('dx', 40)
 
@@ -795,7 +795,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
               .attr('text-anchor', 'middle')
               .attr('fill', '#333')
               .attr('font-size', 10)
-              .attr('font-family', 'Lucida Sans Unicode')
+              .attr('font-family', "'Lucida Sans Unicode', sans-serif")
               .attr('dy', 12)
               .attr('dx', 43)
         }
@@ -848,7 +848,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
 
       $(thatWin.window.document).keydown(function(e) {
         // DELETE key
-        if (e.which==46 && selectedNodes.length>0) {
+        if ((e.which==46 || e.which==8) && selectedNodes.length>0) {
           var cmd = {syncmode: 'diff', nodes: {}, links: []};
           for (var i=0; i<selectedNodes.length; i++) {
             var n = selectedNodes[i];
@@ -1021,7 +1021,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
       .attr('dy', function(d) { return d.getHeight()+12 })
       .attr('dx', 2)
       .attr('font-size', 10)
-      .attr('font-family', 'Lucida Sans Unicode')
+      .attr('font-family', "'Lucida Sans Unicode', sans-serif")
       .attr('fill', 'white')
 
     nodes.append('svg:text')
@@ -1037,7 +1037,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
       .attr('dy', function(d) { return d.getHeight()+12 })
       .attr('dx', 2)
       .attr('font-size', 10)
-      .attr('font-family', 'Lucida Sans Unicode')
+      .attr('font-family', "'Lucida Sans Unicode', sans-serif")
       .attr('fill', 'blue')
 
     nodes.selectAll('g.descriptive-name-bg')
@@ -1098,7 +1098,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
             })
             .attr('dx', 4)
             .attr('font-size', 10)
-            .attr('font-family', 'Lucida Sans Unicode')
+            .attr('font-family', "'Lucida Sans Unicode', sans-serif")
       }
     });
 
@@ -1148,7 +1148,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
             })
             .attr('dy', 30)
             .attr('font-size', 10)
-            .attr('font-family', 'Lucida Sans Unicode')
+            .attr('font-family', "'Lucida Sans Unicode', sans-serif")
             .attr('fill', 'rgba(0,0,0,1)');
         });
       })
@@ -1201,7 +1201,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
             })
             .attr('dy', 30)
             .attr('font-size', 10)
-            .attr('font-family', 'Lucida Sans Unicode')
+            .attr('font-family', "'Lucida Sans Unicode', sans-serif")
             .attr('fill', 'rgba(0,0,0,1)');
         });
       })
@@ -1249,7 +1249,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
       .attr('stroke', '#000')
       .attr('fill', 'none')
       .attr('stroke-width', 1)
-      .attr('stroke-dasharray', function(d) { return (d.fromPin.clusterEdge || d.toPin.clusterEdge) ? '2,2' : 'none' })
+      .attr('stroke-dasharray', function(d) { return (d.fromPin.node.inCluster ? !d.toPin.node.inCluster : d.toPin.node.inCluster) ? '2,2' : 'none' })
       .attr('d', function(d) {
         var deltaY = d.toPin.node.y - d.fromPin.node.y - d.fromPin.node.getHeight();
         var cy = Math.min(Math.max(deltaY * 0.2, 6), 30);
@@ -1320,9 +1320,10 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
 
           chart.selectAll('g.vvvv-'+targetDir+'-pin rect')
             .filter(function(d) {
-              //if (d.typeName!=linkStart.typeName && (linkStart.typeName!="Node" || VVVV.PinTypes[d.typeName].primitive && (d.typeName!="Node" || VVVV.PinTypes[linkStart.typeName].primitive)))
               if (!(d.typeName==linkStart.typeName || (linkStart.typeName=="Node" && !VVVV.PinTypes[d.typeName].primitive) || (d.typeName=="Node" && !VVVV.PinTypes[linkStart.typeName].privimive)))
                 return false;
+              /*if (!VVVV.PinTypes[d.typeName].primitive && (d.node.inCluster ? !linkStart.node.inCluster : linkStart.node.inCluster))
+                return false;*/
               if (upnodes.indexOf(d.node)>=0 || d.node==linkStart.node)
                 return false;
               return true;
@@ -1366,11 +1367,10 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
         d3.event.stopPropagation();
       })
 
-      chart.selectAll('g.vvvv-link')
-        .on("contextmenu", function(d) {
-          if (thatWin.state == UIState.Idle)
+      chart.selectAll('g.vvvv-link path')
+        .on('mousedown', function(d) {
+          if (thatWin.state == UIState.Idle && d3.event.which==3 || (d3.event.which==1 && d3.event.ctrlKey))
             editor.update(patch, {syncmode: 'diff', nodes: {}, links: [{delete: true, srcnodeid: d.fromPin.node.id, srcpinname: d.fromPin.pinname, dstnodeid: d.toPin.node.id, dstpinname: d.toPin.pinname}]});
-
           d3.event.preventDefault();
         })
 
