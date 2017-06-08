@@ -52,7 +52,7 @@ h1{
 }
 
 .pininputbox.color .color-component{
-  font-family:"Lucida Sans Unicode";
+  font-family:"Lucida Sans Unicode", sans-serif;
   font-size:10px;
   width:10px;
   display:inline-block;
