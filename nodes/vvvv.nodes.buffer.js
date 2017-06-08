@@ -26,12 +26,11 @@ VVVV.Nodes.AsStringBuffer = function(id, graph) {
   };
 
   this.auto_evaluate = false;
-  this.environments = ['nodejs'];
 
   // input pins
   var bufferIn = this.addInputPin('Buffer', [], VVVV.PinTypes.Buffer);
   var encodingIn = this.addInputPin('Encoding', ['utf-8'], VVVV.PinTypes.Enum);
-  encodingIn.enumOptions = ['utf-8'];
+  encodingIn.enumOptions = ['utf-8', 'base64'];
 
   // output pins
   var stringOut = this.addOutputPin('String', [''], VVVV.PinTypes.String);
@@ -39,7 +38,7 @@ VVVV.Nodes.AsStringBuffer = function(id, graph) {
   var decoder;
 
   this.evaluate = function() {
-    if (VVVVContext.name=='browser' && encodingIn.pinIsChanged())
+    if (VVVVContext.name=='browser' && encodingIn.pinIsChanged() && encodingIn.getValue(0)!='base64')
       decoder = new TextDecoder(encodingIn.getValue(0));
 
     if (!bufferIn.isConnected()) {
@@ -57,8 +56,19 @@ VVVV.Nodes.AsStringBuffer = function(id, graph) {
       }
       if (VVVVContext.name=='nodejs')
         stringOut.setValue(i, bufferIn.getValue(i).toString(encodingIn.getValue(i)));
-      else
-        stringOut.setValue(i, decoder.decode(bufferIn.getValue(i)));
+      else {
+        if (encodingIn.getValue(i)=='base64') {
+          var binary = '';
+          var bytes = new Uint8Array( bufferIn.getValue(i) );
+          var len = bytes.byteLength;
+          for (var j = 0; j < len; j++) {
+              binary += String.fromCharCode( bytes[ j ] );
+          }
+          stringOut.setValue(i, btoa(binary));
+        }
+        else
+          stringOut.setValue(i, decoder.decode(bufferIn.getValue(i)));
+      }
     }
     stringOut.setSliceCount(maxSliceCount);
   }
@@ -84,10 +94,11 @@ VVVV.Nodes.AsBufferString = function(id, graph) {
   };
 
   this.auto_evaluate = false;
-  this.environments = ['nodejs'];
 
   // input pins
   var stringIn = this.addInputPin('String', [], VVVV.PinTypes.String);
+  var encodingIn = this.addInputPin('Encoding', ['utf-8'], VVVV.PinTypes.Enum);
+  encodingIn.enumOptions = ['utf-8', 'base64'];
 
   // output pins
   var bufferOut = this.addOutputPin('Buffer', [], VVVV.PinTypes.Buffer);
@@ -104,9 +115,20 @@ VVVV.Nodes.AsBufferString = function(id, graph) {
     var i = maxSliceCount;
     while (i--) {
       if (VVVVContext.name=='nodejs')
-        bufferOut.setValue(i, Buffer.from(stringIn.getValue(i)));
-      else
-        bufferOut.setValue(i, encoder.encode(stringIn.getValue(i)));
+        bufferOut.setValue(i, Buffer.from(stringIn.getValue(i), encodingIn.getValue(i)));
+      else {
+        if (encodingIn.getValue(i)=="base64") {
+          var binary_string =  atob(stringIn.getValue(i));
+          var len = binary_string.length;
+          var bytes = new Uint8Array( len );
+          for (var j = 0; j < len; j++)        {
+              bytes[j] = binary_string.charCodeAt(j);
+          }
+          bufferOut.setValue(i, bytes.buffer);
+        }
+        else
+          bufferOut.setValue(i, encoder.encode(stringIn.getValue(i)).buffer);
+      }
     }
     bufferOut.setSliceCount(maxSliceCount);
   }
