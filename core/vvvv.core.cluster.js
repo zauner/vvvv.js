@@ -15,18 +15,24 @@ define(function(require,exports) {
     this.hasNodes = false;
 
     this.detect = function() {
-      function findCluster(node, clusterActive) {
+      function findCluster(node, clusterActive, nonPrimitiveLink) {
+        if (nonPrimitiveLink==undefined)
+          nonPrimitiveLink = false;
         if (node.inCluster)
           return;
         node.inCluster = false;
-        if (node.environments && node.environments.indexOf('nodejs')>=0)
+        if (clusterActive && nonPrimitiveLink)
           node.inCluster = true;
+        if (node.environments && node.environments.indexOf('nodejs')>=0) {
+          node.inCluster = true;
+          clusterActive = true;
+        }
         for (var pinname in node.inputPins) {
           if (node.inputPins[pinname].links.length>0) {
             var fromPin = node.inputPins[pinname].links[0].fromPin;
             if (!node.delays_output)
-              findCluster(fromPin.node, node.inCluster ||  (clusterActive && !node.environments && !node.isSubpatch));
-            if (clusterActive && !node.environments && !node.isSubpatch)
+              findCluster(fromPin.node, node.inCluster ||  (clusterActive && (!node.environments || !VVVV.PinTypes[fromPin.typeName].primitive) && !node.isSubpatch), !VVVV.PinTypes[fromPin.typeName].primitive);
+            if ((clusterActive || !VVVV.PinTypes[fromPin.typeName].primitive) && !node.environments && !node.isSubpatch)
               node.inCluster |= fromPin.node.inCluster;
           }
         }
@@ -56,13 +62,18 @@ define(function(require,exports) {
         }
       }
       for (var i=0; i<patch.nodeList.length; i++) {
-        patch.nodeList[i].inCluster = false;
+        var n = patch.nodeList[i];
+        n.inCluster = false;
+        for (var pinname in n.inputPins) {
+          n.inputPins[pinname].clusterEdge = false;
+        }
+        for (var pinname in n.outputPins) {
+          n.outputPins[pinname].clusterEdge = false;
+        }
       }
       for (var i=0; i<patch.nodeList.length; i++) {
-        if (patch.nodeList[i].environments && patch.nodeList[i].environments.indexOf("nodejs")>=0) {
-          if (!patch.nodeList[i].inCluster) // the node would have been marked as cluster node if it had already been visited
-            findCluster(patch.nodeList[i], true);
-        }
+        if (!patch.nodeList[i].inCluster) // the node would have been marked as cluster node if it had already been visited
+          findCluster(patch.nodeList[i], patch.nodeList[i].environments && patch.nodeList[i].environments.indexOf("nodejs")>=0);
       }
       this.clear();
       for (var i=0; i<patch.nodeList.length; i++) {
