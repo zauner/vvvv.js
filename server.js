@@ -20,10 +20,20 @@ if (argv.e)
   edit_mode = true;
 
 var serve = serveStatic(path.join(documentRoot));
+var map = {
+  '.ico': 'image/x-icon',
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.json': 'application/json',
+  '.css': 'text/css',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg'
+}
 
 VVVVContext.externalHandlers = [];
 var http_hostname = "0.0.0.0";
 var http_port = 5000;
+var virtual_dir = "/vvvvjs"
 try {
   var appconf = JSON.parse(fs.readFileSync(process.cwd()+"/vvvvjsapp.json"));
   if (appconf.externalHandlers) {
@@ -35,8 +45,11 @@ try {
     http_hostname = appconf.httpHostname;
   if (appconf.httpPort)
     http_port = appconf.httpPort;
+  if (appconf.virtualVVVVJsDir)
+    virtual_dir = appconf.virtualVVVVJsDir;
 }
 catch (e) { console.error(e.message)};
+var virtual_dir_regex = new RegExp(virtual_dir+"/(.+)");
 
 var server = http.createServer(function(req, res) {
   var match;
@@ -50,6 +63,18 @@ var server = http.createServer(function(req, res) {
     if (VVVVContext.externalHandlers[i].process(req,res)) {
       return;
     }
+  }
+  if (match = virtual_dir_regex.exec(req.url)) {
+    fs.readFile(path.join(__dirname, match[1]), function(err, data){
+      if(err){
+        res.statusCode = 500;
+        res.end(`Error getting the file: ${err}.`);
+      } else {
+        res.setHeader('Content-type', map[path.parse(match[1]).ext] || 'text/javascript' );
+        res.end(data);
+      }
+    });
+    return;
   }
   // only if not processed by external handler
   var done = finalhandler(req, res)
@@ -172,8 +197,8 @@ VVVVContext.init('./', 'full', function (vvvv) {
   	conn.on("close", function (code, reason) {
       if (patch) patch.destroy();
       patch = undefined;
-      mainloop.stop();
-      mainloop.disposing = true;
+      if (mainloop) mainloop.stop();
+      if (mainloop) mainloop.disposing = true;
       mainloop = undefined;
   		console.log("Connection closed");
   	})
