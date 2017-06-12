@@ -149,7 +149,7 @@ VVVVNodeContext.loadFile = function(filename, opts) {
 VVVVNodeContext.loadDependency = function(name, callback) {
   var npm = require('npm');
   console.log('loading dependency ', name);
-  npm.load({loglevel: 'silent'}, function(err) {
+  npm.load({}, function(err) {
     if (err)
       console.log(err);
     else {
