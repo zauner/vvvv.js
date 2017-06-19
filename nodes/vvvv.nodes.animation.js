@@ -138,6 +138,8 @@ VVVV.Nodes.LinearFilter = function(id, graph) {
 
   this.auto_evaluate = true;
 
+  this.environments = ['browser'];
+
   var positionIn = this.addInputPin("Go To Position", [0.0], VVVV.PinTypes.Value);
   var filterTimeIn = this.addInputPin("FilterTime", [1.0], VVVV.PinTypes.Value);
 
@@ -231,6 +233,8 @@ VVVV.Nodes.Damper = function(id, graph) {
 
   this.auto_evaluate = true;
 
+  this.environments = ['browser'];
+
   var positionIn = this.addInputPin("Go To Position", [0.0], VVVV.PinTypes.Value);
   var filterTimeIn = this.addInputPin("FilterTime", [1.0], VVVV.PinTypes.Value);
 
@@ -312,6 +316,8 @@ VVVV.Nodes.Delay = function(id, graph) {
   };
 
   this.auto_evaluate = true;
+
+  this.environments = ['browser'];
 
   var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
   var timeIn = this.addInputPin("Time", [1.0], VVVV.PinTypes.Value);
@@ -585,6 +591,8 @@ VVVV.Nodes.MonoFlop = function(id, graph) {
   };
 
   this.auto_evaluate = true;
+
+  this.environments = ['browser'];
 
   var setIn = this.addInputPin("Set", [0], VVVV.PinTypes.Value);
   var resetIn = this.addInputPin("Reset", [0], VVVV.PinTypes.Value);
@@ -947,6 +955,8 @@ VVVV.Nodes.ADSR = function(id, graph) {
   };
 
   this.auto_evaluate = true;
+
+  this.environments = ['browser'];
 
   var inputIn = this.addInputPin("Input", [0], VVVV.PinTypes.Value);
   var attackTimeIn = this.addInputPin("Attack Time", [0.1], VVVV.PinTypes.Value);

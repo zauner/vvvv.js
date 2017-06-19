@@ -43,6 +43,7 @@ VVVV.Nodes.FileTextureCanvas = function(id, graph) {
   };
 
   this.auto_evaluate = true;
+  this.environments = ['browser'];
 
   var filenameIn = this.addInputPin('Filename', [], VVVV.PinTypes.String);
 
@@ -119,6 +120,7 @@ VVVV.Nodes.FileStreamCanvas = function(id, graph) {
   };
 
   this.auto_evaluate = true;
+  this.environments = ['browser'];
 
   var networkStates = [ 'NETWORK_EMPTY', 'NETWORK_IDLE', 'NETWORK_LOADING', 'NETWORK_NO_SOURCE' ];
   var readyStates = [ 'HAVE_NOTHING', 'HAVE_METADATA', 'HAVE_FUTURE_DATA', 'HAVE_ENOUGH_DATA', 'HAVE_CURRENT_DATA' ];
@@ -250,6 +252,8 @@ VVVV.Nodes.AudioOutHTML5 = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   var audioIn = this.addInputPin('Audio', [], this);
   var volumeIn = this.addInputPin('Volume', [0.5], VVVV.PinTypes.Value);

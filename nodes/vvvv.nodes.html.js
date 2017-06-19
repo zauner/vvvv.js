@@ -215,6 +215,8 @@ VVVV.Nodes.GroupHTML = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.environments = ['browser'];
+
   var parentIn = this.addInputPin("Parent", [], VVVV.PinTypes.HTMLLayer);
   var slotStyleIn = this.addInputPin("Slot Style In", [], VVVV.PinTypes.HTMLStyle);
   var outputCountIn = this.addInvisiblePin("Output Count", [2], VVVV.PinTypes.Value);
@@ -293,6 +295,8 @@ VVVV.Nodes.GetElementHTML = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.environments = ['browser'];
+
   var selectorIn = this.addInputPin("Selector", [""], VVVV.PinTypes.String);
   var parentIn = this.addInputPin("Parent", [], VVVV.PinTypes.HTMLLayer);
   var refreshIn = this.addInputPin("Refresh", [0], VVVV.PinTypes.Value);
@@ -358,6 +362,7 @@ VVVV.Nodes.GetPositionHTML = function(id, graph) {
   };
 
   this.auto_nil = false;
+  this.environments = ['browser'];
 
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
   var spaceIn = this.addInputPin("Space", ["Document Pixels"], VVVV.PinTypes.Enum);
@@ -450,6 +455,8 @@ VVVV.Nodes.PositionHTML = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.environments = ['browser'];
+
   var styleIn = this.addInputPin("Style In", [], VVVV.PinTypes.HTMLStyle);
   //var spaceIn = this.addInputPin("Space", ["Pixels"], VVVV.PinTypes.Enum);
   //spaceIn.enumOptions = ["Pixels", "Document [-1, +1]"];
@@ -512,6 +519,8 @@ VVVV.Nodes.TransformHTML = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.environments = ['browser'];
+
   var styleIn = this.addInputPin("Style In", [], VVVV.PinTypes.HTMLStyle);
   var transformIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
 
@@ -565,6 +574,7 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
   };
 
   this.auto_nil = false;
+  this.environments = ['browser'];
 
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
 
@@ -666,6 +676,7 @@ VVVV.Nodes.SetValueHTML = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
   var valueIn = this.addInputPin("Value", [''], VVVV.PinTypes.String);
@@ -735,6 +746,7 @@ VVVV.Nodes.GetFileHTML = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   this.auto_nil = false;
 
@@ -871,6 +883,7 @@ event_node_defs.forEach(function(event_node_def) {
 
     this.auto_evaluate = true;
     this.auto_nil = false;
+    this.environments = ['browser'];
 
     var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
     var preventDefaultIn = this.addInputPin("Prevent Default", [0], VVVV.PinTypes.Value);
@@ -982,6 +995,8 @@ VVVV.Nodes.StyleHTML = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.environments = ['browser'];
+
   var styleIn = this.addInputPin("Style In", [], VVVV.PinTypes.HTMLStyle);
   var nameIn = this.addInputPin("Property Name", [], VVVV.PinTypes.String);
   var valueIn = this.addInputPin("Property Value", [], VVVV.PinTypes.String);
@@ -1044,6 +1059,8 @@ style_node_definitions.forEach(function(style_node_def) {
       credits: [],
       compatibility_issues: []
     };
+
+    this.environments = ['browser'];
 
     var styleIn = this.addInputPin("Style In", [], VVVV.PinTypes.HTMLStyle);
 
@@ -1142,6 +1159,8 @@ VVVV.Nodes.ApplyStyleHTML = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.environments = ['browser'];
+
   var styleIn = this.addInputPin("Style", [], VVVV.PinTypes.HTMLStyle);
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
 
@@ -1175,6 +1194,8 @@ VVVV.Nodes.GetTextHTML = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
 
@@ -1254,6 +1275,8 @@ VVVV.Nodes.SetTextHTML = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.environments = ['browser'];
+
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
   var textIn = this.addInputPin("Text", [], VVVV.PinTypes.String);
 
@@ -1292,6 +1315,8 @@ VVVV.Nodes.GetAttributeHTML = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
   var attributeIn = this.addInputPin("Attribute Name", [''], VVVV.PinTypes.String);
@@ -1387,6 +1412,8 @@ VVVV.Nodes.SetAttributeHTML = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
   var nameIn = this.addInputPin("Attribute Name", [''], VVVV.PinTypes.String);

@@ -470,6 +470,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   };
 
   this.auto_evaluate = false;
+  this.environments = ['browser'];
 
   var filenamePin = this.addInputPin("Filename", [""], VVVV.PinTypes.String);
   var outputPin = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
@@ -591,6 +592,7 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var sourceIn = this.addInputPin("Source", [], VVVV.PinTypes.WebGlResource);
   var outputOut = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
@@ -674,6 +676,7 @@ VVVV.Nodes.CanvasTextureWebGl = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var sourceIn = this.addInputPin("Source", [], VVVV.PinTypes.CanvasGraphics);
   var outputOut = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
@@ -747,6 +750,7 @@ VVVV.Nodes.VideoTexture = function(id, graph) {
     credits: [],
     compatibility_issues: ['Only supports power-of-2 sized videos', 'Has no output pins for meta data']
   };
+  this.environments = ['browser'];
 
   var sourceIn = this.addInputPin("Video", [], this);
   var outputOut = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
@@ -806,6 +810,7 @@ VVVV.Nodes.VertexBufferJoin = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var posIn = this.addInputPin("Position XYZ", [0.0, 0.0, 0.0], VVVV.PinTypes.Value);
   var normalIn = this.addInputPin("Normal XYZ", [0.0, 0.0, 0.0], VVVV.PinTypes.Value);
@@ -872,6 +877,7 @@ VVVV.Nodes.MeshJoin = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var vbIn = this.addInputPin("Vertex Buffer", [], VVVV.PinTypes.WebGlResource);
   var indicesIn = this.addInputPin("Indices", [0], VVVV.PinTypes.Value);
@@ -928,6 +934,7 @@ VVVV.Nodes.Grid = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var xIn = this.addInputPin("Resolution X", [2], VVVV.PinTypes.Value);
   var yIn = this.addInputPin("Resolution Y", [2], VVVV.PinTypes.Value);
@@ -1015,6 +1022,7 @@ VVVV.Nodes.Sphere = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var rIn = this.addInputPin("Radius", [0.5], VVVV.PinTypes.Value);
   var xIn = this.addInputPin("Resolution X", [15], VVVV.PinTypes.Value);
@@ -1107,6 +1115,7 @@ VVVV.Nodes.Cylinder = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var r1In = this.addInputPin("Radius 1", [0.5], VVVV.PinTypes.Value);
   var r2In = this.addInputPin("Radius 2", [0.5], VVVV.PinTypes.Value);
@@ -1244,6 +1253,7 @@ VVVV.Nodes.BlendWebGLAdvanced = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
   var alphaBlendingIn = this.addInputPin("Alpha Blending", [1], VVVV.PinTypes.Value);
@@ -1309,6 +1319,7 @@ VVVV.Nodes.BlendWebGL = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
   var drawModeIn = this.addInputPin("Draw Mode", ["Blend"], VVVV.PinTypes.Enum);
@@ -1375,6 +1386,7 @@ VVVV.Nodes.FillWebGL = function(id, graph) {
     credits: [],
     compatibility_issues: ['does not actually draw wireframe, because this is not supported in WebGL, but makes renderer use gl.LINE instead of gl.TRIANGLES when drawing']
   };
+  this.environments = ['browser'];
 
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
   var fillModeIn = this.addInputPin("Fill Mode", ["Solid"], VVVV.PinTypes.Enum);
@@ -1429,6 +1441,7 @@ VVVV.Nodes.ZWriteEnableWebGL = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
   var enableZWriteIn = this.addInputPin("ZWrite Enable", [1], VVVV.PinTypes.Value);
@@ -1492,6 +1505,7 @@ VVVV.Nodes.CullWebGL = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
   var cullingIn = this.addInputPin("Culling", ["None"], VVVV.PinTypes.Enum);
@@ -1544,6 +1558,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   this.shaderFile = '';
 
@@ -1867,6 +1882,7 @@ VVVV.Nodes.Quad = function(id, graph) {
     credits: [],
     compatibility_issues: ['No Sampler States', 'No texture coord mapping', 'No enable pin', 'Transprent pixels are discarded by default']
   };
+  this.environments = ['browser'];
 
   this.auto_evaluate = false;
 
@@ -2023,6 +2039,7 @@ VVVV.Nodes.GridSegment = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var renderStateIn = this.addInputPin("Render State", [], VVVV.PinTypes.WebGlRenderState);
   this.addInputPin("Transform", [], VVVV.PinTypes.Transform);
@@ -2214,6 +2231,7 @@ VVVV.Nodes.Group = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var layerIns = [];
   var enableIn = this.addInputPin("Enabled", [1], VVVV.PinTypes.Value);
@@ -2267,6 +2285,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     credits: [],
     compatibility_issues: ['Disabling Clear doesn\'t work in Chrome', 'No Fullscreen', 'No Enable Pin', 'No Aspect Ration and Viewport transform', 'No mouse output']
   };
+  this.environments = ['browser'];
 
   this.addInputPin("Layers", [], VVVV.PinTypes.WebGlResource);
   var clearIn = this.addInputPin("Clear", [1], VVVV.PinTypes.Value);
@@ -2712,6 +2731,7 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
     credits: [],
     compatibility_issues: ['Not available in classic VVVV']
   };
+  this.environments = ['browser'];
 
   this.auto_evaluate = false;
 

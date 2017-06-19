@@ -109,6 +109,8 @@ VVVV.Nodes.FillCanvas = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.environments = ['browser'];
+
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
   var colorIn = this.addInputPin("Color", [new VVVV.Types.Color('1.0, 1.0, 1.0, 1.0')], VVVV.PinTypes.Color);
 
@@ -149,6 +151,8 @@ VVVV.Nodes.StrokeCanvas = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
   var colorIn = this.addInputPin("Color", [new VVVV.Types.Color('1.0, 1.0, 1.0, 1.0')], VVVV.PinTypes.Color);
@@ -200,6 +204,8 @@ VVVV.Nodes.ShadowCanvas = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.environments = ['browser'];
+
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
   var colorIn = this.addInputPin("Color", [new VVVV.Types.Color('0.0, 0.0, 0.0, 1.0')], VVVV.PinTypes.Color);
   var xOffsetIn = this.addInputPin("Offset X", [0.0], VVVV.PinTypes.Value);
@@ -247,6 +253,8 @@ VVVV.Nodes.BlendCanvas = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.environments = ['browser'];
+
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
   var modeIn = this.addInputPin("Mode", ['source-over'], VVVV.PinTypes.Enum);
   modeIn.enumOptions = ['source-over', 'source-out', 'source-in', 'source-atop', 'destination-over', 'destination-out', 'destination-in', 'destination-atop', 'copy', 'lighter', 'xor'];
@@ -288,6 +296,8 @@ VVVV.Nodes.LinearGradientCanvas = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.CanvasRenderState);
   var startXIn = this.addInputPin("Start X", [0.0], VVVV.PinTypes.Value);
@@ -348,6 +358,8 @@ VVVV.Nodes.ArcCanvas = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   var renderStateIn = this.addInputPin('Render State', [], VVVV.PinTypes.CanvasRenderState);
   var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
@@ -457,6 +469,8 @@ VVVV.Nodes.RectangleCanvas = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.environments = ['browser'];
+
   var renderStateIn = this.addInputPin('Render State', [], VVVV.PinTypes.CanvasRenderState);
   var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
   var clippingLayerIn = this.addInputPin('Clipping Layer', [], VVVV.PinTypes.CanvasLayer);
@@ -564,6 +578,8 @@ VVVV.Nodes.TextCanvas = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.environments = ['browser'];
+
   var renderStateIn = this.addInputPin('Render State', [], VVVV.PinTypes.CanvasRenderState);
   var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
   var clippingLayerIn = this.addInputPin('Clipping Layer', [], VVVV.PinTypes.CanvasLayer);
@@ -659,6 +675,8 @@ VVVV.Nodes.BezierCurveCanvas = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   var renderStateIn = this.addInputPin('Render State', [], VVVV.PinTypes.CanvasRenderState);
   var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
@@ -810,6 +828,8 @@ VVVV.Nodes.QuadCanvas = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.environments = ['browser'];
+
   var transformIn = this.addInputPin('Transform', [], VVVV.PinTypes.Transform);
   var clippingLayerIn = this.addInputPin('Clipping Layer', [], VVVV.PinTypes.CanvasLayer);
   var textureIn = this.addInputPin('Texture', [], VVVV.PinTypes.HTML5Texture);
@@ -904,6 +924,8 @@ VVVV.Nodes.GroupCanvas = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.environments = ['browser'];
+
   var layerCountIn = this.addInvisiblePin("Layer Count", [2], VVVV.PinTypes.Value);
 
   var layerIns = [];
@@ -959,6 +981,8 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   this.auto_nil = false;
 

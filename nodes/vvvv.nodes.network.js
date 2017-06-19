@@ -37,6 +37,7 @@ VVVV.Nodes.HTTPGet = function(id, graph) {
   };
 
   this.auto_evaluate = true;
+  this.environments = ['browser'];
 
   var urlIn = this.addInputPin("URL", ["http://localhost"], VVVV.PinTypes.String);
   var nameIn = this.addInputPin("Name", [""], VVVV.PinTypes.String);
@@ -124,6 +125,7 @@ VVVV.Nodes.HTTPPost = function(id, graph) {
   };
 
   this.auto_evaluate = true;
+  this.environments = ['browser'];
 
   var urlIn = this.addInputPin("URL", ["http://localhost"], VVVV.PinTypes.String);
   var nameIn = this.addInputPin("Name", [""], VVVV.PinTypes.String);
@@ -230,6 +232,7 @@ VVVV.Nodes.WebsocketClient = function(id, graph) {
   };
 
   this.auto_evaluate = true;
+  this.environments = ['browser'];
 
   var hostIn = this.addInputPin("URL", ["localhost"], VVVV.PinTypes.String);
   var portIn = this.addInputPin("Port", [8006], VVVV.PinTypes.Value);
