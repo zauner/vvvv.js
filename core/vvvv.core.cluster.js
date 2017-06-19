@@ -31,7 +31,7 @@ define(function(require,exports) {
           if (node.inputPins[pinname].links.length>0) {
             var fromPin = node.inputPins[pinname].links[0].fromPin;
             if (!node.delays_output)
-              findCluster(fromPin.node, node.inCluster ||  (clusterActive && (!node.environments || !VVVV.PinTypes[fromPin.typeName].primitive) && !node.isSubpatch), !VVVV.PinTypes[fromPin.typeName].primitive);
+              findCluster(fromPin.node, node.inCluster ||  (clusterActive && (!node.environments || (!VVVV.PinTypes[fromPin.typeName].primitive && node.environments.indexOf('browser')<0)) && !node.isSubpatch), !VVVV.PinTypes[fromPin.typeName].primitive);
             if ((clusterActive || !VVVV.PinTypes[fromPin.typeName].primitive) && !node.environments && !node.isSubpatch)
               node.inCluster |= fromPin.node.inCluster;
           }
