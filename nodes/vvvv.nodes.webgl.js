@@ -1585,17 +1585,17 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   var configured_once = false;
 
   this.configure = function() {
-    if (configured_once)
-      return;
-
     // add the pins which have already been added (by the patch XML) to the shaderPins array
     var defaultPins = ["Render State", "Mesh", "Transform", "Technique"];
     _(thatNode.inputPins).each(function(p) {
-      if (defaultPins.indexOf(p.pinname)<0) {
+      if (shaderPins.indexOf(p)<0 && defaultPins.indexOf(p.pinname)<0) {
         p.unvalidated = true;
         shaderPins.push(p);
       }
     })
+
+    if (configured_once)
+      return;
 
     if (thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile]==undefined) {
       thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile] = new VVVV.Types.ShaderCodeResource();
