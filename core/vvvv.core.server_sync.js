@@ -22,7 +22,7 @@ define(function(require,exports) {
       var that = this;
 
       this.socket.onopen = function() {
-        var msg = {app_root: location.pathname, patch: root_patch.nodename};
+        var msg = {app_root: location.pathname.substring(0, location.pathname.lastIndexOf("/")+1), patch: root_patch.nodename};
         this.send(JSON.stringify(msg));
         root_patch.resourcesPending--;
         if (success_callback)
