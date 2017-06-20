@@ -38,7 +38,7 @@ define(function(require,exports) {
         cmd.nodes[this.toPin.node.id] = {pins: pincmd}
         var i = this.toPin.getSliceCount();
         while (i--) {
-          pincmd[this.toPin.pinname].values[i] = this.toPin.values[i];
+          pincmd[this.toPin.pinname].values[i] = this.toPin.values[i].toString();
         }
         if (this.fromPin.node.parentPatch.editor && !this.fromPin.node.parentPatch.disposing)
           this.fromPin.node.parentPatch.editor.update(this.fromPin.node.parentPatch, cmd);
