@@ -105,7 +105,7 @@ VVVV.Nodes.SceneFile = function(id, graph) {
         SceneOut.setSliceCount(maxCount);
      }
   }
- VVVV.Nodes.SceneFile.prototype = new VVVV.Core.Node();
+ VVVV.Nodes.SceneFile.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -192,7 +192,7 @@ VVVV.Nodes.AnimationFile = function(id, graph) {
         SceneOut.setSliceCount(maxCount);
      }
   }
- VVVV.Nodes.AnimationFile.prototype = new VVVV.Core.Node();
+ VVVV.Nodes.AnimationFile.prototype = new Node();
 
  /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -221,11 +221,11 @@ VVVV.Nodes.AnimationBuffer = function(id, graph) {
   var TimeIn = this.addInputPin("Time", ["0.0"], VVVV.PinTypes.Value);
   var ObjectCountIn = this.addInputPin("Object Count", ["40"], VVVV.PinTypes.Value);
 
-  var m1_out = this.addOutputPin("Buffer Matrix Row 1", [], VVVV.PinTypes.Buffer);
-  var m2_out = this.addOutputPin("Buffer Matrix Row 2", [], VVVV.PinTypes.Buffer);
-  var m3_out = this.addOutputPin("Buffer Matrix Row 3", [], VVVV.PinTypes.Buffer);
-  var m4_out = this.addOutputPin("Buffer Matrix Row 4", [], VVVV.PinTypes.Buffer);
-  var colorOut = this.addOutputPin("ColorOut", [], VVVV.PinTypes.Buffer);
+  var m1_out = this.addOutputPin("Buffer Matrix Row 1", [], VVVV.PinTypes.SceneBuffer);
+  var m2_out = this.addOutputPin("Buffer Matrix Row 2", [], VVVV.PinTypes.SceneBuffer);
+  var m3_out = this.addOutputPin("Buffer Matrix Row 3", [], VVVV.PinTypes.SceneBuffer);
+  var m4_out = this.addOutputPin("Buffer Matrix Row 4", [], VVVV.PinTypes.SceneBuffer);
+  var colorOut = this.addOutputPin("ColorOut", [], VVVV.PinTypes.SceneBuffer);
 
   var BinSizeOut = this.addOutputPin("BufferSize", [0], VVVV.PinTypes.Value);
   var offsetOut = this.addOutputPin("offset", [0], VVVV.PinTypes.Value);
@@ -344,10 +344,10 @@ VVVV.Nodes.AnimationBuffer = function(id, graph) {
 
             }
             else{
-             var m1Output = new VVVV.Types.Buffer(4, [0.0,0.0,0.0,0.0], 0, 1, 0);
-            var m2Output = new VVVV.Types.Buffer(4, [0.0,0.0,0.0,0.0], 0, 1, 0);
-            var m3Output = new VVVV.Types.Buffer(4, [0.0,0.0,0.0,0.0], 0, 1, 0);
-            var m4Output = new VVVV.Types.Buffer(4, [0.0,0.0,0.0,0.0], 0, 1, 0);
+             var m1Output = new VVVV.Types.SceneBuffer(4, [0.0,0.0,0.0,0.0], 0, 1, 0);
+            var m2Output = new VVVV.Types.SceneBuffer(4, [0.0,0.0,0.0,0.0], 0, 1, 0);
+            var m3Output = new VVVV.Types.SceneBuffer(4, [0.0,0.0,0.0,0.0], 0, 1, 0);
+            var m4Output = new VVVV.Types.SceneBuffer(4, [0.0,0.0,0.0,0.0], 0, 1, 0);
 
             var offsetCount = [0.0];
             }
@@ -359,11 +359,11 @@ VVVV.Nodes.AnimationBuffer = function(id, graph) {
             var colorbufferConc = [].concat.apply([], colorframe);
 
 
-            var m1Output = new VVVV.Types.Buffer(4, m1bufferConc, offset, count, id);
-            var m2Output = new VVVV.Types.Buffer(4, m2bufferConc, offset, count, id);
-            var m3Output = new VVVV.Types.Buffer(4, m3bufferConc, offset, count, id);
-            var m4Output = new VVVV.Types.Buffer(4, m4bufferConc, offset, count, id);
-            var colorOutput = new VVVV.Types.Buffer(4, colorbufferConc, offset, count, id);
+            var m1Output = new VVVV.Types.SceneBuffer(4, m1bufferConc, offset, count, id);
+            var m2Output = new VVVV.Types.SceneBuffer(4, m2bufferConc, offset, count, id);
+            var m3Output = new VVVV.Types.SceneBuffer(4, m3bufferConc, offset, count, id);
+            var m4Output = new VVVV.Types.SceneBuffer(4, m4bufferConc, offset, count, id);
+            var colorOutput = new VVVV.Types.SceneBuffer(4, colorbufferConc, offset, count, id);
 
 
              m1_out.setValue(0,m1Output);
@@ -406,7 +406,7 @@ VVVV.Nodes.AnimationBuffer = function(id, graph) {
     }
 
   }
-  VVVV.Nodes.AnimationBuffer.prototype = new VVVV.Core.Node();
+  VVVV.Nodes.AnimationBuffer.prototype = new Node();
 
  /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -435,12 +435,12 @@ VVVV.Nodes.BotanyBuffer = function(id, graph) {
   var TimeIn = this.addInputPin("Time", ["0.0"], VVVV.PinTypes.Value);
   var ObjectCountIn = this.addInputPin("Object Count", ["40"], VVVV.PinTypes.Value);
 
-  var m1_out = this.addOutputPin("Buffer Matrix Row 1", [], VVVV.PinTypes.Buffer);
-  var m2_out = this.addOutputPin("Buffer Matrix Row 2", [], VVVV.PinTypes.Buffer);
-  var m3_out = this.addOutputPin("Buffer Matrix Row 3", [], VVVV.PinTypes.Buffer);
-  var m4_out = this.addOutputPin("Buffer Matrix Row 4", [], VVVV.PinTypes.Buffer);
-  var colorOut = this.addOutputPin("ColorOut", [], VVVV.PinTypes.Buffer);
-  var BillboardOut = this.addOutputPin("BillboardOut", [], VVVV.PinTypes.Buffer);
+  var m1_out = this.addOutputPin("Buffer Matrix Row 1", [], VVVV.PinTypes.SceneBuffer);
+  var m2_out = this.addOutputPin("Buffer Matrix Row 2", [], VVVV.PinTypes.SceneBuffer);
+  var m3_out = this.addOutputPin("Buffer Matrix Row 3", [], VVVV.PinTypes.SceneBuffer);
+  var m4_out = this.addOutputPin("Buffer Matrix Row 4", [], VVVV.PinTypes.SceneBuffer);
+  var colorOut = this.addOutputPin("ColorOut", [], VVVV.PinTypes.SceneBuffer);
+  var BillboardOut = this.addOutputPin("BillboardOut", [], VVVV.PinTypes.SceneBuffer);
 
   var BinSizeOut = this.addOutputPin("BufferSize", [0], VVVV.PinTypes.Value);
   var offsetOut = this.addOutputPin("offset", [0], VVVV.PinTypes.Value);
@@ -564,10 +564,10 @@ VVVV.Nodes.BotanyBuffer = function(id, graph) {
 
             }
             else{
-             var m1Output = new VVVV.Types.Buffer(4, [0.0,0.0,0.0,0.0], 0, 1, 0);
-            var m2Output = new VVVV.Types.Buffer(4, [0.0,0.0,0.0,0.0], 0, 1, 0);
-            var m3Output = new VVVV.Types.Buffer(4, [0.0,0.0,0.0,0.0], 0, 1, 0);
-            var m4Output = new VVVV.Types.Buffer(4, [0.0,0.0,0.0,0.0], 0, 1, 0);
+             var m1Output = new VVVV.Types.SceneBuffer(4, [0.0,0.0,0.0,0.0], 0, 1, 0);
+            var m2Output = new VVVV.Types.SceneBuffer(4, [0.0,0.0,0.0,0.0], 0, 1, 0);
+            var m3Output = new VVVV.Types.SceneBuffer(4, [0.0,0.0,0.0,0.0], 0, 1, 0);
+            var m4Output = new VVVV.Types.SceneBuffer(4, [0.0,0.0,0.0,0.0], 0, 1, 0);
 
             var offsetCount = [0.0];
             }
@@ -597,12 +597,12 @@ VVVV.Nodes.BotanyBuffer = function(id, graph) {
         var billboardConc = [].concat.apply([], billboardframe);
 
 
-        var m1Output = new VVVV.Types.Buffer(4, m1bufferConc, offset, count, id);
-        var m2Output = new VVVV.Types.Buffer(4, m2bufferConc, offset, count, id);
-        var m3Output = new VVVV.Types.Buffer(4, m3bufferConc, offset, count, id);
-        var m4Output = new VVVV.Types.Buffer(4, m4bufferConc, offset, count, id);
-        var colorOutput = new VVVV.Types.Buffer(4, colorbufferConc, offset, count, id);
-        var billboardOutput = new VVVV.Types.Buffer(3, billboardConc, offset, count, id);
+        var m1Output = new VVVV.Types.SceneBuffer(4, m1bufferConc, offset, count, id);
+        var m2Output = new VVVV.Types.SceneBuffer(4, m2bufferConc, offset, count, id);
+        var m3Output = new VVVV.Types.SceneBuffer(4, m3bufferConc, offset, count, id);
+        var m4Output = new VVVV.Types.SceneBuffer(4, m4bufferConc, offset, count, id);
+        var colorOutput = new VVVV.Types.SceneBuffer(4, colorbufferConc, offset, count, id);
+        var billboardOutput = new VVVV.Types.SceneBuffer(3, billboardConc, offset, count, id);
 
 
          m1_out.setValue(0,m1Output);
@@ -630,7 +630,7 @@ VVVV.Nodes.BotanyBuffer = function(id, graph) {
     }
 
   }
-  VVVV.Nodes.BotanyBuffer.prototype = new VVVV.Core.Node();
+  VVVV.Nodes.BotanyBuffer.prototype = new Node();
 
 
  /*
@@ -657,7 +657,7 @@ VVVV.Nodes.ElementBuffer = function(id, graph) {
   var SceneIn = this.addInputPin("Scene", [], VVVV.PinTypes.Scene);
   var selectorIn = this.addInputPin("Selector", [""], VVVV.PinTypes.String);
 
-  var BufferOut = this.addOutputPin("Buffer", [], VVVV.PinTypes.Buffer);
+  var BufferOut = this.addOutputPin("Buffer", [], VVVV.PinTypes.SceneBuffer);
   var BinSizeOut = this.addOutputPin("BufferSize", [0], VVVV.PinTypes.Value);
   var offsetOut = this.addOutputPin("offset", [0], VVVV.PinTypes.Value);
   var countOut = this.addOutputPin("count", [1], VVVV.PinTypes.Value);
@@ -728,7 +728,7 @@ VVVV.Nodes.ElementBuffer = function(id, graph) {
 
             bufferIDArray.push(bufferID);
             var VectorSize=3;
-            var bufferOut = new VVVV.Types.Buffer(VectorSize, buffer, offset, count, id);
+            var bufferOut = new VVVV.Types.SceneBuffer(VectorSize, buffer, offset, count, id);
             BufferOut.setValue(i,bufferOut);
             if(buffer[i] !== lastBuffer[i] && lastBuffer[i] !== undefined){
                 changed[i]=1;
@@ -764,7 +764,7 @@ VVVV.Nodes.ElementBuffer = function(id, graph) {
     }
 
   }
-  VVVV.Nodes.ElementBuffer.prototype = new VVVV.Core.Node();
+  VVVV.Nodes.ElementBuffer.prototype = new Node();
 
 
   /*
@@ -788,13 +788,13 @@ VVVV.Nodes.TransformBuffer = function(id, graph) {
   };
 
 
-  var BufferIn = this.addInputPin("Buffer", [], VVVV.PinTypes.Buffer);
+  var BufferIn = this.addInputPin("Buffer", [], VVVV.PinTypes.SceneBuffer);
   var OffsetIn = this.addInputPin("Translate XYZ", [0.0,0.0,0.0], VVVV.PinTypes.Value);
   var ScaleIn = this.addInputPin("Scale XYZ", [1.0], VVVV.PinTypes.Value);
   var MergeIn = this.addInputPin("Merge", [0.0], VVVV.PinTypes.Value);
   var ApplyIn = this.addInputPin("Apply", [0.0], VVVV.PinTypes.Value);
 
-  var BufferOut = this.addOutputPin("Buffer", [], VVVV.PinTypes.Buffer);
+  var BufferOut = this.addOutputPin("Buffer", [], VVVV.PinTypes.SceneBuffer);
 
 
   this.evaluate = function() {
@@ -816,7 +816,7 @@ VVVV.Nodes.TransformBuffer = function(id, graph) {
                             Product += Offset[j%Offset.length];
                             newBuffer[j] = Product;
                         }
-                    var bufferOut = new VVVV.Types.Buffer(Buffer.VectorSize, newBuffer, Buffer.offset, Buffer.count, Buffer.id);
+                    var bufferOut = new VVVV.Types.SceneBuffer(Buffer.VectorSize, newBuffer, Buffer.offset, Buffer.count, Buffer.id);
                     BufferOut.setValue(i, bufferOut);
                     }
                 }
@@ -833,14 +833,14 @@ VVVV.Nodes.TransformBuffer = function(id, graph) {
                 } //end of else
             }//end of inner for loop
             if(MergeIn.getValue(0) !== 0) {
-                var bufferOut = new VVVV.Types.Buffer(Buffer.VectorSize, mergeBuffer, 0, mergeBuffer.length, 0);
+                var bufferOut = new VVVV.Types.SceneBuffer(Buffer.VectorSize, mergeBuffer, 0, mergeBuffer.length, 0);
                 BufferOut.setValue(0, bufferOut);
                 BufferOut.setSliceCount(1);
             }
         }
      }
   }
-  VVVV.Nodes.TransformBuffer.prototype = new VVVV.Core.Node();
+  VVVV.Nodes.TransformBuffer.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -863,12 +863,12 @@ VVVV.Nodes.MergeBuffers = function(id, graph) {
   };
 
 
-  var BufferIn = this.addInputPin("Buffer", [], VVVV.PinTypes.Buffer);
+  var BufferIn = this.addInputPin("Buffer", [], VVVV.PinTypes.SceneBuffer);
   var IdIn = this.addInputPin("Id", [], VVVV.PinTypes.Value);
   var VectorSize = this.addInputPin('VectorSize', [3], VVVV.PinTypes.Value);
   var ApplyIn = this.addInputPin("Apply", [], VVVV.PinTypes.Value);
 
-  var BufferOut = this.addOutputPin("Buffer", [], VVVV.PinTypes.Buffer);
+  var BufferOut = this.addOutputPin("Buffer", [], VVVV.PinTypes.SceneBuffer);
   var CountOut = this.addOutputPin("Count", [], VVVV.PinTypes.Value);
 
   var BufferOutput = [];
@@ -895,7 +895,7 @@ VVVV.Nodes.MergeBuffers = function(id, graph) {
                         }
                     }
                     var mergedBuffer = [].concat.apply([], BufferOutput[j]);
-                    OutputBuffer[j] = new VVVV.Types.Buffer(VectorSize.getValue(0), mergedBuffer, 0, mergedBuffer.length, 0);
+                    OutputBuffer[j] = new VVVV.Types.SceneBuffer(VectorSize.getValue(0), mergedBuffer, 0, mergedBuffer.length, 0);
                     BufferOut.setValue(j, OutputBuffer[j]);
                     CountOut.setValue(j, mergedBuffer.length / VectorSize.getValue(0));
                 }
@@ -904,7 +904,7 @@ VVVV.Nodes.MergeBuffers = function(id, graph) {
             //}//end of inner for loop
         }
   }
-  VVVV.Nodes.MergeBuffers.prototype = new VVVV.Core.Node();
+  VVVV.Nodes.MergeBuffers.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -928,10 +928,10 @@ VVVV.Nodes.GetMatrixBuffers = function(id, graph) {
 
   var trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
 
-  var BufferOut1 = this.addOutputPin("Buffer1", [], VVVV.PinTypes.Buffer);
-  var BufferOut2 = this.addOutputPin("Buffer2", [], VVVV.PinTypes.Buffer);
-  var BufferOut3 = this.addOutputPin("Buffer3", [], VVVV.PinTypes.Buffer);
-  var BufferOut4 = this.addOutputPin("Buffer4", [], VVVV.PinTypes.Buffer);
+  var BufferOut1 = this.addOutputPin("Buffer1", [], VVVV.PinTypes.SceneBuffer);
+  var BufferOut2 = this.addOutputPin("Buffer2", [], VVVV.PinTypes.SceneBuffer);
+  var BufferOut3 = this.addOutputPin("Buffer3", [], VVVV.PinTypes.SceneBuffer);
+  var BufferOut4 = this.addOutputPin("Buffer4", [], VVVV.PinTypes.SceneBuffer);
 
   var transforms = [];
   var matrix_array = [];
@@ -971,10 +971,10 @@ VVVV.Nodes.GetMatrixBuffers = function(id, graph) {
 
     }
     var matrix_values = [].concat.apply([], matrix_array);
-    var OutputBuffer1 = new VVVV.Types.Buffer(4, MatBuffer1, 0, MatBuffer1.length, 0);
-    var OutputBuffer2 = new VVVV.Types.Buffer(4, MatBuffer2, 0, MatBuffer2.length, 0);
-    var OutputBuffer3 = new VVVV.Types.Buffer(4, MatBuffer3, 0, MatBuffer3.length, 0);
-    var OutputBuffer4 = new VVVV.Types.Buffer(4, MatBuffer4, 0, MatBuffer4.length, 0);
+    var OutputBuffer1 = new VVVV.Types.SceneBuffer(4, MatBuffer1, 0, MatBuffer1.length, 0);
+    var OutputBuffer2 = new VVVV.Types.SceneBuffer(4, MatBuffer2, 0, MatBuffer2.length, 0);
+    var OutputBuffer3 = new VVVV.Types.SceneBuffer(4, MatBuffer3, 0, MatBuffer3.length, 0);
+    var OutputBuffer4 = new VVVV.Types.SceneBuffer(4, MatBuffer4, 0, MatBuffer4.length, 0);
     BufferOut1.setValue(0, OutputBuffer1);
     BufferOut2.setValue(0, OutputBuffer2);
     BufferOut3.setValue(0, OutputBuffer3);
@@ -982,7 +982,7 @@ VVVV.Nodes.GetMatrixBuffers = function(id, graph) {
   }
 
 }
-VVVV.Nodes.GetMatrixBuffers.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GetMatrixBuffers.prototype = new Node();
 
 
   /*
@@ -1008,7 +1008,7 @@ VVVV.Nodes.Buffer = function(id, graph) {
   var ApplyIn = this.addInputPin("Apply", [0.0], VVVV.PinTypes.Value);
   var VectorSize = this.addInputPin('VectorSize', [3], VVVV.PinTypes.Value);
 
-  var BufferOut = this.addOutputPin("Buffer", [], VVVV.PinTypes.Buffer);
+  var BufferOut = this.addOutputPin("Buffer", [], VVVV.PinTypes.SceneBuffer);
 
   var oldBuffer = [];
   var Buffer = [];
@@ -1019,12 +1019,12 @@ VVVV.Nodes.Buffer = function(id, graph) {
               Buffer[i] = BufferIn.getValue(i);
               }
         oldBuffer = Buffer;
-        var OutputBuffer = new VVVV.Types.Buffer(VectorSize.getValue(0), Buffer, 0, Buffer.length, -1);
+        var OutputBuffer = new VVVV.Types.SceneBuffer(VectorSize.getValue(0), Buffer, 0, Buffer.length, -1);
         BufferOut.setValue(0, OutputBuffer);
         }   //end of inner for loop
     }
   }
-  VVVV.Nodes.Buffer.prototype = new VVVV.Core.Node();
+  VVVV.Nodes.Buffer.prototype = new Node();
 
     /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1047,7 +1047,7 @@ VVVV.Nodes.GetBuffer = function(id, graph) {
   };
 
 
-  var BufferIn = this.addInputPin("Buffer", [], VVVV.PinTypes.Buffer);
+  var BufferIn = this.addInputPin("Buffer", [], VVVV.PinTypes.SceneBuffer);
   var IndexIn = this.addInputPin("Index", [0.0], VVVV.PinTypes.Value);
 
   var ApplyIn = this.addInputPin("Apply", [0.0], VVVV.PinTypes.Value);
@@ -1071,7 +1071,7 @@ VVVV.Nodes.GetBuffer = function(id, graph) {
         }
      }
   }
-  VVVV.Nodes.GetBuffer.prototype = new VVVV.Core.Node();
+  VVVV.Nodes.GetBuffer.prototype = new Node();
 
 
 
@@ -1102,7 +1102,7 @@ VVVV.Nodes.TerrainPicking = function(id, graph) {
   // input pins
    var RayOrigin = this.addInputPin('RayOrigin', [0.0,0.0,0.0], VVVV.PinTypes.Value);
    var RayDirection = this.addInputPin('RayDirection', [0.0,0.0,0.0], VVVV.PinTypes.Value);
-   var BufferIn = this.addInputPin("Buffer", [], VVVV.PinTypes.Buffer);
+   var BufferIn = this.addInputPin("Buffer", [], VVVV.PinTypes.SceneBuffer);
    var GridIndices = this.addInputPin('GridIndices', [0.0], VVVV.PinTypes.Value);
    var GridPositions = this.addInputPin('GridPositions', [0.0,0.0,0.0], VVVV.PinTypes.Value);
    var grid_scale = this.addInputPin('GridScaleXY', [16.0,16.0], VVVV.PinTypes.Value);
@@ -1413,7 +1413,7 @@ VVVV.Nodes.TerrainPicking = function(id, graph) {
     }
 
 }
-VVVV.Nodes.TerrainPicking.prototype = new VVVV.Core.Node();
+VVVV.Nodes.TerrainPicking.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1444,7 +1444,7 @@ VVVV.Nodes.TerrainCollisionGame = function(id, graph) {
 
    var GridPositions = this.addInputPin('GridPositions', [0.0,0.0,0.0], VVVV.PinTypes.Value);
    var GridIndices = this.addInputPin('GridIndices', [0.0], VVVV.PinTypes.Value);
-   var BufferIn = this.addInputPin("Buffer", [], VVVV.PinTypes.Buffer);
+   var BufferIn = this.addInputPin("Buffer", [], VVVV.PinTypes.SceneBuffer);
    var grid_scale = this.addInputPin('GridScaleXY', [16.0,16.0], VVVV.PinTypes.Value);
    var GridRes = this.addInputPin('GridResolutionXY', [128.0,128.0], VVVV.PinTypes.Value);
    var HeightMapRes = this.addInputPin('HeigthMapRes', [128.0,128.0], VVVV.PinTypes.Value);
@@ -1677,7 +1677,7 @@ VVVV.Nodes.TerrainCollisionGame = function(id, graph) {
     }
 
 }
-VVVV.Nodes.TerrainCollisionGame.prototype = new VVVV.Core.Node();
+VVVV.Nodes.TerrainCollisionGame.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1882,7 +1882,7 @@ VVVV.Nodes.Move = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Move.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Move.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1980,7 +1980,7 @@ VVVV.Nodes.CollisionBoxPoint = function(id, graph) {
   }
 
 }
-VVVV.Nodes.CollisionBoxPoint.prototype = new VVVV.Core.Node();
+VVVV.Nodes.CollisionBoxPoint.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2083,7 +2083,7 @@ VVVV.Nodes.CollisionBoxBox = function(id, graph) {
   }
 
 }
-VVVV.Nodes.CollisionBoxBox.prototype = new VVVV.Core.Node();
+VVVV.Nodes.CollisionBoxBox.prototype = new Node();
 
 
 /*
@@ -2274,7 +2274,7 @@ VVVV.Nodes.CollisionBoxSweep = function(id, graph) {
   }
 
 }
-VVVV.Nodes.CollisionBoxSweep.prototype = new VVVV.Core.Node();
+VVVV.Nodes.CollisionBoxSweep.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2423,7 +2423,7 @@ VVVV.Nodes.Trajectory = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Trajectory.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Trajectory.prototype = new Node();
 
 
 /*
@@ -2512,7 +2512,7 @@ VVVV.Nodes.CollisionResponse = function(id, graph) {
     }
 
 }
-VVVV.Nodes.CollisionResponse.prototype = new VVVV.Core.Node();
+VVVV.Nodes.CollisionResponse.prototype = new Node();
 
 
 
@@ -2637,7 +2637,7 @@ VVVV.Nodes.RayTriangleIntersect = function(id, graph) {
 
 
 }
-VVVV.Nodes.RayTriangleIntersect.prototype = new VVVV.Core.Node();
+VVVV.Nodes.RayTriangleIntersect.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2755,7 +2755,7 @@ VVVV.Nodes.TerrainGridGame = function(id, graph) {
     }
 
 }
-VVVV.Nodes.TerrainGridGame.prototype = new VVVV.Core.Node();
+VVVV.Nodes.TerrainGridGame.prototype = new Node();
 
 
 

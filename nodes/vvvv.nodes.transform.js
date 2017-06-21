@@ -856,7 +856,7 @@ VVVV.Nodes.Ortho = function(id, graph) {
     compatibility_issues: ['Not spreadable']
   };
 
-  var ident = mat4.identity(mat4.create());
+  var ident = glMatrix.mat4.identity(glMatrix.mat4.create());
 
 
   this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
@@ -888,7 +888,7 @@ VVVV.Nodes.Ortho = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Ortho.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Ortho.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -941,6 +941,6 @@ VVVV.Nodes.GetMatrix = function(id, graph) {
   }
 
 }
-VVVV.Nodes.GetMatrix.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GetMatrix.prototype = new Node();
 
 });

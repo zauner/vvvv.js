@@ -1095,6 +1095,6 @@ VVVV.Nodes.FrameDifference = function(id, graph) {
   }
 
 }
-VVVV.Nodes.FrameDifference.prototype = new VVVV.Core.Node();
+VVVV.Nodes.FrameDifference.prototype = new Node();
 
 });

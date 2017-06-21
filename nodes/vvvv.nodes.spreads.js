@@ -990,6 +990,6 @@ VVVV.Nodes.GetSpreadSpreads = function(id, graph) {
   }
 
 }
-VVVV.Nodes.GetSpreadSpreads.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GetSpreadSpreads.prototype = new Node();
 
 });

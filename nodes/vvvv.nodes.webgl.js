@@ -1141,7 +1141,7 @@ VVVV.Nodes.Box = function(id, graph) {
     }
   }
 
-VVVV.Nodes.Box.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Box.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3093,13 +3093,13 @@ VVVV.Nodes.GeometryFile = function(id, graph) {
 
   //temp
   var generateNormals = (function() {
-    var a = vec3.create();
-    var b = vec3.create();
-    var c = vec3.create();
+    var a = glMatrix.vec3.create();
+    var b = glMatrix.vec3.create();
+    var c = glMatrix.vec3.create();
 
-    var ab = vec3.create();
-    var ac = vec3.create();
-    var n = vec3.create();
+    var ab = glMatrix.vec3.create();
+    var ac = glMatrix.vec3.create();
+    var n = glMatrix.vec3.create();
 
     function getVec3FromIndex(out, vecArray, stride, offset, index) {
       out[0] = vecArray[(index*stride)+offset];
@@ -3129,9 +3129,9 @@ VVVV.Nodes.GeometryFile = function(id, graph) {
         getVec3FromIndex(c, vertexArray, stride, offset, idx2);
 
         // Generate the normal
-        vec3.subtract(b, a, ab);
-        vec3.subtract(c, a, ac);
-        vec3.cross(ab, ac, n);
+        glMatrix.vec3.subtract(b, a, ab);
+        glMatrix.vec3.subtract(c, a, ac);
+        glMatrix.vec3.cross(ab, ac, n);
 
         normalArray[(idx0 * 3)] += n[0];
         normalArray[(idx0 * 3)+1] += n[1];
@@ -3148,7 +3148,7 @@ VVVV.Nodes.GeometryFile = function(id, graph) {
 
       for(i = 0; i < count; ++i) {
         getVec3FromIndex(n, normalArray, 3, 0, i);
-        vec3.normalize(n, n);
+        glMatrix.vec3.normalize(n, n);
         setVec3AtIndex(n, normalArray, 3, 0, i);
       }
 
@@ -3225,7 +3225,7 @@ VVVV.Nodes.GeometryFile = function(id, graph) {
 
 
 
-VVVV.Nodes.GeometryFile.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GeometryFile.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3258,7 +3258,7 @@ VVVV.Nodes.InstancerDynamic = function(id, graph) {
   this.initialize = function() {
     var inputCount = Math.max(1, cntCfg.getValue(0));
     VVVV.Helpers.dynamicPins(this, BufferIn, inputCount, function(i) {
-      return this.addInputPin('Buffer '+(i+1), [], VVVV.PinTypes.Buffer);
+      return this.addInputPin('Buffer '+(i+1), [], VVVV.PinTypes.SceneBuffer);
     })
   }
 
@@ -3329,7 +3329,7 @@ VVVV.Nodes.InstancerDynamic = function(id, graph) {
     this.contextChanged = false;
      }
   }
-VVVV.Nodes.InstancerDynamic.prototype = new VVVV.Core.Node();
+VVVV.Nodes.InstancerDynamic.prototype = new Node();
 
 
 });

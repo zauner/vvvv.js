@@ -1342,7 +1342,7 @@ VVVV.Nodes.SqrtValue = function(id, graph) {
 
 
 }
-VVVV.Nodes.SqrtValue.prototype = new VVVV.Core.Node();
+VVVV.Nodes.SqrtValue.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1386,7 +1386,7 @@ VVVV.Nodes.OnOpenVVVV = function(id, graph) {
   }
 
 
-VVVV.Nodes.OnOpenVVVV.prototype = new VVVV.Core.Node();
+VVVV.Nodes.OnOpenVVVV.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1411,9 +1411,9 @@ VVVV.Nodes.Occurrence = function(id, graph) {
   var init = 1.0;
   this.auto_evaluate = true;
 
-    function onlyUnique(value, index, self) {
-        return self.indexOf(value) === index;
-    }
+  function onlyUnique(value, index, self) {
+      return self.indexOf(value) === index;
+  }
 
   this.evaluate = function() {
     var maxSize = this.getMaxInputSliceCount();
@@ -1421,17 +1421,14 @@ VVVV.Nodes.Occurrence = function(id, graph) {
     var Input = inputIn.getValue(0, maxSize);
     var unique = Input.filter( onlyUnique );
     for (var i=0; i<unique.length; i++) {
-    UniqueOut.setValue(i, unique[i]);
-      }
-
-
-
-    UniqueOut.setSliceCount(unique.length);
+      UniqueOut.setValue(i, unique[i]);
     }
+    UniqueOut.setSliceCount(unique.length);
+  }
 
   }
 
-VVVV.Nodes.Occurrence.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Occurrence.prototype = new Node();
 
 
 });

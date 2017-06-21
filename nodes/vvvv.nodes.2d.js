@@ -490,7 +490,7 @@ VVVV.Nodes.Distance2d = function(id, graph) {
   }
 
 
-VVVV.Nodes.Distance2d.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Distance2d.prototype = new Node();
 
 
 
