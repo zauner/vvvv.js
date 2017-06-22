@@ -382,6 +382,10 @@ VVVV.Nodes.DefineNode = function(id, graph) {
 
   this.openUIWindow = function() {
     w = window.open(location.protocol+'//'+location.host+(VVVVContext.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVVContext.Root+"/code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
+    if (!w) {
+      alert('The code editor window seems to be blocked by your browser. Please check for any blocked-popup-messages in the main window and allow popups for this page.')
+      return;
+    }
     var thatNode = this;
     window.setTimeout(function() {
       w.document.title = currentName+" / VVVV.js Node Editor";

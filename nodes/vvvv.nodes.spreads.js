@@ -946,4 +946,50 @@ spreadable_types.forEach(function(type) {
 
 
 
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: GetSpread (Spreads)
+ Author(s): David Gann
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.GetSpreadSpreads = function(id, graph) {
+  this.constructor(id, "GetSpread (Spreads)", graph);
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['no spreadable offset and count']
+  };
+
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
+  var OffsetIn = this.addInputPin("Offset", [1], VVVV.PinTypes.Value);
+  var CountIn = this.addInputPin("Count", [1], VVVV.PinTypes.Value);
+
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+
+  this.evaluate = function() {
+    var size = CountIn.getValue(0);
+    var offset = OffsetIn.getValue(0);
+
+    var outIdx = 0;
+    for (var i=0; i<size; i++) {
+
+      res = inputIn.getValue(Math.round(offset + i));
+
+
+     outputOut.setValue(i, res);
+     outIdx++;
+
+    }
+    outputOut.setSliceCount(outIdx);
+  }
+
+}
+VVVV.Nodes.GetSpreadSpreads.prototype = new Node();
+
 });

@@ -1297,4 +1297,138 @@ VVVV.Nodes.Sift = function(id, graph) {
 }
 VVVV.Nodes.Sift.prototype = new Node();
 
+
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Sqrt (Value)
+ Author(s): David Gann
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.SqrtValue = function(id, graph) {
+  this.constructor(id, "Sqrt (Value)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+
+  var input1In = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
+
+
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+
+
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+
+    for (var i=0; i<maxSize; i++) {
+      if (input1In.getValue(i)==0) {
+        outputOut.setValue(i, 1.0);
+        continue;
+      }
+      outputOut.setValue(i, Math.sqrt(input1In.getValue(i)));
+    }
+    outputOut.setSliceCount(maxSize);
+  }
+
+
+
+}
+VVVV.Nodes.SqrtValue.prototype = new Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: OnOpen (VVVV)
+ Author(s): David Gann
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.OnOpenVVVV = function(id, graph) {
+  this.constructor(id, "OnOpen (VVVV)", graph);
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: [ 'not working, needs probably framecounter solution']
+  };
+
+  var input1In = this.addInputPin("Simulate", [0.0], VVVV.PinTypes.Value);
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+  var init = 1.0;
+  this.auto_evaluate = true;
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+
+
+
+    for (var i=0; i<maxSize; i++) {
+      if (input1In.getValue(i)==1.0) {
+        init = 1.0;
+        continue;
+      }
+      outputOut.setValue(i, init);
+      init = 0.0;
+    }
+    outputOut.setSliceCount(maxSize);
+  }
+
+  }
+
+
+VVVV.Nodes.OnOpenVVVV.prototype = new Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Occurrence (VVVV)
+ Author(s): David Gann
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Occurrence = function(id, graph) {
+  this.constructor(id, "Occurrence (Value)", graph);
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: [ 'have only unique out pin']
+  };
+
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
+  var UniqueOut = this.addOutputPin("Unique", [0.0], VVVV.PinTypes.Value);
+  var init = 1.0;
+  this.auto_evaluate = true;
+
+  function onlyUnique(value, index, self) {
+      return self.indexOf(value) === index;
+  }
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+
+    var Input = inputIn.getValue(0, maxSize);
+    var unique = Input.filter( onlyUnique );
+    for (var i=0; i<unique.length; i++) {
+      UniqueOut.setValue(i, unique[i]);
+    }
+    UniqueOut.setSliceCount(unique.length);
+  }
+
+  }
+
+VVVV.Nodes.Occurrence.prototype = new Node();
+
+
 });
