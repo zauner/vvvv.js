@@ -197,6 +197,14 @@ VVVV.PinTypes.HTMLLayer = {
   }
 }
 
+VVVV.PinTypes.HTMLFile = {
+  typeName: "HTMLFile",
+  reset_on_disconnect: true,
+  defaultValue: function() {
+    return 'No File';
+  }
+}
+
 VVVV.Types.HTMLStyle = function() {
   this.style_properties = {};
   this.inherited_properties = {};

@@ -292,7 +292,7 @@ VVVV.Nodes.StoreFile = function(id, graph) {
     compatibility_issues: []
   };
 
-  var fileIn = this.addInputPin('File In', [], VVVV.PinTypes.Node);
+  var fileIn = this.addInputPin('File In', [], VVVV.PinTypes.HTMLFile);
   var destFileNameIn = this.addInputPin('Destination Path', ['file.dat'], VVVV.PinTypes.String);
   var doWriteIn = this.addInputPin('DoWrite', [0], VVVV.PinTypes.Value);
 
@@ -372,6 +372,75 @@ VVVV.Nodes.StoreFile = function(id, graph) {
   }
   VVVV.Nodes.StoreFile.prototype = new Node();
 
+
+  /*
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   NODE: AsBuffer (HTML File)
+   Author(s): Matthias Zauner
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  */
+
+  VVVV.Nodes.AsBufferHTMLFile = function(id, graph) {
+    this.constructor(id, "AsBuffer (HTML File)", graph);
+
+    this.meta = {
+      authors: ['Matthias Zauner'],
+      original_authors: [],
+      credits: [],
+      compatibility_issues: []
+    };
+    this.environments = ['browser'];
+
+    this.auto_nil = false;
+
+    var fileIn = this.addInputPin("File", [], VVVV.PinTypes.HTMLFile);
+    var offsetIn = this.addInputPin("Offset", [0], VVVV.PinTypes.Value);
+    var lengthIn = this.addInputPin("Length", [-1], VVVV.PinTypes.Value);
+
+    var bufferOut = this.addOutputPin("Buffer", [], VVVV.PinTypes.Buffer);
+    var onReadOut = this.addOutputPin("OnRead", [0], VVVV.PinTypes.Value);
+    onReadOut.auto_reset = true;
+
+    var files = [];
+
+    this.evaluate = function() {
+      var maxSpreadSize = this.getMaxInputSliceCount();
+      var thatNode = this;
+
+      for (var i=0; i<maxSpreadSize; i++) {
+        if (fileIn.getValue(i)!='No File') {
+          if (fileIn.getValue(i)!==files[i]) {
+            (function(j) {
+              var fr = new FileReader();
+              fr.onloadend = function() {
+                bufferOut.setValue(j, this.result);
+                onReadOut.setValue(j, 1);
+              }
+              var offset = offsetIn.getValue(j);
+              var length = lengthIn.getValue(j);
+              if (length<0)
+                length = fileIn.getValue(j).size;
+              fr.readAsArrayBuffer(fileIn.getValue(j).slice(offset, offset + length));
+            })(i);
+            files[i] = fileIn.getValue(i);
+            onReadOut.setValue(i, 0);
+          }
+        }
+        else {
+          bufferOut.setValue(i, 'EMPTY BUFFER');
+        }
+      }
+      files.length = maxSpreadSize;
+      bufferOut.setSliceCount(maxSpreadSize);
+      onReadOut.setSliceCount(maxSpreadSize);
+
+    }
+
+    this.destroy = function() {
+
+    }
+  }
+  VVVV.Nodes.AsBufferHTMLFile.prototype = new Node();
 
 
   /*
