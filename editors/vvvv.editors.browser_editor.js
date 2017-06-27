@@ -1141,12 +1141,10 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
 
           d3.select(this).append('svg:text')
             .text(function(d) {
-                //Truncate preview string to avoid crashes with big strings
-               LabelContent = d.getValue(0); 
-                if(LabelContent.length > 30)
-                         LabelContent = LabelContent.substring(0,30)+'...';
-                else
-                         LabelContent = LabelContent;  
+              //Truncate preview string to avoid crashes with big strings
+              var LabelContent = ""+d.getValue(0);
+              if(LabelContent.length > 30)
+                LabelContent = LabelContent.substring(0,30)+'...';
               if (d.getSliceCount()>1)
                 return d.pinname+"("+d.getSliceCount()+"): "+LabelContent;
               else
@@ -1200,12 +1198,10 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
 
           d3.select(this).append('svg:text')
             .text(function(d) {
-                //Truncate preview string to avoid crashes with big strings
-               LabelContent = d.getValue(0); 
-                if(LabelContent.length > 30)
-                         LabelContent = LabelContent.substring(0,30)+'...';
-                else
-                         LabelContent = LabelContent;                       
+              //Truncate preview string to avoid crashes with big strings
+              var LabelContent = ""+d.getValue(0);
+              if(LabelContent.length > 30)
+                LabelContent = LabelContent.substring(0,30)+'...';
               if (d.getSliceCount()>1)
                 return d.pinname+"("+d.getSliceCount()+"): "+LabelContent;
               else
