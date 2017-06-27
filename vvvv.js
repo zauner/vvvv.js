@@ -153,7 +153,7 @@ VVVVNodeContext.loadDependency = function(name, callback) {
     if (err)
       console.log(err);
     else {
-      npm.commands.install([name], function(err) {
+      npm.commands.install(VVVVContext.Root, [name], function(err) {
         if (err)
           console.log(err);
         else {

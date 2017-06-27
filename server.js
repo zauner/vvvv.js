@@ -217,7 +217,7 @@ VVVVContext.init('./', 'full', function (vvvv) {
 if (argv.e && VVVVContext.name=='nodejs')  {
   var npm = require('npm');
   console.log('Checking for installed Node.js packages ...')
-  npm.load({loglevel: 'silent', progress: false}, function(err) {
+  npm.load({loglevel: 'silent', progress: false, prefix: VVVVContext.Root}, function(err) {
     if (err)
       console.log(err);
     else {
