@@ -1,4 +1,4 @@
-** WARNING: THIS IS A VERY INSTABLE EXPERIMENTAL BRANCH, TAILORED TO A VERY SPECIFIC WIP PROJECT. DO NOT USE THIS, IT WILL NOT MAKE YOU HAPPY UNLESS YOU KNOW EXACTLY WHAT YOU ARE DOING!**
+** NOTICE: THIS IS THE INSTABLE MASTER. Existing documentation on http://vvvvjs.com is refering to the v1.0 tag, and might differ from this version.**
 
 VVVV.js - Visual Web Client Programming
 =======================================
@@ -36,56 +36,67 @@ The best way to dive straight into VVVV.js is to head over to the [VVVV.js Lab](
 
 ### Loading VVVV.js and running patches
 
-The template (see the template directory) gives a good starting point to see how to integrate VVVV.js with your web page.
-
 However, here are the single steps:
 
-1. Download VVVV.js and extract it (or clone the github repo) to the location in your project where you keep your JavaScript. Here, we are using javascripts/vvvv_js. Some webservers seem to have problems with
-dots in directory names, so make sure to really rename the 'vvvv.js' from the archive to 'vvvv_js'.
+1. Download and install [Node.js 6.x](http://nodejs.org)
 
-2. Create a new patch. You do so by just creating an empty .v4p file at the location you'd like to have it, for example, mypatch.v4p.
+2. Download or clone VVVV.js into `/your/project/directory/vvvv_js`
 
-3. Include VVVV.js and the mypatch.v4p in your website (e.g. index.html) like this:
+3. In your console/terminal change to the vvvv.js directory and run
+    npm install
 
-index.html:
+4. At this point you can download/clone the VVVV.js template into `/your/project/directory/vvvvjs-template`. If you decide to go with the template, you can skip over to 7.
+
+5. In your project directoy create an empty VVVV patch. Just do so by creating an empty .v4p patch. In ths example it is `/your/project/directory/main.v4p`
+
+6. Prepare your frontend HTML, so it includes and loads VVVV.js, like this:
+
+/your/project/directory/index.html:
 
     <head>
     ...
-    <script language="JavaScript" src="javascripts/vvvv_js/lib/jquery/jquery-1.8.2.min.js"></script>
-    <script language="JavaScript" src="javascripts/vvvv_js/vvvv.js"></script>
-    <link rel="VVVV" href="mypatch.v4p"/>
+    <script language="JavaScript" src="/vvvvjs/lib/require.js"></script>
+    <script language="JavaScript" src="/vvvvjs/vvvv.js"></script>
+    <link rel="VVVV" href="main.v4p"/>
     <script language="JavaScript">
-      $(document).ready(function() {
-        VVVV.init("javascripts/vvvv_js/", 'full', function() {
-          console.log('VVVV.js initialized');
-        });
+      VVVVContext.init("/vvvv_js/", 'full', function() {
+        console.log('VVVV.js initialized');
       });
     </script>
     ...
     </head>
 
-All the patches (and subpatches) loaded are stored in the VVVV.Patches object. You can access the VVVV.Core.Patch object created above for further processing via
+This code initializes VVVV.js on the frontend and loads and runs `main.v4p`.
 
-    VVVV.Patches[0];
+7. In `/your/project/directory` run
+
+    $ node vvvv_js/server.js . -e
+
+This will run the VVVV.js webserver and serve the current directory (`.` in the first argument). The `-e` option will enable patch editing.
+
+    http://localhost:5000
+
+This will just show `index.html`, since your mypatch.v4p is still empty, nothing more will happen. Read on to launch the patch editor
+
 
 ### Launching the patch editor
 
-1. Launch the editor by appending #edit/mypatch.v4p to the URL in the address bar. This will launch the editor in a popup, make sure your browser allows it.
+1. Launch the editor by appending #edit/main.v4p to the URL in the address bar. This will launch the editor in a popup, make sure your browser allows it.
 
-2. To save, hit CTRL+S in the editor. This will trigger a file download. Overwrite your existing mypatch.v4p with the downloaded file2
+2. To save, hit CTRL+S in the editor.
 
 ### Manually loading patches
 
-If the &lt;script&gt; tag method above doesn't suit your needs (e.g. because you don't want to run the patch immeditely), you can create
+If the &lt;link&gt; tag method above doesn't suit your needs (e.g. because you don't want to run the patch immeditely), you can create
 the VVVV.Core.Patch object yourself like so:
 
     <head>
     ...
-    <script language="JavaScript" src="javascripts/vvvv_js/lib/jquery/jquery-1.8.2.min.js"></script>
-    <script language="JavaScript" src="javascripts/vvvv_js/vvvv.js"></script>
+    <script language="JavaScript" src="/vvvv_js/lib/require.js"></script>
+    <script language="JavaScript" src="/vvvv_js/vvvv.js"></script>
     <script language="JavaScript">
       $(document).ready(function() {
-        VVVV.init("javascripts/vvvv_js/", 'full', function() {
+        VVVVContext.init("javascripts/vvvv_js/", 'full', function(VVVV) {
           console.log('VVVV.js initialized');
 
           var patch = new VVVV.Core.Patch("mypatch.v4p", function() {
