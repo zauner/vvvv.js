@@ -763,7 +763,7 @@ VVVV.Nodes.CanvasTextureWebGl = function(id, graph) {
   };
   this.environments = ['browser'];
 
-  var sourceIn = this.addInputPin("Source", [], VVVV.PinTypes.CanvasGraphics);
+  var sourceIn = this.addInputPin("Source", [], VVVV.PinTypes.HTMLLayer);
   var outputOut = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
 
   var texture;
@@ -780,8 +780,8 @@ VVVV.Nodes.CanvasTextureWebGl = function(id, graph) {
     }
 
     if (sourceIn.isConnected()) {
-      var source = sourceIn.getValue(0);
-      if (!source)
+      var source = sourceIn.getValue(0).element.get(0);
+      if (!source || source.tagName!='CANVAS')
         return;
       if ( (source.width & (source.width-1)) != 0 || (source.height & (source.height-1)) != 0)
         console.log("Warning: Source renderer's width/height is not a power of 2. DX9Texture will most likely not work.");
@@ -2443,6 +2443,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var bufferWidthOut = this.addOutputPin("Actual Backbuffer Width", [0.0], VVVV.PinTypes.Value);
   var bufferHeightOut = this.addOutputPin("Actual Backbuffer Height", [0.0], VVVV.PinTypes.Value);
   var ex9Out = this.addOutputPin("EX9 Out", [], VVVV.PinTypes.WebGlResource);
+  var layerOut = this.addOutputPin("Element Out", [], VVVV.PinTypes.HTMLLayer);
   var antialiasOut = this.addOutputPin("Antialias", ["?"], VVVV.PinTypes.String);
   //var outputDepth = this.addOutputPin("Depth Texture", [], VVVV.PinTypes.WebGlTexture);
 
@@ -2461,6 +2462,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var canvasCtxt = undefined;         // the context of the canvas which is connected to the renderer
   var gl;                             // just a convenience variable for keeping the lines short
   var targetElement;
+  var htmlLayer;
   var id;
 
   var bbufFramebuffer;
@@ -2548,20 +2550,27 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       w = w > 0 ? w : 512;
       h = h > 0 ? h : 512;
       id = 'vvvv-js-generated-renderer-'+(new Date().getTime());
-      canvas = $('<canvas width="'+w+'" height="'+h+'" id="'+id+'" class="vvvv-js-generated-renderer"></canvas>');
+      htmlLayer = new VVVV.Types.HTMLLayer('canvas');
+      htmlLayer.setAttribute('width', w);
+      htmlLayer.setAttribute('height', h);
+      htmlLayer.setAttribute('id', id);
+      htmlLayer.setAttribute('class', 'vvvv-js-generated-renderer');
       if (!targetElement) {
         if (parentIn.isConnected() && parentIn.getValue(0))
           targetElement = parentIn.getValue(0).element;
         else
           targetElement = 'body';
       }
-      $(targetElement).append(canvas);
+      $(targetElement).append(htmlLayer.element);
+      canvas = htmlLayer.element;
     }
     else
       canvas = $(targetElement);
 
     if (!canvas)
       return;
+
+    layerOut.setValue(0, htmlLayer);
 
     attachMouseEvents();
 

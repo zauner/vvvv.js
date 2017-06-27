@@ -994,7 +994,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   var parentIn = this.addInputPin("Parent Element", [], VVVV.PinTypes.HTMLLayer);
   var viewIn = this.addInputPin("View", [], VVVV.PinTypes.Transform);
 
-  var canvasOut = this.addOutputPin("Canvas Out", [], VVVV.PinTypes.CanvasGraphics);
+  var canvasOut = this.addOutputPin("Canvas Out", [], VVVV.PinTypes.HTMLLayer);
 
   var ctx;
   var canvasWidth;
@@ -1004,6 +1004,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
   var canvas;
   var viewT = glMatrix.mat4.create();
   var projT;
+  var layer;
 
   // this is actually some code duplication, because the very same exists in Renderer (EX9)
   function attachMouseEvents(canvas) {
@@ -1088,15 +1089,19 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
       var h = parseInt(bufferHeightIn.getValue(0));
       w = w > 0 ? w : 512;
       h = h > 0 ? h : 512;
-      canvas = $('<canvas width="'+w+'" height="'+h+'" id="vvvv-js-generated-renderer-'+(new Date().getTime())+'" class="vvvv-js-generated-renderer"></canvas>');
+      layer = new VVVV.Types.HTMLLayer('canvas');
+      layer.setAttribute('width', w);
+      layer.setAttribute('height', h);
+      layer.setAttribute('id', 'vvvv-js-generated-renderer-'+(new Date().getTime()));
+      layer.setAttribute('class', 'vvvv-js-generated-renderer');
       if (!targetElement) {
         if (parentIn.isConnected() && parentIn.getValue(0))
           targetElement = parentIn.getValue(0).element;
         else
           targetElement = 'body';
       }
-      $(targetElement).append(canvas);
-      canvas = canvas.get(0);
+      $(targetElement).append(layer.element);
+      canvas = layer.element.get(0);
     }
     else
       canvas = targetElement;
@@ -1183,7 +1188,7 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
         }
       }
 
-      canvasOut.setValue(0, canvas);
+      canvasOut.setValue(0, layer);
 
     }
 
@@ -1194,5 +1199,55 @@ VVVV.Nodes.RendererCanvas = function(id, graph) {
 
 }
 VVVV.Nodes.RendererCanvas.prototype = new Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: AsDataURL (Canvas)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.AsDataURLCanvas = function(id, graph) {
+  this.constructor(id, "AsDataURL (Canvas)", graph);
+
+  this.environments = ['browser'];
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var canvasIn = this.addInputPin("Canvas Element In", [], VVVV.PinTypes.HTMLLayer);
+  var typeIn = this.addInputPin("Type", ['text/png'], VVVV.PinTypes.Enum);
+  typeIn.enumOptions = ['text/png', 'text/jpg'];
+  var qualityIn = this.addInputPin("Quality", [1.0], VVVV.PinTypes.Value);
+  var excludePrefixIn = this.addInputPin("Exclude Prefix", [0], VVVV.PinTypes.Value);
+  var updateIn = this.addInputPin("Update", [0], VVVV.PinTypes.Value);
+
+  var outputOut = this.addOutputPin("Output", [''], VVVV.PinTypes.String);
+
+  var str;
+
+  this.evaluate = function() {
+    if (!canvasIn.isConnected() || canvasIn.getValue(0).element.get(0).tagName!='CANVAS') {
+      outputOut.setValue(0, '');
+      return;
+    }
+    if (updateIn.getValue(0)>=0.5 || typeIn.pinIsChanged() || qualityIn.pinIsChanged() || excludePrefixIn.pinIsChanged()) {
+      str = canvasIn.getValue(0).element.get(0).toDataURL(typeIn.getValue(0), qualityIn.getValue(0));
+      if (excludePrefixIn.getValue(0)>=0.5)
+        str = str.substring(("data:"+typeIn.getValue(0)+";base64,").length+1);
+      outputOut.setValue(0, str);
+    }
+
+  }
+
+}
+VVVV.Nodes.AsDataURLCanvas.prototype = new Node();
+
+
 
 });
