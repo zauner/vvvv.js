@@ -754,17 +754,39 @@ VVVV.Nodes.TCPSend = function(id, graph) {
   var dataIn = this.addInputPin("Input", [], VVVV.PinTypes.Buffer);
   var doSendIn = this.addInputPin("Do Send", [0], VVVV.PinTypes.Value);
 
+  var sentOut = this.addOutputPin("Sent", [0], VVVV.PinTypes.Value);
+  sentOut.auto_reset = true;
+
+  var thatNode = this;
+  var sent = [];
+
   this.initialize = function() {
   }
 
   this.evaluate = function() {
     if (!socketIn.isConnected() || !dataIn.isConnected())
       return;
-    var i = this.getMaxInputSliceCount();
+    var sliceCount = this.getMaxInputSliceCount()
+    var i = sliceCount;
+    console.log(sliceCount);
     while (i--) {
-      if (doSendIn.getValue(i)>=.5)
-        socketIn.getValue(i).write(dataIn.getValue(i));
+      if (doSendIn.getValue(i)>=.5) {
+        sent[i] = false;
+        (function(j) {
+          socketIn.getValue(j).write(dataIn.getValue(j), 'utf-8', function() {
+            sent[j] = true;
+            thatNode.dirty = true;
+          });
+        })(i);
+      }
+      if (sent[i])
+        sentOut.setValue(i, 1);
+      else
+        sentOut.setValue(i, 0);
+      sent[i] = false;
     }
+    sentOut.setSliceCount(sliceCount);
+    sent.length = sliceCount;
   }
 
 }
