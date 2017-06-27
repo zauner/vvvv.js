@@ -294,6 +294,55 @@ VVVV.Nodes.ScreenInfo.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Location (Browser)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Location = function(id, graph) {
+  this.constructor(id, "Location (Browser)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    compatibility_issues: []
+  };
+
+  var hrefIn = this.addInputPin("HREF", ['#'], VVVV.PinTypes.String);
+  var doSetIn = this.addInputPin("Set", [0], VVVV.PinTypes.Value);
+
+  var protocolOut = this.addOutputPin("Protocol", [''], VVVV.PinTypes.String);
+  var hostnameOut = this.addOutputPin("Hostname", [''], VVVV.PinTypes.String);
+  var pathnameOut = this.addOutputPin("Path", [''], VVVV.PinTypes.String);
+  var portOut = this.addOutputPin("Port", [''], VVVV.PinTypes.String);
+  var hashOut = this.addOutputPin("Hash", [''], VVVV.PinTypes.String);
+
+  this.initialize = function() {
+    var thatNode = this;
+    window.addEventListener('hashchange', function() {
+      hashOut.setValue(0, location.hash);
+      thatNode.dirty = true;
+      if (thatNode.parentPatch.mainLoop)
+        thatNode.parentPatch.mainLoop.requestEvaluate();
+    })
+  }
+
+  this.evaluate = function() {
+    protocolOut.setValue(0, location.protocol);
+    hostnameOut.setValue(0, location.hostname);
+    pathnameOut.setValue(0, location.pathname);
+    portOut.setValue(0, location.port);
+    hashOut.setValue(0, location.hash);
+
+    if (doSetIn.getValue(0)>=0.5) {
+      location.href = hrefIn.getValue(0);
+    }
+  }
+}
+VVVV.Nodes.Location.prototype = new Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: DefineNode (System)
  Author(s): Matthias Zauner
  Original Node Author(s): Matthias Zauner
