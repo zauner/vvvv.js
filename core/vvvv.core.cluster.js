@@ -21,7 +21,7 @@ define(function(require,exports) {
         if (node.inCluster)
           return;
         node.inCluster = false;
-        if (clusterActive && nonPrimitiveLink)
+        if (clusterActive && nonPrimitiveLink && !node.environments) // if it's a node, which can run in both contexts, and is connected via non primitive pins, it might be in the cluster
           node.inCluster = true;
         if (node.environments && node.environments.indexOf('nodejs')>=0) {
           node.inCluster = true;
@@ -140,7 +140,7 @@ define(function(require,exports) {
       if (nodes.length==0)
         return;
       var msg = {patch: patch.getPatchIdentifier(), nodes: nodes};
-      console.log(JSON.stringify(msg));
+      //console.log(JSON.stringify(msg));
       if (socket.readyState==socket.OPEN)
         socket.send(JSON.stringify(msg));
     }
