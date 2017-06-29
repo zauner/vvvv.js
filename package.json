@@ -12,7 +12,8 @@
     "finalhandler": "*",
     "jsdom": "=7.0.2",
     "nodejs-websocket": "*",
-    "serve-static": "*"
+    "serve-static": "*",
+    "sqlite3": "*"
   },
   "version": "2.0.0-alpha.1"
 }
