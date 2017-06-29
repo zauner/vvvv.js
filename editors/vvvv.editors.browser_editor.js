@@ -108,6 +108,7 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
       $(this).change();
       $(this).remove();
     }
+    e.stopPropagation();
   });
 
   if (pin.typeName=='Value') {
