@@ -1330,8 +1330,12 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
             .filter(function(d) {
               if (!(d.typeName==linkStart.typeName || (linkStart.typeName=="Node" && !VVVV.PinTypes[d.typeName].primitive) || (d.typeName=="Node" && !VVVV.PinTypes[linkStart.typeName].privimive)))
                 return false;
-              /*if (!VVVV.PinTypes[d.typeName].primitive && (d.node.inCluster ? !linkStart.node.inCluster : linkStart.node.inCluster))
-                return false;*/
+              var browserOnly = linkStart.node.environments && linkStart.node.environments.indexOf('browser')>=0;
+              if (!VVVV.PinTypes[d.typeName].primitive && d.node.inCluster && browserOnly)
+                return false;
+              browserOnly = d.node.environments && d.node.environments.indexOf('browser')>=0;
+              if (!VVVV.PinTypes[d.typeName].primitive && linkStart.node.inCluster && browserOnly)
+                return false;
               if (upnodes.indexOf(d.node)>=0 || d.node==linkStart.node)
                 return false;
               return true;
