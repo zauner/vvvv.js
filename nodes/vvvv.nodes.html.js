@@ -752,7 +752,7 @@ VVVV.Nodes.GetFileHTML = function(id, graph) {
 
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
 
-  var fileOut = this.addOutputPin("File", ['No File'], VVVV.PinTypes.Node);
+  var fileOut = this.addOutputPin("File", ['No File'], VVVV.PinTypes.HTMLFile);
   var filenameOut = this.addOutputPin("Filename", [''], VVVV.PinTypes.String);
   var filesizeOut = this.addOutputPin("File Size", [0], VVVV.PinTypes.Value);
   var fileCountOut = this.addOutputPin("File Count", [1], VVVV.PinTypes.Value);
