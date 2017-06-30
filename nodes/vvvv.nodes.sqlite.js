@@ -31,7 +31,7 @@ VVVV.Nodes.DatabaseSQLite = function(id, graph) {
   this.environments = ['nodejs'];
 
   // input pins
-  var connStringIn = this.addInputPin('Connection String', [0], VVVV.PinTypes.String);
+  var connStringIn = this.addInputPin('Connection String', [''], VVVV.PinTypes.String);
   var connectIn = this.addInputPin('Connect', [0], VVVV.PinTypes.Value);
 
   // output pins
@@ -50,7 +50,7 @@ VVVV.Nodes.DatabaseSQLite = function(id, graph) {
   }
 
   this.evaluate = function() {
-    if (db===undefined && connectIn.getValue(0)>=0.5) {
+    if (db===undefined && connectIn.getValue(0)>=0.5 && connStringIn.getValue(0)!="") {
       try {
         var file = VVVV.Helpers.prepareFilePath(connStringIn.getValue(0), this.parentPatch);
         if (!fs.existsSync(file))
@@ -251,6 +251,10 @@ VVVV.Nodes.InsertSQLite = function(id, graph) {
   var query = "";
   var q = ["INSERT INTO", "", "", "VALUES ", ""];
 
+  var updated = true;
+  var status = "";
+  var inserted = 0;
+
   this.evaluate = function() {
 
     q[1] = tableIn.getValue(0);
@@ -265,14 +269,23 @@ VVVV.Nodes.InsertSQLite = function(id, graph) {
       var that = this;
       db.exec(query, function(err) {
         if (!err) {
-          statusOut.setValue(0, 'OK');
-          insertedOut.setValue(0, 1);
+          status = "OK";
+          inserted = 1;
         }
         else {
-          statusOut.setValue(0, err.message);
+          status = err.message;
         }
+        updated = true;
+        that.dirty = true;
         that.parentPatch.mainloop.requestEvaluate();
       })
+    }
+
+    if (updated) {
+      statusOut.setValue(0, status);
+      insertedOut.setValue(0, inserted);
+      inserted = 0;
+      updated = false;
     }
   }
 
