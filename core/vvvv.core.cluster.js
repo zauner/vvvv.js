@@ -41,8 +41,11 @@ define(function(require,exports) {
             var fromPin = node.inputPins[pinname].links[0].fromPin;
             if (node.inCluster)
               fromPin.edgeLinkCount--;
-            if (fromPin.edgeLinkCount<=0)
+            if (fromPin.edgeLinkCount<=0) {
               fromPin.clusterEdge = false;
+              if (fromPin.values!=node.inputPins[pinname].values)
+                node.inputPins[pinname].connect(fromPin);
+            }
           }
         }
 
