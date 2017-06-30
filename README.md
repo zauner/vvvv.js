@@ -95,14 +95,12 @@ the VVVV.Core.Patch object yourself like so:
     <script language="JavaScript" src="/vvvv_js/lib/require.js"></script>
     <script language="JavaScript" src="/vvvv_js/vvvv.js"></script>
     <script language="JavaScript">
-      $(document).ready(function() {
-        VVVVContext.init("javascripts/vvvv_js/", 'full', function(VVVV) {
-          console.log('VVVV.js initialized');
+      VVVVContext.init("javascripts/vvvv_js/", 'full', function(VVVV) {
+        console.log('VVVV.js initialized');
 
-          var patch = new VVVV.Core.Patch("mypatch.v4p", function() {
-            var mainloop = new VVVV.MainLoop(p);
-            console.log('patch loaded and started');
-          });
+        var patch = new VVVV.Core.Patch("mypatch.v4p", function() {
+          var mainloop = new VVVV.MainLoop(p);
+          console.log('patch loaded and started');
         });
       });
     </script>
