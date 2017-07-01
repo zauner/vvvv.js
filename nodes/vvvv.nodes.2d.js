@@ -3,7 +3,11 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
-(function($) {
+if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
+define(function(require,exports) {
+
+var Node = require('core/vvvv.core.node');
+var VVVV = require('core/vvvv.core.defines');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -15,16 +19,16 @@
 
 VVVV.Nodes.Cross2d = function(id, graph) {
   this.constructor(id, "Cross (2d)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+
   // input pins
   var xinIn = this.addInputPin('X In', [0], VVVV.PinTypes.Value);
   var yinIn = this.addInputPin('Y In', [0], VVVV.PinTypes.Value);
@@ -39,7 +43,7 @@ VVVV.Nodes.Cross2d = function(id, graph) {
   // evaluate() will be called each frame
   // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
   this.evaluate = function() {
-    
+
     var idx = 0;
     for (var i=0; i<yinIn.getSliceCount(); i++) {
       for (var j=0; j<xinIn.getSliceCount(); j++) {
@@ -59,7 +63,7 @@ VVVV.Nodes.Cross2d = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Cross2d.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Cross2d.prototype = new Node();
 
 
 /*
@@ -72,16 +76,16 @@ VVVV.Nodes.Cross2d.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.Polar2d = function(id, graph) {
   this.constructor(id, "Polar (2d)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+
   // input pins
   var xIn = this.addInputPin('X', [1], VVVV.PinTypes.Value);
   var yIn = this.addInputPin('Y', [0], VVVV.PinTypes.Value);
@@ -91,27 +95,27 @@ VVVV.Nodes.Polar2d = function(id, graph) {
   var lengthOut = this.addOutputPin('Length', [1], VVVV.PinTypes.Value);
 
   this.initialize = function() {
-    
+
   }
 
   this.evaluate = function() {
-    
+
     var maxSize = this.getMaxInputSliceCount();
-    
+
     for (var i=0; i<maxSize; i++) {
       var x = xIn.getValue(i);
       var y = yIn.getValue(i);
-      
+
       angleOut.setValue(i, Math.atan2(y, x)/(2*Math.PI));
       lengthOut.setValue(i, Math.sqrt(x*x + y*y));
     }
-    
+
     angleOut.setSliceCount(maxSize);
     lengthOut.setSliceCount(maxSize);
   }
 
 }
-VVVV.Nodes.Polar2d.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Polar2d.prototype = new Node();
 
 
 /*
@@ -124,16 +128,16 @@ VVVV.Nodes.Polar2d.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.Cartesian2d = function(id, graph) {
   this.constructor(id, "Cartesian (2d)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+
   // input pins
   var angleIn = this.addInputPin('Angle', [0], VVVV.PinTypes.Value);
   var lengthIn = this.addInputPin('Length', [1], VVVV.PinTypes.Value);
@@ -143,23 +147,23 @@ VVVV.Nodes.Cartesian2d = function(id, graph) {
   var yOut = this.addOutputPin('Y', [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
-    
+
     var maxSize = this.getMaxInputSliceCount();
-    
+
     for (var i=0; i<maxSize; i++) {
       var angle = angleIn.getValue(i);
       var length = lengthIn.getValue(i);
-      
+
       xOut.setValue(i, length * Math.cos(angle * Math.PI * 2));
       yOut.setValue(i, length * Math.sin(angle * Math.PI * 2));
     }
-    
+
     xOut.setSliceCount(maxSize);
     yOut.setSliceCount(maxSize);
   }
 
 }
-VVVV.Nodes.Cartesian2d.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Cartesian2d.prototype = new Node();
 
 
 /*
@@ -172,16 +176,16 @@ VVVV.Nodes.Cartesian2d.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.Points2Vector2d = function(id, graph) {
   this.constructor(id, "Points2Vector (2d)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+
   // input pins
   var x1In = this.addInputPin('X1', [0], VVVV.PinTypes.Value);
   var y1In = this.addInputPin('Y1', [0], VVVV.PinTypes.Value);
@@ -195,24 +199,24 @@ VVVV.Nodes.Points2Vector2d = function(id, graph) {
   var angleOut = this.addOutputPin('Angle', [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
-    
+
     var maxSize = this.getMaxInputSliceCount();
-    
+
     for (var i=0; i<maxSize; i++) {
       var x1 = x1In.getValue(i);
       var y1 = y1In.getValue(i);
       var x2 = x2In.getValue(i);
       var y2 = y2In.getValue(i);
-      
+
       var x = x2 - x1;
       var y = y2 - y1;
-      
+
       xOut.setValue(i, x1 + x/2);
       yOut.setValue(i, y1 + y/2);
       lengthOut.setValue(i, Math.sqrt(x*x + y*y));
       angleOut.setValue(i, Math.atan2(y, x) / (2 * Math.PI));
     }
-    
+
     xOut.setSliceCount(maxSize);
     yOut.setSliceCount(maxSize);
     lengthOut.setSliceCount(maxSize);
@@ -220,7 +224,7 @@ VVVV.Nodes.Points2Vector2d = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Points2Vector2d.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Points2Vector2d.prototype = new Node();
 
 
 /*
@@ -233,16 +237,16 @@ VVVV.Nodes.Points2Vector2d.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.Vector2Points2d = function(id, graph) {
   this.constructor(id, "Vector2Points (2d)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+
   // input pins
   var xIn = this.addInputPin('X', [0], VVVV.PinTypes.Value);
   var yIn = this.addInputPin('Y', [0], VVVV.PinTypes.Value);
@@ -256,9 +260,9 @@ VVVV.Nodes.Vector2Points2d = function(id, graph) {
   var y2Out = this.addOutputPin('Y2', [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
-    
+
     var maxSize = this.getMaxInputSliceCount();
-    
+
     for (var i=0; i<maxSize; i++) {
       var x = xIn.getValue(i);
       var y = yIn.getValue(i);
@@ -267,13 +271,13 @@ VVVV.Nodes.Vector2Points2d = function(id, graph) {
 
       var dx = length/2 * Math.sin(angle);
       var dy = -length/2 * Math.cos(angle);
-      
+
       x1Out.setValue(i, x + dx);
       y1Out.setValue(i, y + dy);
       x2Out.setValue(i, x - dx);
       y2Out.setValue(i, y - dy);
     }
-    
+
     // you also might want to do stuff like this:
     x1Out.setSliceCount(maxSize);
     y1Out.setSliceCount(maxSize);
@@ -282,7 +286,7 @@ VVVV.Nodes.Vector2Points2d = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Vector2Points2d.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Vector2Points2d.prototype = new Node();
 
 
 /*
@@ -295,16 +299,16 @@ VVVV.Nodes.Vector2Points2d.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.Attractor2d = function(id, graph) {
   this.constructor(id, "Attractor (2d)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+
   // input pins
   var xIn = this.addInputPin('X', [0], VVVV.PinTypes.Value);
   var yIn = this.addInputPin('Y', [0], VVVV.PinTypes.Value);
@@ -317,30 +321,30 @@ VVVV.Nodes.Attractor2d = function(id, graph) {
   // output pins
   var outputxOut = this.addOutputPin('Output X', [0], VVVV.PinTypes.Value);
   var outputyOut = this.addOutputPin('Output Y', [0], VVVV.PinTypes.Value);
-  
+
   function sign(f) {
     return f<0 ? -1 : ( f>0 ? 1 : 0);
   }
 
   this.evaluate = function() {
-    
+
     var posSize = Math.max(xIn.getSliceCount(), yIn.getSliceCount());
     var attrSize = Math.max(attractorxIn.getSliceCount(), attractoryIn.getSliceCount());
-    
+
     var x, y, attractorx, attractory, attractorystrength, attractorpower, attractorradius;
     var dx, dy;
-    
+
     for (var i=0; i<posSize; i++) {
       x = xIn.getValue(i);
       y = yIn.getValue(i);
-      
+
       for (var j=0; j<attrSize; j++) {
         attractorx = attractorxIn.getValue(j);
         attractory = attractoryIn.getValue(j);
         attractorstrength = attractorstrengthIn.getValue(j);
         attractorpower = attractorpowerIn.getValue(j);
         attractorradius = attractorradiusIn.getValue(j);
-  
+
         dx = x - attractorx;
         dy = y - attractory;
         if (dx!=0 || dy!=0) {
@@ -350,7 +354,7 @@ VVVV.Nodes.Attractor2d = function(id, graph) {
             var s = l / attractorradius;
             m = attractorstrength * (Math.pow(s, attractorpower) * sign(s) / s - 1);
           }
-          
+
           x += dx * m;
           y += dy * m;
         }
@@ -358,14 +362,14 @@ VVVV.Nodes.Attractor2d = function(id, graph) {
       outputxOut.setValue(i, x);
       outputyOut.setValue(i, y);
     }
-    
+
     // you also might want to do stuff like this:
     outputxOut.setSliceCount(posSize);
     outputyOut.setSliceCount(posSize);
   }
 
 }
-VVVV.Nodes.Attractor2d.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Attractor2d.prototype = new Node();
 
 
 /*
@@ -378,16 +382,16 @@ VVVV.Nodes.Attractor2d.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.ConnectAll2d = function(id, graph) {
   this.constructor(id, "ConnectAll (2d)", graph);
-  
+
   this.meta = {
     authors: ['woei'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+
   // input pins
   var xinIn = this.addInputPin('X In', [0], VVVV.PinTypes.Value);
   var yinIn = this.addInputPin('Y In', [0], VVVV.PinTypes.Value);
@@ -401,7 +405,7 @@ VVVV.Nodes.ConnectAll2d = function(id, graph) {
   // evaluate() will be called each frame
   // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
   this.evaluate = function() {
-    
+
     var maxSize = this.getMaxInputSliceCount();
 
     var idx = 0;
@@ -422,6 +426,72 @@ VVVV.Nodes.ConnectAll2d = function(id, graph) {
   }
 
 }
-VVVV.Nodes.ConnectAll2d.prototype = new VVVV.Core.Node();
+VVVV.Nodes.ConnectAll2d.prototype = new Node();
 
-}(vvvvjs_jquery));
+/////////////////////////////////////////////////////////
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: distance (2d)
+ Author(s): David Gann
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Distance2d = function(id, graph) {
+  this.constructor(id, "Distance (2d)", graph);
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+
+  var xy1In = this.addInputPin("XY1", [0.0], VVVV.PinTypes.Value);
+  var xy2In = this.addInputPin("XY2", [0.0], VVVV.PinTypes.Value);
+
+
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+
+  var xs = 0;
+  var ys = 0;
+  var idx = 0;
+
+
+  this.evaluate = function() {
+     var maxSize = this.getMaxInputSliceCount();
+
+
+      for (var i=0; i<maxSize/2; i++)
+	  {
+
+               // var distance = lineDistance(xy1In, xy2In);
+
+
+                 xs = xy2In.getValue(idx) - xy1In.getValue(idx);
+                 xs = xs * xs;
+
+                 ys = xy2In.getValue(idx+1) - xy1In.getValue(idx+1);
+                 ys = ys * ys;
+
+                 var distance = Math.sqrt( xs + ys );
+
+                 idx=idx+2;
+
+
+
+		outputOut.setValue(i,distance);
+
+      }
+     outputOut.setSliceCount(maxSize/2);
+    }
+
+  }
+
+
+VVVV.Nodes.Distance2d.prototype = new Node();
+
+
+
+});

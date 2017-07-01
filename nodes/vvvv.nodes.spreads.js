@@ -3,7 +3,14 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
-(function($) {
+if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
+
+define(function(require,exports) {
+
+
+var _ = require('underscore');
+var Node = require('core/vvvv.core.node');
+var VVVV = require('core/vvvv.core.defines');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -15,21 +22,21 @@
 
 VVVV.Nodes.GetSliceSpreads = function(id, graph) {
   this.constructor(id, "GetSlice (Spreads)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
   var binSizeIn = this.addInputPin("Bin Size", [1], VVVV.PinTypes.Value);
   var indexIn = this.addInputPin("Index", [0], VVVV.PinTypes.Value);
-  
+
   var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
 
-  this.evaluate = function() {  
+  this.evaluate = function() {
     var size = indexIn.getSliceCount();
     var res, binSize;
     var outIdx = 0;
@@ -51,53 +58,7 @@ VVVV.Nodes.GetSliceSpreads = function(id, graph) {
   }
 
 }
-VVVV.Nodes.GetSliceSpreads.prototype = new VVVV.Core.Node();
-
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: SetSlice (Spreads)
- Author(s): 'Matthias Zauner'
- Original Node Author(s): 'VVVV Group'
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-VVVV.Nodes.SetSliceSpreads = function(id, graph) {
-  this.constructor(id, "SetSlice (Spreads)", graph);
-  
-  this.meta = {
-    authors: ['Matthias Zauner'],
-    original_authors: ['VVVV Group'],
-    credits: [],
-    compatibility_issues: []
-  };
-  
-  this.auto_evaluate = false;
-  
-  // input pins
-  var spreadIn = this.addInputPin('Spread', [0], VVVV.PinTypes.Value);
-  var inputIn = this.addInputPin('Input', [0], VVVV.PinTypes.Value);
-  var indexIn = this.addInputPin('Index', [0], VVVV.PinTypes.Value);
-
-  // output pins
-  var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
-
-  this.evaluate = function() {
-    var spreadSize = spreadIn.getSliceCount();
-    
-    for (var i=0; i<spreadSize; i++) {
-      outputOut.setValue(i, spreadIn.getValue(i));
-    }
-    size = Math.max(inputIn.getSliceCount(), indexIn.getSliceCount());
-    for (var i=0; i<size; i++) {
-      outputOut.setValue(indexIn.getValue(i)%spreadSize, inputIn.getValue(i));
-    }
-    
-    outputOut.setSliceCount(spreadSize);
-  }
-
-}
-VVVV.Nodes.SetSliceSpreads.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GetSliceSpreads.prototype = new Node();
 
 
 /*
@@ -110,55 +71,55 @@ VVVV.Nodes.SetSliceSpreads.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.RandomSpread = function(id, graph) {
   this.constructor(id, "RandomSpread (Spreads)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: ['http://www.webdeveloper.com/forum/showthread.php?t=140572'],
     compatibility_issues: ['Doesnt handle spreaded inputs','random result will differ from original vvvv node because of different algorithm']
   };
-  
+
   this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
   this.addInputPin("Width", [1.0], VVVV.PinTypes.Value);
   this.addInputPin("Random Seed", [0], VVVV.PinTypes.Value);
   this.addInputPin("Spread Count", [1], VVVV.PinTypes.Value);
-  
+
   this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
-  
+
   // Rc4Random function taken from http://www.webdeveloper.com/forum/showthread.php?t=140572
   function Rc4Random(seed)
   {
     var keySchedule = [];
     var keySchedule_i = 0;
     var keySchedule_j = 0;
-    
+
     function init(seed) {
       for (var i = 0; i < 256; i++)
         keySchedule[i] = i;
-      
+
       var j = 0;
       for (var i = 0; i < 256; i++)
       {
         j = (j + keySchedule[i] + seed.charCodeAt(i % seed.length)) % 256;
-        
+
         var t = keySchedule[i];
         keySchedule[i] = keySchedule[j];
         keySchedule[j] = t;
       }
     }
     init(seed);
-    
+
     function getRandomByte() {
       keySchedule_i = (keySchedule_i + 1) % 256;
       keySchedule_j = (keySchedule_j + keySchedule[keySchedule_i]) % 256;
-      
+
       var t = keySchedule[keySchedule_i];
       keySchedule[keySchedule_i] = keySchedule[keySchedule_j];
       keySchedule[keySchedule_j] = t;
-      
+
       return keySchedule[(keySchedule[keySchedule_i] + keySchedule[keySchedule_j]) % 256];
     }
-    
+
     this.getRandomNumber = function() {
       var number = 0;
       var multiplier = 1;
@@ -175,19 +136,19 @@ VVVV.Nodes.RandomSpread = function(id, graph) {
     var input = this.inputPins["Input"].getValue(0);
     var width = this.inputPins["Width"].getValue(0);
     var randomseed = parseInt(this.inputPins["Random Seed"].getValue(0));
-    
+
     rng = new Rc4Random(randomseed.toString());
-    
+
     this.outputPins["Output"].setSliceCount(count);
     for (var i=0; i<count; i++) {
       this.outputPins["Output"].setValue(i, rng.getRandomNumber()*width-width/2+input);
     }
   }
-  
-  
+
+
 
 }
-VVVV.Nodes.RandomSpread.prototype = new VVVV.Core.Node();
+VVVV.Nodes.RandomSpread.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -199,23 +160,23 @@ VVVV.Nodes.RandomSpread.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.SortSpreads = function(id, graph) {
   this.constructor(id, "Sort (Spreads)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
-  
+
   this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
   this.addOutputPin("Former Index", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
     var sorted = _(this.inputPins["Input"].values).map(function(v,i) { return [v, i]; });
     sorted = _(sorted).sortBy(function(x) { return x[0] });
-    
+
     for (var i=0; i<sorted.length; i++) {
       this.outputPins["Output"].setValue(i, sorted[i][0]);
       this.outputPins["Former Index"].setValue(i, sorted[i][1]);
@@ -225,7 +186,7 @@ VVVV.Nodes.SortSpreads = function(id, graph) {
   }
 
 }
-VVVV.Nodes.SortSpreads.prototype = new VVVV.Core.Node();
+VVVV.Nodes.SortSpreads.prototype = new Node();
 
 
 /*
@@ -238,25 +199,25 @@ VVVV.Nodes.SortSpreads.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.LinearSpread = function(id, graph) {
   this.constructor(id, "LinearSpread (Spreads)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: ['phase does not work with Block alignment']
   };
-  
+
   var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
   var widthIn = this.addInputPin("Width", [1.0], VVVV.PinTypes.Value);
   var alignmentIn = this.addInputPin("Alignment", ['Centered'], VVVV.PinTypes.Enum);
   alignmentIn.enumOptions = ["Centered", "Block", "LeftJustified", "RightJustified"]
   var phaseIn = this.addInputPin("Phase", [0.0], VVVV.PinTypes.Value);
   var countIn = this.addInputPin("Spread Count", [1], VVVV.PinTypes.Value);
-  
+
   var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
-    
+
     var maxSize = this.getMaxInputSliceCount();
     var idx = 0;
     for (var l=0; l<maxSize; l++) {
@@ -291,7 +252,7 @@ VVVV.Nodes.LinearSpread = function(id, graph) {
   }
 
 }
-VVVV.Nodes.LinearSpread.prototype = new VVVV.Core.Node();
+VVVV.Nodes.LinearSpread.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -303,19 +264,19 @@ VVVV.Nodes.LinearSpread.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.AvoidNil = function(id, graph) {
   this.constructor(id, "AvoidNIL (Spreads)", graph);
-  
+
   this.auto_nil = false;
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['Kalle'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
   var defaultIn = this.addInputPin("Default", [0.0], VVVV.PinTypes.Value);
-  
+
   var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
@@ -329,12 +290,12 @@ VVVV.Nodes.AvoidNil = function(id, graph) {
       }
       outputOut.setSliceCount(source.getSliceCount());
     }
-    
+
 
   }
 
 }
-VVVV.Nodes.AvoidNil.prototype = new VVVV.Core.Node();
+VVVV.Nodes.AvoidNil.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -346,18 +307,18 @@ VVVV.Nodes.AvoidNil.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.SwapDim = function(id, graph) {
   this.constructor(id, "SwapDim (Spreads)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: ['BinSize not implemented']
   };
-  
+
   var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
   var columnCountIn = this.addInputPin("Column Count", [0.0], VVVV.PinTypes.Value);
   var rowCountIn = this.addInputPin("Row Count", [0.0], VVVV.PinTypes.Value);
-  
+
   var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
@@ -371,7 +332,7 @@ VVVV.Nodes.SwapDim = function(id, graph) {
   }
 
 }
-VVVV.Nodes.SwapDim.prototype = new VVVV.Core.Node();
+VVVV.Nodes.SwapDim.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -383,21 +344,21 @@ VVVV.Nodes.SwapDim.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.I = function(id, graph) {
   this.constructor(id, "I (Spreads)", graph);
-  
+
   this.meta = {
     authors: ['woei'],
     original_authors: ['VVVV Group'],
     credits: ['Matthias Zauner, Mórász Dávid (micro.D)'],
     compatibility_issues: []
   };
-  
+
   var fromIn = this.addInputPin("[ From ..", [0], VVVV.PinTypes.Value);
   var toIn = this.addInputPin(".. To [", [1], VVVV.PinTypes.Value);
   var phaseIn = this.addInputPin("Phase", [0.0], VVVV.PinTypes.Value);
-  
+
   var outputOut = this.addOutputPin("Output", [0], VVVV.PinTypes.Value);
   this.evaluate = function() {
-    
+
     var maxSize = this.getMaxInputSliceCount();
     var idx = 0;
     for (var s=0; s<maxSize; s++) {
@@ -427,13 +388,13 @@ VVVV.Nodes.I = function(id, graph) {
           o += from;
           outputOut.setValue(idx, o);
         }
-        
+
       }
     }
     outputOut.setSliceCount(idx);
   }
 }
-VVVV.Nodes.I.prototype = new VVVV.Core.Node();
+VVVV.Nodes.I.prototype = new Node();
 
 
 /*
@@ -467,7 +428,7 @@ VVVV.Nodes.CircularSpread = function (id, graph) {
   this.yOut = this.addOutputPin("Output Y", [0.0], VVVV.PinTypes.Value);
 
   this.evaluate = function () {
-    
+
     var pi2 = Math.PI * 2;
     var pCount = 0;
 
@@ -498,7 +459,7 @@ VVVV.Nodes.CircularSpread = function (id, graph) {
     this.yOut.setSliceCount(pCount);
   }
 }
-VVVV.Nodes.CircularSpread.prototype = new VVVV.Core.Node();
+VVVV.Nodes.CircularSpread.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -510,16 +471,16 @@ VVVV.Nodes.CircularSpread.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.ReverseSpreads = function(id, graph) {
   this.constructor(id, "Reverse (Spreads)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+
   // input pins
   var inputIn = this.addInputPin('Input', [0], VVVV.PinTypes.Value);
 
@@ -536,7 +497,7 @@ VVVV.Nodes.ReverseSpreads = function(id, graph) {
   }
 
 }
-VVVV.Nodes.ReverseSpreads.prototype = new VVVV.Core.Node();
+VVVV.Nodes.ReverseSpreads.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -548,16 +509,16 @@ VVVV.Nodes.ReverseSpreads.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.IntegralSpreads = function(id, graph) {
   this.constructor(id, "Integral (Spreads)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner, woei'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+
   // input pins
   var inputIn = this.addInputPin('Input', [0], VVVV.PinTypes.Value);
   var binIn = this.addInputPin('Input Bin Size', [-1], VVVV.PinTypes.Value);
@@ -607,7 +568,7 @@ VVVV.Nodes.IntegralSpreads = function(id, graph) {
   }
 
 }
-VVVV.Nodes.IntegralSpreads.prototype = new VVVV.Core.Node();
+VVVV.Nodes.IntegralSpreads.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -619,16 +580,16 @@ VVVV.Nodes.IntegralSpreads.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.DifferentialSpreads = function(id, graph) {
   this.constructor(id, "Differential (Spreads)", graph);
-  
+
   this.meta = {
     authors: ['woei'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+
   // input pins
   var inputIn = this.addInputPin('Input', [0.0], VVVV.PinTypes.Value);
   var binIn = this.addInputPin('Input Bin Size', [-1], VVVV.PinTypes.Value);
@@ -671,14 +632,14 @@ VVVV.Nodes.DifferentialSpreads = function(id, graph) {
       }
       inId += size+1;
     }
-        
+
     outputOut.setSliceCount(outId);
     binOut.setSliceCount(binC);
     offsetOut.setSliceCount(binC);
   }
 
 }
-VVVV.Nodes.DifferentialSpreads.prototype = new VVVV.Core.Node();
+VVVV.Nodes.DifferentialSpreads.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -690,16 +651,17 @@ VVVV.Nodes.DifferentialSpreads.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.ConsSpreads = function(id, graph) {
   this.constructor(id, "Cons (Spreads)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+  this.auto_nil = false;
+
   var inputPins = [];
 
   // output pins
@@ -707,9 +669,8 @@ VVVV.Nodes.ConsSpreads = function(id, graph) {
 
   // invisible pins
   var inputcountIn = this.addInvisiblePin('Input Count', [2], VVVV.PinTypes.Value);
-  
-  // initialize() will be called after node creation
-  this.initialize = function() {
+
+  this.configure = function() {
     var inputCount = Math.max(2, inputcountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
       return this.addInputPin('Input '+(i+1), [0.0], VVVV.PinTypes.Value);
@@ -717,11 +678,10 @@ VVVV.Nodes.ConsSpreads = function(id, graph) {
   }
 
   this.evaluate = function() {
-    if (inputcountIn.pinIsChanged())
-      this.initialize();
-    
     var idx = 0;
     for (var i=0; i<inputPins.length; i++) {
+      if (inputPins[i].getSliceCount()==0)
+        continue;
       for (var j=0; j<inputPins[i].getSliceCount(); j++) {
         outputOut.setValue(idx++, inputPins[i].getValue(j));
       }
@@ -730,7 +690,7 @@ VVVV.Nodes.ConsSpreads = function(id, graph) {
   }
 
 }
-VVVV.Nodes.ConsSpreads.prototype = new VVVV.Core.Node();
+VVVV.Nodes.ConsSpreads.prototype = new Node();
 
 
 /*
@@ -743,23 +703,23 @@ VVVV.Nodes.ConsSpreads.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.IntervalSpreads = function(id, graph) {
   this.constructor(id, "Interval (Spreads)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+
   // input pins
   var inputIn = this.addInputPin('Input', [0.5], VVVV.PinTypes.Value);
   var intervalsIn = this.addInputPin('Intervals', [0], VVVV.PinTypes.Value);
 
   // output pins
   var indexOut = this.addOutputPin('Index', [0], VVVV.PinTypes.Value);
-  
+
   var minInterval = 0.0;
 
   this.evaluate = function() {
@@ -789,7 +749,7 @@ VVVV.Nodes.IntervalSpreads = function(id, graph) {
   }
 
 }
-VVVV.Nodes.IntervalSpreads.prototype = new VVVV.Core.Node();
+VVVV.Nodes.IntervalSpreads.prototype = new Node();
 
 
 /*
@@ -802,16 +762,16 @@ VVVV.Nodes.IntervalSpreads.prototype = new VVVV.Core.Node();
 
 VVVV.Nodes.QueueSpreads = function(id, graph) {
   this.constructor(id, "Queue (Spreads)", graph);
-  
+
   this.meta = {
     authors: ['Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+
   var inputIn = this.addInputPin('Input', [0], VVVV.PinTypes.Value);
   var insertIn = this.addInputPin('Insert', [0], VVVV.PinTypes.Value);
   var framecountIn = this.addInputPin('Frame Count', [1], VVVV.PinTypes.Value);
@@ -819,7 +779,7 @@ VVVV.Nodes.QueueSpreads = function(id, graph) {
 
   var outputOut = this.addOutputPin('Output', [], VVVV.PinTypes.Value);
   var outputbinsizeOut = this.addOutputPin('Output Bin Size', [], VVVV.PinTypes.Value);
-  
+
   var output = [];
   var binsizes = [];
 
@@ -835,20 +795,20 @@ VVVV.Nodes.QueueSpreads = function(id, graph) {
         output.unshift(inputIn.getValue(i));
       }
       binsizes.unshift(newSize);
-      
+
       changed = true;
     }
-    
+
     if (framecountIn.pinIsChanged() || changed) {
       currFrameCount = binsizes.length;
       for (var i=currFrameCount; i>framecount; i--) {
         output.splice(-binsizes[i-1])
       }
       binsizes.splice(framecount);
-      
+
       changed = true;
     }
-    
+
     if (changed) {
       for (var i=0; i<output.length; i++) {
         outputOut.setValue(i, output[i]);
@@ -856,11 +816,11 @@ VVVV.Nodes.QueueSpreads = function(id, graph) {
       for (var i=0; i<binsizes.length; i++) {
         outputbinsizeOut.setValue(i, binsizes[i]);
       }
-      
+
       outputOut.setSliceCount(output.length);
       outputOut.setSliceCount(binsizes.length);
     }
-    
+
     if (reset>=0.5) {
       output.length = 0;
       binsizes.length = 0;
@@ -871,6 +831,165 @@ VVVV.Nodes.QueueSpreads = function(id, graph) {
   }
 
 }
-VVVV.Nodes.QueueSpreads.prototype = new VVVV.Core.Node();
+VVVV.Nodes.QueueSpreads.prototype = new Node();
 
-}(vvvvjs_jquery));
+var spreadable_types = [
+  {category: "Spreads", pintype: VVVV.PinTypes.Value, defaultValue: 0.0},
+  {category: "String", pintype: VVVV.PinTypes.String, defaultValue: ''},
+]
+
+spreadable_types.forEach(function(type) {
+
+  /*
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   NODE: InsertSlice (*)
+   Author(s): 'Zauner'
+   Original Node Author(s): 'VVVV Group'
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  */
+
+  VVVV.Nodes["InsertSlice"+type.category] = function(id, graph) {
+    this.constructor(id, "InsertSlice ("+type.category+")", graph);
+
+    this.meta = {
+      authors: ['Zauner'],
+      original_authors: ['VVVV Group'],
+      credits: [],
+      compatibility_issues: ['no bin size']
+    };
+
+    this.auto_evaluate = false;
+    this.auto_nil = false;
+
+    var spreadIn = this.addInputPin("Spread", [type.defaultValue], type.pintype);
+    var inputIn = this.addInputPin("Input", [type.defaultValue], type.pintype);
+    var indexIn = this.addInputPin("Index", [0], VVVV.PinTypes.Value);
+
+    var outputOut = this.addOutputPin("Output", [type.defaultValue], type.pintype);
+
+    this.evaluate = function() {
+      var spreadSize = spreadIn.getSliceCount();
+      var indexSize = indexIn.getSliceCount();
+      var outIdx = 0;
+      var toInsert = -1;
+      var skip = inputIn.getSliceCount()==0 || indexIn.getSliceCount()==0;
+      for (var i=0; i<=spreadSize; i++) {
+        if (!skip) {
+          for (var j=0; j<indexSize; j++) {
+            if (indexIn.getValue(j)==i) {
+              outputOut.setValue(outIdx, inputIn.getValue(j));
+              outIdx++;
+            }
+          }
+        }
+        if (i<spreadSize) {
+          outputOut.setValue(outIdx, spreadIn.getValue(i));
+          outIdx++;
+        }
+      }
+
+
+
+      outputOut.setSliceCount(outIdx);
+    }
+
+  }
+  VVVV.Nodes["InsertSlice"+type.category].prototype = new Node();
+
+
+  /*
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   NODE: SetSlice (*)
+   Author(s): 'Matthias Zauner'
+   Original Node Author(s): 'VVVV Group'
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  */
+
+  VVVV.Nodes['SetSlice'+type.category] = function(id, graph) {
+    this.constructor(id, "SetSlice ("+type.category+")", graph);
+
+    this.meta = {
+      authors: ['Matthias Zauner'],
+      original_authors: ['VVVV Group'],
+      credits: [],
+      compatibility_issues: []
+    };
+
+    this.auto_evaluate = false;
+
+    // input pins
+    var spreadIn = this.addInputPin('Spread', [type.defaultValue], type.pintype);
+    var inputIn = this.addInputPin('Input', [type.defaultValue], type.pintype);
+    var indexIn = this.addInputPin('Index', [0], VVVV.PinTypes.Value);
+
+    // output pins
+    var outputOut = this.addOutputPin('Output', [type.defaultValue], type.pintype);
+
+    this.evaluate = function() {
+      var spreadSize = spreadIn.getSliceCount();
+
+      for (var i=0; i<spreadSize; i++) {
+        outputOut.setValue(i, spreadIn.getValue(i));
+      }
+      size = Math.max(inputIn.getSliceCount(), indexIn.getSliceCount());
+      for (var i=0; i<size; i++) {
+        outputOut.setValue(indexIn.getValue(i)%spreadSize, inputIn.getValue(i));
+      }
+
+      outputOut.setSliceCount(spreadSize);
+    }
+
+  }
+  VVVV.Nodes['SetSlice'+type.category].prototype = new Node();
+
+});
+
+
+
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: GetSpread (Spreads)
+ Author(s): David Gann
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.GetSpreadSpreads = function(id, graph) {
+  this.constructor(id, "GetSpread (Spreads)", graph);
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['no spreadable offset and count']
+  };
+
+  var inputIn = this.addInputPin("Input", [0.0], VVVV.PinTypes.Value);
+  var OffsetIn = this.addInputPin("Offset", [1], VVVV.PinTypes.Value);
+  var CountIn = this.addInputPin("Count", [1], VVVV.PinTypes.Value);
+
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+
+  this.evaluate = function() {
+    var size = CountIn.getValue(0);
+    var offset = OffsetIn.getValue(0);
+
+    var outIdx = 0;
+    for (var i=0; i<size; i++) {
+
+      res = inputIn.getValue(Math.round(offset + i));
+
+
+     outputOut.setValue(i, res);
+     outIdx++;
+
+    }
+    outputOut.setSliceCount(outIdx);
+  }
+
+}
+VVVV.Nodes.GetSpreadSpreads.prototype = new Node();
+
+});

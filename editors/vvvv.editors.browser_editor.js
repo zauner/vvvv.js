@@ -1,5 +1,13 @@
 
-(function($) {
+if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
+
+define(function(require,exports) {
+
+
+var $ = require('jquery');
+require('d3');
+var VVVV = require('core/vvvv.core.defines');
+var Makros = require('vvvv.makros');
 
 var UIState = {
   'Idle': 0,
@@ -8,12 +16,51 @@ var UIState = {
   'Creating': 3,
   'Changing': 4,
   'AreaSelecting': 5,
-  'PinDragging': 6
+  'PinDragging': 6,
+  'Resizing': 7
 }
+
+function getAllUpstreamNodes(origin_node, node) {
+  if (node==undefined)
+    node = origin_node;
+  var upnodes = [];
+  var u = node.getUpstreamNodes();
+  for (var j=0; j<u.length; j++) {
+    if (u[j]!=origin_node && !u[j].delays_output) {
+      upnodes.push(u[j]);
+      upnodes = upnodes.concat(getAllUpstreamNodes(origin_node, u[j]));
+    }
+  }
+  return upnodes;
+}
+
+function getAllDownstreamNodes(origin_node, node) {
+  if (node==undefined)
+    node = origin_node;
+  var upnodes = [];
+  var u = node.getDownstreamNodes();
+  for (var j=0; j<u.length; j++) {
+    if (u[j]!=origin_node && !u[j].delays_output) {
+      upnodes.push(u[j]);
+      upnodes = upnodes.concat(getAllDownstreamNodes(origin_node, u[j]));
+    }
+  }
+  return upnodes;
+}
+
+var defaultOpacity = 0.85;
+var blurredOpacity = 0.35;
 
 VVVV.PinTypes.Value.makeLabel = VVVV.PinTypes.String.makeLabel = function(element, node) {
   var rowCount = node.IOBoxRows();
   var sliceCount = node.IOBoxInputPin().getSliceCount();
+  /*d3.select(element)
+  .append('svg:clipPath')
+    .attr('id', 'clip-path-'+node.id)
+    .append("svg:rect")
+      .attr('width', node.getWidth())
+      .attr('height', node.getHeight())*/
+
   d3.select(element).selectAll('.vvvv-node-label').remove();
   for (var i=0; i<rowCount; i++) {
     d3.select(element)
@@ -26,7 +73,8 @@ VVVV.PinTypes.Value.makeLabel = VVVV.PinTypes.String.makeLabel = function(elemen
       })
       .attr('dx', 4)
       .attr('font-size', 10)
-      .attr('font-family', 'Lucida Sans Unicode')
+      .attr('font-family', "'Lucida Sans Unicode', sans-serif")
+      //.attr('clip-path', 'url(#clip-path-'+node.id+')')
   }
 }
 
@@ -49,9 +97,10 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
       pin.setValue(sliceIdx, parseFloat($(this).val()));
     else
       pin.setValue(sliceIdx, $(this).val());
-    var valstr = _(pin.values).map(function(v) { return '|'+v.toString().replace(/\|/g, "||").replace(/'/g, '&apos;').replace(/</g, '&lt;').replace(/>/g, '&gt;')+'|'});
-    valstr.length = pin.getSliceCount();
-    pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+valstr.join(',')+"'/></NODE>");
+    var cmd = {syncmode: 'diff', nodes: {}, links: []};
+    cmd.nodes[pin.node.id] = {pins: {}};
+    cmd.nodes[pin.node.id].pins[pin.pinname] = {values: pin.values};
+    pin.node.parentPatch.editor.update(pin.node.parentPatch, cmd);
     //pin.node.parentPatch.afterUpdate();
   });
   $inputbox.keydown(function(e) {
@@ -59,6 +108,7 @@ VVVV.PinTypes.Value.openInputBox = VVVV.PinTypes.String.openInputBox = function(
       $(this).change();
       $(this).remove();
     }
+    e.stopPropagation();
   });
 
   if (pin.typeName=='Value') {
@@ -150,11 +200,11 @@ VVVV.PinTypes.Enum.openInputBox = function(win, $element, pin, sliceIdx) {
   $element.replaceWith($inputbox);
 
   $inputbox.change(function() {
-    //pin.node.parentPatch.doLoad("<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+$(this).val()+"'/></NODE>");
     pin.setValue(sliceIdx, $(this).val());
-    var valstr = _(pin.values).map(function(v) { return '|'+v+'|'});
-    valstr.length = pin.getSliceCount();
-    pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+valstr.join(',')+"'/></NODE>");
+    var cmd = {syncmode: 'diff', nodes: {}, links: []};
+    cmd.nodes[pin.node.id] = {pins: {}};
+    cmd.nodes[pin.node.id].pins[pin.pinname] = {values: pin.values};
+    pin.node.parentPatch.editor.update(pin.node.parentPatch, cmd);
     //pin.node.parentPatch.afterUpdate();
     $(this).remove();
   });
@@ -253,9 +303,10 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
     ibx = $inputbox;
     //var cmd = "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='|"+col.toString()+"|'/></NODE></PATCH>";
     pin.setValue(sliceIdx, col);
-    var valstr = _(pin.values).map(function(v) { return '|'+v.toString()+'|'});
-    valstr.length = pin.getSliceCount();
-    pin.node.parentPatch.editor.update(pin.node.parentPatch, "<PATCH><NODE id='"+pin.node.id+"'><PIN pinname='"+pin.pinname+"' values='"+valstr.join(',')+"'/></NODE>");
+    var cmd = {syncmode: 'diff', nodes: {}, links: []};
+    cmd.nodes[pin.node.id] = {pins: {}};
+    cmd.nodes[pin.node.id].pins[pin.pinname] = {values: _(pin.values).map(function(v) { return v.toString() }) };
+    pin.node.parentPatch.editor.update(pin.node.parentPatch, cmd);
   }
 
   $inputbox.on('mousewheel', function(e) {
@@ -272,9 +323,9 @@ VVVV.PinTypes.Color.openInputBox = function(win, $element, pin, sliceIdx) {
   })
 }
 
-VVVV.Editors.BrowserEditor = {}
+var BrowserEditor = {}
 
-VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
+BrowserEditor.PatchWindow = function(p, editor, selector) {
 
   this.state = UIState.Idle;
 
@@ -284,12 +335,13 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
   var selectedNodes = [];
   var patch = p;
   var maxNodeId = 0;
-  var pageURL = location.protocol+'//'+location.host+(VVVV.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVV.Root+'/patch.html';
+  var pageURL = location.protocol+'//'+location.host+(VVVVContext.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVVContext.Root+'/patch.html';
   var modKeyPressed = {CTRL: false, SHIFT: false, ALT: false};
   var selectionBB = {x1: 0, y1: 0, x2: 0, y2: 0};
+  var focusedNodes = [];
 
   if (!selector)
-    this.window = window.open(pageURL, p.nodename, "location=no, width="+p.windowWidth+", height="+p.windowHeight+", toolbar=no" );
+    this.window = window.open(pageURL, p.nodename, "location=no, left=250, width="+p.windowWidth+", height="+p.windowHeight+", toolbar=no" );
   else
     this.window = window;
 
@@ -297,6 +349,31 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
     chart.selectAll('.vvvv-node.selected')
       .attr('class', function(d) { return d.isIOBox? 'vvvv-node vvvv-iobox' : 'vvvv-node' })
     selectedNodes = [];
+    chart.selectAll('.vvvv-node')
+      .attr('opacity', defaultOpacity);
+    chart.selectAll('.vvvv-link')
+      .attr('opacity', 1.0);
+  }
+
+  function focusSubGraph(node) {
+    focusedNodes = [node].concat(getAllUpstreamNodes(node).concat(getAllDownstreamNodes(node)));
+    if (focusedNodes.length<=1)
+      return;
+    chart.selectAll('.vvvv-node').filter(function(d) {
+      return focusedNodes.indexOf(d)<0;
+    })
+    .attr('opacity', blurredOpacity);
+
+    chart.selectAll('.vvvv-link').filter(function(d) {
+      return focusedNodes.indexOf(d.fromPin.node)<0 || focusedNodes.indexOf(d.toPin.node)<0;
+    })
+    .attr('opacity', blurredOpacity);
+  }
+
+  function unfocusSubGraph() {
+    chart.selectAll('.vvvv-node').attr('opacity', defaultOpacity);
+    chart.selectAll('.vvvv-link').attr('opacity', defaultOpacity);
+    focusedNodes.length = 0;
   }
 
   var thatWin = this;
@@ -329,7 +406,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         for (var i=0; i<links.length; i++) {
           $patch.append(links[i].serialize());
         }
-        var xml = '<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta28.1.dtd" >\r\n'+$patch.wrapAll('<d></d>').parent().html();
+        var xml = '<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta28.1.dtd" >'+$patch.wrapAll('<d></d>').parent().html();
         xml = xml.replace(/<patch/g, "<PATCH");
         xml = xml.replace(/<\/patch>/g, "\n  </PATCH>");
         xml = xml.replace(/<node/g, "\n  <NODE");
@@ -389,6 +466,16 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         });
 
         var xml = $patch.wrapAll('<d></d>').parent().html();
+        xml = xml.replace(/<patch/g, "<PATCH");
+        xml = xml.replace(/<\/patch>/g, "\n  </PATCH>");
+        xml = xml.replace(/<node/g, "\n  <NODE");
+        xml = xml.replace(/<\/node>/g, "\n  </NODE>");
+        xml = xml.replace(/<bounds/g, "\n  <BOUNDS");
+        xml = xml.replace(/<\/bounds>/g, "\n  </BOUNDS>");
+        xml = xml.replace(/<pin/g, "\n  <PIN");
+        xml = xml.replace(/<\/pin>/g, "\n  </PIN>");
+        xml = xml.replace(/<link/g, "\n  <LINK");
+        xml = xml.replace(/<\/link>/g, "\n  </LINK>");
         editor.update(patch, xml);
 
         resetSelection();
@@ -428,14 +515,25 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             .attr('transform', function(d) { return 'translate('+(d.x+dx)+','+(d.y+dy)+')' })
           for (var i=0; i<selectedNodes.length; i++) {
             var n = selectedNodes[i];
-            chart.selectAll('.vvvv-link line')
-              .filter(function(d) { return d.fromPin.node.id == n.id })
-              .attr('x1', function(d) { return d.fromPin.x + d.fromPin.node.x + dx })
-              .attr('y1', function(d) { return d.fromPin.y + d.fromPin.node.y + dy })
-            chart.selectAll('.vvvv-link line')
-              .filter(function(d) { return d.toPin.node.id == n.id })
-              .attr('x2', function(d) { return d.toPin.x + d.toPin.node.x + dx })
-              .attr('y2', function(d) { return d.toPin.y + d.toPin.node.y + dy })
+            chart.selectAll('.vvvv-link path')
+              .filter(function(d) { return d.fromPin.node.id == n.id || d.toPin.node.id == n.id })
+              .attr('d', function(d) {
+                var dx1 = dx * (selectedNodes.indexOf(d.fromPin.node)>=0);
+                var dy1 = dy * (selectedNodes.indexOf(d.fromPin.node)>=0);
+                var dx2 = dx * (selectedNodes.indexOf(d.toPin.node)>=0);
+                var dy2 = dy * (selectedNodes.indexOf(d.toPin.node)>=0);
+                var deltaY = d.toPin.node.y + dy2 - (d.fromPin.node.y + dy1) - d.fromPin.node.getHeight();
+                var cy = Math.min(Math.max(deltaY * 0.2, 6), 30);
+                if (deltaY<12 && deltaY>3)
+                  cy = deltaY * 0.5;
+                var smooth = Math.max(0, Math.min(7, (deltaY - 2*cy)/2));
+                return 'M'+(d.fromPin.x + d.fromPin.node.x + 2 + .5 + dx1)+','+(d.fromPin.y + d.fromPin.node.y+ 4 + .5 + dy1)
+                      +' L'+(d.fromPin.x + d.fromPin.node.x + 2 + .5 + dx1)+','+(d.fromPin.y + d.fromPin.node.y + 4 + dy1 + cy)
+                      +' C'+(d.fromPin.x + d.fromPin.node.x + 2 + .5 + dx1)+','+(d.fromPin.y + d.fromPin.node.y + 4 + dy1 + cy + smooth)
+                      +' '+(d.toPin.x + d.toPin.node.x + 2 + .5 + dx2)+','+(d.toPin.y + d.toPin.node.y + dy2 - (cy + smooth))
+                      +' '+(d.toPin.x + d.toPin.node.x + 2 + .5 + dx2)+','+(d.toPin.y + d.toPin.node.y + .5 + dy2 -cy)
+                      +' L'+(d.toPin.x + d.toPin.node.x + 2 + .5 + dx2)+','+(d.toPin.y + d.toPin.node.y + .5 + dy2)
+              })
           }
         }
         else if (thatWin.state==UIState.AreaSelecting) {
@@ -467,6 +565,15 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             }
           })
         }
+        else if(thatWin.state==UIState.Resizing) {
+          var dx = d3.event.pageX - dragStart.x;
+          var cmd = {syncmode: 'diff', nodes: {}, links: []};
+          var n = selectedNodes[0];
+          var width = Math.max(n.getWidth()+dx, Math.max((_(n.inputPins).size()-1)*12+4, (n.label().length+2)*6))
+          cmd.nodes[n.id] = {x: n.x*15, y: n.y*15, width: width*15, height: n.height};
+          dragStart.x = d3.event.pageX;
+          editor.update(patch, cmd);
+        }
       })
       .on('contextmenu', function() {
         if (thatWin.state==UIState.Connecting) {
@@ -489,20 +596,23 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           thatWin.state=UIState.Idle;
           var dx = d3.event.pageX - dragStart.x;
           var dy = d3.event.pageY - dragStart.y;
-          var cmd = "<PATCH>";
+          var cmd = {syncmode: 'diff', nodes: {}, links: []};
           for (var i=0; i<selectedNodes.length; i++) {
             var n = selectedNodes[i];
-            cmd += "<NODE componentmode='Node' id='"+n.id+"'><BOUNDS type='Node' left='"+(dx+n.x)*15+"' top='"+(dy+n.y)*15+"' width='"+n.width+"' height='"+n.height+"'/></NODE>";
+            cmd.nodes[n.id] = {x: (dx+n.x)*15, y: (dy+n.y)*15, width: n.width, height: n.height};
           }
-          cmd += "</PATCH>";
           editor.update(patch, cmd);
         }
         if (thatWin.state==UIState.AreaSelecting) {
           chart.select('.selection-area').remove();
           thatWin.state = UIState.Idle;
         }
+        if (thatWin.state==UIState.Resizing) {
+          thatWin.state = UIState.Idle;
+        }
       })
       .on('dblclick', function() {
+        unfocusSubGraph();
         $('#node_selection', thatWin.window.document).remove();
         var x = d3.event.pageX;
         var y = d3.event.pageY;
@@ -520,9 +630,11 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         function filterNodes(e) {
           $nodeselectionlist.empty();
           var filter = $nodeselection.find('#node_filter').val().toLowerCase();
-          if (filter!="")
+          if (filter!="") {
             $('.makro', thatWin.window.document).remove();
-          var available_nodes = VVVV.NodeNames.concat(_(VVVV.ShaderCodeResources).map(function(s,k) { return k.replace("%VVVV%/effects/", ""); }));
+            $('.subpatch_controls', thatWin.window.document).remove();
+          }
+          var available_nodes = VVVV.NodeNames.concat(_(p.executionContext.ShaderCodeResources).map(function(s,k) { return k.replace("%VVVV%/effects/", ""); }));
           var matchingNodes = _(_(available_nodes).filter(function(n) { return VVVV.Helpers.translateOperators(n).toLowerCase().indexOf(filter)>=0 })).sortBy(function(n) { return n.toLowerCase().indexOf(filter);  });
           for (var i=0; i<matchingNodes.length; i++) {
             $nodeselectionlist.append($('<option>'+matchingNodes[i]+'</option>'));
@@ -572,10 +684,10 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             }
 
             maxNodeId++;
-            var cmd = "<PATCH>";
-            cmd += "<NODE componentmode='Hidden' id='"+maxNodeId+"' nodename='"+nodename+"' systemname='"+nodename+"' "+(filename!=""?"filename='"+filename+"'":"")+">";
-            cmd += "<BOUNDS type='Node' left='"+x*15+"' top='"+y*15+"' width='100' height='100'/>";
-            cmd += "</NODE>";
+            var cmd = {syncmode: 'diff', nodes: {}, links: []};
+            cmd.nodes[maxNodeId] = {nodename: nodename, x: x*15, y: y*15, width: 100, height: 100};
+            if (filename!="")
+              cmd.nodes[maxNodeId].filename = filename;
             editor.update(patch, cmd);
 
             $nodeselection.remove();
@@ -587,6 +699,10 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             cmd += "<BOUNDS type='Node' left='"+x*15+"' top='"+y*15+"' width='100' height='100'/>";
             cmd += "<PIN pinname='Input String' values='|"+filtertext+"|'/>";
             cmd += "</NODE>";
+            // TODO: Why does this not work with a cmd object?
+            //var cmd = {syncmode: 'diff', nodes: {}, links: []};
+            //cmd.nodes[maxNodeId] = {nodename: "IOBox (String)", x: x*15, y: y*15, width: 100, height: 100};
+            //cmd.nodes[maxNodeId].pins = {"Input String": filtertext};
             editor.update(patch, cmd);
 
             $nodeselection.remove();
@@ -596,7 +712,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         $nodeselection.find('#new_node').click(tryAddNode);
 
         var makros = chart.selectAll('g.makro')
-          .data(VVVV.Makros)
+          .data(Makros)
           .enter().append('svg:g')
             .attr('class', 'makro resettable')
             .attr('transform', function(d, i) { return "translate("+(x-85-(i%2)*85)+", "+(y+Math.floor(i/2)*25)+")"; })
@@ -606,6 +722,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
 
               $nodeselection.remove();
               $('.makro', thatWin.window.document).remove();
+              $('.resettable', thatWin.window.document).remove();
             })
 
         makros.append('svg:rect')
@@ -618,9 +735,71 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           .attr('text-anchor', 'middle')
           .attr('fill', '#333')
           .attr('font-size', 10)
-          .attr('font-family', 'Lucida Sans Unicode')
+          .attr('font-family', "'Lucida Sans Unicode', sans-serif")
           .attr('dy', 12)
           .attr('dx', 40)
+
+        if (patch.serverSync) {
+          var subpatch_controls = chart.selectAll('g.subpatch_controls')
+            .data(["New Subpatch ..."])
+            .enter().append('svg:g')
+              .attr('class', 'subpatch_controls resettable')
+              .attr('transform', function(d, i) { return 'translate('+x+', '+(y-25*(i+1))+')'; })
+              .on('click', function(d, i) {
+                $nodeselection.remove();
+                $('.resettable', thatWin.window.document).remove();
+                var modal = $('<div class="modal resettable"><div class="modal-contents"><h1>New Supatch</h1><label>Filename:</label><input onload="this.focus()" type="text" id="new_subpatch_name" value="supersubsub.v4p"/></div></div>');
+                var create_subpatch_button = $('<input class="button" type="button" value="OK"/>');
+                var cancel_button = $('<input class="button cancel" type="button" value="X"/>');
+                modal.find('.modal-contents').append(create_subpatch_button);
+                modal.find('.modal-contents').append(cancel_button);
+                $('body', thatWin.window.document).append(modal);
+                modal.find('#new_subpatch_name').on('focus', function() { this.setSelectionRange(0, 11) });
+
+                cancel_button.click(function(e) {
+                  $('.resettable', thatWin.window.document).remove();
+                });
+                create_subpatch_button.click(function() {
+                  $('.resettable', thatWin.window.document).remove();
+                  var filename = modal.find('#new_subpatch_name').val();
+                  if (filename=="")
+                    return;
+                  $.ajax({
+                    url: '/vvvvjs-service/create_subpatch',
+                    type: 'get',
+                    dataType: 'json',
+                    data: {filename: location.pathname+"/"+VVVV.Helpers.prepareFilePath(filename, patch)},
+                    success: function(response) {
+                      if (response.status!="OK") {
+                        alert(response.message);
+                        return;
+                      }
+                      maxNodeId++;
+                      var cmd = {syncmode: 'diff', nodes: {}, links: []};
+                      cmd.nodes[maxNodeId] = {nodename: filename, filename: filename, x: x*15, y: y*15, width: 100, height: 100};
+                      editor.update(patch, cmd);
+                    },
+                    error: function(response) {
+                      alert(response.message);
+                    }
+                  })
+                });
+              })
+
+            subpatch_controls.append('svg:rect')
+              .attr('width', 90)
+              .attr('height', 20)
+              .attr('fill', '#AAA')
+
+            subpatch_controls.append('svg:text')
+              .text(function(d) { return d })
+              .attr('text-anchor', 'middle')
+              .attr('fill', '#333')
+              .attr('font-size', 10)
+              .attr('font-family', "'Lucida Sans Unicode', sans-serif")
+              .attr('dy', 12)
+              .attr('dx', 43)
+        }
 
       })
       .on('mousedown', function() {
@@ -641,6 +820,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           .attr('height', 0)
 
         resetSelection();
+        unfocusSubGraph();
       })
 
       background.on('click', function() {
@@ -654,6 +834,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           .attr('class', '')
         $('#node_selection', thatWin.window.document).remove();
         resetSelection();
+        unfocusSubGraph();
         linkStart = undefined;
       })
 
@@ -668,30 +849,29 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
 
       $(thatWin.window.document).keydown(function(e) {
         // DELETE key
-        if (e.which==46 && selectedNodes.length>0) {
-          var cmd = "<PATCH>";
+        if ((e.which==46 || e.which==8) && selectedNodes.length>0) {
+          var cmd = {syncmode: 'diff', nodes: {}, links: []};
           for (var i=0; i<selectedNodes.length; i++) {
             var n = selectedNodes[i];
-            cmd += "<NODE id='"+selectedNodes[i].id+"' deleteme='pronto'/>";
+            cmd.nodes[selectedNodes[i].id] = {delete: true};
             _(n.inputPins).each(function(pin) {
               _(pin.links).each(function(l) {
-                cmd += "<LINK deleteme='pronto' srcnodeid='"+l.fromPin.node.id+"' srcpinname='"+l.fromPin.pinname+"' dstnodeid='"+l.toPin.node.id+"' dstpinname='"+l.toPin.pinname+"'/>";
+                cmd.links.push({delete: true, srcnodeid: l.fromPin.node.id, srcpinname: l.fromPin.pinname, dstnodeid: l.toPin.node.id, dstpinname: l.toPin.pinname})
               });
             })
             _(n.outputPins).each(function(pin) {
               _(pin.links).each(function(l) {
-                cmd += "<LINK deleteme='pronto' srcnodeid='"+l.fromPin.node.id+"' srcpinname='"+l.fromPin.pinname+"' dstnodeid='"+l.toPin.node.id+"' dstpinname='"+l.toPin.pinname+"'/>";
+                cmd.links.push({delete: true, srcnodeid: l.fromPin.node.id, srcpinname: l.fromPin.pinname, dstnodeid: l.toPin.node.id, dstpinname: l.toPin.pinname})
               });
             })
           }
-          cmd += "</PATCH>";
 
           editor.update(patch, cmd);
           selectedNodes = [];
         }
         // CTRL + S / Save
         else if ((e.which==115 || e.which==83) && e.ctrlKey) {
-          editor.save(patch.nodename, patch.toXML());
+          editor.save(patch);
           e.preventDefault();
           return false;
         }
@@ -749,6 +929,8 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
   }
 
   this.drawComplete = function() {
+    if (patch.disposing)
+      return;
     if (nodes)
       nodes.remove();
     if (links)
@@ -784,21 +966,40 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         })
         .attr('id', function(d) { return 'vvvv-node-'+d.id})
         .attr('transform', function(d) { return 'translate('+d.x+','+d.y+')' })
+        .attr('opacity', function(d) { return (focusedNodes.length>1 && focusedNodes.indexOf(d)<0) ? blurredOpacity : defaultOpacity })
 
     nodes.append('svg:rect')
       .attr('class', 'vvvv-node-background')
       .attr('height', function(d) { return d.getHeight(); })
-      .attr('width', function(d) { return d.getWidth(); })
+      .attr('width', function(d) { return d.getWidth() + 4; })
+      .attr('x', -2)
+      .attr('rx', 2)
+      .attr('ry', 2)
       .attr('fill', function(d) {
         if (d.isComment())
           return 'rgba(0,0,0,0)';
         else if (d.not_implemented)
           return 'rgba(255,0,0,1)';
+        else if (d.isIOBox)
+          return '#ddd';
+        //else if (d.inCluster)
+          //return 'rgba(255, 255, 0, 1)';
         else
-          return '#cdcdcd';
+          return '#999';
       })
+      .attr('stroke', function(d) { return d.isIOBox ? '#999' : 'none'})
+      .attr('stroke-width', 1)
 
     nodes.append('svg:rect')
+      .attr('class', 'resize-handle')
+      .attr('height', function(d) { return d.getHeight() - 4; })
+      .attr('x', function(d) { return d.getWidth(); })
+      .attr('y', 2)
+      .attr('width', 4)
+      .attr('fill', 'rgba(0,0,0,0)')
+      .attr('cursor', 'e-resize')
+
+    /*nodes.append('svg:rect')
       .attr('class', 'vvvv-node-pinbar')
       .attr('height', function (d) { return d.isIOBox? 2 : 4 })
       .attr('fill', function(d) { return d.isIOBox? "#dddddd" : "#9a9a9a"; })
@@ -809,7 +1010,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
       .attr('y',function(d) { return d.isIOBox? d.getHeight() -2 : d.getHeight()-4; })
       .attr('height', function (d) { return d.isIOBox? 2 : 4 })
       .attr('fill', function(d) { return d.isIOBox? "#dddddd" : "#9a9a9a"; })
-      .attr('width', function(d) { return d.getWidth(); })
+      .attr('width', function(d) { return d.getWidth(); })*/
 
     nodes.append('svg:g')
       .attr('class', 'descriptive-name-bg')
@@ -821,17 +1022,23 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
       .attr('dy', function(d) { return d.getHeight()+12 })
       .attr('dx', 2)
       .attr('font-size', 10)
-      .attr('font-family', 'Lucida Sans Unicode')
+      .attr('font-family', "'Lucida Sans Unicode', sans-serif")
       .attr('fill', 'white')
 
     nodes.append('svg:text')
-      .text(function(d) { return (d.invisiblePins["Node Name"] && d.nodename=="DefineNode (System)") ? d.invisiblePins["Node Name"].getValue(0) : null })
+      .text(function(d) {
+        if (d.invisiblePins["Node Name"] && d.nodename=="DefineNode (System)")
+          return d.invisiblePins["Node Name"].getValue(0);
+        if (d.invisiblePins["Effect Descriptor"] && d.nodename=="DefineEffect (DX9)")
+          return d.invisiblePins["Effect Descriptor"].getValue(0);
+        return null;
+      })
       .attr('class', 'vvvv-node-descriptive-name')
       .attr('shape-rendering', 'crispEdges')
       .attr('dy', function(d) { return d.getHeight()+12 })
       .attr('dx', 2)
       .attr('font-size', 10)
-      .attr('font-family', 'Lucida Sans Unicode')
+      .attr('font-family', "'Lucida Sans Unicode', sans-serif")
       .attr('fill', 'blue')
 
     nodes.selectAll('g.descriptive-name-bg')
@@ -871,7 +1078,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
                   $inputbox.css('top', $(this).offset().top + 2);
                   $inputbox.css('width', d.getWidth());
                   $inputbox.css('height', d.getHeight()/rowCount-4);
-                  VVVV.PinTypes[d.IOBoxInputPin().typeName].openInputBox(thatWin.window, $inputbox, d.IOBoxInputPin(), j%sliceCount);
+                  VVVV.PinTypes[d.IOBoxInputPin().typeName].openInputBox(thatWin.window, $inputbox, d.IOBoxInputPin(), j);
                 }
                 d3.event.stopPropagation();
                 d3.event.preventDefault();
@@ -892,7 +1099,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             })
             .attr('dx', 4)
             .attr('font-size', 10)
-            .attr('font-family', 'Lucida Sans Unicode')
+            .attr('font-family', "'Lucida Sans Unicode', sans-serif")
       }
     });
 
@@ -911,17 +1118,19 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           pinOffset = 0;
           if (_(d.node.inputPins).size()>1)
             pinOffset = (d.node.getWidth()-4)/(_(d.node.inputPins).size()-1);
-          d.y = 0;
+          d.y = -1;
           d.x = i*pinOffset;
           //if (d.node.isIOBox)
           //  d.x = d.node.getWidth() - d.x - 4;
-          return 'translate('+d.x+', 0)';
+          return 'translate('+d.x+', '+d.y+')';
         })
 
     inputPins.append('svg:rect')
       .attr('width', 4)
       .attr('height', 4)
-      .attr('fill', function(d) { return d.node.isComment() ? 'rgba(0,0,0,0)' : '#666666' })
+      .attr('ry', 1)
+      .attr('rx', 1)
+      .attr('fill', function(d) { return d.node.isComment() ? 'rgba(0,0,0,0)' : (d.clusterEdge ? '#FFFF00' : '#666666') })
       .on('mouseover', function(d, i) {
         chart.selectAll('#vvvv-node-'+d.node.id+' g.vvvv-input-pin').filter(function(d, j) { return j==i }).each(function() {
           d3.select(this).append('svg:rect')
@@ -933,14 +1142,18 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
 
           d3.select(this).append('svg:text')
             .text(function(d) {
+              //Truncate preview string to avoid crashes with big strings
+              var LabelContent = ""+d.getValue(0);
+              if(LabelContent.length > 30)
+                LabelContent = LabelContent.substring(0,30)+'...';
               if (d.getSliceCount()>1)
-                return d.pinname+"("+d.getSliceCount()+"): "+d.getValue(0);
+                return d.pinname+"("+d.getSliceCount()+"): "+LabelContent;
               else
-                return d.pinname+": "+d.getValue(0);
+                return d.pinname+": "+LabelContent;
             })
             .attr('dy', 30)
             .attr('font-size', 10)
-            .attr('font-family', 'Lucida Sans Unicode')
+            .attr('font-family', "'Lucida Sans Unicode', sans-serif")
             .attr('fill', 'rgba(0,0,0,1)');
         });
       })
@@ -957,7 +1170,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           pinOffset = 0;
           if (_(d.node.outputPins).size()>1)
             pinOffset = (d.node.getWidth()-4)/(_(d.node.outputPins).size()-1);
-          d.y = d.node.getHeight()-4;
+          d.y = d.node.getHeight()-4+1;
           d.x = i*pinOffset;
           //if (d.node.isIOBox)
           //  d.x = d.node.getWidth() - d.x - 4;
@@ -967,7 +1180,9 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
     outputPins.append('svg:rect')
       .attr('width', 4)
       .attr('height', 4)
-      .attr('fill', function(d) { return d.node.isComment() ? 'rgba(0,0,0,0)' : '#666666' })
+      .attr('ry', 1)
+      .attr('rx', 1)
+      .attr('fill', function(d) { return d.node.isComment() ? 'rgba(0,0,0,0)' : (d.clusterEdge ? '#FFFF00' : '#666666') })
       .on('mouseover', function(d, i) {
         chart.selectAll('#vvvv-node-'+d.node.id+' g.vvvv-output-pin').filter(function(d, j) { return j==i }).each(function() {
           d3.select(this).append('svg:rect')
@@ -984,14 +1199,18 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
 
           d3.select(this).append('svg:text')
             .text(function(d) {
+              //Truncate preview string to avoid crashes with big strings
+              var LabelContent = ""+d.getValue(0);
+              if(LabelContent.length > 30)
+                LabelContent = LabelContent.substring(0,30)+'...';
               if (d.getSliceCount()>1)
-                return d.pinname+"("+d.getSliceCount()+"): "+d.getValue(0);
+                return d.pinname+"("+d.getSliceCount()+"): "+LabelContent;
               else
-                return d.pinname+": "+d.getValue(0);
+                return d.pinname+": "+LabelContent;
             })
             .attr('dy', 30)
             .attr('font-size', 10)
-            .attr('font-family', 'Lucida Sans Unicode')
+            .attr('font-family', "'Lucida Sans Unicode', sans-serif")
             .attr('fill', 'rgba(0,0,0,1)');
         });
       })
@@ -1005,22 +1224,54 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
       .data(patch.linkList)
       .enter().append('svg:g')
         .attr('class', 'vvvv-link')
+        .attr('opacity', function(d) { return (focusedNodes.length>0 && (focusedNodes.indexOf(d.fromPin.node)<0 || focusedNodes.indexOf(d.toPin.node)<0)) ? blurredOpacity : 1.0 })
 
-    links.append('svg:line')
+    links.append('svg:path')
       .attr('stroke', 'rgba(0, 0, 0, 0)')
+      .attr('fill', 'none')
       .attr('stroke-width', 4)
-      .attr('x1', function(d) { return d.fromPin.x + d.fromPin.node.x + 2 + .5 })
-      .attr('y1', function(d) { return d.fromPin.y + d.fromPin.node.y + 4 + .5 })
-      .attr('x2', function(d) { return d.toPin.x + d.toPin.node.x + 2 + .5 })
-      .attr('y2', function(d) { return d.toPin.y + d.toPin.node.y + .5 });
+      .attr('d', function(d) {
+        var deltaY = d.toPin.node.y - d.fromPin.node.y - d.fromPin.node.getHeight();
+        var cy = Math.min(Math.max(deltaY * 0.2, 6), 30);
+        if (deltaY<12 && deltaY>3)
+          cy = deltaY * 0.5;
+        var smooth = Math.max(0, Math.min(7, (deltaY - 2*cy)/2));
+        return 'M'+(d.fromPin.x + d.fromPin.node.x + 2 + .5)+','+(d.fromPin.y + d.fromPin.node.y+ 4 + .5)
+              +' L'+(d.fromPin.x + d.fromPin.node.x + 2 + .5)+','+(d.fromPin.y + d.fromPin.node.y + 4 + cy)
+              +' C'+(d.fromPin.x + d.fromPin.node.x + 2 + .5)+','+(d.fromPin.y + d.fromPin.node.y + 4 + cy + smooth)
+              +' '+(d.toPin.x + d.toPin.node.x + 2 + .5)+','+(d.toPin.y + d.toPin.node.y - (cy + smooth))
+              +' '+(d.toPin.x + d.toPin.node.x + 2 + .5)+','+(d.toPin.y + d.toPin.node.y + .5 - cy)
+              +' L'+(d.toPin.x + d.toPin.node.x + 2 + .5)+','+(d.toPin.y + d.toPin.node.y + .5)
+      })
+      .on('mouseenter', function() {
+        d3.select(this)
+          .attr('stroke-width', 4)
+          .attr('stroke', 'rgba(0, 0, 0, 0.35)')
+      })
+      .on('mouseleave', function() {
+        d3.select(this)
+          .attr('stroke-width', 4)
+          .attr('stroke', 'rgba(0, 0, 0, 0)')
+      })
 
-    links.append('svg:line')
+    links.append('svg:path')
       .attr('stroke', '#000')
+      .attr('fill', 'none')
       .attr('stroke-width', 1)
-      .attr('x1', function(d) { return d.fromPin.x + d.fromPin.node.x + 2 + .5 })
-      .attr('y1', function(d) { return d.fromPin.y + d.fromPin.node.y + 4 + .5 })
-      .attr('x2', function(d) { return d.toPin.x + d.toPin.node.x + 2 + .5 })
-      .attr('y2', function(d) { return d.toPin.y + d.toPin.node.y + .5 });
+      .attr('stroke-dasharray', function(d) { return (d.fromPin.node.inCluster ? !d.toPin.node.inCluster : d.toPin.node.inCluster) ? '2,2' : 'none' })
+      .attr('d', function(d) {
+        var deltaY = d.toPin.node.y - d.fromPin.node.y - d.fromPin.node.getHeight();
+        var cy = Math.min(Math.max(deltaY * 0.2, 6), 30);
+        if (deltaY<12 && deltaY>3)
+          cy = deltaY * 0.5;
+        var smooth = Math.max(0, Math.min(7, (deltaY - 2*cy)/2));
+        return 'M'+(d.fromPin.x + d.fromPin.node.x + 2 + .5)+','+(d.fromPin.y + d.fromPin.node.y+ 4 + .5)
+              +' L'+(d.fromPin.x + d.fromPin.node.x + 2 + .5)+','+(d.fromPin.y + d.fromPin.node.y + 4 + cy)
+              +' C'+(d.fromPin.x + d.fromPin.node.x + 2 + .5)+','+(d.fromPin.y + d.fromPin.node.y + 4 + cy + smooth)
+              +' '+(d.toPin.x + d.toPin.node.x + 2 + .5)+','+(d.toPin.y + d.toPin.node.y - (cy + smooth))
+              +' '+(d.toPin.x + d.toPin.node.x + 2 + .5)+','+(d.toPin.y + d.toPin.node.y + .5 - cy)
+              +' L'+(d.toPin.x + d.toPin.node.x + 2 + .5)+','+(d.toPin.y + d.toPin.node.y + .5)
+      })
 
     // set descriptive name widths after rendering
     $('.descriptive-name-bg rect', thatWin.window.document).each(function() {
@@ -1054,6 +1305,7 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
       chart.selectAll('g.vvvv-input-pin, g.vvvv-output-pin')
       .on('click', function(d, i) {
         if (thatWin.state!=UIState.Connecting) {
+          unfocusSubGraph();
           linkStart = d;
           thatWin.state = UIState.Connecting;
           var that = this;
@@ -1072,24 +1324,22 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
             var targetDir = 'output';
 
           var upnodes = [];
-          function getAllUpstreamNodes(node) {
-            var u = node.getUpstreamNodes();
-            for (var j=0; j<u.length; j++) {
-              if (u[j]!=linkStart.node && !u[j].delays_output) {
-                upnodes.push(u[j]);
-                getAllUpstreamNodes(u[j]);
-              }
-            }
-
-            return false;
-          }
           if (!linkStart.node.delays_output)
+<<<<<<< HEAD
             getAllUpstreamNodes(linkStart.node);
+=======
+            upnodes = getAllUpstreamNodes(linkStart.node);
+>>>>>>> require
 
           chart.selectAll('g.vvvv-'+targetDir+'-pin rect')
             .filter(function(d) {
-              //if (d.typeName!=linkStart.typeName && (linkStart.typeName!="Node" || VVVV.PinTypes[d.typeName].primitive && (d.typeName!="Node" || VVVV.PinTypes[linkStart.typeName].primitive)))
               if (!(d.typeName==linkStart.typeName || (linkStart.typeName=="Node" && !VVVV.PinTypes[d.typeName].primitive) || (d.typeName=="Node" && !VVVV.PinTypes[linkStart.typeName].privimive)))
+                return false;
+              var browserOnly = linkStart.node.environments && linkStart.node.environments.indexOf('browser')>=0;
+              if (!VVVV.PinTypes[d.typeName].primitive && d.node.inCluster && browserOnly)
+                return false;
+              browserOnly = d.node.environments && d.node.environments.indexOf('browser')>=0;
+              if (!VVVV.PinTypes[d.typeName].primitive && linkStart.node.inCluster && browserOnly)
                 return false;
               if (upnodes.indexOf(d.node)>=0 || d.node==linkStart.node)
                 return false;
@@ -1114,12 +1364,11 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           }
 
           if ($(this).find('.vvvv-connection-highlight').length==1) {
-            var cmd = "<PATCH>";
+            var cmd = {syncmode: 'diff', nodes: {}, links: []};
             _(dstPin.links).each(function(l) {
-              cmd += "<LINK deleteme='pronto' srcnodeid='"+l.fromPin.node.id+"' srcpinname='"+l.fromPin.pinname+"' dstnodeid='"+l.toPin.node.id+"' dstpinname='"+l.toPin.pinname+"'/>";
+              cmd.links.push({delete: true, srcnodeid: l.fromPin.node.id, srcpinname: l.fromPin.pinname, dstnodeid: l.toPin.node.id, dstpinname: l.toPin.pinname});
             });
-            cmd += "<LINK createme='pronto' srcnodeid='"+srcPin.node.id+"' srcpinname='"+srcPin.pinname+"' dstnodeid='"+dstPin.node.id+"' dstpinname='"+dstPin.pinname+"'/>";
-            cmd += "</PATCH>";
+            cmd.links.push({srcnodeid: srcPin.node.id, srcpinname: srcPin.pinname, dstnodeid: dstPin.node.id, dstpinname: dstPin.pinname});
 
             editor.update(patch, cmd);
 
@@ -1135,15 +1384,15 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
         d3.event.stopPropagation();
       })
 
-      chart.selectAll('g.vvvv-link')
-        .on("contextmenu", function(d) {
-          if (thatWin.state == UIState.Idle)
-            editor.update(patch, "<PATCH><LINK deleteme='pronto' srcnodeid='"+d.fromPin.node.id+"' srcpinname='"+d.fromPin.pinname+"' dstnodeid='"+d.toPin.node.id+"' dstpinname='"+d.toPin.pinname+"'/></PATCH>")
-
+      chart.selectAll('g.vvvv-link path')
+        .on('mousedown', function(d) {
+          if (thatWin.state == UIState.Idle && d3.event.which==3 || (d3.event.which==1 && d3.event.ctrlKey))
+            editor.update(patch, {syncmode: 'diff', nodes: {}, links: [{delete: true, srcnodeid: d.fromPin.node.id, srcpinname: d.fromPin.pinname, dstnodeid: d.toPin.node.id, dstpinname: d.toPin.pinname}]});
           d3.event.preventDefault();
         })
 
       nodes
+        // node selection
         .on('mousedown', function(d) {
           $('.resettable', thatWin.window.document).remove();
           thatWin.state = UIState.Moving;
@@ -1158,10 +1407,14 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           dragStart.y = d3.event.pageY;
           if (editor.inspector)
             editor.inspector.setNode(d);
+
+          focusSubGraph(d);
+
           d3.event.preventDefault();
           d3.event.stopPropagation();
           return false;
         })
+        // open subpatch or UI window
         .on('contextmenu', function(d) {
           if (d.isSubpatch) {
             editor.openPatch(d);
@@ -1173,15 +1426,27 @@ VVVV.Editors.BrowserEditor.PatchWindow = function(p, editor, selector) {
           d3.event.stopPropagation();
           return false;
         })
+
+      nodes.selectAll('.resize-handle')
+        .on('mousedown', function(d) {
+          $('.resettable', thatWin.window.document).remove();
+          dragStart.x = d3.event.pageX;
+          dragStart.y = d3.event.pageY;
+          resetSelection();
+          selectedNodes.push(d);
+          thatWin.state = UIState.Resizing;
+          d3.event.stopPropagation();
+          return false;
+        })
     }
 
   }
 
 }
 
-VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
+BrowserEditor.Inspector = function(VVVVRoot) {
 
-  this.win = window.open(location.protocol+'//'+location.host+(VVVV.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVV.Root+'/inspektor.html', 'inspektor', "location=no, width=250, height=600, toolbar=no" );
+  this.win = window.open(location.protocol+'//'+location.host+(VVVVContext.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVVContext.Root+'/inspektor.html', 'inspektor', "location=no, width=250, height=600, toolbar=no" );
   var node;
   var pin;
   insw = this.win;
@@ -1312,7 +1577,7 @@ VVVV.Editors.BrowserEditor.Inspector = function(VVVVRoot) {
 
 }
 
-VVVV.Editors.BrowserEditor.Interface = function() {
+BrowserEditor.Interface = function() {
 
   var patchWindows = [];
   var patches = {};
@@ -1334,7 +1599,7 @@ VVVV.Editors.BrowserEditor.Interface = function() {
         that.disable();
       })
 
-      this.openInspector(VVVV.Root);
+      this.openInspector(VVVVContext.Root);
 
       if (patchWindows[0].window) {
         if (opts && opts.success)
@@ -1345,12 +1610,16 @@ VVVV.Editors.BrowserEditor.Interface = function() {
           opts.error();
       }
     }
+
+    if (!p.serverSync.isConnected()) {
+      p.serverSync.connect();
+    }
   }
 
   this.openInspector = function(VVVVRoot, node) {
     if (this.inspector)
       return;
-    this.inspector = new VVVV.Editors.BrowserEditor.Inspector(VVVVRoot);
+    this.inspector = new BrowserEditor.Inspector(VVVVRoot);
     var that = this;
     $(this.inspector.win).bind('beforeunload', function() {
       console.log('closing inspektor');
@@ -1392,7 +1661,7 @@ VVVV.Editors.BrowserEditor.Interface = function() {
   }
 
   this.openPatch = function(p, selector) {
-    patchWindows.push(new VVVV.Editors.BrowserEditor.PatchWindow(p, this, selector));
+    patchWindows.push(new BrowserEditor.PatchWindow(p, this, selector));
   }
 
   this.update = function(node, cmd) {
@@ -1401,6 +1670,11 @@ VVVV.Editors.BrowserEditor.Interface = function() {
     for (var i=0; i<n; i++) {
       patches[path][i].doLoad(cmd);
       patches[path][i].afterUpdate();
+    }
+    if (patches[path][0].serverSync.isConnected()) {
+      if (typeof cmd == 'object')
+        cmd = JSON.stringify(cmd);
+      patches[path][0].serverSync.sendPatchUpdate(patches[path][0], cmd);
     }
   }
 
@@ -1413,13 +1687,29 @@ VVVV.Editors.BrowserEditor.Interface = function() {
     $(window).unbind('beforeunload', confirmLeave);
   }
 
-  this.save = function(nodename, xml) {
-    var $dl = $("<a>save</a>");
-    $('body').append($dl);
-    $dl.attr('href', "data:application/octet-stream;charset=utf-8,"+encodeURIComponent(xml));
-    $dl.attr('download', nodename.replace( /.*\//, ''));
-    $dl[0].click();
-    $dl.remove();
+  this.save = function(node) {
+    var path = VVVV.Helpers.prepareFilePath(node.nodename, node.parentPatch)
+    if (patches[path][0].serverSync.isConnected()) {
+      if (!patches[path][0].isPersisted && window.confirm("Do you want to save the patch "+node.nodename+"?")) {
+        patches[path][0].serverSync.sendPatchSave(patches[path][0]);
+        for (var i=0; i<patches[path].length; i++) {
+          patches[path][i].isPersisted = true;
+        }
+      }
+      var i = patches[path][0].nodeList.length;
+      while (i--) {
+        if (patches[path][0].nodeList[i].isSubpatch)
+          this.save(patches[path][0].nodeList[i]);
+      }
+    }
+    else {
+      var $dl = $("<a>save</a>");
+      $('body').append($dl);
+      $dl.attr('href', "data:application/octet-stream;charset=utf-8,"+encodeURIComponent(node.toXML()));
+      $dl.attr('download', node.nodename.replace( /.*\//, ''));
+      $dl[0].click();
+      $dl.remove();
+    }
   }
 
   this.sendUndo = function() {
@@ -1431,10 +1721,10 @@ VVVV.Editors.BrowserEditor.Interface = function() {
 
 // Convinience function to easily inject a patch into the page
 VVVV.VVVViewer = function(patch, selector) {
-  var editor = new VVVV.Editors.BrowserEditor.Interface();
+  var editor = new BrowserEditor.Interface();
   editor.enable(patch, {selector: selector});
 }
 
-VVVV.Editors["edit"] = VVVV.Editors.BrowserEditor.Interface;
+return BrowserEditor;
 
-}(vvvvjs_jquery));
+});

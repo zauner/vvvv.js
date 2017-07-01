@@ -1,12 +1,18 @@
 
-(function($) {
+if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
 
-VVVV.Core.DOMInterface = function(patch) {
+define(function(require,exports) {
+
+
+var _ = require('underscore');
+var $ = require('jquery');
+
+var DOMInterface = function(patch) {
 
   var inputConnectors = {};
   var outputConnectors = {};
   patch.domInterface = this;
-  
+
   this.connect = function(node) {
     _(inputConnectors).each(function(ioboxConn, key) {
       if (ioboxConn.node.id == node.id) {
@@ -19,7 +25,7 @@ VVVV.Core.DOMInterface = function(patch) {
       if (ioboxConn.node.id == node.id)
         delete outputConnectors[key];
     });
-    
+
     var match = /([^\/]+)(\/(event|attribute|style)\/(.+))?/.exec(node.invisiblePins["Descriptive Name"].getValue(0));
     if (match==null)
       return;
@@ -36,10 +42,10 @@ VVVV.Core.DOMInterface = function(patch) {
       inputConnectors[match[0]] = ioboxConn;
     else if (node.getDownstreamNodes().length==0)
       outputConnectors[match[0]] = ioboxConn;
-      
+
     attachEvent(ioboxConn);
   }
-  
+
   function attachEvent(ioboxConn) {
     if (ioboxConn.property_class=="event") {
       var selector = ioboxConn.selector;
@@ -56,7 +62,7 @@ VVVV.Core.DOMInterface = function(patch) {
       });
     }
   }
-  
+
   var that = this;
   _(patch.nodeList).each(function(n) {
     if (n.isIOBox) {
@@ -97,7 +103,7 @@ VVVV.Core.DOMInterface = function(patch) {
       }
     }
   }
-  
+
   this.processOutputConnectors= function() {
     var that = this;
     var connectorName;
@@ -112,9 +118,9 @@ VVVV.Core.DOMInterface = function(patch) {
           that.setDOMByIOBox(outputConnectors[connectorName]);
       }
     }
-    
+
     // reset event ioboxConnes
-    
+
     for (connectorName in inputConnectors) {
       if (inputConnectors[connectorName].property_class=="event") {
         for (var i=0; i<inputConnectors[connectorName].values.length; i++) {
@@ -123,15 +129,15 @@ VVVV.Core.DOMInterface = function(patch) {
       }
     }
   }
-  
-  
+
+
   // helper
-  
+
   this.fetchValuesFromDOM = function(ioboxConn) {
     ioboxConn.values.length = 0;
     $(ioboxConn.selector).each(function(i) {
       var value;
-      
+
       if (ioboxConn.property_class==undefined) {
         switch (this.nodeName) {
           case "INPUT":
@@ -143,19 +149,19 @@ VVVV.Core.DOMInterface = function(patch) {
           default: value = $(this).text();
         }
       }
-      
+
       if (ioboxConn.property_class=="attribute") {
         value = $(this).attr(ioboxConn.property);
       }
-      
+
       if (ioboxConn.property_class=="style") {
         value = $(this).css(ioboxConn.property);
       }
-      
+
       ioboxConn.values[i] = value;
     });
   }
-  
+
   this.setDOMByIOBox= function(ioboxConn) {
     var pin = ioboxConn.node.IOBoxOutputPin();
     if (!pin.pinIsChanged())
@@ -179,18 +185,20 @@ VVVV.Core.DOMInterface = function(patch) {
           default: $elem.html($(ioboxConn.selector).eq(j).html()+values[k]);
         }
       }
-      
+
       if (ioboxConn.property_class=="attribute") {
         $elem.attr(ioboxConn.property, values[k]);
       }
-      
+
       if (ioboxConn.property_class=="style") {
         $elem.css(ioboxConn.property, values[k]);
       }
     }
-    
+
   }
 
 }
 
-}(vvvvjs_jquery));
+
+return DOMInterface;
+})

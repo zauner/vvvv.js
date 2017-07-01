@@ -3,7 +3,11 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
-(function($) {
+if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
+define(function(require,exports) {
+
+var Node = require('core/vvvv.core.node');
+var VVVV = require('core/vvvv.core.defines');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -58,7 +62,7 @@ VVVV.Nodes.Polar3d = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Polar3d.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Polar3d.prototype = new Node();
 
 
 /*
@@ -113,7 +117,7 @@ VVVV.Nodes.Cartesian3d = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Cartesian3d.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Cartesian3d.prototype = new Node();
 
 
 /*
@@ -171,7 +175,7 @@ VVVV.Nodes.Normalize3d = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Normalize3d.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Normalize3d.prototype = new Node();
 
 
 /*
@@ -221,7 +225,7 @@ VVVV.Nodes.Normalize3dVector = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Normalize3dVector.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Normalize3dVector.prototype = new Node();
 
 
 /*
@@ -270,7 +274,7 @@ VVVV.Nodes.Multiply3dCross = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Multiply3dCross.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Multiply3dCross.prototype = new Node();
 
 
 /*
@@ -314,7 +318,7 @@ VVVV.Nodes.Multiply3dDot = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Multiply3dDot.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Multiply3dDot.prototype = new Node();
 
 
 /*
@@ -360,7 +364,7 @@ VVVV.Nodes.Multiply3dVector = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Multiply3dVector.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Multiply3dVector.prototype = new Node();
 
 
 /*
@@ -407,6 +411,6 @@ VVVV.Nodes.Multiply4dVector = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Multiply4dVector.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Multiply4dVector.prototype = new Node();
 
-}(vvvvjs_jquery));
+});

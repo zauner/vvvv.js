@@ -1,0 +1,19 @@
+{
+  "name": "vvvv-js",
+  "repository": "zauner/vvvv.js",
+  "description": "VVVV.js",
+  "license": "MIT",
+  "dependencies": {
+    "amdefine": "=1.0.0",
+    "minimist": "*",
+    "npm": "*",
+    "james-browser-launcher": "*",
+    "cheerio": "=0.22.0",
+    "finalhandler": "*",
+    "jsdom": "=7.0.2",
+    "nodejs-websocket": "*",
+    "serve-static": "*",
+    "sqlite3": "*"
+  },
+  "version": "2.0.0-alpha.1"
+}

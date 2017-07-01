@@ -3,13 +3,28 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
-(function($) {
+if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
+
+define(function(require,exports) {
+
+
+var $ = require('jquery');
+var _ = require('underscore');
+var glMatrix = require('glMatrix');
+var VVVV = require('core/vvvv.core.defines');
+var Node = require('core/vvvv.core.node');
 
 /** A hash table of {@VVVV.Types.ShaderCodeResource} objects, indexed with the name/path of the shader code resource */
 VVVV.ShaderCodeResources = {
   "%VVVV%/effects/PhongDirectional.vvvvjs.fx": undefined,
   "%VVVV%/effects/GouraudDirectional.vvvvjs.fx": undefined,
   "%VVVV%/effects/Constant.vvvvjs.fx": undefined,
+  "%VVVV%/effects/PhongDirectionalInstanced.vvvvjs.fx": undefined,
+  "%VVVV%/effects/PhongDisplacement.vvvvjs.fx": undefined,
+  "%VVVV%/effects/CookTorrance.vvvvjs.fx": undefined,
+  "%VVVV%/effects/PhongInstancedAnimation.vvvvjs.fx": undefined,
+  "%VVVV%/effects/BillBoards.vvvvjs.fx": undefined,
+  "%VVVV%/effects/BotanyInstanced.vvvvjs.fx": undefined
 };
 
 /**
@@ -47,7 +62,7 @@ VVVV.Types.ShaderCodeResource = function() {
 }
 
 
-var identity = mat4.identity(mat4.create());
+var identity = glMatrix.mat4.identity(glMatrix.mat4.create());
 
 /**
  * A data structure which contains all render state attributes that can be set in VVVV.js
@@ -151,10 +166,25 @@ VVVV.Types.VertexBuffer = function(gl, p) {
     this.length += this.subBuffers[u].data.byteLength;
   }
 
+  // in case of dealing already with typed arrays
+  this.setSubBufferTyped = function(u, s, d) {
+    this.subBuffers[u] = {
+      usage: u,
+      data: d,
+      size: s,
+      offset: this.length
+    };
+    this.length += this.subBuffers[u].data.byteLength;
+  }
+
   //this.setSubBuffer('POSITION', 3, p);
 
   this.updateSubBuffer = function(u,d) {
     this.subBuffers[u].data = new Float32Array(d);
+  }
+
+  this.updateSubBufferTyped = function(u,d) {
+    this.subBuffers[u].data = d;
   }
 
   /**
@@ -191,12 +221,70 @@ VVVV.Types.Mesh = function(gl, vertexBuffer, indices) {
   /** @member */
   this.indexBuffer = gl.createBuffer();
 
+  //this.instancedBuffer = gl.createBuffer();
+   this.instanceBuffers = [];
+      this.semantics = [];
+   this.VectorSize = [];
+   this.Divisor = [];
+
   this.update =function(indices) {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.DYNAMIC_DRAW);
     /** @member */
     this.numIndices = indices.length;
   }
+
+   this.addInstanceBuffers =function(count) {
+    for (var i=0; i<count; i++) {
+      this.instanceBuffers[i] = gl.createBuffer();
+    }
+  }
+
+  this.removeInstanceBuffers =function() {
+    for (var i=0; i<this.instanceBuffers.length; i++) {
+        gl.removeBuffer(this.instanceBuffers[i]);
+    }
+  }
+
+   this.addSemantics =function(semanticsIn) {
+    for (var i=0; i<semanticsIn.length; i++) {
+      this.semantics[i] = semanticsIn[i];
+    }
+  }
+
+  this.addVectorSize =function(VectorSizeIn) {
+    for (var i=0; i<VectorSizeIn.length; i++) {
+      this.VectorSize[i] = VectorSizeIn[i];
+    }
+  }
+
+  this.addDivisor =function(DivisorIn) {
+    for (var i=0; i<DivisorIn.length; i++) {
+      this.Divisor[i] = DivisorIn[i];
+    }
+  }
+
+  this.updateInstanced =function(bufferData, index) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.instanceBuffers[index]);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(bufferData), gl.STATIC_DRAW);
+  }
+
+  this.updateInstancedArray =function(Buffer) {
+    for (var i=0; i<Buffer.length; i++) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.instanceBuffers[i]);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(Buffer[i].data), gl.STATIC_DRAW);
+    }
+  }
+
+
+  /** @member */
+  this.instanced = false;
+
+  /** @member */
+  this.instanceCount = 1.0;
+
+  this.instancedBufferChanged = false;
+
 }
 
 /**
@@ -461,14 +549,16 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   };
 
   this.auto_evaluate = false;
+  this.environments = ['browser'];
 
   var filenamePin = this.addInputPin("Filename", [""], VVVV.PinTypes.String);
   var outputPin = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
 
-  var typeIn = this.addInvisiblePin("Type", ["Texture"], VVVV.PinTypes.Enum);
+  var typeIn = this.addInputPin("Type", ["Texture"], VVVV.PinTypes.Enum);
   typeIn.enumOptions = ["Texture", "Cube Texture"];
 
   var textures = [];
+  var prevFilenames = [];//only load new files
 
   this.evaluate = function() {
 
@@ -488,10 +578,13 @@ VVVV.Nodes.FileTexture = function(id, graph) {
     if (filenamePin.pinIsChanged() || typeIn.pinIsChanged() || this.contextChanged) {
       var type = typeIn.getValue(0);
       var maxSize = this.getMaxInputSliceCount();
+      var filenames = [];
       for (var i=0; i<maxSize; i++) {
         var filename = VVVV.Helpers.prepareFilePath(filenamePin.getValue(i), this.parentPatch);
         if (filename.indexOf('http://')===0 && VVVV.ImageProxyPrefix!==undefined)
           filename = VVVV.ImageProxyPrefix+encodeURI(filename);
+        filenames.push(filename);            //only load new files
+        if(prevFilenames[i]!=filenames[i]){  //by loading only when filename actualy changes performance increase and dynamic texture loading possible
         textures[i] = gl.createTexture();
         textures[i].context = gl;
         if (type=="Texture") {
@@ -546,7 +639,9 @@ VVVV.Nodes.FileTexture = function(id, graph) {
         }
 
         outputPin.setValue(i, VVVV.defaultTexture);
+        }
       }
+      prevFilenames = filenames;
       outputPin.setSliceCount(maxSize);
     }
     this.contextChanged = false;
@@ -560,7 +655,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   }
 
 }
-VVVV.Nodes.FileTexture.prototype = new VVVV.Core.Node();
+VVVV.Nodes.FileTexture.prototype = new Node();
 
 
 /*
@@ -582,6 +677,7 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var sourceIn = this.addInputPin("Source", [], VVVV.PinTypes.WebGlResource);
   var outputOut = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
@@ -643,7 +739,7 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
   }
 
 }
-VVVV.Nodes.DX9Texture.prototype = new VVVV.Core.Node();
+VVVV.Nodes.DX9Texture.prototype = new Node();
 
 
 /*
@@ -665,8 +761,9 @@ VVVV.Nodes.CanvasTextureWebGl = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
-  var sourceIn = this.addInputPin("Source", [], VVVV.PinTypes.CanvasGraphics);
+  var sourceIn = this.addInputPin("Source", [], VVVV.PinTypes.HTMLLayer);
   var outputOut = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
 
   var texture;
@@ -683,8 +780,8 @@ VVVV.Nodes.CanvasTextureWebGl = function(id, graph) {
     }
 
     if (sourceIn.isConnected()) {
-      var source = sourceIn.getValue(0);
-      if (!source)
+      var source = sourceIn.getValue(0).element.get(0);
+      if (!source || source.tagName!='CANVAS')
         return;
       if ( (source.width & (source.width-1)) != 0 || (source.height & (source.height-1)) != 0)
         console.log("Warning: Source renderer's width/height is not a power of 2. DX9Texture will most likely not work.");
@@ -717,7 +814,7 @@ VVVV.Nodes.CanvasTextureWebGl = function(id, graph) {
   }
 
 }
-VVVV.Nodes.CanvasTextureWebGl.prototype = new VVVV.Core.Node();
+VVVV.Nodes.CanvasTextureWebGl.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -738,6 +835,7 @@ VVVV.Nodes.VideoTexture = function(id, graph) {
     credits: [],
     compatibility_issues: ['Only supports power-of-2 sized videos', 'Has no output pins for meta data']
   };
+  this.environments = ['browser'];
 
   var sourceIn = this.addInputPin("Video", [], this);
   var outputOut = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
@@ -775,7 +873,7 @@ VVVV.Nodes.VideoTexture = function(id, graph) {
   }
 
 }
-VVVV.Nodes.VideoTexture.prototype = new VVVV.Core.Node();
+VVVV.Nodes.VideoTexture.prototype = new Node();
 
 
 /*
@@ -797,6 +895,7 @@ VVVV.Nodes.VertexBufferJoin = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var posIn = this.addInputPin("Position XYZ", [0.0, 0.0, 0.0], VVVV.PinTypes.Value);
   var normalIn = this.addInputPin("Normal XYZ", [0.0, 0.0, 0.0], VVVV.PinTypes.Value);
@@ -841,7 +940,7 @@ VVVV.Nodes.VertexBufferJoin = function(id, graph) {
   }
 
 }
-VVVV.Nodes.VertexBufferJoin.prototype = new VVVV.Core.Node();
+VVVV.Nodes.VertexBufferJoin.prototype = new Node();
 
 
 /*
@@ -863,6 +962,7 @@ VVVV.Nodes.MeshJoin = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var vbIn = this.addInputPin("Vertex Buffer", [], VVVV.PinTypes.WebGlResource);
   var indicesIn = this.addInputPin("Indices", [0], VVVV.PinTypes.Value);
@@ -898,7 +998,7 @@ VVVV.Nodes.MeshJoin = function(id, graph) {
   }
 
 }
-VVVV.Nodes.MeshJoin.prototype = new VVVV.Core.Node();
+VVVV.Nodes.MeshJoin.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -919,6 +1019,7 @@ VVVV.Nodes.Grid = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var xIn = this.addInputPin("Resolution X", [2], VVVV.PinTypes.Value);
   var yIn = this.addInputPin("Resolution Y", [2], VVVV.PinTypes.Value);
@@ -985,7 +1086,62 @@ VVVV.Nodes.Grid = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Grid.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Grid.prototype = new Node();
+
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Box (EX9.Geometry)
+ Author(s): David Gann
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Box = function(id, graph) {
+  this.constructor(id, "Box (EX9.Geometry)", graph);
+
+  this.auto_nil = false;
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
+
+  var mesh = null;
+
+  this.evaluate = function() {
+
+    if (!this.renderContexts) return;
+    var gl = this.renderContexts[0];
+    if (!gl)
+      return;
+
+
+    var vertices = [-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5];
+    var normals = [-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0];
+    var texCoords = [1.0,1.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0,0.0,1.0,0.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0,1.0,1.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0];
+    var indices = [0,1,2,2,3,0,4,5,6,6,7,4,8,9,10,10,11,8,12,13,14,14,15,12,16,17,18,18,19,16,20,21,22,22,23,20];
+
+    var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+    vertexBuffer.create();
+    vertexBuffer.setSubBuffer('POSITION', 3, vertices);
+    vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
+    vertexBuffer.setSubBuffer('NORMAL', 3, normals);
+    vertexBuffer.update();
+
+    mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
+    mesh.update(indices);
+
+    meshOut.setValue(0, mesh);
+    }
+  }
+
+VVVV.Nodes.Box.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1006,6 +1162,7 @@ VVVV.Nodes.Sphere = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var rIn = this.addInputPin("Radius", [0.5], VVVV.PinTypes.Value);
   var xIn = this.addInputPin("Resolution X", [15], VVVV.PinTypes.Value);
@@ -1076,7 +1233,7 @@ VVVV.Nodes.Sphere = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Sphere.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Sphere.prototype = new Node();
 
 
 /*
@@ -1098,6 +1255,7 @@ VVVV.Nodes.Cylinder = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var r1In = this.addInputPin("Radius 1", [0.5], VVVV.PinTypes.Value);
   var r2In = this.addInputPin("Radius 2", [0.5], VVVV.PinTypes.Value);
@@ -1215,7 +1373,7 @@ VVVV.Nodes.Cylinder = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Cylinder.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Cylinder.prototype = new Node();
 
 
 /*
@@ -1235,6 +1393,7 @@ VVVV.Nodes.BlendWebGLAdvanced = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
   var alphaBlendingIn = this.addInputPin("Alpha Blending", [1], VVVV.PinTypes.Value);
@@ -1280,7 +1439,7 @@ VVVV.Nodes.BlendWebGLAdvanced = function(id, graph) {
   }
 
 }
-VVVV.Nodes.BlendWebGLAdvanced.prototype = new VVVV.Core.Node();
+VVVV.Nodes.BlendWebGLAdvanced.prototype = new Node();
 
 
 /*
@@ -1300,6 +1459,7 @@ VVVV.Nodes.BlendWebGL = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
   var drawModeIn = this.addInputPin("Draw Mode", ["Blend"], VVVV.PinTypes.Enum);
@@ -1346,7 +1506,7 @@ VVVV.Nodes.BlendWebGL = function(id, graph) {
   }
 
 }
-VVVV.Nodes.BlendWebGL.prototype = new VVVV.Core.Node();
+VVVV.Nodes.BlendWebGL.prototype = new Node();
 
 
 /*
@@ -1366,6 +1526,7 @@ VVVV.Nodes.FillWebGL = function(id, graph) {
     credits: [],
     compatibility_issues: ['does not actually draw wireframe, because this is not supported in WebGL, but makes renderer use gl.LINE instead of gl.TRIANGLES when drawing']
   };
+  this.environments = ['browser'];
 
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
   var fillModeIn = this.addInputPin("Fill Mode", ["Solid"], VVVV.PinTypes.Enum);
@@ -1400,7 +1561,7 @@ VVVV.Nodes.FillWebGL = function(id, graph) {
   }
 
 }
-VVVV.Nodes.FillWebGL.prototype = new VVVV.Core.Node();
+VVVV.Nodes.FillWebGL.prototype = new Node();
 
 
 /*
@@ -1420,6 +1581,7 @@ VVVV.Nodes.ZWriteEnableWebGL = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
   var enableZWriteIn = this.addInputPin("ZWrite Enable", [1], VVVV.PinTypes.Value);
@@ -1463,7 +1625,7 @@ VVVV.Nodes.ZWriteEnableWebGL = function(id, graph) {
   }
 
 }
-VVVV.Nodes.ZWriteEnableWebGL.prototype = new VVVV.Core.Node();
+VVVV.Nodes.ZWriteEnableWebGL.prototype = new Node();
 
 
 /*
@@ -1483,6 +1645,7 @@ VVVV.Nodes.CullWebGL = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var renderStateIn = this.addInputPin("Render State In", [], VVVV.PinTypes.WebGlRenderState);
   var cullingIn = this.addInputPin("Culling", ["None"], VVVV.PinTypes.Enum);
@@ -1513,7 +1676,7 @@ VVVV.Nodes.CullWebGL = function(id, graph) {
   }
 
 }
-VVVV.Nodes.CullWebGL.prototype = new VVVV.Core.Node();
+VVVV.Nodes.CullWebGL.prototype = new Node();
 
 
 /*
@@ -1535,6 +1698,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   this.shaderFile = '';
 
@@ -1558,37 +1722,38 @@ VVVV.Nodes.GenericShader = function(id, graph) {
 
   var thatNode = this;
 
-  this.initialize = function() {
+  var configured_once = false;
 
+  this.configure = function() {
     // add the pins which have already been added (by the patch XML) to the shaderPins array
     var defaultPins = ["Render State", "Mesh", "Transform", "Technique"];
     _(thatNode.inputPins).each(function(p) {
-      if (defaultPins.indexOf(p.pinname)<0) {
+      if (shaderPins.indexOf(p)<0 && defaultPins.indexOf(p.pinname)<0) {
         p.unvalidated = true;
         shaderPins.push(p);
       }
     })
 
-    if (VVVV.ShaderCodeResources[thatNode.shaderFile]==undefined) {
-      VVVV.ShaderCodeResources[thatNode.shaderFile] = new VVVV.Types.ShaderCodeResource();
-      VVVV.ShaderCodeResources[thatNode.shaderFile].addRelatedNode(thatNode);
-      $.ajax({
-        url: VVVV.Helpers.prepareFilePath(thatNode.shaderFile, thatNode.parentPatch),
-        async: false,
-        dataType: 'text',
+    if (configured_once)
+      return;
+
+    if (thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile]==undefined) {
+      thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile] = new VVVV.Types.ShaderCodeResource();
+      thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].addRelatedNode(thatNode);
+      VVVVContext.loadFile(VVVV.Helpers.prepareFilePath(thatNode.shaderFile, thatNode.parentPatch), {
         success: function(response) {
-          VVVV.ShaderCodeResources[thatNode.shaderFile].setSourceCode(response);
+          thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].setSourceCode(response);
         },
         error: function() {
-          console.log('ERROR: Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVV.Root));
-          VVVV.onNotImplemented('Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVV.Root));
+          console.log('ERROR: Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVVContext.Root));
+          VVVVContext.onNotImplemented('Could not load shader file '+thatNode.shaderFile.replace('%VVVV%', VVVVContext.Root));
         }
       });
     }
     else {
-      VVVV.ShaderCodeResources[thatNode.shaderFile].addRelatedNode(thatNode);
+      thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].addRelatedNode(thatNode);
     }
-
+    configured_once = true;
 
   }
 
@@ -1733,12 +1898,12 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     if (!shader.isSetup || this.contextChanged || techniqueIn.pinIsChanged()) {
       this.setupShader();
       if (shader.setup(gl)) {
-        if (VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode)
-          VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode.showStatus('success', "Successfully compiled");
+        if (thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].definingNode)
+          thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].definingNode.showStatus('success', "Successfully compiled");
       }
       else {
-        if (VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode)
-          VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode.showStatus('error', shader.log);
+        if (thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].definingNode)
+          thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].definingNode.showStatus('error', shader.log);
       }
     }
 
@@ -1765,7 +1930,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     }
     for (var j=currentLayerCount; j<maxSize; j++) {
       layers[j] = new VVVV.Types.Layer();
-      layers[j].mesh = meshIn.getValue(0);
+      layers[j].mesh = meshIn.getValue(j);
       layers[j].shader = shader;
       _(shader.uniformSpecs).each(function(u) {
         layers[j].uniformNames.push(u.varname);
@@ -1774,7 +1939,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     }
     if (meshIn.pinIsChanged()) {
       for (var j=0; j<maxSize; j++) {
-      	layers[j].mesh = meshIn.getValue(0);
+      	layers[j].mesh = meshIn.getValue(j);
       }
     }
     for (var j=0; j<maxSize; j++) {
@@ -1829,13 +1994,13 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   }
 
   this.openUIWindow = function() {
-    if (VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode)
-      VVVV.ShaderCodeResources[thatNode.shaderFile].definingNode.openUIWindow();
+    if (thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].definingNode)
+      thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].definingNode.openUIWindow();
   }
 
 
 }
-VVVV.Nodes.GenericShader.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GenericShader.prototype = new Node();
 
 
 /*
@@ -1857,6 +2022,7 @@ VVVV.Nodes.Quad = function(id, graph) {
     credits: [],
     compatibility_issues: ['No Sampler States', 'No texture coord mapping', 'No enable pin', 'Transprent pixels are discarded by default']
   };
+  this.environments = ['browser'];
 
   this.auto_evaluate = false;
 
@@ -1991,7 +2157,7 @@ VVVV.Nodes.Quad = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Quad.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Quad.prototype = new Node();
 
 
 /*
@@ -2013,6 +2179,7 @@ VVVV.Nodes.GridSegment = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var renderStateIn = this.addInputPin("Render State", [], VVVV.PinTypes.WebGlRenderState);
   this.addInputPin("Transform", [], VVVV.PinTypes.Transform);
@@ -2183,7 +2350,7 @@ VVVV.Nodes.GridSegment = function(id, graph) {
   }
 
 }
-VVVV.Nodes.GridSegment.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GridSegment.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2204,6 +2371,7 @@ VVVV.Nodes.Group = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+  this.environments = ['browser'];
 
   var layerIns = [];
   var enableIn = this.addInputPin("Enabled", [1], VVVV.PinTypes.Value);
@@ -2235,7 +2403,7 @@ VVVV.Nodes.Group = function(id, graph) {
   }
 
 }
-VVVV.Nodes.Group.prototype = new VVVV.Core.Node();
+VVVV.Nodes.Group.prototype = new Node();
 
 
 /*
@@ -2257,12 +2425,15 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     credits: [],
     compatibility_issues: ['Disabling Clear doesn\'t work in Chrome', 'No Fullscreen', 'No Enable Pin', 'No Aspect Ration and Viewport transform', 'No mouse output']
   };
+  this.environments = ['browser'];
 
   this.addInputPin("Layers", [], VVVV.PinTypes.WebGlResource);
   var clearIn = this.addInputPin("Clear", [1], VVVV.PinTypes.Value);
+  var antialiasIn = this.addInputPin("Antialiasing", [0], VVVV.PinTypes.Value);
   var bgColIn = this.addInputPin("Background Color", [new VVVV.Types.Color("0.0, 0.0, 0.0, 1.0")], VVVV.PinTypes.Color);
   var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], VVVV.PinTypes.Value);
   var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], VVVV.PinTypes.Value);
+  var parentIn = this.addInputPin("Parent Element", [], VVVV.PinTypes.HTMLLayer);
   var viewIn = this.addInputPin("View", [], VVVV.PinTypes.Transform);
   var projIn = this.addInputPin("Projection", [], VVVV.PinTypes.Transform);
 
@@ -2272,6 +2443,10 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var bufferWidthOut = this.addOutputPin("Actual Backbuffer Width", [0.0], VVVV.PinTypes.Value);
   var bufferHeightOut = this.addOutputPin("Actual Backbuffer Height", [0.0], VVVV.PinTypes.Value);
   var ex9Out = this.addOutputPin("EX9 Out", [], VVVV.PinTypes.WebGlResource);
+  var layerOut = this.addOutputPin("Element Out", [], VVVV.PinTypes.HTMLLayer);
+  var antialiasOut = this.addOutputPin("Antialias", ["?"], VVVV.PinTypes.String);
+  //var outputDepth = this.addOutputPin("Depth Texture", [], VVVV.PinTypes.WebGlTexture);
+
 
   var width = 0.0;
   var height = 0.0;
@@ -2279,13 +2454,15 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var pMatrix;
   var vMatrix;
   var vpMatrix;
-  var wvMatrix = mat4.create();
-  var wvpMatrix = mat4.create();
+  var wvMatrix = glMatrix.mat4.create();
+  var wvpMatrix = glMatrix.mat4.create();
 
   var canvas;
   this.ctxt = undefined;              // the renderer's active context. might be the canvas context, or the context of a connected downstream renderer
   var canvasCtxt = undefined;         // the context of the canvas which is connected to the renderer
   var gl;                             // just a convenience variable for keeping the lines short
+  var targetElement;
+  var htmlLayer;
   var id;
 
   var bbufFramebuffer;
@@ -2366,16 +2543,26 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     if (!this.invisiblePins["Descriptive Name"])
       return;
     var selector = this.invisiblePins["Descriptive Name"].getValue(0);
-    var targetElement = $(selector).get(0);
+    targetElement = $(selector).get(0);
     if (!targetElement || targetElement.nodeName!='CANVAS') {
       var w = parseInt(bufferWidthIn.getValue(0));
       var h = parseInt(bufferHeightIn.getValue(0));
       w = w > 0 ? w : 512;
       h = h > 0 ? h : 512;
       id = 'vvvv-js-generated-renderer-'+(new Date().getTime());
-      canvas = $('<canvas width="'+w+'" height="'+h+'" id="'+id+'" class="vvvv-js-generated-renderer"></canvas>');
-      if (!targetElement) targetElement = 'body';
-      $(targetElement).append(canvas);
+      htmlLayer = new VVVV.Types.HTMLLayer('canvas');
+      htmlLayer.setAttribute('width', w);
+      htmlLayer.setAttribute('height', h);
+      htmlLayer.setAttribute('id', id);
+      htmlLayer.setAttribute('class', 'vvvv-js-generated-renderer');
+      if (!targetElement) {
+        if (parentIn.isConnected() && parentIn.getValue(0))
+          targetElement = parentIn.getValue(0).element;
+        else
+          targetElement = 'body';
+      }
+      $(targetElement).append(htmlLayer.element);
+      canvas = htmlLayer.element;
     }
     else
       canvas = $(targetElement);
@@ -2383,10 +2570,12 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     if (!canvas)
       return;
 
+    layerOut.setValue(0, htmlLayer);
+
     attachMouseEvents();
 
     try {
-      canvasCtxt = canvas.get(0).getContext("experimental-webgl", {preserveDrawingBuffer: true});
+      canvasCtxt = canvas.get(0).getContext("experimental-webgl", {preserveDrawingBuffer: true,antialias: true});
       canvasCtxt.viewportWidth = parseInt(canvas.get(0).width);
       canvasCtxt.viewportHeight = parseInt(canvas.get(0).height);
     } catch (e) {
@@ -2474,6 +2663,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     // this is to ensure that all the input pins get evaluated, if the gl context has been set after the node creation
     this.inputPins["Layers"].markPinAsChanged();
     clearIn.markPinAsChanged();
+    antialiasIn.markPinAsChanged();
     bgColIn.markPinAsChanged();
     viewIn.markPinAsChanged();
     projIn.markPinAsChanged();
@@ -2489,7 +2679,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   this.evaluate = function() {
     gl = this.ctxt;
 
-    if (this.invisiblePins["Descriptive Name"].pinIsChanged() || this.contextChanged) {
+    if (this.invisiblePins["Descriptive Name"].pinIsChanged() || (parentIn.pinIsChanged() && parentIn.getValue(0).element!=targetElement) || this.contextChanged) {
       if (canvasCtxt && $(canvasCtxt.canvas).hasClass('vvvv-js-generated-renderer'))
         $(canvasCtxt.canvas).remove();
       this.getContexts();
@@ -2525,6 +2715,9 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
 
     if (this.renderContexts && this.renderContexts[0] && gl==this.renderContexts[0]) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, bbufFramebuffer);
+      //ANTIALIASING STATUS
+      var antialiasstatus = gl.getContextAttributes().antialias;
+    antialiasOut.setValue(0, antialiasstatus);
     }
     else {
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -2533,6 +2726,16 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     if (this.contextChanged || bgColIn.pinIsChanged()) {
       var col = bgColIn.getValue(0);
       gl.clearColor(col.rgba[0], col.rgba[1], col.rgba[2], col.rgba[3]);
+    }
+
+    if (this.contextChanged || antialiasIn.pinIsChanged()) {
+      var aa = antialiasIn.getValue(0);
+      if (aa==0)
+        var antialiasb = false
+      else
+        var antialiasb = true
+
+        $(canvasCtxt.canvas).attr('antialias', antialiasb)
     }
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -2546,24 +2749,24 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
 
     if (projIn.pinIsChanged()) {
       if (projIn.isConnected()) {
-        pMatrix = mat4.create();
-        mat4.set(projIn.getValue(0), pMatrix);
-        mat4.scale(pMatrix, [1, 1, -1]);
+        pMatrix = glMatrix.mat4.create();
+        glMatrix.mat4.set(projIn.getValue(0), pMatrix);
+        glMatrix.mat4.scale(pMatrix, [1, 1, -1]);
       }
       else {
-        pMatrix = mat4.create();
-        mat4.ortho(-1, 1, -1, 1, -100, 100, pMatrix);
-        mat4.scale(pMatrix, [1, 1, -1]);
+        pMatrix = glMatrix.mat4.create();
+        glMatrix.mat4.ortho(-1, 1, -1, 1, -100, 100, pMatrix);
+        glMatrix.mat4.scale(pMatrix, [1, 1, -1]);
       }
       if (this.renderContexts && this.renderContexts[0]) // flip the output texture, if connected to downstream renderer
-        mat4.scale(pMatrix, [1, -1, 1]);
-      vpMatrix = mat4.create();
+        glMatrix.mat4.scale(pMatrix, [1, -1, 1]);
+      vpMatrix = glMatrix.mat4.create();
     }
     if (viewIn.pinIsChanged()) {
       vMatrix = viewIn.getValue(0);
     }
     if (viewIn.pinIsChanged() || projIn.pinIsChanged()) {
-      mat4.multiply(pMatrix, vMatrix, vpMatrix);
+      glMatrix.mat4.multiply(pMatrix, vMatrix, vpMatrix);
     }
 
     if (this.contextChanged) { // don't render anything, if the context changed in this frame. will only give warnings...
@@ -2571,6 +2774,21 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       return
     }
 
+    function getExtension(gl, name){
+            var vendorPrefixes = ["", "WEBKIT_", "MOZ_"];
+            var i, ext;
+            for(i in vendorPrefixes) {
+                ext = gl.getExtension(vendorPrefixes[i] + name);
+                if (ext) {
+                    return ext;
+
+                }
+            }
+            return null;
+
+        }
+
+    gl.getExtension('OES_standard_derivatives');
     gl.viewport(0, 0, width, height);
 
     var currentShaderProgram = null;
@@ -2602,6 +2820,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
           renderState.apply(gl);
 
         if (layer.mesh != currentMesh || layer.shader.shaderProgram != currentShaderProgram) {
+
+        if(layer.mesh.instanced == false){
           gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
           _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
             if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]] || layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position==-1)
@@ -2611,6 +2831,55 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
           });
 
           gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
+        }
+        if(layer.mesh.instanced == true){ //Instancing
+           //console.log("entering instancing, VertexCount: " + layer.mesh.Buffer1.length);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
+          _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
+            if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]] || layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position==-1)
+              return;
+            gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
+            gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, 0, b.offset);
+          });
+          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
+          //getExtension and instancing by Brandon Jones http://blog.tojicode.com/2013/07/webgl-instancing-with.html
+
+
+
+           this.instanceExt = getExtension(gl, "ANGLE_instanced_arrays");
+                    if(!this.instanceExt) {
+                        var customControls = document.getElementById("body");
+                        customControls.classList.add("error");
+                        customControls.innerHTML = "ANGLE_instanced_arrays not supported by this browser";
+                        this.instanceCheck = null;
+                    } else {
+                        this.instanceCheck = document.getElementById("hardwareInstancing");
+                    }
+
+             //console.log(JSON.stringify(layer.mesh.semantics));
+           //console.log(JSON.stringify(layer.shader.attributeSpecs));
+//           console.log(JSON.stringify(layer.shader.uniformSpecs));
+           //console.log(JSON.stringify(layer.shader.attribSemanticMap));
+//           console.log(JSON.stringify(layer.shader.uniformSemanticMap));
+//           console.log(JSON.stringify(layer.mesh.Buffer1));
+//           console.log(JSON.stringify(layer.mesh.Buffer2));
+//           console.log(JSON.stringify(layer.mesh.instanceCount));
+
+//           var OffsetBuffer;
+//           OffsetBuffer = gl.createBuffer();
+//                    gl.bindBuffer(gl.ARRAY_BUFFER, OffsetBuffer);
+//                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(layer.mesh.Buffer1), gl.STATIC_DRAW);
+         for (var i=0; i<layer.mesh.semantics.length; i++) {
+           var semantic = layer.mesh.semantics[i];
+           gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.instanceBuffers[i]);
+           gl.enableVertexAttribArray(layer.shader.attributeSpecs[semantic].position);
+           gl.vertexAttribPointer(layer.shader.attributeSpecs[semantic].position, layer.mesh.VectorSize[i], gl.FLOAT, false, 0, 0);  //stride can be 12 or 0
+           this.instanceExt.vertexAttribDivisorANGLE(layer.shader.attributeSpecs[semantic].position, layer.mesh.Divisor[i]);
+        }
+
+            } //end if case of instanced
+
         }
 
         /*if (layer.shader.uniformSemanticMap["WORLDVIEWPROJECTION"]) {
@@ -2654,8 +2923,12 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
           }
           loopstart = new Date().getTime();
         }
-
-        gl.drawElements(gl[renderState.polygonDrawMode], layer.mesh.numIndices, gl.UNSIGNED_SHORT, 0);
+        if(layer.mesh.instanced == true){
+            this.instanceExt.drawElementsInstancedANGLE(gl[renderState.polygonDrawMode], layer.mesh.numIndices, gl.UNSIGNED_SHORT, 0, layer.mesh.instanceCount);
+        }
+        else{
+            gl.drawElements(gl[renderState.polygonDrawMode], layer.mesh.numIndices, gl.UNSIGNED_SHORT, 0);
+        }
 
         // save current states
         currentShaderProgram = layer.shader.shaderProgram;
@@ -2676,11 +2949,24 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
 
     ex9Out.setValue(0, bbufTexture);
 
+
+//    this.depthExt = getExtension(gl, "WEBGL_depth_texture");
+//                    if(!this.depthExt) {
+//                        var customControls = document.getElementById("customControls");
+//                        customControls.classList.add("error");
+//                        customControls.innerHTML = "WEBGL_depth_texture not supported by this browser";
+//                    }
+//
+//
+//
+//    outputDepth.setValue(0, null);
+
+
     this.contextChanged = false;
   }
 
 }
-VVVV.Nodes.RendererWebGL.prototype = new VVVV.Core.Node();
+VVVV.Nodes.RendererWebGL.prototype = new Node();
 
 
 /*
@@ -2702,43 +2988,49 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
     credits: [],
     compatibility_issues: ['Not available in classic VVVV']
   };
+  this.environments = ['browser'];
 
   this.auto_evaluate = false;
 
-  var nameIn = this.addInputPin("Effect Descriptor", [''], VVVV.PinTypes.String);
+  var nameIn = this.addInvisiblePin("Effect Descriptor", [''], VVVV.PinTypes.String);
   var sourceCodeIn = this.addInvisiblePin("Source Code", ['#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform mat4 tW : WORLD;\nuniform mat4 tV : VIEW;\nuniform mat4 tP : PROJECTION;\n\nuniform vec4 Color : COLOR = {1.0, 1.0, 1.0, 1.0};\nuniform sampler2D Texture;\nuniform mat4 Texture_Transform;\nuniform float Alpha = 1.0;\n\nvarying vec2 vs2psTexCd;\n\nvertex_shader:\n\nattribute vec3 PosO : POSITION;\nattribute vec2 TexCd : TEXCOORD0;\n\nvoid main(void) {\n  gl_Position = tP * tV * tW * vec4(PosO, 1.0);\n  vs2psTexCd = (Texture_Transform * vec4(TexCd, 0, 1)).xy;\n}\n\n\nfragment_shader:\n\nvoid main(void) {\n  gl_FragColor = Color * texture2D(Texture, vs2psTexCd) * vec4(1.0, 1.0, 1.0, Alpha);\n}'], VVVV.PinTypes.String);
 
   var currentName = '';
   var w; // the UI window
+  var thatNode = this;
 
-  this.evaluate = function() {
+  this.configure = function() {
     if (nameIn.getValue(0)!='') {
       if (nameIn.pinIsChanged()) {
         var descriptor = nameIn.getValue(0);
         if (descriptor=='')
           return;
         if (currentName=='') { // if is set for the first time
-          if (VVVV.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx']==undefined)
-            VVVV.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx'] = new VVVV.Types.ShaderCodeResource();
+          if (thatNode.parentPatch.executionContext.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx']==undefined)
+            thatNode.parentPatch.executionContext.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx'] = new VVVV.Types.ShaderCodeResource();
         }
         else
-          VVVV.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx'] = VVVV.ShaderCodeResources[currentName];
+          thatNode.parentPatch.executionContext.ShaderCodeResources["./"+descriptor+'.vvvvjs.fx'] = thatNode.parentPatch.executionContext.ShaderCodeResources[currentName];
         currentName = "./"+descriptor+'.vvvvjs.fx';
-        VVVV.ShaderCodeResources[currentName].definingNode = this;
-        VVVV.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(0));
+        thatNode.parentPatch.executionContext.ShaderCodeResources[currentName].definingNode = this;
+        thatNode.parentPatch.executionContext.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(0));
         if (w)
           $('#path', w.document).text((this.parentPatch.nodename || 'root')+' / '+(currentName!='' ? currentName : 'Untitled'));
       }
 
       if (sourceCodeIn.pinIsChanged()) {
-        if (VVVV.ShaderCodeResources[currentName])
-          VVVV.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(0));
+        if (thatNode.parentPatch.executionContext.ShaderCodeResources[currentName])
+          thatNode.parentPatch.executionContext.ShaderCodeResources[currentName].setSourceCode(sourceCodeIn.getValue(0));
       }
     }
   }
 
+  this.evaluate = function() {
+    // nix
+  }
+
   this.openUIWindow = function() {
-    w = window.open(location.protocol+'//'+location.host+(VVVV.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVV.Root+"/code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
+    w = window.open(location.protocol+'//'+location.host+(VVVVContext.Root[0]=='/' ? '' : location.pathname.replace(/\/[^\/]*$/, '')+'/')+VVVVContext.Root+"/code_editor.html", currentName+" / VVVV.js Effect Editor", "location=no, width=800, height=800, toolbar=no");
     var thatNode = this;
     window.setTimeout(function() {
       w.document.title = currentName+" / VVVV.js Effect Editor";
@@ -2751,8 +3043,12 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
           thatNode.showStatus('error', 'Please provide a name for this shader first');
           return;
         }
-        sourceCodeIn.setValue(0, $('textarea', w.document).val());
-        if (VVVV.ShaderCodeResources[currentName].relatedNodes.length>0) {
+        //sourceCodeIn.setValue(0, $('textarea', w.document).val());
+        var cmd = {syncmode: 'diff', nodes: {}, links: []};
+        cmd.nodes[thatNode.id] = {pins: {}};
+        cmd.nodes[thatNode.id].pins['Source Code'] = {values: [$('textarea', w.document).val()]};
+        thatNode.parentPatch.editor.update(thatNode.parentPatch, cmd);
+        if (thatNode.parentPatch.executionContext.ShaderCodeResources[currentName].relatedNodes.length>0) {
           thatNode.showStatus('notice', 'Compiling ...');
           thatNode.evaluate();
         }
@@ -2771,6 +3067,278 @@ VVVV.Nodes.DefineEffect = function(id, graph) {
   }
 
 }
-VVVV.Nodes.DefineEffect.prototype = new VVVV.Core.Node();
+VVVV.Nodes.DefineEffect.prototype = new Node();
 
-}(vvvvjs_jquery));
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: GeometryFile (WebGl Geometry)
+ Author(s): David Gann
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.GeometryFile = function(id, graph) {
+  this.constructor(id, "GeometryFile (WebGl Geometry)", graph);
+
+  this.auto_nil = false;
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['David Gann'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+
+  var filenamePin = this.addInputPin("FileName", ["http://localhost"], VVVV.PinTypes.String);
+  var ScaleIn = this.addInputPin("Scale", [1.0], VVVV.PinTypes.Value);
+
+  var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
+  var LoadedOut = this.addOutputPin("Has Loaded", [0.0], VVVV.PinTypes.Value);
+
+  var mesh = null;
+  var vertexBuffer = null;
+
+  //temp
+  var generateNormals = (function() {
+    var a = glMatrix.vec3.create();
+    var b = glMatrix.vec3.create();
+    var c = glMatrix.vec3.create();
+
+    var ab = glMatrix.vec3.create();
+    var ac = glMatrix.vec3.create();
+    var n = glMatrix.vec3.create();
+
+    function getVec3FromIndex(out, vecArray, stride, offset, index) {
+      out[0] = vecArray[(index*stride)+offset];
+      out[1] = vecArray[(index*stride)+offset+1];
+      out[2] = vecArray[(index*stride)+offset+2];
+    }
+
+    function setVec3AtIndex(v, vecArray, stride, offset, index) {
+      vecArray[(index*stride)+offset] = v[0];
+      vecArray[(index*stride)+offset+1] = v[1];
+      vecArray[(index*stride)+offset+2] = v[2];
+    }
+
+    return function(vertexArray, stride, offset, count, indexArray) {
+      var normalArray = new Float32Array(3 * count);
+
+      var i, j;
+      var idx0, idx1, idx2;
+      var indexCount = indexArray.length;
+      for(i = 0; i < indexCount; i+=3) {
+        idx0 = indexArray[i];
+        idx1 = indexArray[i+1];
+        idx2 = indexArray[i+2];
+
+        getVec3FromIndex(a, vertexArray, stride, offset, idx0);
+        getVec3FromIndex(b, vertexArray, stride, offset, idx1);
+        getVec3FromIndex(c, vertexArray, stride, offset, idx2);
+
+        // Generate the normal
+        glMatrix.vec3.subtract(b, a, ab);
+        glMatrix.vec3.subtract(c, a, ac);
+        glMatrix.vec3.cross(ab, ac, n);
+
+        normalArray[(idx0 * 3)] += n[0];
+        normalArray[(idx0 * 3)+1] += n[1];
+        normalArray[(idx0 * 3)+2] += n[2];
+
+        normalArray[(idx1 * 3)] += n[0];
+        normalArray[(idx1 * 3)+1] += n[1];
+        normalArray[(idx1 * 3)+2] += n[2];
+
+        normalArray[(idx2 * 3)] += n[0];
+        normalArray[(idx2 * 3)+1] += n[1];
+        normalArray[(idx2 * 3)+2] += n[2];
+      }
+
+      for(i = 0; i < count; ++i) {
+        getVec3FromIndex(n, normalArray, 3, 0, i);
+        glMatrix.vec3.normalize(n, n);
+        setVec3AtIndex(n, normalArray, 3, 0, i);
+      }
+
+      return normalArray;
+    };
+  })();
+
+  var HasLoaded = 0;
+   var prevFilenames = [];
+   var filename = [];
+   var xhr = [];
+
+  this.evaluate = function() {
+    var scale = ScaleIn.getValue(0);
+
+    if (filenamePin.pinIsChanged() | ScaleIn.pinIsChanged()){
+      this.initialize();}
+
+    if (!this.renderContexts) return;
+       var gl = this.renderContexts[0];
+    if (!gl)
+      return;
+
+      for (var i=0; i<filenamePin.getSliceCount(); i++) {
+            if (prevFilenames[i] != filenamePin.getValue(i) | HasLoaded[i] == 0 | ScaleIn.pinIsChanged()) {
+                filename[i] = VVVV.Helpers.prepareFilePath(filenamePin.getValue(i), this.parentPatch);
+
+                LoadedOut.setValue(i, 0);
+                (function(i) {
+                  xhr[i] = new XMLHttpRequest();
+                  //xhr[i].responseType = 'arraybuffer';
+                  xhr[i].open("GET", filename[i], true);
+                  xhr[i].onreadystatechange = function (oEvent) {
+                     if (xhr[i].readyState === 4) {
+                        if (xhr[i].status === 200) {
+                          var data = JSON.parse(xhr[i].responseText);
+                            var positionData = data.buffer;
+                            var posMapped = positionData.map(function(x) { return x * scale; });
+                            var texCoords0 = [0,0];  //missing texturecoordinates
+                            var indexData = data.indices;
+
+                            var PosTyped = new Float32Array(posMapped);
+                            var normalData = generateNormals(PosTyped, 3, 0, positionData.length/3, indexData);
+
+                              vertexBuffer = new VVVV.Types.VertexBuffer(gl, posMapped);
+                              vertexBuffer.create();
+                              vertexBuffer.setSubBuffer('POSITION', 3, posMapped);
+                              vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords0);
+                              vertexBuffer.setSubBufferTyped('NORMAL', 3, normalData);
+                              vertexBuffer.update();
+
+                              mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indexData);
+                              mesh.update(indexData);
+                              meshOut.setValue(i, mesh);
+                              HasLoaded[i]=1;
+                              LoadedOut.setValue(i, 1);
+                        } else {
+                          console.log("Error", xhr[i].status);
+                                meshOut.setValue(i, undefined);
+                                delete mesh;
+                        }
+                     }
+                  };
+                  xhr[i].send(null);
+               })(i);
+             }
+             prevFilenames[i] = filenamePin.getValue(i);
+
+        }   //end of inner for loop
+
+    this.contextChanged = false;
+     }
+  }
+
+
+
+VVVV.Nodes.GeometryFile.prototype = new Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Instancer (WebGl Geometry Dynamic)
+ Author(s): David Gann
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.InstancerDynamic = function(id, graph) {
+  this.constructor(id, "Instancer (WebGl Geometry Dynamic)", graph);
+
+  this.auto_nil = false;
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['David Gann'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var meshIn = this.addInputPin("Geometry", [], VVVV.PinTypes.WebGlResource);
+  var BufferIn = [];
+  var CountIn = this.addInputPin("Count", [1.0], VVVV.PinTypes.Value);
+  var ApplyIn = this.addInputPin("Apply", [0.0], VVVV.PinTypes.Value);
+  var SemanticIn = this.addInputPin("Semantic", ["offset"], VVVV.PinTypes.String);
+  var DivisorIn = this.addInputPin("InstanceDivisor", [1.0], VVVV.PinTypes.Value);
+  var cntCfg = this.addInvisiblePin("Input Count",[1],VVVV.PinTypes.Value);
+
+  this.initialize = function() {
+    var inputCount = Math.max(1, cntCfg.getValue(0));
+    VVVV.Helpers.dynamicPins(this, BufferIn, inputCount, function(i) {
+      return this.addInputPin('Buffer '+(i+1), [], VVVV.PinTypes.SceneBuffer);
+    })
+  }
+
+
+  var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
+
+    var Geometry = null;
+    var Buffers = [];
+    var MeshWasConnected = 0;
+    var vecSize = [];
+    var semanticsArray = [];
+    var divisorArray = [];
+
+
+  this.evaluate = function() {
+
+    var geometryCount = meshIn.getSliceCount();
+    var bufferCount = BufferIn.length;
+    if (!this.renderContexts) return;
+       var gl = this.renderContexts[0];
+    if (!gl)
+      return;
+
+    if (cntCfg.pinIsChanged()){
+        this.initialize();
+      }
+
+    if(MeshWasConnected == false && meshIn.isConnected()){
+    var MeshNewlyConnected = true;
+    }
+
+    if (cntCfg.pinIsChanged() || MeshNewlyConnected || meshIn.pinIsChanged()){
+        this.initialize();
+
+    for(var j=0; j<geometryCount; j++){
+            Geometry = meshIn.getValue(j%geometryCount);
+            Geometry.addInstanceBuffers(bufferCount);
+        }
+      }
+
+  //var maxCount = Math.max(geometryCount, bufferCount);
+
+  if(ApplyIn.getValue(0)==1 && meshIn.isConnected()){
+
+  for (var j=0; j<BufferIn.length; j++) {
+                 vecSize[j] = BufferIn[j].getValue(j).VectorSize;
+                 semanticsArray[j] = SemanticIn.getValue(j%SemanticIn.getSliceCount());
+                 Buffers[j] = BufferIn[j].getValue(j);
+                 divisorArray[j] = DivisorIn.getValue(j%DivisorIn.getSliceCount());
+
+                }
+    //
+  for(var i=0; i<geometryCount; i++){
+                    Geometry = meshIn.getValue(i%geometryCount);
+                    Geometry.instanced = true;
+                    Geometry.instanceCount = CountIn.getValue(i%CountIn.getSliceCount());
+                    //Geometry.Buffer1 = objectBuffer.data; //new Float32Array(offsetData);
+                    Geometry.updateInstancedArray(Buffers);
+                    Geometry.addSemantics(semanticsArray);
+                    Geometry.addVectorSize(vecSize);
+                    Geometry.addDivisor(divisorArray);
+                    //console.log("updatedBuffer");
+                    Geometry.instancedBufferChanged = true;
+        meshOut.setValue(i, Geometry);
+        }   //end of inner for loop
+    }
+    MeshWasConnected = meshIn.isConnected();
+    this.contextChanged = false;
+     }
+  }
+VVVV.Nodes.InstancerDynamic.prototype = new Node();
+
+
+});

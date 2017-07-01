@@ -3,145 +3,11 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
-(function($) {
+if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
+define(function(require,exports) {
 
-VVVV.Types.HTMLLayer = function(tagName) {
-
-  this.tagName = tagName;
-  this.styles = {};
-  this.attributes = {};
-  if (this.tagName) {
-    this.element = $('<'+this.tagName+'>');
-    this.element.data('vvvvjslayer', this);
-  }
-  else
-    this.element = undefined;
-  this.children = [emptyHTMLLayer];
-  this.parent = emptyHTMLLayer;
-  this.text = "";
-  this.position = 0;
-  this.style = defaultHTMLStyle;
-
-  this.set_style_properties = {};
-
-  this.setText = function(text) {
-    if (!this.element || this.element.prop("tagName")=="IFRAME")
-      return;
-    this.text = text;
-    var $el = $(this.element);
-    if ($el.contents().length>0 && $el.contents().first()[0].nodeType==3)
-      $el.contents().first()[0].data = this.text;
-    else
-      $el.prepend(document.createTextNode(this.text));
-  }
-
-  this.setAttribute = function(name, value) {
-    if (!this.element)
-      return;
-    if (this.attributes[name]==value)
-      return;
-    this.attributes[name] = value;
-    this.element.attr(name, value);
-  }
-
-  this.setStyle = function(style) {
-    if (!this.element)
-      return;
-    this.style = style;
-    for (var stylename in this.set_style_properties) {
-      if (this.set_style_properties[stylename]==true && !this.style.style_properties[stylename]) {
-        this.element.css(stylename, "");
-        this.set_style_properties[stylename] = false;
-      }
-    }
-    this.style.apply(this);
-  }
-
-  this.setParent = function(parent) {
-    if (!this.element)
-      return;
-    if ((this.parent.element && parent.element && this.parent.element[0] == parent.element[0]) || (this.parent.element==undefined && parent.element==undefined && this.element.parent().length!=0))
-      return;
-    this.parent = parent;
-    if (this.parent.tagName) {
-      if (this.parent.element[0]!=this.element[0].parentElement) {
-        this.parent.element.append(this.element);
-      }
-    }
-    else if (this.element[0].parentElement!=document.body) {
-      $('body').append(this.element);
-    }
-  }
-
-  this.changeTagName = function(tagName) {
-    if (!this.element)
-      return;
-    if (this.tagName == tagName)
-      return;
-    this.tagName = tagName;
-    var $newElement = $('<'+this.tagName+'>');
-    this.element.before($newElement);
-    this.element.contents().detach().appendTo($newElement);
-    this.element.remove();
-    this.element = $newElement;
-    this.style.apply(this);
-  }
-}
-
-var emptyHTMLLayer = new VVVV.Types.HTMLLayer();
-
-VVVV.PinTypes.HTMLLayer = {
-  typeName: "HTMLLayer",
-  reset_on_disconnect: true,
-  defaultValue: function() {
-    return emptyHTMLLayer
-  }
-}
-
-VVVV.Types.HTMLStyle = function() {
-  this.style_properties = {};
-  this.inherited_properties = {};
-
-  this.set_properties = {};
-
-  this.apply = function(layer) {
-    var $el = $(layer.element);
-    for (var stylename in this.inherited_properties) {
-      $el.css(stylename, this.inherited_properties[stylename]);
-      layer.set_style_properties[stylename] = true;
-    }
-    for (var stylename in this.style_properties) {
-      $el.css(stylename, this.style_properties[stylename]);
-      layer.set_style_properties[stylename] = true;
-    }
-  }
-
-  this.copy_properties = function(other_style) {
-    for (var stylename in other_style.style_properties) {
-      this.inherited_properties[stylename] = other_style.style_properties[stylename];
-    }
-    for (var stylename in other_style.inherited_properties) {
-      this.inherited_properties[stylename] = other_style.inherited_properties[stylename];
-    }
-
-    // clear inherited properties which have been removed upstream
-    for (var stylename in this.inherited_properties) {
-      if (!other_style.style_properties[stylename] && !other_style.inherited_properties[stylename]) {
-        delete this.inherited_properties[stylename];
-      }
-    }
-  }
-}
-
-var defaultHTMLStyle = new VVVV.Types.HTMLStyle();
-
-VVVV.PinTypes.HTMLStyle = {
-  typeName: "HTMLStyle",
-  reset_on_disconnect: true,
-  defaultValue: function() {
-    return defaultHTMLStyle;
-  }
-}
+var Node = require('core/vvvv.core.node');
+var VVVV = require('core/vvvv.core.defines');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -155,19 +21,26 @@ var element_node_defs = [
   {nodename: "Link", tagname: "a", pins: [{name: 'href', type: VVVV.PinTypes.String, value: '#', attribute: true}]},
   {nodename: "Image", tagname: "img", pins: [{name: 'src', type: VVVV.PinTypes.String, value: '', attribute: true}]},
   {nodename: "TextInput", tagname: "input type='text'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]},
+  {nodename: "TextArea", tagname: "textarea", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}]},
   {nodename: "Checkbox", tagname: "input type='checkbox'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true, attribute: true}, {name: 'value', value: '1', type: VVVV.PinTypes.String, attribute: true}]},
   {nodename: "RadioButton", tagname: "input type='radio'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: '1', type: VVVV.PinTypes.String, attribute: true}]},
   {nodename: "Button", tagname: "input type='button'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: 'Push me', type: VVVV.PinTypes.String, attribute: true}]},
   {nodename: "RangeSlider", tagname: "input type='range'", pins:[{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: 0, type: VVVV.PinTypes.Value, attribute: true}, {name: 'min', value: 0, type: VVVV.PinTypes.Value, attribute: true}, {name: 'max', value: 10, type: VVVV.PinTypes.Value, attribute: true}, {name: 'step', value: 1, type: VVVV.PinTypes.Value, attribute: true}]},
   //{nodename: "SelectBox", tagname: "select", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'Option Labels', value: 'Option 1', type: VVVV.PinTypes.String}, {name: 'Option Values', value: '1', type: VVVV.PinTypes.String}, {name: 'Selected Index', value: 0, type: VVVV.PinTypes.Value}]}
   {nodename: "SelectBox", tagname: "select", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}]},
-  {nodename: "SelectOption", tagname: "option", pins: [{name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]}
+  {nodename: "SelectOption", tagname: "option", pins: [{name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]},
+  {nodename: "FileInput", tagname: "input type='file' multiple", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}]},
+  {nodename: "ColorInput", tagname: "input type='color'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]},
+  {nodename: "DateInput", tagname: "input type='date'", pins: [{name: 'name', value: '', type: VVVV.PinTypes.String, attribute: true}, {name: 'value', value: '', type: VVVV.PinTypes.String, attribute: true}]}
 ]
 
 element_node_defs.forEach(function(element_node_def) {
 
   VVVV.Nodes[element_node_def.nodename+"HTML"] = function(id, graph) {
     this.constructor(id, element_node_def.nodename+" (HTML)", graph);
+
+    this.environments = ['browser'];
+    this.auto_nil = false;
 
     this.meta = {
       authors: ['Matthias Zauner'],
@@ -198,12 +71,13 @@ element_node_defs.forEach(function(element_node_def) {
       else
         this.addInputPin(element_node_def.pins[i].name, [element_node_def.pins[i].value], element_node_def.pins[i].type)
     }
+    var enabledIn = this.addInputPin("Enabled", [1], VVVV.PinTypes.Value);
 
     var layersOut = this.addOutputPin("Layers Out", [], VVVV.PinTypes.HTMLLayer);
 
     var layers = [];
 
-    this.initialize = function() {
+    this.configure = function() {
       var attribNames = [];
       var regex = new RegExp(/([a-z]+)/g);
       var match;
@@ -234,43 +108,78 @@ element_node_defs.forEach(function(element_node_def) {
     }
 
     this.evaluate = function() {
-      if (attributeNamesIn.pinIsChanged())
-        this.initialize();
-
       var maxSpreadSize = this.getMaxInputSliceCount();
+
+      if (this.hasNilInputs()) {
+        for (var i=0; i<layers.length; i++) {
+          if (layers[i].element)
+            layers[i].disable();
+        }
+        layers.length = 0;
+        layersOut.setSliceCount(0);
+        return;
+      }
 
       for (var i=0; i<maxSpreadSize; i++) {
         var fresh = false;
+
         if (layers[i]==undefined) {
           layers[i] = new VVVV.Types.HTMLLayer(nameIn ? nameIn.getValue(i) : tagName);
+          layers[i].originNode = this;
           fresh = true;
         }
 
-        if (nameIn && layers[i].tagName!=nameIn.getValue(i))
-          layers[i].changeTagName(nameIn.getValue(i));
+        if (enabledIn.getValue(i)>=0.5) {
 
-        if (fresh || textIn.pinIsChanged())
-          layers[i].setText(textIn.getValue(i));
-        if (fresh || parentIn.pinIsChanged())
-          layers[i].setParent(parentIn.getValue(i));
-        for (var j=0; j<attributePins.length; j++) {
-          if (fresh || attributePins[j].pinIsChanged())
-            layers[i].setAttribute(attributePins[j].pinname, attributePins[j].getValue(i));
+          if (layers[i].enabled==false && parentIn.getValue(i).enabled) {
+            layers[i].enable();
+            fresh = true;
+          }
+
+          if (layers[i].enabled && !parentIn.getValue(i).enabled)
+            layers[i].disable();
+
+          if (layers[i].enabled) {
+            if (nameIn && layers[i].tagName!=nameIn.getValue(i))
+              layers[i].changeTagName(nameIn.getValue(i));
+
+            if (fresh || textIn.pinIsChanged())
+              layers[i].setText(textIn.getValue(i));
+            if (fresh || parentIn.pinIsChanged())
+              layers[i].setParent(parentIn.getValue(i));
+            for (var j=0; j<attributePins.length; j++) {
+              if (fresh || attributePins[j].pinIsChanged()) {
+                layers[i].setAttribute(attributePins[j].pinname, attributePins[j].getValue(i));
+                if (attributePins[j].pinname=="value" && $(layers[i].element).prop('tagName')=="INPUT")
+                  $(layers[i].element).change();
+              }
+            }
+            for (var j=0; j<staticAttributePins.length; j++) {
+              if (fresh || staticAttributePins[j].pinIsChanged()) {
+                layers[i].setAttribute(staticAttributePins[j].pinname, staticAttributePins[j].getValue(i));
+                if (staticAttributePins[j].pinname=="value" && $(layers[i].element).prop('tagName')=="INPUT")
+                  $(layers[i].element).change();
+              }
+            }
+
+            if (fresh || styleIn.pinIsChanged())
+              layers[i].setStyle(styleIn.getValue(i));
+          }
+          layers[i].freshlyEnabled = fresh;
         }
-        for (var j=0; j<staticAttributePins.length; j++) {
-          if (fresh || staticAttributePins[j].pinIsChanged())
-            layers[i].setAttribute(staticAttributePins[j].pinname, staticAttributePins[j].getValue(i));
+        else {
+          if (layers[i] && layers[i].enabled==true) {
+            layers[i].disable();
+          }
         }
-
-        if (fresh || styleIn.pinIsChanged())
-          layers[i].setStyle(styleIn.getValue(i));
-
         layersOut.setValue(i, layers[i]);
       }
 
       // remove untracked elements
       for (var i=maxSpreadSize; i<layers.length; i++) {
-        layers[i].element.remove();
+        if (layers[i].element) {
+          layers[i].disable();
+        }
       }
 
       layers.length = maxSpreadSize;
@@ -280,11 +189,12 @@ element_node_defs.forEach(function(element_node_def) {
 
     this.destroy = function() {
       for (var i=0; i<layers.length; i++) {
-        layers[i].element.remove();
+        if (layers[i].enabled)
+          layers[i].element.remove();
       }
     }
   }
-  VVVV.Nodes[element_node_def.nodename+'HTML'].prototype = new VVVV.Core.Node();
+  VVVV.Nodes[element_node_def.nodename+'HTML'].prototype = new Node();
 });
 
 
@@ -305,14 +215,17 @@ VVVV.Nodes.GroupHTML = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.environments = ['browser'];
+
   var parentIn = this.addInputPin("Parent", [], VVVV.PinTypes.HTMLLayer);
+  var slotStyleIn = this.addInputPin("Slot Style In", [], VVVV.PinTypes.HTMLStyle);
   var outputCountIn = this.addInvisiblePin("Output Count", [2], VVVV.PinTypes.Value);
 
   var outPins = [];
 
   var layers = [];
 
-  this.initialize = function() {
+  this.configure = function() {
     var outputCount = Math.max(2, outputCountIn.getValue(0));
     for (var i=outPins.length; i<outputCount; i++) {
       outPins.push(this.addOutputPin("Element Slot "+(i+1), [], VVVV.PinTypes.HTMLLayer));
@@ -324,10 +237,6 @@ VVVV.Nodes.GroupHTML = function(id, graph) {
   }
 
   this.evaluate = function() {
-    if (outputCountIn.pinIsChanged()) {
-      this.initialize();
-      this.parentPatch.afterUpdate();
-    }
 
     var sliceCount = parentIn.getSliceCount();
 
@@ -336,6 +245,12 @@ VVVV.Nodes.GroupHTML = function(id, graph) {
         var layer = outPins[j].values[i];
         if (!layer)
           layer = new VVVV.Types.HTMLLayer("span");
+        if (layer.enabled && !parentIn.getValue(i).enabled)
+          layer.disable();
+        else if (!layer.enabled && parentIn.getValue(i).enabled)
+          layer.enable();
+        if (layer.enabled)
+          layer.setStyle(slotStyleIn.getValue(0));
         layer.setParent(parentIn.getValue(i));
         outPins[j].setValue(i, layer);
       }
@@ -343,7 +258,8 @@ VVVV.Nodes.GroupHTML = function(id, graph) {
 
     for (var i=0; i<outPins.length; i++) {
       for (var j=outPins[i].values.length-1; j>=sliceCount; j--) {
-        outPins[i].values[j].element.remove();
+        if (outPins[i].values[j].element)
+          outPins[i].values[j].element.remove();
       }
       outPins[i].setSliceCount(sliceCount);
     }
@@ -357,7 +273,7 @@ VVVV.Nodes.GroupHTML = function(id, graph) {
     }
   }
 }
-VVVV.Nodes.GroupHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GroupHTML.prototype = new Node();
 
 
 /*
@@ -370,12 +286,16 @@ VVVV.Nodes.GroupHTML.prototype = new VVVV.Core.Node();
 VVVV.Nodes.GetElementHTML = function(id, graph) {
   this.constructor(id, "GetElement (HTML)", graph);
 
+  this.environments = ['browser'];
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   var selectorIn = this.addInputPin("Selector", [""], VVVV.PinTypes.String);
   var parentIn = this.addInputPin("Parent", [], VVVV.PinTypes.HTMLLayer);
@@ -421,7 +341,7 @@ VVVV.Nodes.GetElementHTML = function(id, graph) {
     binSizeOut.setSliceCount(selectorCount);
   }
 }
-VVVV.Nodes.GetElementHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GetElementHTML.prototype = new Node();
 
 
 /*
@@ -440,6 +360,9 @@ VVVV.Nodes.GetPositionHTML = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.auto_nil = false;
+  this.environments = ['browser'];
 
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
   var spaceIn = this.addInputPin("Space", ["Document Pixels"], VVVV.PinTypes.Enum);
@@ -468,13 +391,13 @@ VVVV.Nodes.GetPositionHTML = function(id, graph) {
   this.evaluate = function() {
     var maxSpreadSize = this.getMaxInputSliceCount();
 
-    if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
+    if (elementIn.isConnected() && !this.hasNilInputs() && elementIn.getValue(0).tagName!='') {
       for (var i=0; i<maxSpreadSize; i++) {
-        if (targets[i]!=undefined && targets[i]!=elementIn.getValue(i).element[0]) {
+        if (targets[i]!=undefined && elementIn.getValue(i).enabled && targets[i]!=elementIn.getValue(i).element[0]) {
           observers[i].disconnect();
           observers[i] = undefined;
         }
-        if (observers[i]==undefined) {
+        if (observers[i]==undefined && elementIn.getValue(i).enabled) {
           (function(j) {
             observers[j] = new MutationObserver(function(mutations) {
               updatePosition(targets[j], j);
@@ -513,7 +436,7 @@ VVVV.Nodes.GetPositionHTML = function(id, graph) {
     })
   }
 }
-VVVV.Nodes.GetPositionHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GetPositionHTML.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -531,6 +454,8 @@ VVVV.Nodes.PositionHTML = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   var styleIn = this.addInputPin("Style In", [], VVVV.PinTypes.HTMLStyle);
   //var spaceIn = this.addInputPin("Space", ["Pixels"], VVVV.PinTypes.Enum);
@@ -575,7 +500,7 @@ VVVV.Nodes.PositionHTML = function(id, graph) {
     styleOut.setSliceCount(maxSpreadSize);
   }
 }
-VVVV.Nodes.PositionHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.PositionHTML.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -593,6 +518,8 @@ VVVV.Nodes.TransformHTML = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   var styleIn = this.addInputPin("Style In", [], VVVV.PinTypes.HTMLStyle);
   var transformIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
@@ -627,7 +554,7 @@ VVVV.Nodes.TransformHTML = function(id, graph) {
     styleOut.setSliceCount(maxSpreadSize);
   }
 }
-VVVV.Nodes.TransformHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.TransformHTML.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -646,6 +573,9 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.auto_nil = false;
+  this.environments = ['browser'];
+
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
 
   var valueOut = this.addOutputPin("Output", [0], VVVV.PinTypes.String);
@@ -660,13 +590,16 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
 
     var thatNode = this;
 
-    if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
+    if (elementIn.isConnected() && !this.hasNilInputs() && elementIn.getValue(0).tagName!='') {
       for (var i=0; i<maxSpreadSize; i++) {
-        if (targets[i]!=undefined && (targets[i]!=elementIn.getValue(i).element[0])) {
+        if (targets[i]!=undefined && (!elementIn.getValue(i).enabled || targets[i]!=elementIn.getValue(i).element[0]) || elementIn.getValue(i).freshlyEnabled) {
           $(targets[i]).unbind("change input paste keyup", handlers[i]);
           handlers[i] = undefined;
+          elementIn.getValue(i).freshlyEnabled = false;
         }
-        if (handlers[i]==undefined) {
+        if (!elementIn.getValue(i).enabled)
+          targets[i] = undefined;
+        if (elementIn.getValue(i).enabled && handlers[i]==undefined) {
           targets[i] = elementIn.getValue(i).element[0];
           (function(j) {
             handlers[j] = function(e) {
@@ -675,9 +608,13 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
                 v = $(this).find("option:selected").attr('value');
               else if ($(this).prop('tagName')=="INPUT" && $(this).prop('type')=="checkbox")
                 v = $(this).is(":checked") ? $(this).attr('value') : "";
-              else if ($(this).prop('tagName')=="INPUT" && $(this).prop('type')=="radio")
+              else if ($(this).prop('tagName')=="INPUT" && $(this).prop('type')=="radio") {
+                if ($(this).attr('name')!="" && $(this).is(':checked')) {
+                  $("input[type='radio'][name='"+$(this).attr('name')+"']").not(':checked').trigger('change')
+                }
                 v = $(this).is(":checked") ? $(this).attr('value') : "";
-              else if ($(this).prop('tagName')=="INPUT")
+              }
+              else if ($(this).prop('tagName')=="INPUT" || $(this).prop('tagName')=="TEXTAREA")
                 v = $(this).val();
               if (v==undefined)
                 v = "";
@@ -720,7 +657,196 @@ VVVV.Nodes.GetValueHTML = function(id, graph) {
     }
   }
 }
-VVVV.Nodes.GetValueHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GetValueHTML.prototype = new Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: SetValue (HTML)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.SetValueHTML = function(id, graph) {
+  this.constructor(id, "SetVAlue (HTML)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  this.environments = ['browser'];
+
+  var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
+  var valueIn = this.addInputPin("Value", [''], VVVV.PinTypes.String);
+  var doSetIn = this.addInputPin("DoSet", [0], VVVV.PinTypes.Value);
+
+  this.evaluate = function() {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+
+    var thatNode = this;
+
+    if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
+      for (var i=0; i<maxSpreadSize; i++) {
+        if (doSetIn.getValue(i)<0.5)
+          continue;
+        var $el = elementIn.getValue(i);
+        if (!$el.enabled)
+          continue;
+        if ($el.element.prop("type")=="radio") {
+          var radiobuttons = undefined;
+          if ($el.element.attr('name')!="")
+            radiobuttons = $("input[type='radio'][name='"+$el.element.attr('name')+"']");
+          else
+            radiobuttons = $el.element;
+          radiobuttons.each(function() {
+            if ($(this).attr('value')==valueIn.getValue(i))
+              $(this).attr('checked', 'checked');
+            else
+              $(this).removeAttr('checked');
+            $(this).trigger('change');
+          });
+        }
+        else if ($el.element.prop("type")=="checkbox") {
+          if ($el.element.attr('value')==valueIn.getValue(i))
+            $el.element.attr('checked', 'checked');
+          else
+            $el.element.removeAttr('checked');
+          $el.element.trigger('change');
+        }
+        else {
+          $el.element.val(valueIn.getValue(i));
+          $el.element.trigger('change');
+        }
+      }
+    }
+  }
+
+  this.destroy = function() {
+
+  }
+}
+VVVV.Nodes.SetValueHTML.prototype = new Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: GetFile (HTML)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.GetFileHTML = function(id, graph) {
+  this.constructor(id, "GetFile (HTML)", graph);
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+  this.environments = ['browser'];
+
+  this.auto_nil = false;
+
+  var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
+
+  var fileOut = this.addOutputPin("File", ['No File'], VVVV.PinTypes.HTMLFile);
+  var filenameOut = this.addOutputPin("Filename", [''], VVVV.PinTypes.String);
+  var filesizeOut = this.addOutputPin("File Size", [0], VVVV.PinTypes.Value);
+  var fileCountOut = this.addOutputPin("File Count", [1], VVVV.PinTypes.Value);
+
+  var handlers = [];
+  var targets = [];
+
+  var needsUpdate = false;
+
+  this.evaluate = function() {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+
+    var thatNode = this;
+
+    if (elementIn.isConnected() && !this.hasNilInputs()) {
+      for (var i=0; i<maxSpreadSize; i++) {
+        if (targets[i]!=undefined && (!elementIn.getValue(i).enabled || targets[i]!=elementIn.getValue(i).element[0]) || elementIn.getValue(i).freshlyEnabled) {
+          $(targets[i]).unbind("change", handlers[i]);
+          handlers[i] = undefined;
+          elementIn.getValue(i).freshlyEnabled = false;
+        }
+        if (!elementIn.getValue(i).enabled)
+          targets[i] = undefined;
+        if (elementIn.getValue(i).enabled && handlers[i]==undefined) {
+          targets[i] = elementIn.getValue(i).element[0];
+          (function(j) {
+            handlers[j] = function(e) {
+              needsUpdate = true;
+              thatNode.dirty = true;
+            }
+          }(i));
+          $(targets[i]).bind("change", handlers[i]);
+          $(targets[i]).data("check", "brock");
+          handlers[i].call(targets[i]);
+        }
+      }
+
+      handlers.length = maxSpreadSize;
+      targets.length = maxSpreadSize;
+    }
+    else {
+      for (var i=0; i<targets.length; i++) {
+        $(targets[i]).unbind("change", handlers[i]);
+      }
+      handlers.length = 0;
+      targets.length = 0;
+      fileOut.setValue(0, "No File");
+      fileOut.setSliceCount(1);
+      filenameOut.setValue(0, '');
+      filenameOut.setSliceCount(1);
+      filesizeOut.setValue(0, 0);
+      filesizeOut.setSliceCount(1);
+      fileCountOut.setValue(0, 0);
+      fileCountOut.setSliceCount(1);
+    }
+
+    if (needsUpdate) {
+      var outIdx = 0;
+      for (var i=0; i<maxSpreadSize; i++) {
+        var fileList = elementIn.getValue(i).element[0].files;
+        if (elementIn.getValue(i).enabled && fileList.length>0) {
+          var k;
+          for (k=0; k<fileList.length; k++) {
+            fileOut.setValue(outIdx, fileList[k]);
+            filenameOut.setValue(outIdx, fileList[k].name);
+            filesizeOut.setValue(outIdx, fileList[k].size);
+            outIdx++;
+          }
+          fileCountOut.setValue(i, k);
+        }
+        else {
+          fileOut.setValue(outIdx, "No File");
+          filenameOut.setValue(outIdx, "");
+          filesizeOut.setValue(outIdx, 0);
+          fileCountOut.setValue(i, 0);
+          outIdx++;
+        }
+      }
+      fileOut.setSliceCount(outIdx);
+      filenameOut.setSliceCount(outIdx);
+      filesizeOut.setSliceCount(outIdx);
+      fileCountOut.setSliceCount(maxSpreadSize);
+      needsUpdate = false;
+      thatNode.dirty = false;
+    }
+  }
+
+  this.destroy = function() {
+    for (var i=0; i<targets.length; i++) {
+      $(targets[i]).unbind("change", handlers[i]);
+    }
+  }
+}
+VVVV.Nodes.GetFileHTML.prototype = new Node();
 
 
 /*
@@ -756,8 +882,11 @@ event_node_defs.forEach(function(event_node_def) {
     };
 
     this.auto_evaluate = true;
+    this.auto_nil = false;
+    this.environments = ['browser'];
 
     var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
+    var preventDefaultIn = this.addInputPin("Prevent Default", [0], VVVV.PinTypes.Value);
 
     var eventCode = '';
     var eventIn = undefined;
@@ -778,21 +907,27 @@ event_node_defs.forEach(function(event_node_def) {
     this.evaluate = function() {
       var maxSpreadSize = this.getMaxInputSliceCount();
 
-      if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
+      if (elementIn.isConnected() && !this.hasNilInputs() && elementIn.getValue(0).tagName!='') {
         for (var i=0; i<maxSpreadSize; i++) {
           if (eventIn)
             eventCode = eventIn.getValue(i);
-          if (targets[i]!=undefined && (targets[i]!=elementIn.getValue(i).element[0] || eventTypes[i]!=eventCode)) {
+          if (targets[i]!=undefined && (!elementIn.getValue(i).enabled || targets[i]!=elementIn.getValue(i).element[0] || eventTypes[i]!=eventCode)) {
             $(targets[i]).unbind(eventTypes[i], handlers[i]);
             handlers[i] = undefined;
           }
-          if (handlers[i]==undefined) {
+          if (!elementIn.getValue(i).enabled)
+            targets[i] = undefined;
+          if (elementIn.getValue(i).enabled && handlers[i]==undefined) {
             targets[i] = elementIn.getValue(i).element[0];
             eventTypes[i] = eventCode;
             (function(j) {
               handlers[j] = function(e) {
                 setSlices.push(j);
                 doReset = false;
+                if (preventDefaultIn.getValue(j)>.5) {
+                  e.preventDefault();
+                  return false;
+                }
               }
             }(i));
             $(targets[i]).bind(eventTypes[i], handlers[i]);
@@ -838,7 +973,7 @@ event_node_defs.forEach(function(event_node_def) {
       }
     }
   }
-  VVVV.Nodes["On"+event_node_def.name+"HTML"].prototype = new VVVV.Core.Node();
+  VVVV.Nodes["On"+event_node_def.name+"HTML"].prototype = new Node();
 
 });
 
@@ -859,6 +994,8 @@ VVVV.Nodes.StyleHTML = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   var styleIn = this.addInputPin("Style In", [], VVVV.PinTypes.HTMLStyle);
   var nameIn = this.addInputPin("Property Name", [], VVVV.PinTypes.String);
@@ -899,7 +1036,7 @@ VVVV.Nodes.StyleHTML = function(id, graph) {
     styleOut.setSliceCount(maxSpreadSize);
   }
 }
-VVVV.Nodes.StyleHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.StyleHTML.prototype = new Node();
 
 var style_node_definitions = [
   {name: "Background", pins: [{name: "background-color", type: VVVV.PinTypes.Color, is_property: true}]},
@@ -908,6 +1045,7 @@ var style_node_definitions = [
   {name: "Margin", pins: [{name: "margin-left", value: 1, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, {name: "margin-top", value: 1, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, {name: "margin-right", value: 1, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, {name: "margin-bottom", value: 1, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, ]},
   {name: "Font", pins: [{name: "color", type: VVVV.PinTypes.Color, is_property: true}, {name: "font-family", value: "inherit", type: VVVV.PinTypes.String, is_property: true}, {name: "font-weight", value: "inherit", type: VVVV.PinTypes.Enum, is_property: true, enumOptions: ["inherit", "normal", "light", "bold"]}, {name: "text-decoration", value: "inherit", type: VVVV.PinTypes.Enum, is_property: true, enumOptions: ["inherit", "none", "underline", "line-through"]}]},
   {name: "FontSize", pins: [{name: "font-size", value: 12, unit: "px", type: VVVV.PinTypes.Value, is_property: true}]},
+  {name: "InlineBox", pins: [{name: "width", value: 100, unit: "px", type: VVVV.PinTypes.Value, is_property: true}, {name: "height", value: 100, unit: "px", type: VVVV.PinTypes.Value, is_property: true},{name: "display", value: "inline-block", type: VVVV.PinTypes.String, is_property: true}]},
 ]
 
 style_node_definitions.forEach(function(style_node_def) {
@@ -921,6 +1059,8 @@ style_node_definitions.forEach(function(style_node_def) {
       credits: [],
       compatibility_issues: []
     };
+
+    this.environments = ['browser'];
 
     var styleIn = this.addInputPin("Style In", [], VVVV.PinTypes.HTMLStyle);
 
@@ -998,7 +1138,7 @@ style_node_definitions.forEach(function(style_node_def) {
       styleOut.setSliceCount(maxSpreadSize);
     }
   }
-  VVVV.Nodes[style_node_def.name+"HTML"].prototype = new VVVV.Core.Node();
+  VVVV.Nodes[style_node_def.name+"HTML"].prototype = new Node();
 
 });
 
@@ -1019,6 +1159,8 @@ VVVV.Nodes.ApplyStyleHTML = function(id, graph) {
     compatibility_issues: []
   };
 
+  this.environments = ['browser'];
+
   var styleIn = this.addInputPin("Style", [], VVVV.PinTypes.HTMLStyle);
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
 
@@ -1033,7 +1175,7 @@ VVVV.Nodes.ApplyStyleHTML = function(id, graph) {
     }
   }
 }
-VVVV.Nodes.ApplyStyleHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.ApplyStyleHTML.prototype = new Node();
 
 
 /*
@@ -1052,6 +1194,8 @@ VVVV.Nodes.GetTextHTML = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
 
@@ -1111,7 +1255,7 @@ VVVV.Nodes.GetTextHTML = function(id, graph) {
     })
   }
 }
-VVVV.Nodes.GetTextHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GetTextHTML.prototype = new Node();
 
 
 /*
@@ -1130,6 +1274,8 @@ VVVV.Nodes.SetTextHTML = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
   var textIn = this.addInputPin("Text", [], VVVV.PinTypes.String);
@@ -1150,7 +1296,7 @@ VVVV.Nodes.SetTextHTML = function(id, graph) {
     }
   }
 }
-VVVV.Nodes.SetTextHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.SetTextHTML.prototype = new Node();
 
 
 /*
@@ -1169,6 +1315,8 @@ VVVV.Nodes.GetAttributeHTML = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
   var attributeIn = this.addInputPin("Attribute Name", [''], VVVV.PinTypes.String);
@@ -1245,7 +1393,7 @@ VVVV.Nodes.GetAttributeHTML = function(id, graph) {
     })
   }
 }
-VVVV.Nodes.GetAttributeHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.GetAttributeHTML.prototype = new Node();
 
 
 /*
@@ -1264,6 +1412,8 @@ VVVV.Nodes.SetAttributeHTML = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
+
+  this.environments = ['browser'];
 
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
   var nameIn = this.addInputPin("Attribute Name", [''], VVVV.PinTypes.String);
@@ -1295,7 +1445,7 @@ VVVV.Nodes.SetAttributeHTML = function(id, graph) {
     }
   }
 }
-VVVV.Nodes.SetAttributeHTML.prototype = new VVVV.Core.Node();
+VVVV.Nodes.SetAttributeHTML.prototype = new Node();
 
 
-}(vvvvjs_jquery));
+});

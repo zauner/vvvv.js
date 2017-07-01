@@ -3,7 +3,11 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
-(function($) {
+if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
+define(function(require,exports) {
+
+var Node = require('core/vvvv.core.node');
+var VVVV = require('core/vvvv.core.defines');
 
 
 
@@ -17,16 +21,16 @@
 
 VVVV.Nodes.BoundsSpectral = function(id, graph) {
   this.constructor(id, "Bounds (Spectral)", graph);
-  
+
   this.meta = {
     authors: ['Matthias Zauner'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
   };
-  
+
   this.auto_evaluate = false;
-  
+
   // input pins
   var inputIn = this.addInputPin('Input', [0], VVVV.PinTypes.Value);
   var binSizeIn = this.addInputPin('Bin Size', [-1], VVVV.PinTypes.Value);
@@ -38,12 +42,12 @@ VVVV.Nodes.BoundsSpectral = function(id, graph) {
   var maximumOut = this.addOutputPin('Maximum', [0], VVVV.PinTypes.Value);
 
   this.evaluate = function() {
-    
+
     var maxSpreadSize = this.getMaxInputSliceCount();
     var binNum = 0;
     var subIndex = 0;
     var input, minimum, maximum;
-    
+
     for (var i=0; i<maxSpreadSize || (binSizeIn.getValue(0)>0 && (subIndex>0 || binNum%binSizeIn.getSliceCount()!=0)); i++) {
       input = inputIn.getValue(i);
       if (subIndex == 0) {
@@ -52,7 +56,7 @@ VVVV.Nodes.BoundsSpectral = function(id, graph) {
       }
       minimum = Math.min(input, minimum);
       maximum = Math.max(input, maximum);
-      
+
       subIndex++;
       if (binSizeIn.getValue(0)>0) {
         if (subIndex>=binSizeIn.getValue(binNum)) {
@@ -71,7 +75,7 @@ VVVV.Nodes.BoundsSpectral = function(id, graph) {
       centerOut.setValue(binNum, minimum + (maximum - minimum)/2);
       widthOut.setValue(binNum, Math.abs(maximum - minimum));
     }
-    
+
     // you also might want to do stuff like this:
     centerOut.setSliceCount(binNum+(subIndex>0));
     widthOut.setSliceCount(binNum+(subIndex>0));
@@ -80,6 +84,6 @@ VVVV.Nodes.BoundsSpectral = function(id, graph) {
   }
 
 }
-VVVV.Nodes.BoundsSpectral.prototype = new VVVV.Core.Node();
+VVVV.Nodes.BoundsSpectral.prototype = new Node();
 
-}(vvvvjs_jquery));
+});
