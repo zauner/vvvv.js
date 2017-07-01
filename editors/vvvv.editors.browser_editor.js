@@ -1325,11 +1325,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
 
           var upnodes = [];
           if (!linkStart.node.delays_output)
-<<<<<<< HEAD
-            getAllUpstreamNodes(linkStart.node);
-=======
             upnodes = getAllUpstreamNodes(linkStart.node);
->>>>>>> require
 
           chart.selectAll('g.vvvv-'+targetDir+'-pin rect')
             .filter(function(d) {
