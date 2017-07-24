@@ -2168,7 +2168,7 @@ VVVV.Nodes.CollisionBoxSweep = function(id, graph) {
         var maxZ2 = Box2Position.getValue(2+idx) + Box2Scale.getValue(3+idx) /2 ;
 
         var vX = -1*(Box1Velocity.getValue(iidx) - Box2Velocity.getValue(idx));
-        var vY = -1*(Box1Velocity.getValue(iidx+1) - Box2Velocity.getValue(idx+1));
+        var vY = 1*(Box1Velocity.getValue(iidx+1) - Box2Velocity.getValue(idx+1));  
         var vZ = -1*(Box1Velocity.getValue(iidx+2) - Box2Velocity.getValue(idx+2));
 
         if (vX==0.0){vX=0.00000000001;}
@@ -2300,7 +2300,11 @@ VVVV.Nodes.Trajectory = function(id, graph) {
    var InitPos = this.addInputPin("Initial Position", [0.0,0.0,0.0], VVVV.PinTypes.Value);
    var InitVel = this.addInputPin("Initial Velocity", [0.0,0.0,0.0], VVVV.PinTypes.Value);
    var MaxAge = this.addInputPin("Max Age", [100], VVVV.PinTypes.Value);
-
+   var Gravitation = this.addInputPin("Gravitation Vector", [0.0,0.0,0.0], VVVV.PinTypes.Value);
+   var massIn = this.addInputPin("mass", [1.0], VVVV.PinTypes.Value);
+   var elasticityIn = this.addInputPin("elasticity", [1.0], VVVV.PinTypes.Value);
+   
+   
    var Create = this.addInputPin("Create", [0], VVVV.PinTypes.Value);
 
    var DestroyIndex = this.addInputPin("Destroy Index", [0.0,0.0,0.0], VVVV.PinTypes.Value);
@@ -2314,10 +2318,15 @@ VVVV.Nodes.Trajectory = function(id, graph) {
   var PositionXYZ = this.addOutputPin('PositionXYZ', [0.0,0.0,0.0], VVVV.PinTypes.Value);
   var VelocityXYZ = this.addOutputPin('VelocityXYZ', [0.0,0.0,0.0], VVVV.PinTypes.Value);
   var AgeOut = this.addOutputPin('Age', [0], VVVV.PinTypes.Value);
+  var ElasticityOut = this.addOutputPin('Elasticity Factor', [1.0], VVVV.PinTypes.Value);
+  var MassOut = this.addOutputPin('Mass', [1.0], VVVV.PinTypes.Value);
 
   var Pos = [];
   var Vel = [];
   var Age = [];
+  var Mass = [];
+  var Elasticity = [];
+  var updateIndexArray = [];
   var MaxAgeArray = [];
   // evaluate() will be called each frame
   // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
@@ -2333,17 +2342,22 @@ VVVV.Nodes.Trajectory = function(id, graph) {
       Vel.push(InitVel.getValue(i*3));
       Vel.push(InitVel.getValue(i*3+1));
       Vel.push(InitVel.getValue(i*3+2));
-      Age.push(0);
+      Age.push(i);
+      Mass.push(massIn.getValue(i));
+      Elasticity.push(elasticityIn.getValue(i));
       MaxAgeArray.push(MaxAge.getValue(i));
 
      }
     }
 
     if(Update.getValue(0)==1){
+        var updateIndexArray = [];
         for(var j=0; j<UpdateIndex.getSliceCount(); j++){
-            Vel[UpdateIndex.getValue(j)*3]= NewVel.getValue(j*3);
-            Vel[UpdateIndex.getValue(j)*3+1]= NewVel.getValue(j*3+1);
-            Vel[UpdateIndex.getValue(j)*3+2]= NewVel.getValue(j*3+2);
+            var currentUpdateIndex = UpdateIndex.getValue(j);
+            Vel[currentUpdateIndex*3]= NewVel.getValue(j*3);
+            Vel[currentUpdateIndex*3+1]= NewVel.getValue(j*3+1);
+            Vel[currentUpdateIndex*3+2]= NewVel.getValue(j*3+2);
+            updateIndexArray[j] = currentUpdateIndex;
         }
     }
 
@@ -2361,13 +2375,28 @@ VVVV.Nodes.Trajectory = function(id, graph) {
     var maxSize= Math.max(Pos.length/3,Vel.length/3);
     var AgeCount=0;
     var AgedIndices=[];
-
+    var g = [];
+    g[0] = Gravitation.getValue(0);
+    g[1] = Gravitation.getValue(1);
+    g[2] = Gravitation.getValue(2);
+    
     //Mainloop
     if(maxSize != 0 || Create.getValue(0)==1){
         for(var n=0; n<maxSize; n++){
+            
+            
+            if(Update.getValue(0)==1 ){ 
             Pos[n*3] = Pos[n*3]+ Vel[n*3];
             Pos[n*3+1] = Pos[n*3+1]+ Vel[n*3+1];
-            Pos[n*3+2] = Pos[n*3+2]+ Vel[n*3+2];
+            Pos[n*3+2] = Pos[n*3+2]+ Vel[n*3+2];  
+            }else{
+            Vel[n*3] += g[0]*Mass[n];
+            Vel[n*3+1] += g[1]*Mass[n];
+            Vel[n*3+2] += g[2]*Mass[n];
+            Pos[n*3] = Pos[n*3]+ Vel[n*3];
+            Pos[n*3+1] = Pos[n*3+1]+ Vel[n*3+1] ;
+            Pos[n*3+2] = Pos[n*3+2]+ Vel[n*3+2] ;
+            }
             Age[n] = Age[n]+1;
             if(Age[n]>= MaxAgeArray[n]){
                 AgeCount=AgeCount+1;
@@ -2401,6 +2430,8 @@ VVVV.Nodes.Trajectory = function(id, graph) {
             VelocityXYZ.setValue(l*3+2, -(Vel[l*3+2]));
 
             AgeOut.setValue(l,Age[l]);
+            ElasticityOut.setValue(l,Elasticity[l]);
+            MassOut.setValue(l,Mass[l]);
 
         }
     }
@@ -2419,6 +2450,8 @@ VVVV.Nodes.Trajectory = function(id, graph) {
     PositionXYZ.setSliceCount(Pos.length);
     VelocityXYZ.setSliceCount(Vel.length);
     AgeOut.setSliceCount(Age.length);
+    ElasticityOut.setSliceCount(Elasticity.length);
+    MassOut.setSliceCount(Mass.length);
 
   }
 
@@ -2449,6 +2482,7 @@ VVVV.Nodes.CollisionResponse = function(id, graph) {
   // input pins
    var Velocity = this.addInputPin('Velocity', [0.0,0.0,0.0], VVVV.PinTypes.Value);
    var Normals = this.addInputPin('CollisionNormals', [0.0,0.0,0.0], VVVV.PinTypes.Value);
+   var Elasticity = this.addInputPin('Elasticity', [1.0], VVVV.PinTypes.Value);
    var CollisionTime = this.addInputPin('CollisionTime', [0.0,0.0,0.0], VVVV.PinTypes.Value);
    var typeIn = this.addInputPin('ResponseType', ['deflect'], VVVV.PinTypes.Enum);
    typeIn.enumOptions = ["deflect", "slide"];
@@ -2456,7 +2490,6 @@ VVVV.Nodes.CollisionResponse = function(id, graph) {
 
   // output pins
   var UpdatedVelocity = this.addOutputPin('UpdatedVelocityXYZ', [0.0,0.0,0.0], VVVV.PinTypes.Value);
-
 
   this.evaluate = function() {
 
@@ -2470,14 +2503,14 @@ VVVV.Nodes.CollisionResponse = function(id, graph) {
 
 
         if (typeIn.getValue(i)=='deflect'){
-            var velX = -Velocity.getValue(i*3); //* remainingtime;
-            var velY = -Velocity.getValue(i*3+1); //* remainingtime;
-            var velZ = -Velocity.getValue(i*3+2); //* remainingtime;
+            var velX = -Velocity.getValue(i*3) * Elasticity.getValue(i); //* remainingtime;
+            var velY = -Velocity.getValue(i*3+1) * Elasticity.getValue(i); //* remainingtime;
+            var velZ = -Velocity.getValue(i*3+2) * Elasticity.getValue(i); //* remainingtime;
             if(Math.abs(Normals.getValue(i*3))>0.0){
                 velX = -velX;
                 }
             if(Math.abs(Normals.getValue(i*3+1))>0.0){
-                velY = -velY;
+                velY = velY; 
                 }
             if(Math.abs(Normals.getValue(i*3+2))>0.0){
                 velZ = -velZ;
