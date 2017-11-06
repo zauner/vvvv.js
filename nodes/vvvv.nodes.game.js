@@ -656,6 +656,7 @@ VVVV.Nodes.ElementBuffer = function(id, graph) {
 
   var SceneIn = this.addInputPin("Scene", [], VVVV.PinTypes.Scene);
   var selectorIn = this.addInputPin("Selector", [""], VVVV.PinTypes.String);
+  var UpdateIn = this.addInputPin("Update", ["0.0"], VVVV.PinTypes.Value);
 
   var BufferOut = this.addOutputPin("Buffer", [], VVVV.PinTypes.SceneBuffer);
   var BinSizeOut = this.addOutputPin("BufferSize", [0], VVVV.PinTypes.Value);
@@ -663,7 +664,7 @@ VVVV.Nodes.ElementBuffer = function(id, graph) {
   var countOut = this.addOutputPin("count", [1], VVVV.PinTypes.Value);
   var AssetIndex = this.addOutputPin("Asset id", [0], VVVV.PinTypes.Value);
   var BufferId = this.addOutputPin("Buffer id", [0], VVVV.PinTypes.Value);
-  var ChangedOut = this.addOutputPin("Buffer Changed", [0], VVVV.PinTypes.Value);
+  //var ChangedOut = this.addOutputPin("Buffer Changed", [0], VVVV.PinTypes.Value);
 
     Object.byString = function(o, s) {
         s = s.replace(/\[(\w+)\]/g, '.$1'); // convert indexes to properties
@@ -688,22 +689,33 @@ VVVV.Nodes.ElementBuffer = function(id, graph) {
     var changed = [];
     //if (SceneIn.pinIsChanged()){
     //  this.initialize();}
-    var selector = selectorIn.getValue(0);
-    var offsetKey = "data."+selector+".offset";
-    var countKey = "data."+selector+".count";
-    var idKey = "data."+selector+".id";
-    var bufferKey = "data."+selector+".buffer";
 
-    var maxCount = SceneIn.getSliceCount();
+    var maxCount = this.getMaxInputSliceCount();
     var offsetArray = [];
     var countArray = [];
     var idArray = [];
     var buffer = [];
     var bufferIDArray = [];
     var offsetCountArr = [];
+    
+    var scene_count = SceneIn.getSliceCount();
+    var selector_count = selectorIn.getSliceCount();
+    var update_count = UpdateIn.getSliceCount();
+    
         for (var i=0; i<maxCount; i++) {
+            var Update = UpdateIn.getValue(i%update_count);
+            if (Update == 1.0 ){ //|| update_count.pinIsChanged()
+                
+            var selector = selectorIn.getValue(i%selector_count);
+            var offsetKey = "data."+selector+".offset";
+            var countKey = "data."+selector+".count";
+            var idKey = "data."+selector+".id";
+            var bufferKey = "data."+selector+".buffer";
+    
+    
+            
             var bufferID = [];
-            var scene = SceneIn.getValue(i);
+            var scene = SceneIn.getValue(i%scene_count);
             if(scene !== undefined){
                 var offset = Object.byString(scene, offsetKey);
                 var count = Object.byString(scene, countKey);
@@ -730,19 +742,21 @@ VVVV.Nodes.ElementBuffer = function(id, graph) {
             var VectorSize=3;
             var bufferOut = new VVVV.Types.SceneBuffer(VectorSize, buffer, offset, count, id);
             BufferOut.setValue(i,bufferOut);
-            if(buffer[i] !== lastBuffer[i] && lastBuffer[i] !== undefined){
-                changed[i]=1;
-            }
-            if(buffer == lastBuffer[i]){
-                changed[i]=0;
-            }
-            lastBuffer[i] = buffer;
+//            if(buffer[i] !== lastBuffer[i] && lastBuffer[i] !== undefined){
+//                changed[i]=1;
+//            }
+//            if(buffer == lastBuffer[i]){
+//                changed[i]=0;
+//            }
+            //lastBuffer[i] = buffer;
 
             if(offsetCount.length !== undefined){
             BinSizeOut.setValue(i, offsetCount.length);
             }else{BinSizeOut.setValue(i, 0); }
+            
+            }//Update End
 
-            ChangedOut.setValue(i, changed[i]);
+            //ChangedOut.setValue(i, changed[i]);
         }   //end of inner for loop
 
 
@@ -2114,7 +2128,6 @@ VVVV.Nodes.CollisionBoxSweep = function(id, graph) {
    var Box2Velocity = this.addInputPin("Box2Velocity", [0.0,0.0,0.0], VVVV.PinTypes.Value);
    var Box2Scale = this.addInputPin("Box2Scale", [0.0,0.0,0.0], VVVV.PinTypes.Value);
 
-
   // output pins
   var Box1Colide = this.addOutputPin('Box1Colide', [0], VVVV.PinTypes.Value);
   var Box1Index = this.addOutputPin('Box1Index', [0], VVVV.PinTypes.Value);
@@ -2124,12 +2137,9 @@ VVVV.Nodes.CollisionBoxSweep = function(id, graph) {
 
   var NormalsOut = this.addOutputPin('NormalsOut', [0.0,0.0,0.0], VVVV.PinTypes.Value);
   var CollisionTime = this.addOutputPin('CollisionTime', [0.0], VVVV.PinTypes.Value);
+  var MTD_Out = this.addOutputPin('Minimum Translation Distance', [0.0], VVVV.PinTypes.Value);
   var Collide = this.addOutputPin('Collide', [0], VVVV.PinTypes.Value);
 
-
-
-  // evaluate() will be called each frame
-  // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
   this.evaluate = function() {
 
     if(Box1Position.getSliceCount() >= 3){ var maxsizeBox1 =  Box1Position.getSliceCount()/3; }
@@ -2146,6 +2156,7 @@ VVVV.Nodes.CollisionBoxSweep = function(id, graph) {
     var b1iix = 0;
     var Box2IndexArray = [];
     var normalArray = [];
+    var MTDArray = [];
     var niix = 0;
     var CollisionTimeArray = [];
     var Collision = 0;
@@ -2181,32 +2192,39 @@ VVVV.Nodes.CollisionBoxSweep = function(id, graph) {
             var EarlyTimeX = (minX2 - maxX1) / vX;
             var LateTimeX = (maxX2 - minX1) / vX;
             var normalDirX = 1;
+            var MTDx = minX2 - Box1Scale.getValue(iidx) /2;
         }
         else if(vX < 0){
             var EarlyTimeX = (maxX2 - minX1) / vX;
             var LateTimeX = (minX2 - maxX1) / vX;
             var normalDirX = -1;
+            var MTDx = maxX2 + Box1Scale.getValue(iidx) /2;
+            
         }
 
         if(vY > 0){
             var EarlyTimeY = (minY2 - maxY1) / vY;
             var LateTimeY = (maxY2 - minY1) / vY;
             var normalDirY = 1;
+            var MTDy = minY2 - Box1Scale.getValue(iidx + 1) /2;
         }
         else if(vY < 0){
             var EarlyTimeY = (maxY2 - minY1) / vY;
             var LateTimeY = (minY2 - maxY1) / vY;
             var normalDirY = -1;
+            var MTDy = maxY2 + Box1Scale.getValue(iidx + 1) /2;
         }
         if(vZ > 0){
             var EarlyTimeZ = (minZ2 - maxZ1) / vZ;
             var LateTimeZ = (maxZ2 - minZ1) / vZ;
             var normalDirZ = 1;
+            var MTDz = minZ2 - Box1Scale.getValue(iidx + 2) /2;
         }
         else if(vZ < 0){
             var EarlyTimeZ = (maxZ2 - minZ1) / vZ;
             var LateTimeZ = (minZ2 - maxZ1) / vZ;
             var normalDirZ = -1;
+            var MTDz = maxZ2 + Box1Scale.getValue(iidx + 2) /2;
         }
 
 
@@ -2231,16 +2249,33 @@ VVVV.Nodes.CollisionBoxSweep = function(id, graph) {
            CollisionTimeArray.push(T0);
 
            CollisionTime.setValue(b1iix, CollisionTimeArray[b1iix]);
-
-           if(EarlyTimeX>EarlyTimeY && EarlyTimeX>EarlyTimeZ) {var normal=[1.0*normalDirX,0,0];}
-           if(EarlyTimeY>EarlyTimeX && EarlyTimeY>EarlyTimeZ) {var normal=[0,1.0*normalDirY,0];}
-           if(EarlyTimeZ>EarlyTimeX && EarlyTimeZ>EarlyTimeY) {var normal=[0,0,1.0*normalDirZ];}
+           
+           var normal =[0,0,0];
+           var MTD =[0,0,0];
+           //Apply Normals from Collission Surface and Minimum Translation Distance (MTD) for repositioning the colliding object to not overlap anymore (avoids tunneling bugs)
+           if(EarlyTimeX>EarlyTimeY && EarlyTimeX>EarlyTimeZ) {
+               normal[0] = normalDirX;
+               MTD[0] = MTDx;
+           }
+           if(EarlyTimeY>EarlyTimeX && EarlyTimeY>EarlyTimeZ) {
+               normal[1] = normalDirY;
+               MTD[1] = MTDy;
+           }
+           if(EarlyTimeZ>EarlyTimeX && EarlyTimeZ>EarlyTimeY) {
+               normal[2] = normalDirZ;
+               MTD[2] = MTDz;;
+           }
 
            normalArray.push(normal[0]);normalArray.push(normal[1]);normalArray.push(normal[2]);
            NormalsOut.setValue(niix, normalArray[niix]);
            NormalsOut.setValue(niix+1, normalArray[niix+1]);
            NormalsOut.setValue(niix+2, normalArray[niix+2]);
 
+           MTDArray.push(MTD[0]);MTDArray.push(MTD[1]);MTDArray.push(MTD[2]);
+           MTD_Out.setValue(niix, MTDArray[niix]);
+           MTD_Out.setValue(niix+1, MTDArray[niix+1]);
+           MTD_Out.setValue(niix+2, MTDArray[niix+2]);
+           
            b1iix++;
 
            niix=niix+3;
@@ -2261,12 +2296,14 @@ VVVV.Nodes.CollisionBoxSweep = function(id, graph) {
         Box2Index.setSliceCount(1);
         Box1Index.setSliceCount(1);
         NormalsOut.setSliceCount(3);
+        MTD_Out.setSliceCount(3);
         CollisionTime.setSliceCount(1);
     }
     else {
         Box2Index.setSliceCount(Box2IndexArray.length);
         Box1Index.setSliceCount(Box1IndexArray.length);
         NormalsOut.setSliceCount(normalArray.length);
+        MTD_Out.setSliceCount(MTDArray.length);
         CollisionTime.setSliceCount(CollisionTimeArray.length);
     }
 
@@ -2312,6 +2349,8 @@ VVVV.Nodes.Trajectory = function(id, graph) {
 
    var NewVel = this.addInputPin("Update Velocity", [0.0,0.0,0.0], VVVV.PinTypes.Value);
    var UpdateIndex = this.addInputPin("Update Index", [0], VVVV.PinTypes.Value);
+   var MTDIn = this.addInputPin("Min Translation Distance", [0.0, 0.0, 0.0], VVVV.PinTypes.Value);
+   var NormalsIn = this.addInputPin("Normals of Colliding Box", [0.0, 0.0, 0.0], VVVV.PinTypes.Value);
    var Update = this.addInputPin("Update", [0], VVVV.PinTypes.Value);
 
   // output pins
@@ -2331,7 +2370,7 @@ VVVV.Nodes.Trajectory = function(id, graph) {
   // evaluate() will be called each frame
   // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
   this.evaluate = function() {
-
+    var updateIndexArray = [];
     var maxInit= Math.max(InitPos.getSliceCount()/3,InitVel.getSliceCount()/3);
     if(Create.getValue(0)==1) {
     for (var i=0; i<maxInit; i++) {
@@ -2351,7 +2390,7 @@ VVVV.Nodes.Trajectory = function(id, graph) {
     }
 
     if(Update.getValue(0)==1){
-        var updateIndexArray = [];
+        
         for(var j=0; j<UpdateIndex.getSliceCount(); j++){
             var currentUpdateIndex = UpdateIndex.getValue(j);
             Vel[currentUpdateIndex*3]= NewVel.getValue(j*3);
@@ -2364,12 +2403,12 @@ VVVV.Nodes.Trajectory = function(id, graph) {
     if(Destroy.getValue(0)==1){
         for(var k=0; k<DestroyIndex.getSliceCount(); k++){
             Pos.splice([DestroyIndex[k]*3],3);
-
             Vel.splice([DestroyIndex[k]*3],3);
-
             Age.splice([DestroyIndex[k]],1);
-
+            Elasticity.splice([DestroyIndex[k]],1);
+            Mass.splice([DestroyIndex[k]],1);
             MaxAgeArray.splice([DestroyIndex[k]],1);
+            
         }
     }
     var maxSize= Math.max(Pos.length/3,Vel.length/3);
@@ -2379,16 +2418,23 @@ VVVV.Nodes.Trajectory = function(id, graph) {
     g[0] = Gravitation.getValue(0);
     g[1] = Gravitation.getValue(1);
     g[2] = Gravitation.getValue(2);
-    
+    var uix = 0;
     //Mainloop
+    var landet = [];
     if(maxSize != 0 || Create.getValue(0)==1){
         for(var n=0; n<maxSize; n++){
             
+            if( updateIndexArray.indexOf(n) != -1){ //Update.getValue(0)==1 
+            Pos[n*3] = Pos[n*3]+ Vel[n*3]  ;
+            Pos[n*3+1] = MTDIn.getValue(1) + Vel[n*3+1] ;
+            Pos[n*3+2] = Pos[n*3+2]+ Vel[n*3+2] ; 
+            //////////limit Pos to the Minimal Translation Distance
+
+                //Pos[n*3+1] == MTDIn.getValue(uix*3+1);
+
             
-            if(Update.getValue(0)==1 ){ 
-            Pos[n*3] = Pos[n*3]+ Vel[n*3];
-            Pos[n*3+1] = Pos[n*3+1]+ Vel[n*3+1];
-            Pos[n*3+2] = Pos[n*3+2]+ Vel[n*3+2];  
+            
+            uix += 1;
             }else{
             Vel[n*3] += g[0]*Mass[n];
             Vel[n*3+1] += g[1]*Mass[n];
@@ -2411,6 +2457,8 @@ VVVV.Nodes.Trajectory = function(id, graph) {
                 Pos.splice(AgedIndices[a]*3,3);
                 Vel.splice(AgedIndices[a]*3,3);
                 Age.splice(AgedIndices[a],1);
+                Elasticity.splice(AgedIndices[a],1);
+                Mass.splice(AgedIndices[a],1);
                 MaxAgeArray.splice(AgedIndices[a],1); ///doesnt remove array correctly?
              }
 

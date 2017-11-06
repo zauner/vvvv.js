@@ -24,7 +24,8 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/CookTorrance.vvvvjs.fx": undefined,
   "%VVVV%/effects/PhongInstancedAnimation.vvvvjs.fx": undefined,
   "%VVVV%/effects/BillBoards.vvvvjs.fx": undefined,
-  "%VVVV%/effects/BotanyInstanced.vvvvjs.fx": undefined
+  "%VVVV%/effects/BotanyInstanced.vvvvjs.fx": undefined,
+  "%VVVV%/effects/CookTorrance_AO.vvvvjs.fx": undefined
 };
 
 /**
@@ -3340,5 +3341,196 @@ VVVV.Nodes.InstancerDynamic = function(id, graph) {
   }
 VVVV.Nodes.InstancerDynamic.prototype = new Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: HeightMap (Buffer Geometry)
+ Author(s): David Gann
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.HeightMap = function(id, graph) {
+  this.constructor(id, "HeightMap (Buffer Geometry)", graph);
+
+  this.auto_nil = false;
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['David Gann'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+
+
+  var BufferIn = this.addInputPin("Buffer", [], VVVV.PinTypes.SceneBuffer);
+  var ResolutionIn = this.addInputPin("Resolution", [128], VVVV.PinTypes.Value);
+  var ScaleIn = this.addInputPin("Scale", [1.0], VVVV.PinTypes.Value);
+  var UpdateIn = this.addInputPin("Update", [1.0], VVVV.PinTypes.Value);
+
+  var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
+  var LoadedOut = this.addOutputPin("Has Loaded", [0.0], VVVV.PinTypes.Value);
+
+  var mesh = null;
+  var vertexBuffer = null;
+
+  //temp
+  var generateNormals = (function() {
+    var a = glMatrix.vec3.create();
+    var b = glMatrix.vec3.create();
+    var c = glMatrix.vec3.create();
+
+    var ab = glMatrix.vec3.create();
+    var ac = glMatrix.vec3.create();
+    var n = glMatrix.vec3.create();
+
+    function getVec3FromIndex(out, vecArray, stride, offset, index) {
+      out[0] = vecArray[(index*stride)+offset];
+      out[1] = vecArray[(index*stride)+offset+1];
+      out[2] = vecArray[(index*stride)+offset+2];
+    }
+
+    function setVec3AtIndex(v, vecArray, stride, offset, index) {
+      vecArray[(index*stride)+offset] = v[0];
+      vecArray[(index*stride)+offset+1] = v[1];
+      vecArray[(index*stride)+offset+2] = v[2];
+    }
+
+    return function(vertexArray, stride, offset, count, indexArray) {
+      var normalArray = new Float32Array(3 * count);
+
+      var i, j;
+      var idx0, idx1, idx2;
+      var indexCount = indexArray.length;
+      for(i = 0; i < indexCount; i+=3) {
+        idx0 = indexArray[i];
+        idx1 = indexArray[i+1];
+        idx2 = indexArray[i+2];
+
+        getVec3FromIndex(a, vertexArray, stride, offset, idx0);
+        getVec3FromIndex(b, vertexArray, stride, offset, idx1);
+        getVec3FromIndex(c, vertexArray, stride, offset, idx2);
+
+        // Generate the normal
+        glMatrix.vec3.subtract(b, a, ab);
+        glMatrix.vec3.subtract(c, a, ac);
+        glMatrix.vec3.cross(ab, ac, n);
+
+        normalArray[(idx0 * 3)] += n[0];
+        normalArray[(idx0 * 3)+1] += n[1];
+        normalArray[(idx0 * 3)+2] += n[2];
+
+        normalArray[(idx1 * 3)] += n[0];
+        normalArray[(idx1 * 3)+1] += n[1];
+        normalArray[(idx1 * 3)+2] += n[2];
+
+        normalArray[(idx2 * 3)] += n[0];
+        normalArray[(idx2 * 3)+1] += n[1];
+        normalArray[(idx2 * 3)+2] += n[2];
+      }
+
+      for(i = 0; i < count; ++i) {
+        getVec3FromIndex(n, normalArray, 3, 0, i);
+        glMatrix.vec3.normalize(n, n);
+        setVec3AtIndex(n, normalArray, 3, 0, i);
+      }
+
+      return normalArray;
+    };
+  })();
+
+   var HasLoaded = 0;
+   var prevFilenames = [];
+   var filename = [];
+   var xhr = [];
+   var Buffer = [];
+   var update = [];
+  this.evaluate = function() {
+    var scale = ScaleIn.getValue(0);
+    
+    var Res = parseInt(ResolutionIn.getValue(0));
+        
+        
+    if (BufferIn.pinIsChanged() | ScaleIn.pinIsChanged() | update == 1){
+      this.initialize();}
+
+    if (!this.renderContexts) return;
+       var gl = this.renderContexts[0];
+    if (!gl)
+      return;
+  
+    
+    
+      for (var i=0; i<BufferIn.getSliceCount(); i++) {
+          
+            Buffer[i] = BufferIn.getValue(i);
+            update[i] = UpdateIn.getValue(i);
+            
+            if (BufferIn.pinIsChanged() | ScaleIn.pinIsChanged()  | update[i] == 1) {
+                
+            
+               
+
+               
+                           
+                        
+            var vertices = [];
+            var normals = [];
+            var texCoords = [];
+            var index = 0;
+            for (var y=0; y<Res; y++) {
+              for (var x=0; x<Res; x++) {
+                var b_index = x+y*Res;
+                var displacement =  (Buffer[i].data[b_index]) * scale; 
+                vertices.push(parseFloat(x)/(Res-1)-0.5);
+                vertices.push(displacement);
+                vertices.push(0.5-parseFloat(y)/(Res-1));
+                index++;
+                texCoords.push(parseFloat(x)/(Res-1));
+                texCoords.push(parseFloat(y)/(Res-1));
+              }
+            }
+            
+            
+
+            var indices = [];
+            for (var y=0; y<Res-1; y++) {
+              for (var x=0; x<Res-1; x++) {
+                var refP = x+Res*y;
+                indices.push(refP);
+                indices.push(refP+1);
+                indices.push(refP+Res+1);
+
+                indices.push(refP+Res+1);
+                indices.push(refP+Res);
+                indices.push(refP);
+              }
+            }
+            
+            var PosTyped = new Float32Array(vertices);
+            var normalData = generateNormals(PosTyped, 3, 0, vertices.length/3, indices);
+            
+            
+            var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+            vertexBuffer.create();
+            vertexBuffer.setSubBuffer('POSITION', 3, vertices);
+            vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
+            vertexBuffer.setSubBuffer('NORMAL', 3, normalData);
+            vertexBuffer.update();
+            
+            mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
+            mesh.update(indices);          
+            meshOut.setValue(i, mesh);
+            } //if update
+        }   //end of inner for loop
+
+    this.contextChanged = false;
+     }
+  }
+
+
+
+VVVV.Nodes.HeightMap.prototype = new Node();
 
 });
+
