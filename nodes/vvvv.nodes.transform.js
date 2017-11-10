@@ -943,4 +943,58 @@ VVVV.Nodes.GetMatrix = function(id, graph) {
 }
 VVVV.Nodes.GetMatrix.prototype = new Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Transpose (Transform)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.TransposeTransform = function(id, graph) {
+  this.constructor(id, "Transpose (Transform)", graph);
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var transforms = [];
+
+  var trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
+
+  var trOut = this.addOutputPin("Transform Out", [], VVVV.PinTypes.Transform);
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+
+    if (maxSize>transforms.length) {
+      var i=transforms.length;
+      while (i++<maxSize) {
+        transforms.push(glMatrix.mat4.create());
+      }
+    }
+    else if (maxSize<transforms.length) {
+      transforms.length = maxSize;
+    }
+
+    for (var i=0; i<maxSize; i++) {
+      //Where the code goes
+      var matrix = trIn.getValue(i);
+      var new_matrix = [matrix[0], matrix[4], matrix[8], matrix[12],
+                        matrix[1], matrix[5], matrix[9], matrix[13],
+                        matrix[2], matrix[6], matrix[10], matrix[14],
+                        matrix[3], matrix[7], matrix[11], matrix[15]];
+          
+      
+      trOut.setValue(i, new_matrix);
+    }
+    trOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.TransposeTransform.prototype = new Node();
+
 });

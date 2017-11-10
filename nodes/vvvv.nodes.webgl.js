@@ -25,7 +25,9 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/PhongInstancedAnimation.vvvvjs.fx": undefined,
   "%VVVV%/effects/BillBoards.vvvvjs.fx": undefined,
   "%VVVV%/effects/BotanyInstanced.vvvvjs.fx": undefined,
+  "%VVVV%/effects/ParallaxOcclusionMapping.vvvvjs.fx": undefined,
   "%VVVV%/effects/CookTorrance_AO.vvvvjs.fx": undefined
+  
 };
 
 /**
@@ -3528,9 +3530,61 @@ VVVV.Nodes.HeightMap = function(id, graph) {
      }
   }
 
-
-
 VVVV.Nodes.HeightMap.prototype = new Node();
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Primitives (EX9.Geometry)
+ Author(s): David Gann
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Primitives = function(id, graph) {
+  this.constructor(id, "Primitives (EX9.Geometry)", graph);
+
+  this.auto_nil = false;
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
+
+  var mesh = null;
+
+  this.evaluate = function() {
+
+    if (!this.renderContexts) return;
+    var gl = this.renderContexts[0];
+    if (!gl)
+      return;
+
+
+    var vertices = [-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5];
+    var normals = [-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0];
+    var texCoords = [1.0,1.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0,0.0,1.0,0.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0,1.0,1.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0];
+    var indices = [0,1,2,2,3,0,4,5,6,6,7,4,8,9,10,10,11,8,12,13,14,14,15,12,16,17,18,18,19,16,20,21,22,22,23,20];
+
+    var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+    vertexBuffer.create();
+    vertexBuffer.setSubBuffer('POSITION', 3, vertices);
+    vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
+    vertexBuffer.setSubBuffer('NORMAL', 3, normals);
+    vertexBuffer.update();
+
+    mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
+    mesh.update(indices);
+
+    meshOut.setValue(0, mesh);
+    }
+  }
+
+VVVV.Nodes.Primitives.prototype = new Node();
+
+
 
 });
 
