@@ -26,6 +26,7 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/BillBoards.vvvvjs.fx": undefined,
   "%VVVV%/effects/BotanyInstanced.vvvvjs.fx": undefined,
   "%VVVV%/effects/ParallaxOcclusionMapping.vvvvjs.fx": undefined,
+  "%VVVV%/effects/SSAO.vvvvjs.fx": undefined,
   "%VVVV%/effects/CookTorrance_AO.vvvvjs.fx": undefined
   
 };
@@ -685,7 +686,9 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
   var sourceIn = this.addInputPin("Source", [], VVVV.PinTypes.WebGlResource);
   var outputOut = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
 
+
   var texture;
+  var depth;
   var warningIssued = false;
 
   this.evaluate = function() {
@@ -696,6 +699,7 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
 
     if (this.contextChanged && texture) {
       texture.context.deleteTexture(texture);
+      depth.context.deleteTexture(depth);
       texture = undefined;
     }
 
@@ -724,6 +728,7 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
         gl.bindTexture(gl.TEXTURE_2D, null);
 
         outputOut.setValue(0, texture);
+
       }
     }
     else {
@@ -2448,7 +2453,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var ex9Out = this.addOutputPin("EX9 Out", [], VVVV.PinTypes.WebGlResource);
   var layerOut = this.addOutputPin("Element Out", [], VVVV.PinTypes.HTMLLayer);
   var antialiasOut = this.addOutputPin("Antialias", ["?"], VVVV.PinTypes.String);
-  //var outputDepth = this.addOutputPin("Depth Texture", [], VVVV.PinTypes.WebGlTexture);
+  var depthOut = this.addOutputPin("Depth Out", [], VVVV.PinTypes.WebGlResource);
 
 
   var width = 0.0;
@@ -2470,7 +2475,22 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
 
   var bbufFramebuffer;
   var bbufTexture;
+  var depthTexture;
 
+   function getExtension(gl, name){
+            var vendorPrefixes = ["", "WEBKIT_", "MOZ_"];
+            var i, ext;
+            for(i in vendorPrefixes) {
+                ext = gl.getExtension(vendorPrefixes[i] + name);
+                if (ext) {
+                    return ext;
+
+                }
+            }
+            return null;
+
+        }
+        
   function attachMouseEvents() {
     $(canvas).detach('mousemove');
     $(canvas).detach('mousedown');
@@ -2591,6 +2611,15 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
 
       gl = this.ctxt;
 
+    this.depthExt = getExtension(gl, "WEBGL_depth_texture");
+                    if(!this.depthExt) {
+                        console.log("WEBGL_depth_texture not supported")
+//                        var customControls = document.getElementById("customControls");
+//                        customControls.classList.add("error");
+//                        customControls.innerHTML = "WEBGL_depth_texture not supported by this browser";
+                    }
+
+
       bbufFramebuffer = gl.createFramebuffer();
       gl.bindFramebuffer(gl.FRAMEBUFFER, bbufFramebuffer);
       bbufFramebuffer.width = canvas.get(0).width;
@@ -2605,12 +2634,24 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, bbufFramebuffer.width, bbufFramebuffer.height, 0, gl.RGBA, gl.UNSIGNED_SHORT_4_4_4_4, null);
       gl.generateMipmap(gl.TEXTURE_2D);
 
-      var renderbuffer = gl.createRenderbuffer();
-      gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
-      gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, bbufFramebuffer.width, bbufFramebuffer.height);
+//      var renderbuffer = gl.createRenderbuffer();
+//      gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+//      gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, bbufFramebuffer.width, bbufFramebuffer.height);
 
+        // Create the depth texture / Replaces the above code for depth test
+        depthTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, depthTexture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, bbufFramebuffer.width, bbufFramebuffer.height, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
+        
+        
+        
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, bbufTexture, 0);
-      gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthTexture, 0);
+      //gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
 
       gl.bindTexture(gl.TEXTURE_2D, null);
       gl.bindRenderbuffer(gl.RENDERBUFFER, null);
@@ -2777,19 +2818,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       return
     }
 
-    function getExtension(gl, name){
-            var vendorPrefixes = ["", "WEBKIT_", "MOZ_"];
-            var i, ext;
-            for(i in vendorPrefixes) {
-                ext = gl.getExtension(vendorPrefixes[i] + name);
-                if (ext) {
-                    return ext;
-
-                }
-            }
-            return null;
-
-        }
+   
 
     gl.getExtension('OES_standard_derivatives');
     gl.viewport(0, 0, width, height);
@@ -2951,18 +2980,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     }
 
     ex9Out.setValue(0, bbufTexture);
-
-
-//    this.depthExt = getExtension(gl, "WEBGL_depth_texture");
-//                    if(!this.depthExt) {
-//                        var customControls = document.getElementById("customControls");
-//                        customControls.classList.add("error");
-//                        customControls.innerHTML = "WEBGL_depth_texture not supported by this browser";
-//                    }
-//
-//
-//
-//    outputDepth.setValue(0, null);
+    depthOut.setValue(0, depthTexture);
 
 
     this.contextChanged = false;
@@ -3550,7 +3568,8 @@ VVVV.Nodes.Primitives = function(id, graph) {
     credits: [],
     compatibility_issues: []
   };
-
+  var selectIn = this.addInputPin("Primitive Index", [0.0], VVVV.PinTypes.Value);
+  
   var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
 
   var mesh = null;
@@ -3561,13 +3580,42 @@ VVVV.Nodes.Primitives = function(id, graph) {
     var gl = this.renderContexts[0];
     if (!gl)
       return;
+    var select = selectIn.getValue(0);
+    
+    if(select == 0){
+    var vertices = [
+         0.5,  0.5,  0.0,
+        -0.5,  0.5,  0.0,
+         0.5, -0.5,  0.0,
+        -0.5, -0.5,  0.0
+      ];
 
+     var normals = [
+        0.0,  0.0,  1.0,
+        0.0,  0.0,  1.0,
+        0.0, 0.0,  1.0,
+        0.0, 0.0,  1.0
+      ];
+      
+      var texCoords = [
+        1.0, 0.0,
+        0.0, 0.0,
+        1.0, 1.0,
+        0.0, 1.0
+      ];
+      
+      var indices = [ 0, 1, 2, 1, 3, 2 ];
+    }
 
+    if(select == 1){
     var vertices = [-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5];
     var normals = [-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0,0.0,0.0,-1.0];
     var texCoords = [1.0,1.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0,0.0,1.0,0.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0,1.0,1.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0];
     var indices = [0,1,2,2,3,0,4,5,6,6,7,4,8,9,10,10,11,8,12,13,14,14,15,12,16,17,18,18,19,16,20,21,22,22,23,20];
-
+    }
+    
+    
+    
     var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
     vertexBuffer.create();
     vertexBuffer.setSubBuffer('POSITION', 3, vertices);
