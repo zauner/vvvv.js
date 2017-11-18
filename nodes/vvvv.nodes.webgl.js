@@ -2379,7 +2379,7 @@ VVVV.Nodes.Group = function(id, graph) {
 
   var layerOut = this.addOutputPin("Layer", [], VVVV.PinTypes.WebGlResource);
 
-  this.initialize = function() {
+  this.configure = function() {
   	var layerCount = Math.max(2, layerCountIn.getValue(0));
   	VVVV.Helpers.dynamicPins(this, layerIns, layerCount, function(i) {
       return this.addInputPin("Layer "+(i+1), [], VVVV.PinTypes.WebGlResource);
@@ -3264,7 +3264,7 @@ VVVV.Nodes.InstancerDynamic = function(id, graph) {
   var DivisorIn = this.addInputPin("InstanceDivisor", [1.0], VVVV.PinTypes.Value);
   var cntCfg = this.addInvisiblePin("Input Count",[1],VVVV.PinTypes.Value);
 
-  this.initialize = function() {
+  this.configure = function() {
     var inputCount = Math.max(1, cntCfg.getValue(0));
     VVVV.Helpers.dynamicPins(this, BufferIn, inputCount, function(i) {
       return this.addInputPin('Buffer '+(i+1), [], VVVV.PinTypes.SceneBuffer);
