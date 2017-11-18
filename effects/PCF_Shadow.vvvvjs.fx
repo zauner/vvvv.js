@@ -34,7 +34,6 @@ varying vec2 uv;
 uniform sampler2D InputTexture;
 uniform sampler2D DepthTexture;
 //light properti
-uniform vec3 SpotLightPos : POSITION = {1.0, 1.0, 0.0};
 uniform float PCFSize = 0.01;
 uniform float SpotLightCone = 0.2;
 uniform float ShadGamma = 0.35;
@@ -77,42 +76,42 @@ float shadow_calc(vec4 LP,  sampler2D ShadowMapTex)
   
   float offSize = PCFSize / 16.0;
 	//interation1
-		vec2 offset = vec2(offSize*vec2( 0.0, 0.0 ));
+		vec2 offset = vec2(offSize*vec2( -0.94201624, -0.39906216 ));
 		vec2 nuv = vec2(0.5,-0.5)*(LP.xy+offset)/LP.w + vec2(0.5,0.5);
 		float shadMapDepth = texture2DCompare(ShadowMapTex, nuv, LP.z/LP.w-bias);   
 		totalShad +=shadMapDepth;
     	//interation2
-		offset = vec2(offSize* vec2( 0.0, 0.0 ));
+		offset = vec2(offSize* vec2( 0.94558609, -0.76890725 ));
 		nuv = vec2(0.5,-0.5)*(LP.xy+offset)/LP.w + vec2(0.5,0.5);
 		shadMapDepth = texture2DCompare(ShadowMapTex, nuv, LP.z/LP.w-bias);   
 		totalShad +=shadMapDepth;
 		//interation3
-		offset = vec2(offSize* vec2( 0.0, 0.0 ));
+		offset = vec2(offSize* vec2( -0.094184101, -0.92938870 ));
 		nuv = vec2(0.5,-0.5)*(LP.xy+offset)/LP.w + vec2(0.5,0.5);
 		shadMapDepth = texture2DCompare(ShadowMapTex, nuv, LP.z/LP.w-bias);   
 		totalShad +=shadMapDepth;
 	//interation4
-		offset = vec2(offSize* vec2( 0.0, 0.0 ));
+		offset = vec2(offSize* vec2( 0.34495938, 0.29387760 ));
 		nuv = vec2(0.5,-0.5)*(LP.xy+offset)/LP.w + vec2(0.5,0.5);
 		shadMapDepth = texture2DCompare(ShadowMapTex, nuv, LP.z/LP.w-bias);   
 		totalShad +=shadMapDepth;
 		//interation5
-		offset = vec2(offSize* vec2( 0.0, 0.0 ));
+		offset = vec2(offSize* vec2( -0.91588581, 0.45771432 ));
 		nuv = vec2(0.5,-0.5)*(LP.xy+offset)/LP.w + vec2(0.5,0.5);
 		shadMapDepth = texture2DCompare(ShadowMapTex, nuv, LP.z/LP.w-bias);   
 		totalShad +=shadMapDepth;
     	//interation6
-		offset = vec2(offSize* vec2 ( 0.0, 0.0 ));
+		offset = vec2(offSize* vec2 ( -0.81544232, -0.87912464 ));
 		nuv = vec2(0.5,-0.5)*(LP.xy+offset)/LP.w + vec2(0.5,0.5);
 		shadMapDepth = texture2DCompare(ShadowMapTex, nuv, LP.z/LP.w-bias);   
 		totalShad +=shadMapDepth;
 		//interation7
-		offset = vec2(offSize*  vec2 ( 0.0, 0.0 ));
+		offset = vec2(offSize*  vec2 ( -0.38277543, 0.27676845 ));
 		nuv = vec2(0.5,-0.5)*(LP.xy+offset)/LP.w + vec2(0.5,0.5);
 		 shadMapDepth = texture2DCompare(ShadowMapTex, nuv, LP.z/LP.w-bias);   
 		totalShad +=shadMapDepth;
 	//interation8
-		offset = vec2(offSize* vec2( 0.0, 0.0 ));
+		offset = vec2(offSize* vec2( 0.97484398, 0.75648379 ));
 		nuv = vec2(0.5,-0.5)*(LP.xy+offset)/LP.w + vec2(0.5,0.5);
 		shadMapDepth = texture2DCompare(ShadowMapTex, nuv, LP.z/LP.w-bias);   
 		totalShad +=shadMapDepth;
@@ -167,7 +166,7 @@ void main(void)
     vec4 LP = d * ShadowViewProjXf;	
 	float CosSpotAng = cos(SpotLightCone); //removed radians conversion, initial value was 60.0 degree. 
 	
-	float dl = clamp(LP.xyz,0.0,1.0).z;
+	float dl = normalize(LP.xyz).z;
     dl = max(0.0,((dl-CosSpotAng)/(1.0-CosSpotAng)));
 	float shadowed = clamp(shadow_calc(LP,ShadowTexture)+ShadowDensity,0.0,1.0);
 	
