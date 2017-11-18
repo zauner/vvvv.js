@@ -47,6 +47,7 @@ uniform mat4 LampProjXf;
 uniform mat4 ViewInverse;
 uniform mat4 ProjectionInverse;
 uniform sampler2D ShadowTexture;
+uniform float debug_tex = 0.0;
 
 ///////////////////////////////////////////////////////////////////////
 // Utility function for pixel shaders to use this shadow map
@@ -170,8 +171,14 @@ void main(void)
     dl = max(0.0,((dl-CosSpotAng)/(1.0-CosSpotAng)));
 	float shadowed = clamp(shadow_calc(LP,ShadowTexture)+ShadowDensity,0.0,1.0);
 	
-  	
+	vec4 final_col = vec4(0.0,0.0,0.0,1.0);
+	if(debug_tex < 0.5){
+  	final_col = vec4(col.rgb*shadowed*gain *pow(dl,ShadGamma),1.0);	
+	}
+	if(debug_tex >= 0.5){
+	final_col = vec4(shadmap, shadmap, shadmap, 1.0);
+	}
 
-  gl_FragColor = vec4(col.rgb*shadowed*gain *pow(dl,ShadGamma),1.0);	
+   gl_FragColor = final_col;	
   
 }
