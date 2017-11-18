@@ -27,6 +27,7 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/BotanyInstanced.vvvvjs.fx": undefined,
   "%VVVV%/effects/ParallaxOcclusionMapping.vvvvjs.fx": undefined,
   "%VVVV%/effects/SSAO.vvvvjs.fx": undefined,
+  "%VVVV%/effects/PCF_Shadow.vvvvjs.fx": undefined,
   "%VVVV%/effects/CookTorrance_AO.vvvvjs.fx": undefined
   
 };
