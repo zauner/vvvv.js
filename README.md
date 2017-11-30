@@ -45,7 +45,7 @@ However, here are the single steps:
 3. In your console/terminal change to the vvvv.js directory and run
     npm install
 
-4. At this point you can download/clone the VVVV.js template into `/your/project/directory/vvvvjs-template`. If you decide to go with the template, you can skip over to 7.
+4. At this point you can download/clone the [VVVV.js template](https://github.com/zauner/vvvv.js-template) into `/your/project/directory/vvvvjs-template`. If you decide to go with the template, you can skip over to 7.
 
 5. In your project directoy create an empty VVVV patch. Just do so by creating an empty .v4p patch. In ths example it is `/your/project/directory/main.v4p`
 
