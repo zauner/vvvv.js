@@ -470,4 +470,42 @@ VVVV.Nodes.DefineNode = function(id, graph) {
 }
 VVVV.Nodes.DefineNode.prototype = new Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: FPS (Debug PerfMeter)
+ Author(s): David Gann
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.FPS = function(id, graph) {
+  this.constructor(id, "FPS (Debug PerfMeter)", graph);
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: [],
+    compatibility_issues: []
+  };
+  this.auto_evaluate = true;
+
+
+  var fpsOut = this.addOutputPin("FPS", [0.0], VVVV.PinTypes.Value);
+  
+  var framecounter = 0;
+  var prevTime = 0;
+  
+  
+  this.evaluate = function() {
+
+
+   
+  var frameTime = Date.now();  
+  var fps = 1/ ((frameTime - prevTime) * 0.001);
+  prevTime = frameTime;
+ 
+
+  fpsOut.setValue(0,fps);
+  }
+}
+VVVV.Nodes.FPS.prototype = new Node();
+
 });

@@ -17,7 +17,7 @@ void main(void) {
     mat4 tWVP = tW*tVP;
     vec4 PosWVP  = PosO*tWVP;
     uv = TexCd.xy;
-	Pos = PosO;
+	Pos = PosWVP;
 	gl_Position = PosWVP;
 }
 
@@ -33,6 +33,7 @@ varying vec2 uv;
 
 uniform sampler2D InputTexture;
 uniform sampler2D DepthTexture;
+uniform sampler2D ShadowTexture;
 //light properti
 uniform float PCFSize = 0.01;
 uniform float SpotLightCone = 0.2;
@@ -40,42 +41,25 @@ uniform float ShadGamma = 0.35;
 uniform float ShadowDensity = 0.19;
 uniform float gain = 1.46;
 uniform float bias = 0.0001;
-////////////////////////////////////////////////////////////////////////////////
-uniform mat4 LampViewXf;
-uniform mat4 LampProjXf;
-///////////////////////////////////////////////////////////////////////
-uniform mat4 ViewInverse;
-uniform mat4 ProjectionInverse;
-uniform sampler2D ShadowTexture;
+uniform vec2 camerarange;
+uniform mat4 InverseViewProjection;
+uniform mat4 LightViewProjection;
 uniform float debug_tex = 0.0;
 
-///////////////////////////////////////////////////////////////////////
-// Utility function for pixel shaders to use this shadow map
+
 //WebGL Shadow Function
-
-
-// vec3 ShadowPos(vec4 shadowpos)
-// {
-  // vec3 ligthspace  = shadowpos.xyz / shadowpos.w;
-    // vec2 shadowtex = 0.5 * ligthspace.xy + vec2( 0.5, 0.5 );
-    // shadowtex.y = 1.0 - shadowtex.y;
-    // return vec3( shadowtex, ligthspace.z - 0.005 );
-// }
-
 
 float texture2DCompare(sampler2D ShadowTexture, vec2 uv, float compare){
     float depth = texture2D(ShadowTexture, uv).r;
     return step(compare, depth);
 }
 
-
-
 //Eliminated for loop to quickly workaround constant array limitation, poisson disk is hardcoded
 float shadow_calc(vec4 LP,  sampler2D ShadowMapTex)
 {
     float totalShad=0.0;
   
-  float offSize = PCFSize / 16.0;
+  float offSize = PCFSize / 8.0;
 	//interation1
 		vec2 offset = vec2(offSize*vec2( -0.94201624, -0.39906216 ));
 		vec2 nuv = vec2(0.5,-0.5)*(LP.xy+offset)/LP.w + vec2(0.5,0.5);
@@ -117,66 +101,47 @@ float shadow_calc(vec4 LP,  sampler2D ShadowMapTex)
 		shadMapDepth = texture2DCompare(ShadowMapTex, nuv, LP.z/LP.w-bias);   
 		totalShad +=shadMapDepth;
 
-	return totalShad/16.0;
+	return totalShad/8.0;
 }
 
-//original shadow code
-// float shadow_calc(vec4 LP,  sampler2D ShadowMapTex)
-// {
-    // float totalShad=0.0;
-	// int i;
-	// float offSize = PCFSize / 16.0;
-	// for (int i = 0; i <= 8; i++) 
-	// {
-		// vec2 offset = vec2(offSize*poissonDisk[i]);
-		// vec2 nuv = vec2(0.5,-0.5)*(LP.xy+offset)/LP.w + vec2(0.5,0.5);
-		// float shadMapDepth = texture2DCompare(ShadowMapTex, nuv, LP.z/LP.w-bias);   //ShadowMapTex.SampleCmpLevelZero(PCF_Sampler,nuv,LP.z/LP.w-bias).x;
-		
-		//float shad = 1.0-(shadMapDepth<LP.z);
-		//totalShad += shad;
-		// totalShad +=shadMapDepth;
-	// }
-	// return totalShad/16.0;
-// }
-
-
-/////////////////////////////////////////////////////////////////
-vec4 PosV(sampler2D tex, vec2 uv)
-{
-	vec4 p = vec4(0.0,0.0,0.0,1.0);
-
-		p = vec4(-1.0+2.0*uv.x,-1.0+2.0*uv.y,-1.0+2.0*texture2D(tex,uv).x,1.0);
-		p.y *= -1.0;
-		p = p * ProjectionInverse;
-		p = vec4(p.xyz*2.0/p.w,1.0);
-	return p;
-}
-//vec4 PosW(sampler2D tex,vec2 uv)
-//{
-//	return PosV(DepthTexture,uv) * ViewInverse;
-//}
-////////////////////////////////////////////////////////////////////
 
 void main(void)
 {
-  vec4 col = texture2D(InputTexture,uv);
- float depth = texture2D(DepthTexture, uv).r;
-	float shadmap = texture2D(ShadowTexture, uv).r; //get the depth from the light
-	vec4 d= PosV(DepthTexture,uv) * ViewInverse; //Get the scene depth
-	mat4 ShadowViewProjXf = LampViewXf * LampProjXf;    // light viewprojection
-    vec4 LP = d * ShadowViewProjXf;	
+    vec4 col = texture2D(InputTexture,uv);
+    float depth = texture2D(DepthTexture, uv).r;
+
+	//Get View Space Positions from Depth
+	vec4 sPos = vec4(uv.x * 2.0 - 1.0, -1.0 * (uv.y * 2.0 - 1.0), depth * 2.0 - 1.0, 1.0);
+	//Convert View Space Positions to World Space Positions
+	sPos = InverseViewProjection * sPos;
+	sPos.xyz /= sPos.w;
+	
+	// Convert World Space Positions to Light Space Positions
+
+	vec4 lightSpacePos = LightViewProjection * vec4(sPos.xyz,1.0);
+	
+	
+	
+		//light cone
 	float CosSpotAng = cos(SpotLightCone); //removed radians conversion, initial value was 60.0 degree. 
-	
-	float dl = normalize(LP.xyz).z;
+	float dl = normalize( lightSpacePos.xyz ).z;
     dl = max(0.0,((dl-CosSpotAng)/(1.0-CosSpotAng)));
-	float shadowed = clamp(shadow_calc(LP,ShadowTexture)+ShadowDensity,0.0,1.0);
-	
+		//shadow equation 
+	float shadowed = clamp( shadow_calc( lightSpacePos , ShadowTexture ) + ShadowDensity , 0.0 ,1.0 );
+
+
 	vec4 final_col = vec4(0.0,0.0,0.0,1.0);
 	if(debug_tex < 0.5){
+		
+	//final_col = vec4(col.rgb *gain  *shadowed  ,1.0);	
   	final_col = vec4(col.rgb*shadowed*gain *pow(dl,ShadGamma),1.0);	
-	}
+	} //preview shadow texture
 	if(debug_tex >= 0.5){
-	final_col = vec4(shadmap, shadmap, shadmap, 1.0);
+	final_col = vec4(sPos.xyz,1.0);	
+	}
+	if(debug_tex >= 1.5){
+	float shadmap = texture2D(ShadowTexture, uv).r; //get the depth from the light
+	final_col = vec4(shadmap, shadmap, shadmap,1.0);	
 	}
 
    gl_FragColor = final_col;	
