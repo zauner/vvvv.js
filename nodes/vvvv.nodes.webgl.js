@@ -29,7 +29,8 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/SSAO.vvvvjs.fx": undefined,
   "%VVVV%/effects/PCF_Shadow.vvvvjs.fx": undefined,
   "%VVVV%/effects/CookTorrance_AO.vvvvjs.fx": undefined,
-  "%VVVV%/effects/FXAA.vvvvjs.fx": undefined
+  "%VVVV%/effects/FXAA.vvvvjs.fx": undefined,
+  "%VVVV%/effects/Skybox.vvvvjs.fx": undefined
   
   
   
@@ -634,8 +635,8 @@ VVVV.Nodes.FileTexture = function(id, graph) {
                 ctx.translate(-this.width/4 * faces[k].offset[0], -this.height/3 * faces[k].offset[1]);
                 ctx.drawImage(this, 0, 0);
                 gl.texImage2D(faces[k].face, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, $texcanvas.get(0));
-                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
                 ctx.restore();
               }
               gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
