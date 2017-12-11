@@ -30,6 +30,8 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/PCF_Shadow.vvvvjs.fx": undefined,
   "%VVVV%/effects/CookTorrance_AO.vvvvjs.fx": undefined,
   "%VVVV%/effects/FXAA.vvvvjs.fx": undefined,
+  "%VVVV%/effects/CookTorrance_Displacement_TriplanarFBM.vvvvjs.fx": undefined,
+  "%VVVV%/effects/PBR_POM_FBM_MultiTex.vvvvjs.fx": undefined,
   "%VVVV%/effects/Skybox.vvvvjs.fx": undefined
   
   
@@ -564,7 +566,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   var outputPin = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
 
   var typeIn = this.addInputPin("Type", ["Texture"], VVVV.PinTypes.Enum);
-  typeIn.enumOptions = ["Texture", "Cube Texture"];
+  typeIn.enumOptions = ["Texture", "Cube Texture", "Cube Texture Flip Y"];
 
   var textures = [];
   var prevFilenames = [];//only load new files
@@ -635,6 +637,45 @@ VVVV.Nodes.FileTexture = function(id, graph) {
                 ctx.translate(-this.width/4 * faces[k].offset[0], -this.height/3 * faces[k].offset[1]);
                 ctx.drawImage(this, 0, 0);
                 gl.texImage2D(faces[k].face, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, $texcanvas.get(0));
+                //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); //test
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                ctx.restore();
+              }
+              gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+              $texcanvas.remove();
+              outputPin.setValue(j, textures[j]);
+            }
+          })(i);
+          textures[i].image.src = filename;
+        }
+        else if (type=="Cube Texture Flip Y") {
+          textures[i].image = new Image();
+          textures[i].image.onload = (function(j) {
+            return function() {
+              var faces = [
+                {face: gl.TEXTURE_CUBE_MAP_POSITIVE_X, offset: [2, 1]},
+                {face: gl.TEXTURE_CUBE_MAP_NEGATIVE_X, offset: [0, 1]},
+                {face: gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, offset: [1, 0]},
+                {face: gl.TEXTURE_CUBE_MAP_POSITIVE_Y, offset: [1, 2]},
+                {face: gl.TEXTURE_CUBE_MAP_POSITIVE_Z, offset: [1, 1]},
+                {face: gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, offset: [3, 1]}];
+              gl.bindTexture(gl.TEXTURE_CUBE_MAP, textures[j]);
+
+              var $texcanvas = $('<canvas style="display:none" width="'+(this.width/4)+'" height="'+(this.height/3)+'"></canvas>');
+              $('body').append($texcanvas);
+              var ctx = $texcanvas.get(0).getContext("2d");
+
+              for (var k=0; k<6; k++) {
+                ctx.save();
+                ctx.translate(-this.width/4 * faces[k].offset[0], -this.height/3 * faces[k].offset[1]);
+                ctx.drawImage(this, 0, 0);
+                gl.texImage2D(faces[k].face, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, $texcanvas.get(0));
+                //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); //test
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
                 gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
                 gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
                 ctx.restore();
@@ -2619,11 +2660,18 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     this.depthExt = getExtension(gl, "WEBGL_depth_texture");
                     if(!this.depthExt) {
                         console.log("WEBGL_depth_texture not supported")
-//                        var customControls = document.getElementById("customControls");
-//                        customControls.classList.add("error");
-//                        customControls.innerHTML = "WEBGL_depth_texture not supported by this browser";
                     }
-
+                
+    this.floatExt = getExtension(gl, "OES_texture_float");
+                    if(!this.depthExt) {
+                        console.log("WEBGL_depth_texture not supported")
+                    }            
+    this.floatExt = getExtension(gl, "OES_texture_float_linear");
+                    if(!this.depthExt) {
+                        console.log("WEBGL_depth_texture not supported")
+                    }            
+     
+      
 
       bbufFramebuffer = gl.createFramebuffer();
       gl.bindFramebuffer(gl.FRAMEBUFFER, bbufFramebuffer);
@@ -2635,8 +2683,11 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, bbufFramebuffer.width, bbufFramebuffer.height, 0, gl.RGBA, gl.UNSIGNED_SHORT_4_4_4_4, null);
+      
+      //verify color attachements against https://www.khronos.org/registry/webgl/sdk/tests/extra/webgl-info.html
+      // for mobile devices support
+      
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, bbufFramebuffer.width, bbufFramebuffer.height, 0, gl.RGBA, gl.FLOAT, null);  //gl.UNSIGNED_SHORT_4_4_4_4
       gl.generateMipmap(gl.TEXTURE_2D);
 
 //      var renderbuffer = gl.createRenderbuffer();
@@ -2646,8 +2697,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         // Create the depth texture / Replaces the above code for depth test
         depthTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, depthTexture);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, bbufFramebuffer.width, bbufFramebuffer.height, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
@@ -2716,6 +2767,18 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     bgColIn.markPinAsChanged();
     viewIn.markPinAsChanged();
     projIn.markPinAsChanged();
+
+    gl.getExtension('OES_standard_derivatives');      
+    
+    this.instanceExt = getExtension(gl, "ANGLE_instanced_arrays");
+         if(!this.instanceExt) {
+             var customControls = document.getElementById("body");
+             customControls.classList.add("error");
+             customControls.innerHTML = "ANGLE_instanced_arrays not supported by this browser";
+             this.instanceCheck = null;
+         } else {
+             this.instanceCheck = document.getElementById("hardwareInstancing");
+         }
 
   }
 
@@ -2825,7 +2888,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
 
    
 
-    gl.getExtension('OES_standard_derivatives');
+
     gl.viewport(0, 0, width, height);
 
     var currentShaderProgram = null;
@@ -2880,19 +2943,6 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
             gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, 0, b.offset);
           });
           gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
-          //getExtension and instancing by Brandon Jones http://blog.tojicode.com/2013/07/webgl-instancing-with.html
-
-
-
-           this.instanceExt = getExtension(gl, "ANGLE_instanced_arrays");
-                    if(!this.instanceExt) {
-                        var customControls = document.getElementById("body");
-                        customControls.classList.add("error");
-                        customControls.innerHTML = "ANGLE_instanced_arrays not supported by this browser";
-                        this.instanceCheck = null;
-                    } else {
-                        this.instanceCheck = document.getElementById("hardwareInstancing");
-                    }
 
              //console.log(JSON.stringify(layer.mesh.semantics));
            //console.log(JSON.stringify(layer.shader.attributeSpecs));
@@ -2993,7 +3043,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
 
 }
 VVVV.Nodes.RendererWebGL.prototype = new Node();
-
+//VVVV.Nodes.RendererWebGL.requirements = ["floatExtension"];
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

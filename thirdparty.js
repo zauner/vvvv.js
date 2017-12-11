@@ -16,7 +16,8 @@ VVVVContext.ThirdPartyLibs = {
   //"exampleLib": "lib/examplelib.js"
   "beatdetektor": "lib/beatdetektor.js",
   "GLUtil": "lib/gl-util.js",
-  "meshUtils": "lib/mesh-utils.js"
+  "meshUtils": "lib/mesh-utils.js",
+  "floatExtension": "lib/webgl-texture-float-extension-shims/webgl-texture-float-extension-shims.js"
 }
 
 // ... and just leave this
