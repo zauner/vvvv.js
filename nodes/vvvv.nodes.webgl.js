@@ -32,7 +32,8 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/FXAA.vvvvjs.fx": undefined,
   "%VVVV%/effects/CookTorrance_Displacement_TriplanarFBM.vvvvjs.fx": undefined,
   "%VVVV%/effects/PBR_POM_FBM_MultiTex.vvvvjs.fx": undefined,
-  "%VVVV%/effects/Skybox.vvvvjs.fx": undefined
+  "%VVVV%/effects/Skybox.vvvvjs.fx": undefined,
+  "%VVVV%/effects/PhysicalBased_SpecularAA.vvvvjs.fx": undefined
   
   
   
@@ -640,8 +641,8 @@ VVVV.Nodes.FileTexture = function(id, graph) {
                 //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); //test
                 gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
                 gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
                 ctx.restore();
               }
               gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
@@ -676,8 +677,8 @@ VVVV.Nodes.FileTexture = function(id, graph) {
                 //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); //test
                 gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
                 gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
                 ctx.restore();
               }
               gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
@@ -2712,6 +2713,10 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       gl.bindTexture(gl.TEXTURE_2D, null);
       gl.bindRenderbuffer(gl.RENDERBUFFER, null);
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      
+      
+     
+      
 
     }
     else {
@@ -2744,8 +2749,9 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
     gl.bindTexture(gl.TEXTURE_2D, null);
-
+    
     gl.DefaultTexture['CUBE'] = gl.createTexture();
+
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, gl.DefaultTexture['CUBE']);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -2789,8 +2795,11 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var initialized = false;
 
   this.evaluate = function() {
+      
+    
     gl = this.ctxt;
 
+        
     if (this.invisiblePins["Descriptive Name"].pinIsChanged() || (parentIn.pinIsChanged() && parentIn.getValue(0).element!=targetElement) || this.contextChanged) {
       if (canvasCtxt && $(canvasCtxt.canvas).hasClass('vvvv-js-generated-renderer'))
         $(canvasCtxt.canvas).remove();

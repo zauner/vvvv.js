@@ -1,4 +1,3 @@
-
 vertex_shader:
 
 attribute vec3 PosO : POSITION;
@@ -75,11 +74,11 @@ void main(void) {
   vec4 PosV = tWV * vec4(PosO, 1);
   fPosition = PosV.xyz;
   
-  
+  n = NormW; //Previously NormO as basis
   //tangents and binormals approximation
   vec3 tangent; 
   vec3 binormal; 
-  vec3 c1 = cross(n, vec3(0.0, 0.0, 1.0)); 
+  vec3 c1 = cross( n, vec3(0.0, 0.0, 1.0)); 
   vec3 c2 = cross(n, vec3(0.0, 1.0, 0.0)); 
   if (length(c1) > length(c2))
     tangent = c1;	
@@ -321,10 +320,15 @@ void main(void) {
 	//sampleTextures
 	
 	//Triplanar Texture Mapping uv weights
-	vec3 tpweights = abs(NormW);
-	tpweights = (tpweights - 0.5) * 7.0;
-	tpweights = max(tpweights, vec3(0.0));
-	tpweights /= tpweights.x + tpweights.y+ tpweights.z;
+	//vec3 tpweights = abs(NormW);
+	//tpweights = (tpweights - 0.5) * 7.0;
+	//tpweights = max(tpweights, vec3(0.0));
+	//tpweights /= tpweights.x + tpweights.y+ tpweights.z;
+	
+	vec3 triblend = NormW*NormW;
+    triblend= triblend / (triblend.x + triblend.y + triblend.z);
+	
+	vec3 tpweights = triblend;
 	
 	//Triplanar Albedo Texture
     vec3 xaxis = texture2D(tCol1, uv_x).xyz;
@@ -344,7 +348,7 @@ void main(void) {
 	
 	//vec3 NormalMap2 = texture2D(tNormal1, uv).xyz;
 	//applyNormals
-	vec3 nN = normalize(NormV + binormal + tangent);
+	vec3 nN = normalize(NormW + binormal + tangent);
 	vec3 normal = normalize(NormalTex * nN); 
 	//sample EnvironmentMap (Optimaly Prebacked Irradiance Map but works with any cubemap too)
 	vec4 env_dif = textureCube(EnvironmentMap, CubeMap_Sampler_Sign * fNormal);
