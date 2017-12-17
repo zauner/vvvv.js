@@ -96,6 +96,8 @@ uniform float exposure;
 
 uniform float TextureScale = 1.0;
 
+uniform float NormalScale = 0.1;
+
 // Helper functions
 ///////////////////
 const float M_PI = 3.14159265359;
@@ -201,20 +203,6 @@ void filterRoughnessDeferred(vec3 n, mat3 t2w, inout vec2 roughness)
     filterRoughness(approxH, roughness);
 }
 
-vec3 PerturbNormal ( vec3 surf_pos ,vec3 surf_norm , float height )
-{
-vec3 vSigmaS = dFdx ( surf_pos );
-vec3 vSigmaT = dFdy ( surf_pos );
-vec3 vN = surf_norm ; // normalized
-vec3 vR1 = cross ( vSigmaT , vN );
-vec3 vR2 = cross (vN , vSigmaS );
-float fDet = dot ( vSigmaS , vR1 );
-float dBs = dFdx ( height );
-float dBt = dFdy ( height );
-vec3 vSurfGrad = sign( fDet ) * ( dBs * vR1 + dBt * vR2 );
-return normalize( abs( fDet )*vN - vSurfGrad );
-}
-
 
 // Project the surface gradient (dhdx, dhdy) onto the surface (n, dpdx, dpdy)
 vec3 CalculateSurfaceGradient(vec3 n, vec3 dpdx, vec3 dpdy, float dhdx, float dhdy)
@@ -255,23 +243,46 @@ void main()
 {
 	
 	
-	vec3 triblend = wnormal*wnormal;
-    triblend= triblend / (triblend.x + triblend.y + triblend.z);
+	//vec3 triblend = wnormal*wnormal;
+	vec3 abs_normal = abs(wnormal.xyz);
+	vec3 triblend = vec3(pow(abs_normal.x, 4.0), pow(abs_normal.y, 4.0), pow(abs_normal.z, 4.0) );
+	triblend /= max(dot(triblend, vec3(1,1,1)), 0.0001);
+	
+	
+   // triblend= triblend / (triblend.x + triblend.y + triblend.z);
+	
+	 // calculate triplanar blend
+                //vec3 triblend = pow(abs(wnormal), 4.0);
+                //triblend /= max(dot(triblend, half3(1,1,1)), 0.0001);
 	
 	vec3 uvs = TextureScale * wpos;
 	
-	vec3 ws_derivative_x = dFdx(wpos);
-	vec3 ddx_UV =  ws_derivative_x * TextureScale;
-	vec2 ddx_UV_X = ddx_UV.zy;
-	vec2 ddx_UV_Y = ddx_UV.xz;
-	vec2 ddx_UV_Z = ddx_UV.xy;
+		//This is an ugly way to do basically //wnormal < 0 ? -1 : 1; 
+	vec3 axisSign = vec3(1.0,1.0,1.0);                      
+	if (wnormal.x<0.0)
+	{ 
+	axisSign.x = -1.0; 
+	} 
+		if (wnormal.y<0.0)
+	{ 
+	axisSign.y = -1.0; 
+	} 
+		if (wnormal.z<0.0)
+	{ 
+	axisSign.z = -1.0; 
+	} 
+	
 	
 	vec3 xaxis = texture2D(normal_map, uvs.zy).xyz;
-	vec3 yaxis = texture2D(normal_map, uvs.xz).xyz;
+	vec3 yaxis = texture2D(normal_map, uvs.xz).xyz ;
     vec3 zaxis = texture2D(normal_map, uvs.xy).xyz;
     vec3 ColorTex = xaxis * triblend.x + yaxis * triblend.y + zaxis * triblend.z;
 	
-	vec3 Derivative_Normal =CalculateSurfaceNormal(wnormal ,wpos , ColorTex.x );
+
+	
+	
+	
+	vec3 Derivative_Normal =CalculateSurfaceNormal(wnormal ,wpos , NormalScale*ColorTex.x );
 	
 	
     // Unpack normal map
@@ -279,7 +290,7 @@ void main()
     bump = bump*2.0 - 1.0;
 
     // Generate tangent frame
-    vec3 n = normalize(wnormal);
+    vec3 n = normalize(Derivative_Normal);
     vec3 b = normalize(wbitangent - n*dot(wbitangent, n));
     vec3 t = normalize(cross(b, n));
     mat3 t2w = mat3(t, b, n);
@@ -288,7 +299,7 @@ void main()
     if (do_nm)
     {
         // Orthogonalise tangent frame
-        n = normalize(t2w*bump);
+        n = normalize(t2w*Derivative_Normal);
         b = normalize(b - n*dot(b, n));
         t = normalize(cross(b, n));
         t2w = mat3(t, b, n);
@@ -312,7 +323,7 @@ void main()
     }
 
     // Do regular shading and output 
-    vec3 color = doShading(h, Derivative_Normal, light, roughness);
+    vec3 color = doShading(h, n, light, roughness);
 
     gl_FragColor = vec4(color, 1);
 }
