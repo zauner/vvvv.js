@@ -10,6 +10,7 @@ uniform mat4 tV : VIEW;
 uniform mat4 tP : PROJECTION;
 uniform vec3 LightPos;
 uniform vec3 cameraPosition;
+uniform float index = 0.0;
 
 varying vec2 texcoord;
 varying vec3 wpos;
@@ -17,7 +18,7 @@ varying vec3 wview;
 varying vec3 wnormal;
 varying vec3 wtangent;
 varying vec3 wbitangent;
-varying vec3 light;
+varying vec3 atlas_index;
 
 void main(void) {
 	
@@ -44,7 +45,8 @@ void main(void) {
 	binormal = normalize(cross(n, tangent)); 
   
     //fill varyings with data
-	texcoord = (Texture_Transform * vec4(TexCd, 0, 1)).xy;
+	//texcoord = (Texture_Transform * vec4(TexCd, 0, 1)).xy;
+	texcoord = (Texture_Transform * vec4(TexCd, 0, 1)).xy +vec2(mod(atlas_index, 4.0)/4.0,floor(atlas_index/4.0)/4.0);
 	wpos = vec3(tW*vec4(PosO, 1)).xyz;
 	wview = normalize( wpos.xyz - cameraPosition );//normalize(-PosV).xyz;
 	wnormal = NormW;
@@ -335,7 +337,7 @@ vec3 PBR_Shading(vec3 normal, vec3 light_dir, vec3 view_dir, float fresnel_value
 void main()
 {
 	
-	
+	//inverseTransformDirection( normal, viewMatrix );
 	//vec3 triblend = wnormal*wnormal;
 	vec3 abs_normal = abs(wnormal.xyz);
 	vec3 triblend = vec3(pow(abs_normal.x, 4.0), pow(abs_normal.y, 4.0), pow(abs_normal.z, 4.0) );
