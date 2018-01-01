@@ -3279,7 +3279,7 @@ VVVV.Nodes.GeometryFile = function(id, graph) {
                   //xhr[i].responseType = 'arraybuffer';
                   xhr[i].open("GET", filename[i], true);
                   xhr[i].onreadystatechange = function (oEvent) {
-                     if (xhr[i].readyState === 4) {
+                    if (xhr[i].readyState === 4) {
                         if (xhr[i].status === 200) {
                           var data = JSON.parse(xhr[i].responseText);
                         if(typeIn.getValue(i)=='vvvv json'){
@@ -3290,8 +3290,14 @@ VVVV.Nodes.GeometryFile = function(id, graph) {
                             
                             var PosTyped = new Float32Array(posMapped);
                             var normalData = generateNormals(PosTyped, 3, 0, positionData.length/3, indexData);
-                        }
-                        
+                            
+                            vertexBuffer = new VVVV.Types.VertexBuffer(gl, posMapped);
+                            vertexBuffer.create();
+                            vertexBuffer.setSubBuffer('POSITION', 3, posMapped);
+                            vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords0);
+                            vertexBuffer.setSubBufferTyped('NORMAL', 3, normalData);
+                    }
+                    ///////////////////////////////Three.js json from blender exporter    
                         if(typeIn.getValue(i)=='three.js json'){
                             var positionData = data.data.attributes.position.array;
                             var posMapped = positionData.map(function(x) { return x * scale; });
@@ -3300,14 +3306,25 @@ VVVV.Nodes.GeometryFile = function(id, graph) {
                             
                             var PosTyped = new Float32Array(posMapped);
                             
-                            var normalData = data.data.attributes.normal.array;//generateNormals(PosTyped, 3, 0, positionData.length/3, indexData);
+                        if (GenerateNormals.getValue(0) == 1.0){
+                            var normalData = generateNormals(PosTyped, 3, 0, positionData.length/3, indexData);
+                        }else{
+                            var normalData = data.data.attributes.normal.array;
+                        }
                             normalData = new Float32Array(normalData);
-                              }
-                              vertexBuffer = new VVVV.Types.VertexBuffer(gl, posMapped);
-                              vertexBuffer.create();
-                              vertexBuffer.setSubBuffer('POSITION', 3, posMapped);
-                              vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords0);
-                              vertexBuffer.setSubBufferTyped('NORMAL', 3, normalData);
+                            if (data.metadata.hasOwnProperty('color')){
+                                var VertexColorData = data.data.attributes.color.array;
+                                //console.log('geometry has vertex color');
+                            }
+                            
+                            vertexBuffer = new VVVV.Types.VertexBuffer(gl, posMapped);
+                            vertexBuffer.create();
+                            vertexBuffer.setSubBuffer('POSITION', 3, posMapped);
+                            vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords0);
+                            vertexBuffer.setSubBufferTyped('NORMAL', 3, normalData);
+                            vertexBuffer.setSubBuffer('VERTEXCOLOR', 3, VertexColorData);
+                        }
+                 
                               vertexBuffer.update();
 
                               mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indexData);
@@ -3790,7 +3807,6 @@ VVVV.Nodes.DataTexture = function(id, graph) {
         var float32 = new Float32Array(Buffer.data);
         var uint8 = new Uint8Array(Buffer.data);
         
-        console.log(float32); // 31
         
               gl.bindTexture(gl.TEXTURE_2D, textures[i]);
               
