@@ -33,7 +33,12 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/CookTorrance_Displacement_TriplanarFBM.vvvvjs.fx": undefined,
   "%VVVV%/effects/PBR_POM_FBM_MultiTex.vvvvjs.fx": undefined,
   "%VVVV%/effects/Skybox.vvvvjs.fx": undefined,
-  "%VVVV%/effects/PhysicalBased_SpecularAA.vvvvjs.fx": undefined
+  "%VVVV%/effects/PhysicalBased_SpecularAA.vvvvjs.fx": undefined,
+  "%VVVV%/effects/PhysicalBased_Basic.vvvvjs.fx": undefined,
+  "%VVVV%/effects/PhysicalBased_Atlas_MultiTex.vvvvjs.fx": undefined,
+  "%VVVV%/effects/Constant_Instanced.vvvvjs.fx": undefined
+  
+  
   
   
   
@@ -3301,7 +3306,7 @@ VVVV.Nodes.GeometryFile = function(id, graph) {
                         if(typeIn.getValue(i)=='three.js json'){
                             var positionData = data.data.attributes.position.array;
                             var posMapped = positionData.map(function(x) { return x * scale; });
-                            var texCoords0 = [0.0,0.0];//new Float32Array(data.data.attributes.uv.array);  //missing texturecoordinates
+                            var texCoords0 = data.data.attributes.uv.array;  //missing texturecoordinates
                             var indexData = data.data.index.array;
                             
                             var PosTyped = new Float32Array(posMapped);
