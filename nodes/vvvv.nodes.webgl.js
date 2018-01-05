@@ -34,9 +34,9 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/PBR_POM_FBM_MultiTex.vvvvjs.fx": undefined,
   "%VVVV%/effects/Skybox.vvvvjs.fx": undefined,
   "%VVVV%/effects/PhysicalBased_SpecularAA.vvvvjs.fx": undefined,
-  "%VVVV%/effects/PhysicalBased_Basic.vvvvjs.fx": undefined,
   "%VVVV%/effects/PhysicalBased_Atlas_MultiTex.vvvvjs.fx": undefined,
-  "%VVVV%/effects/Constant_Instanced.vvvvjs.fx": undefined
+  "%VVVV%/effects/Constant_Instanced.vvvvjs.fx": undefined,
+  "%VVVV%/effects/Deffered_FX.vvvvjs.fx": undefined
   
   
   
@@ -646,8 +646,8 @@ VVVV.Nodes.FileTexture = function(id, graph) {
                 //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); //test
                 gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
                 gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
                 ctx.restore();
               }
               gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
@@ -682,8 +682,8 @@ VVVV.Nodes.FileTexture = function(id, graph) {
                 //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); //test
                 gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
                 gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
                 ctx.restore();
               }
               gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);

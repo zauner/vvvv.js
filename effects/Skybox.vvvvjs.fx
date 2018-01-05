@@ -20,7 +20,7 @@ void main(void) {
     vec4 PosW = tW * PosO;
     
     //texture coordinates for skybox cubemap
-    ViewVectorW = PosW.xyz - posCam;
+    ViewVectorW = PosW.xyz * vec3(1.0, -1.0, 1.0) - posCam;
 
     //position in projection space
 
