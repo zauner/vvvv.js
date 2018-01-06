@@ -1,5 +1,5 @@
 
-//author: David Gann
+//author: David Gann | url: www.000.graphics | contact for support: davidgann@000.graphics
 //Copyright 2017, 2018 David Gann
  // This program is free software: you can redistribute it and/or modify
     // it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ attribute vec3 PosO : POSITION;
 attribute vec2 TexCd : TEXCOORD0;
 attribute vec3 NormO : NORMAL;
 attribute vec4 index : INDEX;
-attribute vec4 vcol : VERTEXCOLOR;
+attribute vec4 vcol : VERTEXCOLOR;  //is used for submesh indices in case of batched instancing
 
 
 uniform mat4 Texture_Transform;
@@ -32,7 +32,6 @@ uniform mat4 tV : VIEW;
 uniform mat4 tP : PROJECTION;
 uniform vec3 LightPos;
 uniform vec3 cameraPosition;
-uniform float atlas_index;
 uniform sampler2D InstanceWorldTex;
 uniform float submesh_count = 10.0;
 uniform float instance_count = 100.0;
@@ -57,7 +56,7 @@ void main(void) {
 
 	vec3 NormW = normalize(tW * vec4(NormO, 0)).xyz;
 	
-	float pos_index = index.x + atlas_index; //* floor(vcol.r*submesh_count + 0.001) for batching
+	float pos_index = index.x; //* floor(vcol.r*submesh_count + 0.001) for batching
 
 	vec2 uv_worldpos = vec2(mod(pos_index, data_texture_resX)/data_texture_resX , floor(pos_index/data_texture_resX)/data_texture_resX);
 
@@ -136,29 +135,12 @@ uniform float TextureScale = 1.0;
 
 uniform float NormalScale = 0.1;
 
-uniform float atlasIndex;
 
 uniform float TileCount = 4.0;
 uniform float TilePixelSize = 256.0;
 uniform float GutterPercent = 0.0;
 uniform float MinLOD = 3.0;
 uniform float Atlas_TexSize = 2048;
-
-//FBM Uniforms
-uniform float scale_in;
-uniform vec4 FBM_Pos;
-uniform vec2 on_in;
-uniform vec2 n_in;
-uniform vec2 m_in;
-
-uniform vec3 noise_pos1;
-uniform vec3 noise_pos2;
-uniform vec3 noise_pos3;
-
-uniform vec3 noise_scale1;
-uniform vec3 noise_scale2;
-uniform vec3 noise_scale3;
-
 uniform float triplanar_texcd = 1.0;
 
 
