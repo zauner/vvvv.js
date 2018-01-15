@@ -24,6 +24,7 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/CookTorrance.vvvvjs.fx": undefined,
   "%VVVV%/effects/PhongInstancedAnimation.vvvvjs.fx": undefined,
   "%VVVV%/effects/BillBoards.vvvvjs.fx": undefined,
+  "%VVVV%/effects/BillBoard_Particles.vvvvjs.fx": undefined,
   "%VVVV%/effects/BotanyInstanced.vvvvjs.fx": undefined,
   "%VVVV%/effects/ParallaxOcclusionMapping.vvvvjs.fx": undefined,
   "%VVVV%/effects/SSAO.vvvvjs.fx": undefined,
@@ -3827,7 +3828,7 @@ VVVV.Nodes.DataTexture = function(id, graph) {
 
               gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border,
                             format, type, float32);
-
+              gl.generateMipmap( gl.TEXTURE_2D );
               // set the filtering so we don't need mips and it's not filtered
               gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
               gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
@@ -3841,8 +3842,9 @@ VVVV.Nodes.DataTexture = function(id, graph) {
         //gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
         //gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST );
         //gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST );
-        //gl.generateMipmap( gl.TEXTURE_2D );
+        
         //gl.bindTexture( gl.TEXTURE_2D, null );
+        gl.bindTexture(gl.TEXTURE_2D, null);
         outputPin.setValue(i, textures[i]);
   
         
