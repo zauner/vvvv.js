@@ -7,6 +7,7 @@ precision highp float;
 uniform mat4 tW : WORLD;
 uniform mat4 tVP : VIEWPROJECTION;
 uniform vec3 posCam;
+uniform float invertY = 1;
 
 attribute vec4 PosO : POSITION;
 attribute vec4 TexCd : TEXCOORD0;
@@ -20,7 +21,9 @@ void main(void) {
     vec4 PosW = tW * PosO;
     
     //texture coordinates for skybox cubemap
-    ViewVectorW = PosW.xyz * vec3(1.0, -1.0, 1.0) - posCam;
+	float invertedY = 1.0;
+	if(invertY >= 0.5){invertedY=-1.0;}
+    ViewVectorW = PosW.xyz * vec3(1.0, invertedY, 1.0) - posCam;
 
     //position in projection space
 

@@ -37,7 +37,9 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/PhysicalBased_SpecularAA.vvvvjs.fx": undefined,
   "%VVVV%/effects/PhysicalBased_Atlas_MultiTex.vvvvjs.fx": undefined,
   "%VVVV%/effects/Constant_Instanced.vvvvjs.fx": undefined,
-  "%VVVV%/effects/Deffered_FX.vvvvjs.fx": undefined
+  "%VVVV%/effects/Deffered_FX.vvvvjs.fx": undefined,
+  "%VVVV%/effects/PBR_glTF.vvvvjs.fx": undefined
+  
   
   
   
@@ -570,9 +572,11 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   this.environments = ['browser'];
 
   var filenamePin = this.addInputPin("Filename", [""], VVVV.PinTypes.String);
+  var typeIn = this.addInputPin("Type", ["Texture"], VVVV.PinTypes.Enum);
+  var Apply= this.addInputPin('Apply', [1], VVVV.PinTypes.Value);
   var outputPin = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
 
-  var typeIn = this.addInputPin("Type", ["Texture"], VVVV.PinTypes.Enum);
+  
   typeIn.enumOptions = ["Texture", "Cube Texture", "Cube Texture Flip Y"];
 
   var textures = [];
@@ -585,7 +589,11 @@ VVVV.Nodes.FileTexture = function(id, graph) {
 
     if (!gl)
       return;
-
+    
+    //if (Apply.getValue(0) != 1)
+    //  return;
+  
+  
     if (this.contextChanged) {
       for (var i=0; i<textures.length; i++) {
         textures[i].context.deleteTexture(textures[i]);
@@ -602,7 +610,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
         if (filename.indexOf('http://')===0 && VVVV.ImageProxyPrefix!==undefined)
           filename = VVVV.ImageProxyPrefix+encodeURI(filename);
         filenames.push(filename);            //only load new files
-        if(prevFilenames[i]!=filenames[i]){  //by loading only when filename actualy changes performance increase and dynamic texture loading possible
+        if(prevFilenames[i]!=filenames[i]){  //prevFilenames[i]!=filenames[i]//by loading only when filename actualy changes performance increase and dynamic texture loading possible
         textures[i] = gl.createTexture();
         textures[i].context = gl;
         if (type=="Texture") {
@@ -714,6 +722,92 @@ VVVV.Nodes.FileTexture = function(id, graph) {
 }
 VVVV.Nodes.FileTexture.prototype = new Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: TextureLoader (WebGL)
+ Author(s): David Gann
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.TextureLoader = function(id, graph) {
+  this.constructor(id, "TextureLoader (WebGL)", graph);
+
+  this.auto_nil = false;
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: ['Always loads in background', 'No reload pin', 'No preload pin (preloading handled by browser)', 'No up and running pin', 'No texture info outputs']
+  };
+
+  this.auto_evaluate = false;
+  this.environments = ['browser'];
+
+  var filenamePin = this.addInputPin("Filename", [""], VVVV.PinTypes.String);
+  var typeIn = this.addInputPin("Type", ["Texture"], VVVV.PinTypes.Enum);
+  var Apply= this.addInputPin('Apply', [1], VVVV.PinTypes.Value);
+  var outputPin = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
+
+  
+  typeIn.enumOptions = ["Texture", "Cube Texture", "Cube Texture Flip Y"];
+
+
+
+  var textures = [];
+
+
+  this.evaluate = function() {
+
+    if (!this.renderContexts){ console.log("context lost");return;} 
+    var gl = this.renderContexts[0];
+
+    if (!gl){ console.log("no gl");return;} 
+    
+  if (Apply.getValue(0) != 1.0) return;
+
+  if (this.contextChanged) {
+      for (var i=0; i<textures.length; i++) {
+        textures[i].context.deleteTexture(textures[i]);
+      }
+      textures = [];
+    }
+    
+  var filename = VVVV.Helpers.prepareFilePath(filenamePin.getValue(0), this.parentPatch);
+        if (filename.indexOf('http://')===0 && VVVV.ImageProxyPrefix!==undefined)
+          filename = VVVV.ImageProxyPrefix+encodeURI(filename);
+      
+// Create a texture.
+var texture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, texture);
+ 
+// Fill the texture with a 1x1 blue pixel.
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+              new Uint8Array([0, 0, 255, 255]));
+ 
+// Asynchronously load an image
+var image = new Image();
+image.src = filename;
+image.addEventListener('load', function() {
+  // Now that the image has loaded make copy it to the texture.
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, image);
+  gl.generateMipmap(gl.TEXTURE_2D);
+});
+  
+  outputPin.setValue(0, texture);
+
+  this.destroy = function() {
+    for (var i=0; i<textures.length; i++) {
+      textures[i].context.deleteTexture(textures[i]);
+    }
+  }
+ 
+
+}
+}
+VVVV.Nodes.TextureLoader.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -737,7 +831,9 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
   this.environments = ['browser'];
 
   var sourceIn = this.addInputPin("Source", [], VVVV.PinTypes.WebGlResource);
+  var Update= this.addInputPin('Update', [1], VVVV.PinTypes.Value);
   var outputOut = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
+  
 
 
   var texture;
@@ -745,6 +841,7 @@ VVVV.Nodes.DX9Texture = function(id, graph) {
   var warningIssued = false;
 
   this.evaluate = function() {
+    if (Update.getValue(0) != 1) return;   
     if (!this.renderContexts) return;
     var gl = this.renderContexts[0];
     if (!gl)
@@ -2716,9 +2813,9 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthTexture, 0);
       //gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
 
-      gl.bindTexture(gl.TEXTURE_2D, null);
-      gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      //gl.bindTexture(gl.TEXTURE_2D, null);
+      //gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+      //gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       
       
      
@@ -3058,7 +3155,6 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
 
 }
 VVVV.Nodes.RendererWebGL.prototype = new Node();
-//VVVV.Nodes.RendererWebGL.requirements = ["floatExtension"];
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3187,6 +3283,7 @@ VVVV.Nodes.GeometryFile = function(id, graph) {
   var typeIn = this.addInputPin("Type", ['vvvv json'], VVVV.PinTypes.Enum);
   typeIn.enumOptions = ['vvvv json', 'three.js json' ];
   var GenerateNormals = this.addInputPin("Generate Normals", [1.0], VVVV.PinTypes.Value);
+  var Apply= this.addInputPin('Apply', [1], VVVV.PinTypes.Value);
 
   var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
   var LoadedOut = this.addOutputPin("Has Loaded", [0.0], VVVV.PinTypes.Value);
@@ -3265,6 +3362,9 @@ VVVV.Nodes.GeometryFile = function(id, graph) {
    var xhr = [];
 
   this.evaluate = function() {
+    if (Apply.getValue(0) != 1)
+      return;
+  
     var scale = ScaleIn.getValue(0);
 
     if (filenamePin.pinIsChanged() | ScaleIn.pinIsChanged()){
@@ -3844,7 +3944,7 @@ VVVV.Nodes.DataTexture = function(id, graph) {
         //gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST );
         
         //gl.bindTexture( gl.TEXTURE_2D, null );
-        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.bindTexture(gl.TEXTURE_2sonsD, null);
         outputPin.setValue(i, textures[i]);
   
         
@@ -3867,6 +3967,771 @@ VVVV.Nodes.DataTexture = function(id, graph) {
 }
 VVVV.Nodes.DataTexture.prototype = new Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Renderer (WebGL)
+ Author(s): David Gann, Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.RendererWebGL2 = function(id, graph) {
+  this.constructor(id, "Renderer (WebGL)", graph);
+
+  this.auto_nil = false;
+
+  this.meta = {
+    authors: ['Matthias Zauner'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['Disabling Clear doesn\'t work in Chrome', 'No Fullscreen', 'No Enable Pin', 'No Aspect Ration and Viewport transform', 'No mouse output']
+  };
+  this.environments = ['browser'];
+
+  this.addInputPin("Layers", [], VVVV.PinTypes.WebGlResource);
+  var clearIn = this.addInputPin("Clear", [1], VVVV.PinTypes.Value);
+  var antialiasIn = this.addInputPin("Antialiasing", [0], VVVV.PinTypes.Value);
+  var bgColIn = this.addInputPin("Background Color", [new VVVV.Types.Color("0.0, 0.0, 0.0, 1.0")], VVVV.PinTypes.Color);
+  var bufferWidthIn = this.addInputPin("Backbuffer Width", [0], VVVV.PinTypes.Value);
+  var bufferHeightIn = this.addInputPin("Backbuffer Height", [0], VVVV.PinTypes.Value);
+  var parentIn = this.addInputPin("Parent Element", [], VVVV.PinTypes.HTMLLayer);
+  var viewIn = this.addInputPin("View", [], VVVV.PinTypes.Transform);
+  var projIn = this.addInputPin("Projection", [], VVVV.PinTypes.Transform);
+
+  var enableDepthBufIn = this.addInvisiblePin("Windowed Depthbuffer Format", ['NONE'], VVVV.PinTypes.Enum);
+  enableDepthBufIn.enumOptions = ['NONE', 'DX16'];
+
+  var bufferWidthOut = this.addOutputPin("Actual Backbuffer Width", [0.0], VVVV.PinTypes.Value);
+  var bufferHeightOut = this.addOutputPin("Actual Backbuffer Height", [0.0], VVVV.PinTypes.Value);
+  var ex9Out = this.addOutputPin("EX9 Out", [], VVVV.PinTypes.WebGlResource);
+  var layerOut = this.addOutputPin("Element Out", [], VVVV.PinTypes.HTMLLayer);
+  var antialiasOut = this.addOutputPin("Antialias", ["?"], VVVV.PinTypes.String);
+  var depthOut = this.addOutputPin("Depth Out", [], VVVV.PinTypes.WebGlResource);
+
+
+  var width = 0.0;
+  var height = 0.0;
+
+  var pMatrix;
+  var vMatrix;
+  var vpMatrix;
+  var wvMatrix = glMatrix.mat4.create();
+  var wvpMatrix = glMatrix.mat4.create();
+
+  var canvas;
+  this.ctxt = undefined;              // the renderer's active context. might be the canvas context, or the context of a connected downstream renderer
+  var canvasCtxt = undefined;         // the context of the canvas which is connected to the renderer
+  var gl;                             // just a convenience variable for keeping the lines short
+  var targetElement;
+  var htmlLayer;
+  var id;
+
+  var bbufFramebuffer;
+  var bbufTexture;
+  var depthTexture;
+
+   function getExtension(gl, name){
+            var vendorPrefixes = ["", "WEBKIT_", "MOZ_"];
+            var i, ext;
+            for(i in vendorPrefixes) {
+                ext = gl.getExtension(vendorPrefixes[i] + name);
+                if (ext) {
+                    return ext;
+
+                }
+            }
+            return null;
+
+        }
+        
+  function attachMouseEvents() {
+    $(canvas).detach('mousemove');
+    $(canvas).detach('mousedown');
+    $(canvas).detach('mouseup');
+    VVVV.MousePositions[id] = {'x': [0.0], 'y': [0.0], 'wheel': [0.0], 'lb': [0.0], 'mb': [0.0], 'rb': [0.0]};
+    $(canvas).mousemove(function(e) {
+      var x = (e.pageX - $(this).offset().left) * 2 / $(this).width() - 1;
+      var y = -((e.pageY - $(this).offset().top) * 2 / $(this).height() - 1);
+      VVVV.MousePositions['_all'].x[0] = x;
+      VVVV.MousePositions['_all'].y[0] = y;
+      VVVV.MousePositions[id].x[0] = x;
+      VVVV.MousePositions[id].y[0] = y;
+    });
+    $(canvas).bind('mousewheel', function(e) {
+      var delta = e.originalEvent.wheelDelta/120;
+      VVVV.MousePositions[id].wheel[0] += delta;
+      VVVV.MousePositions['_all'].wheel[0] += delta;
+    });
+    $(canvas).bind('DOMMouseScroll', function(e) {
+      var delta = -e.originalEvent.detail/3;
+      VVVV.MousePositions[id].wheel[0] += delta;
+      VVVV.MousePositions['_all'].wheel[0] += delta;
+    })
+    function mouseup(e) {
+      switch (e.which) {
+        case 1: VVVV.MousePositions['_all'].lb[0] = 0; VVVV.MousePositions[id].lb[0] = 0; break;
+        case 2: VVVV.MousePositions['_all'].mb[0] = 0; VVVV.MousePositions[id].mb[0] = 0; break;
+        case 3: VVVV.MousePositions['_all'].rb[0] = 0; VVVV.MousePositions[id].rb[0] = 0; break;
+      }
+    }
+    $(canvas).mousedown(function(e) {
+      switch (e.which) {
+        case 1: VVVV.MousePositions['_all'].lb[0] = 1; VVVV.MousePositions[id].lb[0] = 1; break;
+        case 2: VVVV.MousePositions['_all'].mb[0] = 1; VVVV.MousePositions[id].mb[0] = 1; break;
+        case 3: VVVV.MousePositions['_all'].rb[0] = 1; VVVV.MousePositions[id].rb[0] = 1; break;
+      }
+      $(document).unbind('mouseup', mouseup);
+      $(document).mouseup(mouseup);
+    });
+
+    function setTouchPositions(e, element) {
+      var i = e.originalEvent.changedTouches.length;
+      while (i--) {
+        var x = (e.originalEvent.changedTouches[i].pageX - $(element).offset().left) * 2 / $(element).width() - 1;
+        var y = -((e.originalEvent.changedTouches[i].pageY - $(element).offset().top) * 2 / $(element).height() - 1);
+        VVVV.MousePositions['_all'].x[e.originalEvent.changedTouches[i].identifier] = VVVV.MousePositions[element.id].x[e.originalEvent.changedTouches[i].identifier] = x;
+        VVVV.MousePositions['_all'].y[e.originalEvent.changedTouches[i].identifier] = VVVV.MousePositions[element.id].y[e.originalEvent.changedTouches[i].identifier] = y;
+      }
+    }
+
+    $(canvas).bind('touchstart', function(e) {
+      var i = e.originalEvent.changedTouches.length;
+      while (i--) {
+        VVVV.MousePositions['_all'].lb[e.originalEvent.changedTouches[i].identifier] = VVVV.MousePositions[id].lb[e.originalEvent.changedTouches[i].identifier] = 1;
+      }
+      setTouchPositions(e, this);
+    })
+
+    $(canvas).bind('touchend', function(e) {
+      var i = e.originalEvent.changedTouches.length;
+      while (i--) {
+        VVVV.MousePositions['_all'].lb[e.originalEvent.changedTouches[i].identifier] = VVVV.MousePositions[id].lb[e.originalEvent.changedTouches[i].identifier] = 0;
+      }
+    })
+
+    $(canvas).bind('touchmove', function(e) {
+      setTouchPositions(e, this);
+      e.preventDefault();
+    })
+  }
+
+  this.getContexts = function() {
+    if (!this.invisiblePins["Descriptive Name"])
+      return;
+    var selector = this.invisiblePins["Descriptive Name"].getValue(0);
+    targetElement = $(selector).get(0);
+    if (!targetElement || targetElement.nodeName!='CANVAS') {
+      var w = parseInt(bufferWidthIn.getValue(0));
+      var h = parseInt(bufferHeightIn.getValue(0));
+      w = w > 0 ? w : 512;
+      h = h > 0 ? h : 512;
+      id = 'vvvv-js-generated-renderer-'+(new Date().getTime());
+      htmlLayer = new VVVV.Types.HTMLLayer('canvas');
+      htmlLayer.setAttribute('width', w);
+      htmlLayer.setAttribute('height', h);
+      htmlLayer.setAttribute('id', id);
+      htmlLayer.setAttribute('class', 'vvvv-js-generated-renderer');
+      if (!targetElement) {
+        if (parentIn.isConnected() && parentIn.getValue(0))
+          targetElement = parentIn.getValue(0).element;
+        else
+          targetElement = 'body';
+      }
+      $(targetElement).append(htmlLayer.element);
+      canvas = htmlLayer.element;
+    }
+    else
+      canvas = $(targetElement);
+
+    if (!canvas)
+      return;
+
+    layerOut.setValue(0, htmlLayer);
+
+    attachMouseEvents();
+
+    try {
+      canvasCtxt = canvas.get(0).getContext("experimental-webgl", {preserveDrawingBuffer: true,antialias: true});
+      canvasCtxt.viewportWidth = parseInt(canvas.get(0).width);
+      canvasCtxt.viewportHeight = parseInt(canvas.get(0).height);
+    } catch (e) {
+      console.log(e);
+    }
+    this.ctxt = canvasCtxt;
+
+    if (ex9Out.isConnected() && this.renderContexts && this.renderContexts[0]) {
+      this.ctxt = this.renderContexts[0];
+
+      gl = this.ctxt;
+
+    this.depthExt = getExtension(gl, "WEBGL_depth_texture");
+                    if(!this.depthExt) {
+                        console.log("WEBGL_depth_texture not supported")
+                    }
+                
+//    this.floatExt = getExtension(gl, "OES_texture_float");
+//                    if(!this.depthExt) {
+//                        console.log("WEBGL_depth_texture not supported")
+//                    }            
+    this.floatExt = getExtension(gl, "OES_texture_float_linear");
+                    if(!this.depthExt) {
+                        console.log("WEBGL_depth_texture not supported")
+                    }       
+                    
+    this.ShaderTexLOD = getExtension(gl, "EXT_shader_texture_lod");
+                    if(!this.depthExt) {
+                        console.log("GL_EXT_shader_texture_lod not supported")
+                    }    
+     
+      
+
+      bbufFramebuffer = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, bbufFramebuffer);
+      bbufFramebuffer.width = canvas.get(0).width;
+      bbufFramebuffer.height = canvas.get(0).height;
+
+      bbufTexture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, bbufTexture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+      
+      //verify color attachements against https://www.khronos.org/registry/webgl/sdk/tests/extra/webgl-info.html
+      // for mobile devices support
+      
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, bbufFramebuffer.width, bbufFramebuffer.height, 0, gl.RGBA, gl.FLOAT, null);  //gl.UNSIGNED_SHORT_4_4_4_4
+      gl.generateMipmap(gl.TEXTURE_2D);
+
+//      var renderbuffer = gl.createRenderbuffer();
+//      gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+//      gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, bbufFramebuffer.width, bbufFramebuffer.height);
+
+        // Create the depth texture / Replaces the above code for depth test
+        depthTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, depthTexture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, bbufFramebuffer.width, bbufFramebuffer.height, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
+        
+        
+        
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, bbufTexture, 0);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthTexture, 0);
+      //gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
+
+      //gl.bindTexture(gl.TEXTURE_2D, null);
+      //gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+      //gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      
+      
+     
+      
+
+    }
+    else {
+      if (this.renderContexts && this.renderContexts[0]) {
+        this.renderContexts[0].deleteTexture(bbufTexture);
+        bbufTexture = undefined;
+        // TODO: destroy framebuffer resources ...
+      }
+    }
+
+    if (!this.ctxt)
+      return;
+
+    // doing this afterwards, so we can use these values in the patch for checking, if webgl context was set up correctly
+    width = parseInt(canvas.get(0).width);
+    height = parseInt(canvas.get(0).height);
+
+    // create default white texture
+
+    gl = this.ctxt;
+
+    var pixels = new Uint8Array([255, 255, 255]);
+    gl.DefaultTexture = {};
+    gl.DefaultTexture['2D'] = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, gl.DefaultTexture['2D']);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    
+    gl.DefaultTexture['CUBE'] = gl.createTexture();
+
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, gl.DefaultTexture['CUBE']);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, pixels);
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+
+    // this is to ensure that all the input pins get evaluated, if the gl context has been set after the node creation
+    this.inputPins["Layers"].markPinAsChanged();
+    clearIn.markPinAsChanged();
+    antialiasIn.markPinAsChanged();
+    bgColIn.markPinAsChanged();
+    viewIn.markPinAsChanged();
+    projIn.markPinAsChanged();
+
+    gl.getExtension('OES_standard_derivatives');      
+    
+    this.instanceExt = getExtension(gl, "ANGLE_instanced_arrays");
+         if(!this.instanceExt) {
+             var customControls = document.getElementById("body");
+             customControls.classList.add("error");
+             customControls.innerHTML = "ANGLE_instanced_arrays not supported by this browser";
+             this.instanceCheck = null;
+         } else {
+             this.instanceCheck = document.getElementById("hardwareInstancing");
+         }
+
+  }
+
+  this.destroy = function() {
+    $(canvas).remove();
+  }
+
+  var initialized = false;
+
+  this.evaluate = function() {
+      
+    
+    gl = this.ctxt;
+
+        
+    if (this.invisiblePins["Descriptive Name"].pinIsChanged() || (parentIn.pinIsChanged() && parentIn.getValue(0).element!=targetElement) || this.contextChanged) {
+      if (canvasCtxt && $(canvasCtxt.canvas).hasClass('vvvv-js-generated-renderer'))
+        $(canvasCtxt.canvas).remove();
+      this.getContexts();
+      if (this.inputPins["Layers"].isConnected())
+        this.inputPins["Layers"].links[0].fromPin.connectionChanged();
+    }
+
+    if (!initialized) {
+      bufferWidthOut.setValue(0, width);
+      bufferHeightOut.setValue(0, height);
+      initialized = true;
+    }
+
+    if (gl==undefined)
+      return;
+
+    if (bufferWidthIn.pinIsChanged() && !(this.renderContexts && this.renderContexts[0])) {
+      var w = parseInt(bufferWidthIn.getValue(0));
+      if (w>0) {
+        width = w;
+        $(canvasCtxt.canvas).attr('width', width);
+        bufferWidthOut.setValue(0, width);
+      }
+    }
+    if (bufferHeightIn.pinIsChanged() && !(this.renderContexts && this.renderContexts[0])) {
+      var h = parseInt(bufferHeightIn.getValue(0));
+      if (h>0) {
+        height = h;
+        $(canvasCtxt.canvas).attr('height', height);
+        bufferHeightOut.setValue(0, height);
+      }
+    }
+
+    if (this.renderContexts && this.renderContexts[0] && gl==this.renderContexts[0]) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, bbufFramebuffer);
+      //ANTIALIASING STATUS
+      var antialiasstatus = gl.getContextAttributes().antialias;
+    antialiasOut.setValue(0, antialiasstatus);
+    }
+    else {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+
+    if (this.contextChanged || bgColIn.pinIsChanged()) {
+      var col = bgColIn.getValue(0);
+      gl.clearColor(col.rgba[0], col.rgba[1], col.rgba[2], col.rgba[3]);
+    }
+
+    if (this.contextChanged || antialiasIn.pinIsChanged()) {
+      var aa = antialiasIn.getValue(0);
+      if (aa==0)
+        var antialiasb = false
+      else
+        var antialiasb = true
+
+        $(canvasCtxt.canvas).attr('antialias', antialiasb)
+    }
+
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    if (this.contextChanged || enableDepthBufIn.pinIsChanged()) {
+      if (enableDepthBufIn.getValue(0)=='NONE')
+        gl.disable(gl.DEPTH_TEST);
+      else
+        gl.enable(gl.DEPTH_TEST);
+    }
+
+    if (projIn.pinIsChanged()) {
+      if (projIn.isConnected()) {
+        pMatrix = glMatrix.mat4.create();
+        glMatrix.mat4.set(projIn.getValue(0), pMatrix);
+        glMatrix.mat4.scale(pMatrix, [1, 1, -1]);
+      }
+      else {
+        pMatrix = glMatrix.mat4.create();
+        glMatrix.mat4.ortho(-1, 1, -1, 1, -100, 100, pMatrix);
+        glMatrix.mat4.scale(pMatrix, [1, 1, -1]);
+      }
+      if (this.renderContexts && this.renderContexts[0]) // flip the output texture, if connected to downstream renderer
+        glMatrix.mat4.scale(pMatrix, [1, -1, 1]);
+      vpMatrix = glMatrix.mat4.create();
+    }
+    if (viewIn.pinIsChanged()) {
+      vMatrix = viewIn.getValue(0);
+    }
+    if (viewIn.pinIsChanged() || projIn.pinIsChanged()) {
+      glMatrix.mat4.multiply(pMatrix, vMatrix, vpMatrix);
+    }
+
+    if (this.contextChanged) { // don't render anything, if the context changed in this frame. will only give warnings...
+      this.contextChanged = false;
+      return
+    }
+
+   
+
+
+    gl.viewport(0, 0, width, height);
+
+    var currentShaderProgram = null;
+    var currentRenderState = null;
+    var currentMesh = null;
+
+    if (this.inputPins["Layers"].isConnected()) {
+      var layers = this.inputPins["Layers"].values;
+      for (var i=0; i<layers.length; i++) {
+        layer = layers[i];
+
+        if (layer.shader==undefined) // if it's an empty layer (e.g. created by IOBox (Node))
+          continue;
+
+        if (currentShaderProgram!=layer.shader.shaderProgram) {
+          gl.useProgram(layer.shader.shaderProgram);
+          if (layer.shader.uniformSemanticMap["PROJECTION"] && layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["PROJECTION"]].position!=0)
+            gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["PROJECTION"]].position, false, pMatrix);
+          if (layer.shader.uniformSemanticMap["VIEW"] && layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEW"]].position!=0)
+            gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEW"]].position, false, vMatrix);
+          if (layer.shader.uniformSemanticMap["VIEWPROJECTION"] && layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEWPROJECTION"]].position!=0)
+            gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["VIEWPROJECTION"]].position, false, vpMatrix);
+        }
+
+        var renderState = layer.renderState;
+        if (!renderState)
+          renderState = defaultWebGlRenderState;
+        if (renderState!=currentRenderState)
+          renderState.apply(gl);
+
+        if (layer.mesh != currentMesh || layer.shader.shaderProgram != currentShaderProgram) {
+
+        if(layer.mesh.instanced == false){
+          gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
+          _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
+            if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]] || layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position==-1)
+              return;
+            gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
+            gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, 0, b.offset);
+          });
+
+          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
+        }
+        if(layer.mesh.instanced == true){ //Instancing
+           //console.log("entering instancing, VertexCount: " + layer.mesh.Buffer1.length);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
+          _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
+            if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]] || layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position==-1)
+              return;
+            gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
+            gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, 0, b.offset);
+          });
+          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
+
+             //console.log(JSON.stringify(layer.mesh.semantics));
+           //console.log(JSON.stringify(layer.shader.attributeSpecs));
+//           console.log(JSON.stringify(layer.shader.uniformSpecs));
+           //console.log(JSON.stringify(layer.shader.attribSemanticMap));
+//           console.log(JSON.stringify(layer.shader.uniformSemanticMap));
+//           console.log(JSON.stringify(layer.mesh.Buffer1));
+//           console.log(JSON.stringify(layer.mesh.Buffer2));
+//           console.log(JSON.stringify(layer.mesh.instanceCount));
+
+//           var OffsetBuffer;
+//           OffsetBuffer = gl.createBuffer();
+//                    gl.bindBuffer(gl.ARRAY_BUFFER, OffsetBuffer);
+//                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(layer.mesh.Buffer1), gl.STATIC_DRAW);
+         for (var i=0; i<layer.mesh.semantics.length; i++) {
+           var semantic = layer.mesh.semantics[i];
+           gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.instanceBuffers[i]);
+           gl.enableVertexAttribArray(layer.shader.attributeSpecs[semantic].position);
+           gl.vertexAttribPointer(layer.shader.attributeSpecs[semantic].position, layer.mesh.VectorSize[i], gl.FLOAT, false, 0, 0);  //stride can be 12 or 0
+           this.instanceExt.vertexAttribDivisorANGLE(layer.shader.attributeSpecs[semantic].position, layer.mesh.Divisor[i]);
+        }
+
+            } //end if case of instanced
+
+        }
+
+        /*if (layer.shader.uniformSemanticMap["WORLDVIEWPROJECTION"]) {
+          mat4.multiply(vpMatrix, layer.uniforms[layer.shader.uniformSemanticMap["WORLDVIEWPROJECTION"]].value, wvpMatrix);
+          gl.uniformMatrix4fv(layer.shader.uniformSpecs[layer.shader.uniformSemanticMap["WORLDVIEWPROJECTION"]].position, false, wvpMatrix);
+        } */
+
+        var uniformCount = layer.uniformNames.length;
+        var textureIdx = 0;
+        for (var j=0; j<uniformCount; j++) {
+          var u = layer.uniforms[layer.uniformNames[j]];
+
+          if (u.value==undefined)
+            continue;
+          if (i>0 && layer.shader.shaderProgram==currentShaderProgram && layers[i-1].uniforms[layer.uniformNames[j]] && u.value==layers[i-1].uniforms[layer.uniformNames[j]].value)
+            continue;
+          start = new Date().getTime();
+          switch (u.uniformSpec.type) {
+            case "mat": gl['uniformMatrix'+u.uniformSpec.dimension+'fv'](u.uniformSpec.position, false, u.value); break;
+            case "vec": gl['uniform'+u.uniformSpec.dimension+'fv'](u.uniformSpec.position, u.value); break;
+            case "int": gl['uniform'+u.uniformSpec.dimension+'i'](u.uniformSpec.position, u.value); break;
+            case "float": gl['uniform'+u.uniformSpec.dimension+'f'](u.uniformSpec.position, u.value); break;
+            case "sampler":
+              var tex = u.value;
+              if (tex==VVVV.DefaultTexture)
+                tex = gl.DefaultTexture['2D'];
+              gl.activeTexture(gl['TEXTURE'+textureIdx]);
+              gl.bindTexture(gl['TEXTURE_'+u.uniformSpec.dimension], tex);
+              gl.uniform1i(u.uniformSpec.position, textureIdx);
+              textureIdx++;
+              break;
+            case "samplerCube":
+              var tex = u.value;
+              if (tex==VVVV.DefaultTexture)
+                tex = gl.DefaultTexture['CUBE'];
+              gl.activeTexture(gl['TEXTURE'+textureIdx]);
+              gl.bindTexture(gl.TEXTURE_CUBE_MAP, tex);
+              gl.uniform1i(u.uniformSpec.position, textureIdx);
+              textureIdx++;
+              break;
+          }
+          loopstart = new Date().getTime();
+        }
+        if(layer.mesh.instanced == true){
+            this.instanceExt.drawElementsInstancedANGLE(gl[renderState.polygonDrawMode], layer.mesh.numIndices, gl.UNSIGNED_SHORT, 0, layer.mesh.instanceCount);
+        }
+        else{
+            gl.drawElements(gl[renderState.polygonDrawMode], layer.mesh.numIndices, gl.UNSIGNED_SHORT, 0);
+        }
+
+        // save current states
+        currentShaderProgram = layer.shader.shaderProgram;
+        currentRenderState = renderState;
+        currentMesh = layer.mesh;
+      }
+
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+
+    }
+
+    if (this.renderContexts && this.renderContexts[0]) {
+      gl.bindTexture(gl.TEXTURE_2D, bbufTexture);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.bindTexture(this.renderContexts[0].TEXTURE_2D, null);
+    }
+
+    ex9Out.setValue(0, bbufTexture);
+    depthOut.setValue(0, depthTexture);
+
+
+    this.contextChanged = false;
+  }
+
+}
+VVVV.Nodes.RendererWebGL2.prototype = new Node();
+//VVVV.Nodes.RendererWebGL.requirements = ["floatExtension"];
+
+/*
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   NODE: FileSelection (WebGL Texture HTML5 Input)
+   Author(s): David Gann
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  */
+
+  VVVV.Nodes.FileSelection = function(id, graph) {
+    this.constructor(id, "FileSelection (WebGL Texture HTML5 Input)", graph);
+
+    //this.environments = ['nodejs'];
+
+    this.meta = {
+      authors: ['Matthias Zauner'],
+      original_authors: ['VVVV Group'],
+      credits: [],
+      compatibility_issues: []
+    };
+    
+    var parentIn = this.addInputPin("Parent Element", [], VVVV.PinTypes.HTMLLayer);
+    var CSS_ID_In = this.addInputPin('css id', ["file"], VVVV.PinTypes.String);
+    var updateIn = this.addInputPin('Update', [0], VVVV.PinTypes.Value);
+    var filenamePin = this.addInputPin("Filename", [""], VVVV.PinTypes.String);    
+    var outputPin = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
+    var WidthOut = this.addOutputPin("Width", [1], VVVV.PinTypes.Value);
+    var HeightOut = this.addOutputPin("Height", [1], VVVV.PinTypes.Value);
+    var shortFilenamesOut = this.addOutputPin('Short Filenames', [''], VVVV.PinTypes.String);
+
+    var textures = [];
+    var alignment = 1;
+    var targetElement;
+    var id;
+    var id_list;
+    var htmlLayer;     
+    var htmlLayer2;  
+    
+
+  
+  
+    function isPowerOf2(value) {
+  return (value & (value - 1)) == 0;
+}
+
+    this.evaluate = function() {
+        if (updateIn.getValue(0)>0.5) {
+        if (!this.renderContexts){ return;} 
+        var gl = this.renderContexts[0];
+        if (!gl){ return;} 
+        if (this.contextChanged) {
+            for (var i=0; i<textures.length; i++) {
+              textures[i].context.deleteTexture(textures[i]);
+            }
+            textures = [];
+
+            var texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+
+        // Fill the texture with a 1x1 blue pixel.
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,new Uint8Array([0, 0, 0, 255]));
+            
+         outputPin.setValue(0, texture); 
+        
+
+
+        var filename = VVVV.Helpers.prepareFilePath(filenamePin.getValue(i), this.parentPatch);
+        if (filename.indexOf('http://')===0 && VVVV.ImageProxyPrefix!==undefined)
+          filename = VVVV.ImageProxyPrefix+encodeURI(filename);
+        texture = gl.createTexture();
+        texture.context = gl;
+        var image = new Image();
+        image.src = filename;
+        image.onload = (function(j) {
+            return function() {  // this is to create a new scope within the loop. see "javascript closure in for loops" http://www.mennovanslooten.nl/blog/post/62
+              gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+              gl.bindTexture(gl.TEXTURE_2D, texture);
+              //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+              gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+              gl.generateMipmap(gl.TEXTURE_2D);
+              gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+              gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+              gl.bindTexture(gl.TEXTURE_2D, null);
+               outputPin.setValue(0, texture);
+                    }
+                 })(i);
+            
+         
+        
+                                 WidthOut.setValue(0, 1);
+                                 HeightOut.setValue(0, 1);
+                                 shortFilenamesOut.setValue(0, "empty");    
+          }  
+          
+    if (CSS_ID_In.pinIsChanged() || this.contextChanged ){
+          id = CSS_ID_In.getValue(0);
+      id_list = "list_" + CSS_ID_In.getValue(0);
+      htmlLayer = new VVVV.Types.HTMLLayer('input');
+      htmlLayer.setAttribute('id', id);
+      htmlLayer.setAttribute('type', 'file');
+      htmlLayer.setAttribute('name', 'files[]');
+      htmlLayer.setAttribute('multiple');
+      if (!targetElement) {
+        if (parentIn.isConnected() && parentIn.getValue(0))
+          targetElement = parentIn.getValue(0).element;
+        else
+          targetElement = 'body';
+      }
+      if($ != undefined){
+      $(targetElement).append(htmlLayer.element);
+       }
+      
+      htmlLayer2 = new VVVV.Types.HTMLLayer('output');
+      htmlLayer2.setAttribute('id', id_list);
+      $(targetElement).append(htmlLayer2.element);
+      
+    }    
+
+                // Create a texture.
+        
+     		var fileInput = document.getElementById(id);
+		//var fileDisplayArea = document.getElementById('body');
+		fileInput.addEventListener('change', function(e) {
+			var file = fileInput.files[0];
+			var imageType = /image.*/;
+
+			if (file.type.match(imageType)) {
+				var reader = new FileReader();
+
+				reader.onload = function(e) {
+					//fileDisplayArea.innerHTML = "";
+
+					var img = new Image();
+					img.src = reader.result;
+                                        img.addEventListener('load', function() {
+                                        // Now that the image has loaded make copy it to the texture.
+                                        gl.bindTexture(gl.TEXTURE_2D, texture);
+                                         
+                                        gl.texImage2D(gl.TEXTURE_2D,  0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, img);
+                                        
+                                        if (isPowerOf2(img.width) && isPowerOf2(img.height)) {
+                                            gl.generateMipmap(gl.TEXTURE_2D);
+                                        } else {
+                                            // No, it's not a power of 2. Turn off mips and set wrapping to clamp to edge
+                                            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                                            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                                            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                                         }
+                                        outputPin.setValue(0, texture);
+                                        WidthOut.setValue(0, img.width);
+                                        HeightOut.setValue(0, img.height);
+                                        shortFilenamesOut.setValue(0, file.name);
+                                      });
+					//fileDisplayArea.appendChild(img);
+				}
+				reader.readAsDataURL(file);	
+			} else {
+				
+			}
+		});
+
+}
+
+       
+      }
+    
+
+  }
+  VVVV.Nodes.FileSelection.prototype = new Node();
 
 });
 
