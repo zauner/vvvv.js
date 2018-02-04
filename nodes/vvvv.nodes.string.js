@@ -1082,4 +1082,51 @@ VVVV.Nodes.ReplaceString = function(id, graph) {
 }
 VVVV.Nodes.ReplaceString.prototype = new Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Unzip (String)
+ Author(s): David Gann
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.UnzipString = function(id, graph) {
+  this.constructor(id, "Unzip (String)", graph);
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+ var inputIn = this.addInputPin("Input", [''], VVVV.PinTypes.String);
+  var OutputCountIn = this.addInvisiblePin("Output Count", [1], VVVV.PinTypes.Value);
+
+  var outputOut = []
+
+  this.configure = function() {
+    var outputCount = Math.max(1, OutputCountIn.getValue(0));
+    VVVV.Helpers.dynamicPins(this, outputOut, outputCount, function(i) {
+      return this.addOutputPin('Output '+(i+1), ['text'], VVVV.PinTypes.String);
+    })
+  }
+
+  this.evaluate = function() {
+      var outputCount = OutputCountIn.getValue(0);
+    var maxSize = this.getMaxInputSliceCount();
+    var maxCount = Math.max(maxSize, outputCount);
+    var slicecount_value = [];
+    for (var i=0; i<maxCount; i++) {
+      outputOut[i%outputCount].setValue(Math.floor(i/outputCount), inputIn.getValue(i%maxSize));
+      slicecount_value[i%outputCount] = Math.floor(i/outputCount)+1;
+    }
+    for (var j=0; j<outputCount; j++) {
+    outputOut[j].setSliceCount( slicecount_value[j%slicecount_value.length]);
+    
+    }
+  }
+
+}
+VVVV.Nodes.UnzipString.prototype = new Node();
+
 });

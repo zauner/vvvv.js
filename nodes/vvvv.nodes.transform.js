@@ -8,7 +8,7 @@ if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node
 define(function(require,exports) {
 
 
-var glMatrix = require('glMatrix');
+var glMatrix = new require('glMatrix');
 var VVVV = require('core/vvvv.core.defines');
 var Node = require('core/vvvv.core.node');
 

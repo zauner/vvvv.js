@@ -11,6 +11,7 @@ define(function(require,exports) {
 var $ = require('jquery');
 var _ = require('underscore');
 var glMatrix = require('glMatrix');
+//var glMatrix2 = require('glMatrix2');
 var VVVV = require('core/vvvv.core.defines');
 var Node = require('core/vvvv.core.node');
 
@@ -4732,6 +4733,155 @@ VVVV.Nodes.RendererWebGL2.prototype = new Node();
 
   }
   VVVV.Nodes.FileSelection.prototype = new Node();
+  
+
+
+///*
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//   NODE: glTF Loader (glTF)
+//   Author(s): David Gann
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//  */
+
+  VVVV.Nodes.glTFLoader = function(id, graph) {
+    this.constructor(id, "glTF Loader (glTF Scene)", graph);
+
+    this.meta = {
+      authors: ['David Gann'],
+      original_authors: ['000.graphics'],
+      credits: [],
+      compatibility_issues: []
+    };
+    
+
+    var filenamePin = this.addInputPin("Filename", [""], VVVV.PinTypes.String);    
+    var Update= this.addInputPin('Update', [0], VVVV.PinTypes.Value);
+    
+   
+    var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
+    var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
+     
+    //Helper Function
+      Object.byString = function(o, s) {
+        s = s.replace(/\[(\w+)\]/g, '.$1'); // convert indexes to properties
+        s = s.replace(/^\./, '');           // strip a leading dot
+        var a = s.split('.');
+        for (var i = 0, n = a.length; i < n; ++i) {
+            var k = a[i];
+            if (k in o) {
+                o = o[k];
+            } else {
+                return;
+            }
+        }
+        return o;
+    }
+    
+    function isOne(currentValue) {
+  return currentValue >= 0.5;
+}
+     
+    var HasLoaded = [];
+   var prevFilenames = [];
+   var filename = [];
+   var path = [];
+   var xhr = [];
+   var buffer = [];
+    var BufferLoaded = [];
+    var xhr_buffer = [];
+   var glTF_array = [];
+   var uri = [];
+   var SceneElementArray = [];
+  var SuccessLoad = [];
+  var data = [];
+  
+
+  
+    this.evaluate = function() { 
+    if (!this.renderContexts){ return;} 
+        var gl = this.renderContexts[0];
+        if (!gl){ return;} 
+        
+       
+        
+        //import {vec3, vec4, quat, mat4} from 'gl-matrix';
+      var maxCount = filenamePin.getSliceCount();
+      for (var i=0; i<maxCount; i++) {
+          
+
+            if (prevFilenames[i] != filenamePin.getValue(i) | HasLoaded[i] == 0 | Update.getValue(i) == 1) {
+                filename[i] = VVVV.Helpers.prepareFilePath(filenamePin.getValue(i), this.parentPatch);
+                path[i] = filename[i].substring(0, filename[i].lastIndexOf("/"));
+                
+            (function(i) {
+              xhr[i] = new XMLHttpRequest();
+              xhr[i].open("GET", filename[i], true);
+              xhr[i].onreadystatechange = function() {
+                if (xhr[i].readyState === 4) {
+                    if (xhr[i].status === 200) {
+                        var glTF = {data: {}, buffer: []};
+                        glTF_array[i] = glTF;
+                        glTF_array[i].data = JSON.parse(xhr[i].responseText);
+                        Success.setValue(i,1);
+                        HasLoaded[i]=1;
+                        SuccessLoad[i] = 1;
+                    } else {
+                        console.log("Error loading glTF file", xhr[i].status);
+                        Success.setValue(i,0);
+                    }
+                }
+            };
+              xhr[i].send(null);
+           })(i);
+         }
+         else{Success.setValue(i,0);}
+         prevFilenames[i] = filenamePin.getValue(i);
+             
+        }   //end of inner for loop
+        
+        if (HasLoaded.every(isOne)){
+            console.log("loading buffers");
+            console.log(JSON.stringify(glTF_array[0].data));
+       //for each binary buffer parse buffer data
+            for (var k=0; k<maxCount; k++) {
+               for (var j=0; j<glTF_array[k].data.buffers.length; j++) {
+               uri[j] = path[k]+ "/" + glTF_array[k].data.buffers[j].uri;
+               //console.log (uri[j]);
+               //Load the Binary
+
+                   (function(j) {
+                   xhr_buffer[j] = new XMLHttpRequest();
+                   xhr_buffer[j].responseType = 'arraybuffer';
+                   xhr_buffer[j].open("GET", uri, true);
+                   xhr_buffer[j].onreadystatechange = function() {
+                      if (xhr_buffer[j].readyState === 4) {
+                         if (xhr_buffer[j].status === 200) {
+                         buffer[j] = xhr_buffer[j].response;
+
+                         //glTF_array[i].push(buffer[j]); /////////////////////
+
+                         BufferLoaded[j]=1; 
+                         console.log(buffer[0]);
+
+
+                         } else {
+                             console.log("could not load glTF binary.");
+                         }
+                      }
+                   };
+                   xhr_buffer[j].send(null);
+                })(j);
+
+                }  //end buffer loading 
+            } //End buffer loading iterator
+        }
+    }
+    
+
+  }
+  VVVV.Nodes.glTFLoader.prototype = new Node();
+//VVVV.Nodes.glTFLoader.requirements = ["glMatrix2"]
+
 
 });
 

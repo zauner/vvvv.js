@@ -40,10 +40,13 @@ varying vec3 v_Normal;
 #endif
 #endif
 
-
+varying vec3 NormView;
+varying vec3 PosV;
 
 void main()
 {
+  mat4 tWV = tV * tW;
+  mat4 tWVP = tP * tWV;
   vec4 pos = tW * a_Position;
   v_Position = vec3(pos.xyz) / pos.w;
 
@@ -55,16 +58,17 @@ void main()
   v_TBN = mat3(tangentW, bitangentW, normalW);
   #else // HAS_TANGENTS != 1
   v_Normal = normalize(vec3(tW * vec4(a_Normal.xyz, 0.0)));
+  
   #endif
   #endif
-
+  PosV = vec3(tWV * vec4(a_Position.xyz, 1.0));
+  NormView = normalize(vec3(tWV * vec4(a_Normal.xyz, 0.0))).xyz;
   #ifdef HAS_UV
   v_UV = a_UV;
   #else
   v_UV = vec2(0.,0.);
   #endif
-  mat4 tWV = tV * tW;
-  mat4 tWVP = tP * tWV;
+
   
   gl_Position = tWVP * a_Position; // needs w for proper perspective correction
 }
@@ -80,8 +84,11 @@ fragment_shader:
 #define HAS_BASECOLORMAP
 #define HAS_NORMALMAP
 #define HAS_METALROUGHNESSMAP
-#define HAS_OCCLUSIONMAP 0;
-#define MANUAL_SRGB 1;
+#define HAS_OCCLUSIONMAP
+#define MANUAL_SRGB
+#define HAS_METALNESS_SINGLECHANNEL
+#define USE_DERIVATIVE_MAP
+//#define USE_POM_SIHLOUETTE
 //#define SRGB_FAST_APPROXIMATION 1 ;
 //#define USE_TEX_LOD 0;
 
@@ -129,8 +136,11 @@ uniform vec3 u_EmissiveFactor;
 #endif
 #ifdef HAS_METALROUGHNESSMAP
 uniform sampler2D u_MetallicRoughnessSampler;
+#endif
+#ifdef HAS_METALNESS_SINGLECHANNEL
 uniform sampler2D u_Metallic;
 #endif
+
 #ifdef HAS_OCCLUSIONMAP
 uniform sampler2D u_OcclusionSampler;
 uniform float u_OcclusionStrength;
@@ -146,6 +156,12 @@ uniform vec4 u_ScaleDiffBaseMR;
 uniform vec4 u_ScaleFGDSpec;
 uniform vec4 u_ScaleIBLAmbient;
 
+uniform float parallaxHeight = 0.1;
+uniform float parallaxSampleCount = 8.0;
+uniform float occlusion = 0.3;
+
+uniform float exposure = 0.0;
+
 varying vec3 v_Position;
 
 varying vec2 v_UV;
@@ -157,6 +173,9 @@ varying mat3 v_TBN;
 varying vec3 v_Normal;
 #endif
 #endif
+
+varying vec3 NormView;
+varying vec3 PosV;
 
 // Encapsulate the various inputs used by the various functions in the shading equation
 // We store values in this struct to simplify the integration of alternative implementations
@@ -194,7 +213,7 @@ vec3 getNormal()
     vec3 t = (tex_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx.t);
 
 #ifdef HAS_NORMALS
-    vec3 ng = normalize(v_Normal);
+    vec3 ng = v_Normal;
 #else
     vec3 ng = cross(pos_dx, pos_dy);
 #endif
@@ -293,8 +312,149 @@ float microfacetDistribution(PBRInfo pbrInputs)
     return roughnessSq / (M_PI * f * f);
 }
 
-void main()
+//Derivative Mapping
+float ApplyChainRule( float dhdu, float dhdv, float dud_, float dvd_ )
 {
+    return dhdu * dud_ + dhdv * dvd_;
+}
+ 
+vec3 SurfaceGradient( vec3 n, vec3 dpdx, vec3 dpdy, float dhdx, float dhdy )
+{
+    vec3 r1 = cross( dpdy, n );
+    vec3 r2 = cross( n, dpdx );
+    float det = dot( dpdx, r1 );
+  
+    return ( r1 * dhdx + r2 * dhdy ) / det;
+}
+
+
+vec3 ParallaxDirection( vec3 v, vec3 n, vec3 dpdx, vec3 dpdy, vec2 duvdx, vec2 duvdy )
+{
+    vec3 r1 = cross( dpdy, n );
+    vec3 r2 = cross( n, dpdx );
+    float det = dot( dpdx, r1 );
+  
+    vec2 vscr = vec2( dot( r1, v ), dot( r2, v ) ) / det;
+    vec3 vtex;
+    vtex.z  = dot( n, v ) / parallaxHeight;
+    //vtex.z  = dot( n, v );
+    vtex.xy = duvdx * vscr.x + duvdy * vscr.y;
+     
+    return vtex;
+}
+
+vec3 ParallaxDerivative( vec3 wsViewDir, vec3 wsNormal, vec3 dpdx, vec3 dpdy, vec2 duvdx, vec2 duvdy, vec2 uv )
+		{
+			vec3 tsPDir = ParallaxDirection( wsViewDir, wsNormal, dpdx, dpdy, duvdx, duvdy );
+			 
+			// The length of this vector determines the furthest amount of displacement:
+			float fLength = length( tsPDir );
+			fLength = sqrt( fLength * fLength - tsPDir.z * tsPDir.z ) / tsPDir.z; 
+			 
+			// Compute the maximum reverse parallax displacement vector:
+			vec2 maxParallaxOffset = normalize( tsPDir.xy ) * fLength;
+			 
+			// Scale the maximum amount of displacement by the artist-editable parameter: parallaxHeight
+			maxParallaxOffset *= parallaxHeight;
+			 
+			int numSteps = int( mix( parallaxSampleCount * 8.0, parallaxSampleCount, clamp( dot( wsViewDir, wsNormal ), 0.0, 1.0 ) ) );
+			float stepSize = 1.0 / float( numSteps );
+			float currHeight = 0.0;
+			float prevHeight = 1.0;
+			float currBound  = 1.0;
+			 
+			vec2 offsetPerStep = stepSize * maxParallaxOffset;
+			vec2 currOffset = uv;
+			 
+			vec2 pt1;
+			vec2 pt2;
+			 
+			for ( int it = 0; it < 512; ++it )
+			{
+				if ( it >= numSteps )
+					break;
+		 
+				currOffset -= offsetPerStep;
+				 
+				currHeight = texture2D( u_HeightMap, currOffset ).b;
+				 
+				currBound -= stepSize;
+				 
+				if ( currHeight > currBound ) 
+				{
+					pt1 = vec2( currBound, currHeight );
+					pt2 = vec2( currBound + stepSize, prevHeight );
+		 
+					break;
+				}
+				 
+				prevHeight = currHeight;
+			}
+			 
+			// compute the parallaxAmount using line intersection
+			float parallaxAmount = 0.0;
+			 
+			float delta2 = pt2.x - pt2.y;
+			float delta1 = pt1.x - pt1.y;
+		 
+			float denominator = delta2 - delta1;
+		 
+			if ( denominator != 0.0 )
+				parallaxAmount = ( pt1.x * delta2 - pt2.x * delta1 ) / denominator;
+			 
+			uv = uv - maxParallaxOffset * ( 1.0 - parallaxAmount );
+			 
+#ifdef USE_POM_SIHLOUETTE
+				float tile = 1.0;
+				float clipMax = tile;
+				float clipMin = 0.0;
+				 
+				if ( uv.x >= clipMax || uv.y >= clipMax
+				  || uv.x <= clipMin || uv.y <= clipMin )
+				{
+					discard;
+				}
+#endif
+			 
+			float ao = 1.0 - occlusion;
+			ao = 1.0 - ao * ao;
+			ao = mix( 1.0, max( 0.0, currBound ), ao );
+			
+			return vec3(uv.x,uv.y,ao);
+		}
+		
+
+void main()
+{		
+
+		vec2 uv = v_UV;
+		vec3 v = normalize(u_Camera - v_Position);        // Vector from surface point to camera
+		vec3 view_dir = normalize(vec3(0.0,0.0,0.0) - PosV);        // Vector from surface point to camera
+#ifdef USE_DERIVATIVE_MAP
+		//vec3 CamPos = vec3(0.0,0.0,0.0);
+		//vec3 wsViewDir = normalize( CamPos - v_Position.xyz );
+		vec3 wsNormal = normalize( NormView );
+		 
+		vec3 dpdx = dFdx( PosV.xyz );
+		vec3 dpdy = dFdy( PosV.xyz );
+	 
+		
+		vec2 duvdx = dFdx( uv );
+		vec2 duvdy = dFdy( uv );
+	 
+		vec3 Parallax_UV_AO = ParallaxDerivative( view_dir, wsNormal, dpdx, dpdy, duvdx, duvdy, uv );
+		uv = Parallax_UV_AO.xy;
+		float ao_POM = Parallax_UV_AO.z;
+		
+		vec2 dhduv = texture2D( u_HeightMap, uv ).rg;
+		dhduv = ( dhduv * 2.0 - 1.0 ) * u_NormalScale;
+		 
+		float dhdx = ApplyChainRule( dhduv.x, dhduv.y, duvdx.x, duvdx.y );
+		float dhdy = ApplyChainRule( dhduv.x, dhduv.y, duvdy.x, duvdy.y );
+		 
+		vec3 derivative_normal = normalize( wsNormal - SurfaceGradient( wsNormal, dpdx, dpdy, dhdx, dhdy ) );
+#endif		
+	
     // Metallic and Roughness material properties are packed together
     // In glTF, these factors can be specified by fixed scalar values
     // or from a metallic-roughness map
@@ -303,9 +463,13 @@ void main()
 #ifdef HAS_METALROUGHNESSMAP
     // Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel.
     // This layout intentionally reserves the 'r' channel for (optional) occlusion map data
-    vec4 mrSample = texture2D(u_MetallicRoughnessSampler, v_UV);
+    vec4 mrSample = texture2D(u_MetallicRoughnessSampler, uv);
     perceptualRoughness = mrSample.g * perceptualRoughness;
-    metallic = mrSample.b * metallic;
+#ifdef HAS_METALNESS_SINGLECHANNEL
+    metallic = texture2D(u_Metallic, uv).g * metallic;
+#else
+	metallic = mrSample.b * metallic;
+#endif	
 #endif
     perceptualRoughness = clamp(perceptualRoughness, c_MinRoughness, 1.0);
     metallic = clamp(metallic, 0.0, 1.0);
@@ -315,7 +479,7 @@ void main()
 
     // The albedo may be defined from a base texture or a flat color
 #ifdef HAS_BASECOLORMAP
-    vec4 baseColor = SRGBtoLINEAR(texture2D(u_BaseColorSampler, v_UV)) * u_BaseColorFactor;
+    vec4 baseColor = SRGBtoLINEAR(texture2D(u_BaseColorSampler, uv)) * u_BaseColorFactor;
 #else
     vec4 baseColor = u_BaseColorFactor;
 #endif
@@ -334,8 +498,11 @@ void main()
     vec3 specularEnvironmentR0 = specularColor.rgb;
     vec3 specularEnvironmentR90 = vec3(1.0, 1.0, 1.0) * reflectance90;
 
+#ifdef USE_DERIVATIVE_MAP
+	vec3 n = derivative_normal ;
+#else
     vec3 n = getNormal();                             // normal at surface point
-    vec3 v = normalize(u_Camera - v_Position);        // Vector from surface point to camera
+#endif    
     vec3 l = normalize(u_LightDirection);             // Vector from surface point to light
     vec3 h = normalize(l+v);                          // Half vector between both l and v
     vec3 reflection = -normalize(reflect(v, n));
@@ -378,12 +545,12 @@ void main()
 
     // Apply optional PBR terms for additional (optional) shading
 #ifdef HAS_OCCLUSIONMAP
-    float ao = texture2D(u_OcclusionSampler, v_UV).r;
+    float ao = texture2D(u_OcclusionSampler, uv).r;
     color = mix(color, color * ao, u_OcclusionStrength);
 #endif
 
 #ifdef HAS_EMISSIVEMAP
-    vec3 emissive = SRGBtoLINEAR(texture2D(u_EmissiveSampler, v_UV)).rgb * u_EmissiveFactor;
+    vec3 emissive = SRGBtoLINEAR(texture2D(u_EmissiveSampler, uv)).rgb * u_EmissiveFactor;
     color += emissive;
 #endif
 
@@ -398,6 +565,6 @@ void main()
     color = mix(color, baseColor.rgb, u_ScaleDiffBaseMR.y);
     color = mix(color, vec3(metallic), u_ScaleDiffBaseMR.z);
     color = mix(color, vec3(perceptualRoughness), u_ScaleDiffBaseMR.w);
-
+	color *= pow(2.0, exposure);
     gl_FragColor = vec4(pow(color,vec3(1.0/2.2)), baseColor.a);
 }
