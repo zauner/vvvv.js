@@ -283,4 +283,19 @@ VVVV.PinTypes.SceneBuffer = {
   }
 }
 
+VVVV.Types.glTF = function() {
+  this.data = {};
+  this.buffer = {};
+}
+
+var default_glTF = new VVVV.Types.glTF();
+
+VVVV.PinTypes.glTF = {
+  typeName: "glTF",
+  reset_on_disconnect: true,
+  defaultValue: function() {
+    return default_glTF
+  }
+}
+
 });

@@ -11,7 +11,6 @@ define(function(require,exports) {
 var $ = require('jquery');
 var _ = require('underscore');
 var glMatrix = require('glMatrix');
-//var glMatrix2 = require('glMatrix2');
 var VVVV = require('core/vvvv.core.defines');
 var Node = require('core/vvvv.core.node');
 
@@ -162,7 +161,7 @@ VVVV.Types.WebGlRenderState = function() {
  * @param {WebGlContext} gl the WebGL context
  * @param {Array} p an array of vertex positions
  */
-VVVV.Types.VertexBuffer = function(gl, p) {
+VVVV.Types.VertexBuffer = function(gl) {
 
   /** the WebGL Vertex Buffer Object */
   this.vbo = undefined;
@@ -1085,7 +1084,7 @@ VVVV.Nodes.VertexBufferJoin = function(id, graph) {
       }
       positions.length = texCoords0.length = normals.length = n;
       if (!vertexBuffer) {
-        vertexBuffer = new VVVV.Types.VertexBuffer(gl, positions);
+        vertexBuffer = new VVVV.Types.VertexBuffer(gl);
         vertexBuffer.create();
       }
       vertexBuffer.setSubBuffer('POSITION', 3, positions);
@@ -1217,7 +1216,7 @@ VVVV.Nodes.Grid = function(id, graph) {
       }
     }
 
-    var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+    var vertexBuffer = new VVVV.Types.VertexBuffer(gl);
     vertexBuffer.create();
     vertexBuffer.setSubBuffer('POSITION', 3, vertices);
     vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
@@ -1286,7 +1285,7 @@ VVVV.Nodes.Box = function(id, graph) {
     var texCoords = [1.0,1.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0,0.0,1.0,0.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0,1.0,1.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0];
     var indices = [0,1,2,2,3,0,4,5,6,6,7,4,8,9,10,10,11,8,12,13,14,14,15,12,16,17,18,18,19,16,20,21,22,22,23,20];
 
-    var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+    var vertexBuffer = new VVVV.Types.VertexBuffer(gl);
     vertexBuffer.create();
     vertexBuffer.setSubBuffer('POSITION', 3, vertices);
     vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
@@ -1363,7 +1362,7 @@ VVVV.Nodes.Sphere = function(id, graph) {
       }
     }
 
-    var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+    var vertexBuffer = new VVVV.Types.VertexBuffer(gl);
     vertexBuffer.create();
     vertexBuffer.setSubBuffer('POSITION', 3, vertices);
     vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
@@ -1490,7 +1489,7 @@ VVVV.Nodes.Cylinder = function(id, graph) {
       }
     }
 
-    var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+    var vertexBuffer = new VVVV.Types.VertexBuffer(gl);
     vertexBuffer.create();
     vertexBuffer.setSubBuffer('POSITION', 3, vertices);
     vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
@@ -2221,7 +2220,7 @@ VVVV.Nodes.Quad = function(id, graph) {
         0.0, 1.0
       ];
 
-      var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+      var vertexBuffer = new VVVV.Types.VertexBuffer(gl);
       vertexBuffer.create();
       vertexBuffer.setSubBuffer('POSITION', 3, vertices);
       vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
@@ -2427,7 +2426,7 @@ VVVV.Nodes.GridSegment = function(id, graph) {
         }
       }
 
-      var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+      var vertexBuffer = new VVVV.Types.VertexBuffer(gl);
       vertexBuffer.create();
       vertexBuffer.setSubBuffer('POSITION', 3, vertices);
       vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
@@ -3398,7 +3397,7 @@ VVVV.Nodes.GeometryFile = function(id, graph) {
                             var PosTyped = new Float32Array(posMapped);
                             var normalData = generateNormals(PosTyped, 3, 0, positionData.length/3, indexData);
                             
-                            vertexBuffer = new VVVV.Types.VertexBuffer(gl, posMapped);
+                            vertexBuffer = new VVVV.Types.VertexBuffer(gl);
                             vertexBuffer.create();
                             vertexBuffer.setSubBuffer('POSITION', 3, posMapped);
                             vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords0);
@@ -3424,7 +3423,7 @@ VVVV.Nodes.GeometryFile = function(id, graph) {
                                 //console.log('geometry has vertex color');
                             }
                             
-                            vertexBuffer = new VVVV.Types.VertexBuffer(gl, posMapped);
+                            vertexBuffer = new VVVV.Types.VertexBuffer(gl);
                             vertexBuffer.create();
                             vertexBuffer.setSubBuffer('POSITION', 3, posMapped);
                             vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords0);
@@ -3735,7 +3734,7 @@ VVVV.Nodes.HeightMap = function(id, graph) {
             var normalData = generateNormals(PosTyped, 3, 0, vertices.length/3, indices);
             
             
-            var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+            var vertexBuffer = new VVVV.Types.VertexBuffer(gl);
             vertexBuffer.create();
             vertexBuffer.setSubBuffer('POSITION', 3, vertices);
             vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
@@ -3834,7 +3833,7 @@ VVVV.Nodes.Primitives = function(id, graph) {
       ];
   }
     
-    var vertexBuffer = new VVVV.Types.VertexBuffer(gl, vertices);
+    var vertexBuffer = new VVVV.Types.VertexBuffer(gl);
     vertexBuffer.create();
     vertexBuffer.setSubBuffer('POSITION', 3, vertices);
     vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
@@ -4753,134 +4752,232 @@ VVVV.Nodes.RendererWebGL2.prototype = new Node();
       compatibility_issues: []
     };
     
-
+    //input
     var filenamePin = this.addInputPin("Filename", [""], VVVV.PinTypes.String);    
     var Update= this.addInputPin('Update', [0], VVVV.PinTypes.Value);
-    
-   
-    var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
+    //output
+    var glTF_Out = this.addOutputPin("glTF", [], VVVV.PinTypes.glTF);
     var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
-     
-    //Helper Function
-      Object.byString = function(o, s) {
-        s = s.replace(/\[(\w+)\]/g, '.$1'); // convert indexes to properties
-        s = s.replace(/^\./, '');           // strip a leading dot
-        var a = s.split('.');
-        for (var i = 0, n = a.length; i < n; ++i) {
-            var k = a[i];
-            if (k in o) {
-                o = o[k];
-            } else {
-                return;
-            }
-        }
-        return o;
-    }
-    
-    function isOne(currentValue) {
-  return currentValue >= 0.5;
-}
-     
-    var HasLoaded = [];
+      
    var prevFilenames = [];
    var filename = [];
-   var path = [];
-   var xhr = [];
-   var buffer = [];
-    var BufferLoaded = [];
-    var xhr_buffer = [];
    var glTF_array = [];
-   var uri = [];
-   var SceneElementArray = [];
-  var SuccessLoad = [];
-  var data = [];
-  
+   
+//callback functions for subsequent async loading of JSON and binary buffers
+function loadFile(url, timeout, callback) {
+    var args = Array.prototype.slice.call(arguments, 3);
+    var xhr = new XMLHttpRequest();
+    xhr.ontimeout = function () {
+        console.error("The request for " + url + " timed out.");
+    };
+    xhr.onload = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                callback.apply(xhr, args);
+            } else {
+                console.error(xhr.statusText);
+            }
+        }
+    };
+    xhr.open("GET", url, true);
+    xhr.timeout = timeout;
+    xhr.send(null);
+}
+function loadBuffer(url, timeout, callback) {
+    var args = Array.prototype.slice.call(arguments, 3);
+    var xhr = new XMLHttpRequest();
+    xhr.responseType = 'arraybuffer';
+    xhr.ontimeout = function () {
+        console.error("The request for " + url + " timed out.");
+    };
+    xhr.onload = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                callback.apply(xhr, args);
+            } else {
+                console.error(xhr.statusText);
+            }
+        }
+    };
+    xhr.open("GET", url, true);
+    xhr.timeout = timeout;
+    xhr.send(null);
+}
 
+function attachBuffer(glTF, i) {
+    glTF.buffer.push(this.response);
+    //Write to the Pin
+    glTF_Out.setValue(i, glTF);
+}
   
+function attachJSON(glTF, i, filename) {
+    glTF.data = JSON.parse(this.responseText);
+    path = filename.substring(0, filename.lastIndexOf("/"));
+    glTF.data.buffers.forEach(function(element) { //not yet tested against multiple buffers in glTF file
+         uri = path + "/" + element.uri;
+          loadBuffer(uri, 2000, attachBuffer, glTF, i);
+         
+    }); 
+}
+
     this.evaluate = function() { 
-    if (!this.renderContexts){ return;} 
-        var gl = this.renderContexts[0];
-        if (!gl){ return;} 
-        
-       
-        
+    //if (!this.renderContexts){ return;} 
+    //var gl = this.renderContexts[0];
+    //if (!gl){ return;} 
+
         //import {vec3, vec4, quat, mat4} from 'gl-matrix';
-      var maxCount = filenamePin.getSliceCount();
-      for (var i=0; i<maxCount; i++) {
+    var maxCount = filenamePin.getSliceCount();
+        for (var i=0; i<maxCount; i++) {
           
 
-            if (prevFilenames[i] != filenamePin.getValue(i) | HasLoaded[i] == 0 | Update.getValue(i) == 1) {
+            if (prevFilenames[i] != filenamePin.getValue(i)  | Update.getValue(i) == 1) {
                 filename[i] = VVVV.Helpers.prepareFilePath(filenamePin.getValue(i), this.parentPatch);
-                path[i] = filename[i].substring(0, filename[i].lastIndexOf("/"));
-                
-            (function(i) {
-              xhr[i] = new XMLHttpRequest();
-              xhr[i].open("GET", filename[i], true);
-              xhr[i].onreadystatechange = function() {
-                if (xhr[i].readyState === 4) {
-                    if (xhr[i].status === 200) {
-                        var glTF = {data: {}, buffer: []};
-                        glTF_array[i] = glTF;
-                        glTF_array[i].data = JSON.parse(xhr[i].responseText);
-                        Success.setValue(i,1);
-                        HasLoaded[i]=1;
-                        SuccessLoad[i] = 1;
-                    } else {
-                        console.log("Error loading glTF file", xhr[i].status);
-                        Success.setValue(i,0);
-                    }
-                }
-            };
-              xhr[i].send(null);
-           })(i);
-         }
-         else{Success.setValue(i,0);}
-         prevFilenames[i] = filenamePin.getValue(i);
-             
-        }   //end of inner for loop
-        
-        if (HasLoaded.every(isOne)){
-            console.log("loading buffers");
-            console.log(JSON.stringify(glTF_array[0].data));
-       //for each binary buffer parse buffer data
-            for (var k=0; k<maxCount; k++) {
-               for (var j=0; j<glTF_array[k].data.buffers.length; j++) {
-               uri[j] = path[k]+ "/" + glTF_array[k].data.buffers[j].uri;
-               //console.log (uri[j]);
-               //Load the Binary
+               var glTF = {data: {}, buffer: []};
+                        glTF_array[i] = glTF;             
+                (function(i) {        
+                loadFile(filename[i], 2000, attachJSON, glTF_array[i], i, filename[i]);   
+                })(i);
 
-                   (function(j) {
-                   xhr_buffer[j] = new XMLHttpRequest();
-                   xhr_buffer[j].responseType = 'arraybuffer';
-                   xhr_buffer[j].open("GET", uri, true);
-                   xhr_buffer[j].onreadystatechange = function() {
-                      if (xhr_buffer[j].readyState === 4) {
-                         if (xhr_buffer[j].status === 200) {
-                         buffer[j] = xhr_buffer[j].response;
-
-                         //glTF_array[i].push(buffer[j]); /////////////////////
-
-                         BufferLoaded[j]=1; 
-                         console.log(buffer[0]);
-
-
-                         } else {
-                             console.log("could not load glTF binary.");
-                         }
-                      }
-                   };
-                   xhr_buffer[j].send(null);
-                })(j);
-
-                }  //end buffer loading 
-            } //End buffer loading iterator
-        }
+                prevFilenames[i] = filenamePin.getValue(i);
+            }
+        } 
+        glTF_Out.setSliceCount(maxCount);
     }
-    
+}
+VVVV.Nodes.glTFLoader.prototype = new Node();
 
-  }
-  VVVV.Nodes.glTFLoader.prototype = new Node();
-//VVVV.Nodes.glTFLoader.requirements = ["glMatrix2"]
+
+///*
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//   NODE: Geometry (glTF)
+//   Author(s): David Gann
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//  */
+
+  VVVV.Nodes.GeometryGLTF = function(id, graph) {
+    this.constructor(id, "Geometry (glTF)", graph);
+
+    this.meta = {
+      authors: ['David Gann'],
+      original_authors: ['000.graphics'],
+      credits: [],
+      compatibility_issues: []
+    };
+    
+    //input
+    var glTF_In = this.addInputPin("glTF", [], VVVV.PinTypes.glTF);   
+    var Update= this.addInputPin('Update', [0], VVVV.PinTypes.Value);
+    //output
+    var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
+    var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
+
+function _arrayBuffer2TypedArray(buffer, byteOffset, countOfComponentType, componentType) {
+    switch(componentType) {
+        // @todo: finish
+        case 5122: return new Int16Array(buffer, byteOffset, countOfComponentType);
+        case 5123: return new Uint16Array(buffer, byteOffset, countOfComponentType);
+        case 5124: return new Int32Array(buffer, byteOffset, countOfComponentType);
+        case 5125: return new Uint32Array(buffer, byteOffset, countOfComponentType);
+        case 5126: return new Float32Array(buffer, byteOffset, countOfComponentType);
+        default: return null; 
+    }
+}    
+function accessor(glTF, accessor_index){
+    var bufferView_index = glTF.data.accessors[accessor_index].bufferView;
+    var byteOffset = glTF.data.accessors[accessor_index].byteOffset + glTF.data.bufferViews[bufferView_index].byteOffset; 
+    var componentType = glTF.data.accessors[accessor_index].componentType;
+    var ComponentType_count = glTF.data.accessors[accessor_index].count;
+    //get the typed array
+    var typedArray = _arrayBuffer2TypedArray(glTF.buffer[glTF.data.bufferViews[bufferView_index].buffer], byteOffset, ComponentType_count, componentType);
+    return typedArray;
+}
+
+function type(glTF, accessor_index){
+    var vec_type = glTF.data.accessors[accessor_index].type;
+    if (vec_type = "VEC4"){return 4}
+    else{return 3}
+}
+ 
+var mesh_array = []; 
+ 
+function loadMesh(gl,meshes, glTF) {
+    meshes.primitives.forEach(function(element) { //not yet tested against multiple buffers in glTF file
+        var mesh = null;
+        vertexBuffer = new VVVV.Types.VertexBuffer(gl);
+        vertexBuffer.create();
+                            
+        if ("POSITION" in element.attributes) {
+            var posTyped = accessor(glTF, element.attributes.POSITION);
+            vertexBuffer.setSubBufferTyped('POSITION', 3, posTyped);
+        }
+        if ("NORMAL" in element.attributes) {
+            var normalTyped = accessor(glTF, element.attributes.NORMAL);
+            vertexBuffer.setSubBufferTyped('NORMAL', 3, normalTyped);
+        }
+        if ("TANGENT" in element.attributes) {
+            var tangentTyped =  accessor(glTF, element.attributes.TANGENT);
+            vertexBuffer.setSubBufferTyped('TANGENT', 4, tangentTyped);
+        }
+        if ("TEXCOORD_0" in element.attributes) {
+            var texcoord0Typed = accessor(glTF, element.attributes.TEXCOORD_0);
+            vertexBuffer.setSubBufferTyped('TEXCOORD_0', 2, texcoord0Typed);
+        }
+        if ("TEXCOORD_1" in element.attributes) {
+            var texcoord1Typed = accessor(glTF, element.attributes.TEXCOORD_1);
+            vertexBuffer.setSubBufferTyped('TEXCOORD_1', 2, texcoord1Typed);
+        }
+        if ("COLOR_0" in element.attributes) {
+            var color0Typed = accessor(glTF, element.attributes.COLOR_0);
+            vertexBuffer.setSubBufferTyped('COLOR_0', type(glTF, element.attributes.C), color0Typed); //COLOR_0 can be either vec3 or vec4
+        }
+        if ("JOINTS_0" in element.attributes) {
+            var joints0Typed = accessor(glTF, element.attributes.JOINTS_0);
+            vertexBuffer.setSubBufferTyped('JOINTS_0', 3, joints0Typed);
+        }
+        if ("WEIGHTS_0" in element.attributes) {
+            var weights0Typed = accessor(glTF, element.attributes.WIGHTS_0);
+            vertexBuffer.setSubBufferTyped('WEIGHTS_0', 3, weights0Typed);
+        }
+        var indices = accessor(glTF, element.indices);
+        vertexBuffer.update();
+
+        mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
+        //mesh.update(indices);
+        //mesh_array.push(mesh);
+        meshOut.setValue(0, mesh);
+        //console.log(mesh);
+        
+    }); 
+}
+
+    this.evaluate = function() { 
+    if (!this.renderContexts){ return;} 
+    var gl = this.renderContexts[0];
+    if (!gl){ return;} 
+
+        //import {vec3, vec4, quat, mat4} from 'gl-matrix';
+    var maxCount = glTF_In.getSliceCount();
+        for (var i=0; i<maxCount; i++) {
+            if ( glTF_In.pinIsChanged() | Update.getValue(i) == 1) {
+            var glTF = glTF_In.getValue(i);  
+            
+            glTF.data.meshes.forEach(function(element) { //not yet tested against multiple buffers in glTF file
+            loadMesh(gl,element, glTF);
+            }); 
+            
+            }
+        } 
+        console.log(mesh_array);
+//        for (var j=0; j<mesh_array.length; j++) {
+//        meshOut.setValue(j, mesh_array[j]);
+//        //console.log(mesh);
+//        }
+        meshOut.setSliceCount(mesh_array.length);
+        Success.setSliceCount(mesh_array.length);
+    }
+}
+VVVV.Nodes.GeometryGLTF.prototype = new Node();
+
 
 
 });
