@@ -1,7 +1,7 @@
 vertex_shader:
 #define HAS_NORMALS
 #define HAS_UV
-
+#define HAS_TANGENTS
 #ifdef GL_ES
 precision highp float;
 #endif
@@ -20,7 +20,7 @@ attribute vec4 a_Position : POSITION;
 attribute vec4 a_Normal : NORMAL;
 #endif
 #ifdef HAS_TANGENTS
-attribute vec4 a_Tangent;
+attribute vec4 a_Tangent : TANGENT;
 #endif
 #ifdef HAS_UV
 attribute vec2 a_UV : TEXCOORD0;
@@ -52,8 +52,8 @@ void main()
 
   #ifdef HAS_NORMALS
   #ifdef HAS_TANGENTS
-  vec3 normalW = normalize(vec3(u_ModelMatrix * vec4(a_Normal.xyz, 0.0)));
-  vec3 tangentW = normalize(vec3(u_ModelMatrix * vec4(a_Tangent.xyz, 0.0)));
+  vec3 normalW = normalize(vec3(tW * vec4(a_Normal.xyz, 0.0)));
+  vec3 tangentW = normalize(vec3(tW * vec4(a_Tangent.xyz, 0.0)));
   vec3 bitangentW = cross(normalW, tangentW) * a_Tangent.w;
   v_TBN = mat3(tangentW, bitangentW, normalW);
   #else // HAS_TANGENTS != 1
@@ -88,6 +88,7 @@ fragment_shader:
 #define MANUAL_SRGB
 #define HAS_METALNESS_SINGLECHANNEL
 #define USE_DERIVATIVE_MAP
+#define HAS_TANGENTS
 //#define USE_POM_SIHLOUETTE
 //#define SRGB_FAST_APPROXIMATION 1 ;
 //#define USE_TEX_LOD 0;
@@ -343,6 +344,7 @@ vec3 ParallaxDirection( vec3 v, vec3 n, vec3 dpdx, vec3 dpdy, vec2 duvdx, vec2 d
     return vtex;
 }
 
+#ifdef USE_DERIVATIVE_MAP
 vec3 ParallaxDerivative( vec3 wsViewDir, vec3 wsNormal, vec3 dpdx, vec3 dpdy, vec2 duvdx, vec2 duvdy, vec2 uv )
 		{
 			vec3 tsPDir = ParallaxDirection( wsViewDir, wsNormal, dpdx, dpdy, duvdx, duvdy );
@@ -422,7 +424,7 @@ vec3 ParallaxDerivative( vec3 wsViewDir, vec3 wsNormal, vec3 dpdx, vec3 dpdy, ve
 			
 			return vec3(uv.x,uv.y,ao);
 		}
-		
+#endif		
 
 void main()
 {		

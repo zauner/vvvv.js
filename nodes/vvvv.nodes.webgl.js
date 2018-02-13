@@ -4882,71 +4882,92 @@ function _arrayBuffer2TypedArray(buffer, byteOffset, countOfComponentType, compo
         default: return null; 
     }
 }    
-function accessor(glTF, accessor_index){
+
+var Type2NumOfComponent = {
+    'SCALAR': 1,
+    'VEC2': 2,
+    'VEC3': 3,
+    'VEC4': 4,
+    'MAT2': 4,
+    'MAT3': 9,
+    'MAT4': 16
+};
+
+function Type2Num(glTF, accessor_index){
+    var vec_type = glTF.data.accessors[accessor_index].type;
+    return Type2NumOfComponent[vec_type];
+}
+
+function accessor(glTF, accessor_index, type){
     var bufferView_index = glTF.data.accessors[accessor_index].bufferView;
     var byteOffset = glTF.data.accessors[accessor_index].byteOffset + glTF.data.bufferViews[bufferView_index].byteOffset; 
     var componentType = glTF.data.accessors[accessor_index].componentType;
     var ComponentType_count = glTF.data.accessors[accessor_index].count;
+    //var type = glTF.data.accessors[accessor_index].type;
+    //var type_count = type(glTF, glTF.data.accessors[accessor_index].type)
     //get the typed array
-    var typedArray = _arrayBuffer2TypedArray(glTF.buffer[glTF.data.bufferViews[bufferView_index].buffer], byteOffset, ComponentType_count, componentType);
+    var typedArray = _arrayBuffer2TypedArray(glTF.buffer[glTF.data.bufferViews[bufferView_index].buffer], byteOffset,  type * ComponentType_count, componentType);
     return typedArray;
 }
 
-function type(glTF, accessor_index){
-    var vec_type = glTF.data.accessors[accessor_index].type;
-    if (vec_type = "VEC4"){return 4}
-    else{return 3}
-}
- 
-var mesh_array = []; 
- 
-function loadMesh(gl,meshes, glTF) {
+
+
+function loadMesh(gl,meshes, glTF, output_index) {
+    var iterator = 0;
     meshes.primitives.forEach(function(element) { //not yet tested against multiple buffers in glTF file
         var mesh = null;
         vertexBuffer = new VVVV.Types.VertexBuffer(gl);
-        vertexBuffer.create();
-                            
+        vertexBuffer.create();                  
         if ("POSITION" in element.attributes) {
-            var posTyped = accessor(glTF, element.attributes.POSITION);
-            vertexBuffer.setSubBufferTyped('POSITION', 3, posTyped);
+            var type = Type2Num(glTF, element.attributes.POSITION);
+            var posTyped = accessor(glTF, element.attributes.POSITION, type);
+            vertexBuffer.setSubBufferTyped('POSITION', type, posTyped);
         }
         if ("NORMAL" in element.attributes) {
-            var normalTyped = accessor(glTF, element.attributes.NORMAL);
-            vertexBuffer.setSubBufferTyped('NORMAL', 3, normalTyped);
+            var type = Type2Num(glTF, element.attributes.NORMAL);
+            var normalTyped = accessor(glTF, element.attributes.NORMAL, type);
+            vertexBuffer.setSubBufferTyped('NORMAL', type, normalTyped);
         }
         if ("TANGENT" in element.attributes) {
-            var tangentTyped =  accessor(glTF, element.attributes.TANGENT);
-            vertexBuffer.setSubBufferTyped('TANGENT', 4, tangentTyped);
+            var type = Type2Num(glTF, element.attributes.TANGENT);
+            var tangentTyped =  accessor(glTF, element.attributes.TANGENT, type);
+            vertexBuffer.setSubBufferTyped('TANGENT', type, tangentTyped);
         }
         if ("TEXCOORD_0" in element.attributes) {
-            var texcoord0Typed = accessor(glTF, element.attributes.TEXCOORD_0);
-            vertexBuffer.setSubBufferTyped('TEXCOORD_0', 2, texcoord0Typed);
+            var type = Type2Num(glTF, element.attributes.TEXCOORD_0);
+            var texcoord0Typed = accessor(glTF, element.attributes.TEXCOORD_0, type);
+            vertexBuffer.setSubBufferTyped('TEXCOORD0', type, texcoord0Typed);
         }
         if ("TEXCOORD_1" in element.attributes) {
-            var texcoord1Typed = accessor(glTF, element.attributes.TEXCOORD_1);
-            vertexBuffer.setSubBufferTyped('TEXCOORD_1', 2, texcoord1Typed);
+            var type = Type2Num(glTF, element.attributes.TEXCOORD_1);
+            var texcoord1Typed = accessor(glTF, element.attributes.TEXCOORD_1, type);
+            vertexBuffer.setSubBufferTyped('TEXCOORD_1', type, texcoord1Typed);
         }
         if ("COLOR_0" in element.attributes) {
-            var color0Typed = accessor(glTF, element.attributes.COLOR_0);
-            vertexBuffer.setSubBufferTyped('COLOR_0', type(glTF, element.attributes.C), color0Typed); //COLOR_0 can be either vec3 or vec4
+            var type = Type2Num(glTF, element.attributes.COLOR_0);
+            var color0Typed = accessor(glTF, element.attributes.COLOR_0, type);
+            vertexBuffer.setSubBufferTyped('COLOR_0', type, color0Typed); //COLOR_0 can be either vec3 or vec4
         }
         if ("JOINTS_0" in element.attributes) {
-            var joints0Typed = accessor(glTF, element.attributes.JOINTS_0);
-            vertexBuffer.setSubBufferTyped('JOINTS_0', 3, joints0Typed);
+            var type = Type2Num(glTF, element.attributes.JOINTS_0);
+            var joints0Typed = accessor(glTF, element.attributes.JOINTS_0, type);
+            vertexBuffer.setSubBufferTyped('JOINTS_0', type, joints0Typed);
         }
         if ("WEIGHTS_0" in element.attributes) {
-            var weights0Typed = accessor(glTF, element.attributes.WIGHTS_0);
-            vertexBuffer.setSubBufferTyped('WEIGHTS_0', 3, weights0Typed);
+            var type = Type2Num(glTF, element.attributes.WEIGHTS_0);
+            var weights0Typed = accessor(glTF, element.attributes.WEIGHTS_0);
+            vertexBuffer.setSubBufferTyped('WEIGHTS_0', type, weights0Typed);
         }
-        var indices = accessor(glTF, element.indices);
+        var type = Type2Num(glTF, element.indices);
+        var indices = accessor(glTF, element.indices, type);
         vertexBuffer.update();
 
         mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
-        //mesh.update(indices);
+        mesh.update(indices);
         //mesh_array.push(mesh);
-        meshOut.setValue(0, mesh);
-        //console.log(mesh);
-        
+        output_index = output_index + iterator;
+        meshOut.setValue(output_index, mesh);
+        iterator += 1;
     }); 
 }
 
@@ -4955,25 +4976,28 @@ function loadMesh(gl,meshes, glTF) {
     var gl = this.renderContexts[0];
     if (!gl){ return;} 
 
-        //import {vec3, vec4, quat, mat4} from 'gl-matrix';
     var maxCount = glTF_In.getSliceCount();
+    var index_offset=0;
         for (var i=0; i<maxCount; i++) {
             if ( glTF_In.pinIsChanged() | Update.getValue(i) == 1) {
             var glTF = glTF_In.getValue(i);  
-            
+            index_offset = i * glTF.data.meshes.length;
+            var iterator = 0;
             glTF.data.meshes.forEach(function(element) { //not yet tested against multiple buffers in glTF file
-            loadMesh(gl,element, glTF);
+                output_index = iterator * element.primitives.length + index_offset;
+                loadMesh(gl,element, glTF, output_index);
+                iterator += 1;
             }); 
             
             }
         } 
-        console.log(mesh_array);
+        //console.log(glTF[primitives]);
 //        for (var j=0; j<mesh_array.length; j++) {
 //        meshOut.setValue(j, mesh_array[j]);
 //        //console.log(mesh);
 //        }
-        meshOut.setSliceCount(mesh_array.length);
-        Success.setSliceCount(mesh_array.length);
+        //meshOut.setSliceCount(mesh_array.length);
+        //Success.setSliceCount(mesh_array.length);
     }
 }
 VVVV.Nodes.GeometryGLTF.prototype = new Node();
