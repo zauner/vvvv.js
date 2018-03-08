@@ -38,7 +38,8 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/PhysicalBased_Atlas_MultiTex.vvvvjs.fx": undefined,
   "%VVVV%/effects/Constant_Instanced.vvvvjs.fx": undefined,
   "%VVVV%/effects/Deffered_FX.vvvvjs.fx": undefined,
-  "%VVVV%/effects/PBR_glTF.vvvvjs.fx": undefined
+  "%VVVV%/effects/PBR_glTF.vvvvjs.fx": undefined,
+  "%VVVV%/effects/BillBoard_Particles_Noise.vvvvjs.fx": undefined
   
   
   
@@ -4899,14 +4900,21 @@ function Type2Num(glTF, accessor_index){
 }
 
 function accessor(glTF, accessor_index, type){
-    var bufferView_index = glTF.data.accessors[accessor_index].bufferView;
-    var byteOffset = glTF.data.accessors[accessor_index].byteOffset + glTF.data.bufferViews[bufferView_index].byteOffset; 
-    var componentType = glTF.data.accessors[accessor_index].componentType;
-    var ComponentType_count = glTF.data.accessors[accessor_index].count;
-    //var type = glTF.data.accessors[accessor_index].type;
-    //var type_count = type(glTF, glTF.data.accessors[accessor_index].type)
-    //get the typed array
-    var typedArray = _arrayBuffer2TypedArray(glTF.buffer[glTF.data.bufferViews[bufferView_index].buffer], byteOffset,  type * ComponentType_count, componentType);
+    //accessor
+    var bufferView_index = glTF.data.accessors[ accessor_index ].bufferView;
+    var byteOffset_accessor = glTF.data.accessors[ accessor_index ].byteOffset ;
+    var componentType = glTF.data.accessors[ accessor_index ].componentType;
+    var ComponentType_count = glTF.data.accessors[ accessor_index ].count;
+    //buffer view
+    var byteLength = glTF.data.bufferViews[bufferView_index].byteLength; 
+    var byteOffset_bufferview = glTF.data.bufferViews[bufferView_index].byteOffset ; 
+    console.log(byteLength);
+    
+    var buffer_data = glTF.buffer[glTF.data.bufferViews[bufferView_index].buffer];
+    var accessor_buffer_data = buffer_data.slice(byteOffset_bufferview, byteOffset_bufferview + byteLength);
+    
+    var typedArray = _arrayBuffer2TypedArray(accessor_buffer_data, byteOffset_accessor,  type * ComponentType_count, componentType);
+    //var typedArray = _arrayBuffer2TypedArray(glTF.buffer[glTF.data.bufferViews[bufferView_index].buffer], byteOffset,  type * ComponentType_count, componentType);
     return typedArray;
 }
 
@@ -4955,11 +4963,12 @@ function loadMesh(gl,meshes, glTF, output_index) {
         }
         if ("WEIGHTS_0" in element.attributes) {
             var type = Type2Num(glTF, element.attributes.WEIGHTS_0);
-            var weights0Typed = accessor(glTF, element.attributes.WEIGHTS_0);
+            var weights0Typed = accessor(glTF, element.attributes.WEIGHTS_0, type);
             vertexBuffer.setSubBufferTyped('WEIGHTS_0', type, weights0Typed);
         }
         var type = Type2Num(glTF, element.indices);
         var indices = accessor(glTF, element.indices, type);
+        console.log(indices.length);
         vertexBuffer.update();
 
         mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
