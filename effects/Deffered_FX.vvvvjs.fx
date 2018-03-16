@@ -68,7 +68,7 @@ uniform float mistend = 16.0; //mist end
 uniform float onlyAO = 0.0; //use only ambient occlusion pass?
 uniform float lumInfluence = 0.7; //how much luminance affects occlusion
 uniform float AOfactor = 1.0; //multiply ao for artist control
-
+uniform float Debug_ShadowTex = 0.0;
 
 //WebGL Shadow Function
 
@@ -291,6 +291,11 @@ vec2 noise = rand(uv.xy, width, height);
 		final = vec3(mix(vec3(ao, ao, ao),vec3(1.0, 1.0, 1.0),luminance*lumInfluence)); //ambient occlusion only
 	}	
 	
+	
+	if(Debug_ShadowTex >= 0.5){
+		float shadmap = texture2D(ShadowTexture, uv).r;
+	final = vec3(shadmap,shadmap,shadmap);
+	}
 	
 	
    gl_FragColor = vec4(final.r,final.g,final.b,1.0);	
