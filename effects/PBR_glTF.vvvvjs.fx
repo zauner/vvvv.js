@@ -64,7 +64,7 @@ void main()
   PosV = vec3(tWV * vec4(a_Position.xyz, 1.0));
   NormView = normalize(vec3(tWV * vec4(a_Normal.xyz, 0.0))).xyz;
   #ifdef HAS_UV
-  v_UV = a_UV;
+  v_UV = (Texture_Transform * vec4(a_UV, 0, 1)).xy; 
   #else
   v_UV = vec2(0.,0.);
   #endif
@@ -87,7 +87,7 @@ fragment_shader:
 #define HAS_OCCLUSIONMAP
 #define MANUAL_SRGB
 #define HAS_METALNESS_SINGLECHANNEL
-//#define USE_DERIVATIVE_MAP
+#define USE_DERIVATIVE_MAP
 #define HAS_TANGENTS
 //#define USE_POM_SIHLOUETTE
 //#define SRGB_FAST_APPROXIMATION 1 ;

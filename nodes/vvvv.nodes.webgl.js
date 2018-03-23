@@ -254,6 +254,13 @@ VVVV.Types.Mesh = function(gl, vertexBuffer, indices) {
     /** @member */
     this.numIndices = indices.length;
   }
+  
+  this.update32 =function(indices) {
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.DYNAMIC_DRAW);
+    /** @member */
+    this.numIndices = indices.length;
+  }
 
    this.addInstanceBuffers =function(count) {
     for (var i=0; i<count; i++) {
@@ -2769,11 +2776,15 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
                 
     this.floatExt = getExtension(gl, "OES_texture_float");
                     if(!this.depthExt) {
-                        console.log("WEBGL_depth_texture not supported")
+                        console.log("OES_texture_float not supported")
                     }            
     this.floatExt = getExtension(gl, "OES_texture_float_linear");
                     if(!this.depthExt) {
-                        console.log("WEBGL_depth_texture not supported")
+                        console.log("OES_texture_float_linear not supported")
+                    }         
+    this.floatExt = getExtension(gl, "OES_element_index_uint");
+                    if(!this.depthExt) {
+                        console.log("OES_element_index_uint not supported")
                     }            
      
       
@@ -4908,7 +4919,6 @@ function accessor(glTF, accessor_index, type){
     //buffer view
     var byteLength = glTF.data.bufferViews[bufferView_index].byteLength; 
     var byteOffset_bufferview = glTF.data.bufferViews[bufferView_index].byteOffset ; 
-    console.log(byteLength);
     
     var buffer_data = glTF.buffer[glTF.data.bufferViews[bufferView_index].buffer];
     var accessor_buffer_data = buffer_data.slice(byteOffset_bufferview, byteOffset_bufferview + byteLength);
@@ -4966,13 +4976,17 @@ function loadMesh(gl,meshes, glTF, output_index) {
             var weights0Typed = accessor(glTF, element.attributes.WEIGHTS_0, type);
             vertexBuffer.setSubBufferTyped('WEIGHTS_0', type, weights0Typed);
         }
+        
+        //////////////index buffer///////////////////
         var type = Type2Num(glTF, element.indices);
+        console.log("index buffer type " + type );
+
         var indices = accessor(glTF, element.indices, type);
-        console.log(indices.length);
+        console.log(indices);
         vertexBuffer.update();
 
         mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
-        mesh.update(indices);
+        mesh.update32(indices);
         //mesh_array.push(mesh);
         output_index = output_index + iterator;
         meshOut.setValue(output_index, mesh);
