@@ -9,6 +9,7 @@ uniform mat4 tVP : VIEWPROJECTION;
 uniform vec3 posCam;
 uniform float invertY = 1;
 
+
 attribute vec4 PosO : POSITION;
 attribute vec4 TexCd : TEXCOORD0;
 
@@ -44,6 +45,8 @@ uniform samplerCube skybox;
 //Those Parameters are used to fix seams that appear with webgl 1.0 cube map lookup
 uniform float cube_size = 256.0;
 uniform float lod = 1.0;
+uniform float alpha = 1.0;
+
 
 varying vec3 ViewVectorW;
 
@@ -59,5 +62,5 @@ vec3 fix_cube_lookup(vec3 v) {
 
 void main(void) {
   vec3 Seamless_ViewVectorW = fix_cube_lookup(ViewVectorW);
-  gl_FragColor = textureCube(skybox, Seamless_ViewVectorW);
+  gl_FragColor = vec4(textureCube(skybox, Seamless_ViewVectorW).xyz, alpha);
 }

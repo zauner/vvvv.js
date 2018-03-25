@@ -1,7 +1,7 @@
 vertex_shader:
 #define HAS_NORMALS
 #define HAS_UV
-#define HAS_TANGENTS
+//#define HAS_TANGENTS
 #ifdef GL_ES
 precision highp float;
 #endif
@@ -87,8 +87,8 @@ fragment_shader:
 #define HAS_OCCLUSIONMAP
 #define MANUAL_SRGB
 #define HAS_METALNESS_SINGLECHANNEL
-#define USE_DERIVATIVE_MAP
-#define HAS_TANGENTS
+//#define USE_DERIVATIVE_MAP
+//#define HAS_TANGENTS
 //#define USE_POM_SIHLOUETTE
 //#define SRGB_FAST_APPROXIMATION 1 ;
 //#define USE_TEX_LOD 0;
@@ -162,6 +162,8 @@ uniform float parallaxSampleCount = 8.0;
 uniform float occlusion = 0.3;
 
 uniform float exposure = 0.0;
+
+uniform float alpha = 1.0;
 
 varying vec3 v_Position;
 
@@ -568,5 +570,5 @@ void main()
     color = mix(color, vec3(metallic), u_ScaleDiffBaseMR.z);
     color = mix(color, vec3(perceptualRoughness), u_ScaleDiffBaseMR.w);
 	color *= pow(2.0, exposure);
-    gl_FragColor = vec4(pow(color,vec3(1.0/2.2)), baseColor.a);
+    gl_FragColor = vec4(pow(color,vec3(1.0/2.2)), baseColor.a*alpha);
 }
