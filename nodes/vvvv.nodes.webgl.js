@@ -4979,10 +4979,10 @@ function loadMesh(gl,meshes, glTF, output_index) {
         
         //////////////index buffer///////////////////
         var type = Type2Num(glTF, element.indices);
-        console.log("index buffer type " + type );
+        //console.log("index buffer type " + type );
 
         var indices = accessor(glTF, element.indices, type);
-        console.log(indices);
+        //console.log(indices);
         vertexBuffer.update();
 
         mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);

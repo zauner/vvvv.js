@@ -1447,5 +1447,38 @@ VVVV.Nodes.SetAttributeHTML = function(id, graph) {
 }
 VVVV.Nodes.SetAttributeHTML.prototype = new Node();
 
+VVVV.Nodes["InjectHTML"] = function(id, graph) {
+    this.constructor(id, "InjectHTML (HTML)", graph);
+
+    this.environments = ['browser'];
+    this.auto_nil = false;
+
+    this.meta = {
+      authors: ['David Gann'],
+      original_authors: [],
+      credits: [],
+      compatibility_issues: []
+    };
+
+   
+    var HtmlIn = this.addInputPin("Html In", [" "], VVVV.PinTypes.String);
+    var Selector = this.addInputPin("Selector", [" "], VVVV.PinTypes.String);  
+
+
+    this.evaluate = function() {
+      var maxSpreadSize = this.getMaxInputSliceCount();
+      var $selector = $(Selector.getValue(0))
+      if (HtmlIn.pinIsChanged())
+        $selector.innerHTML=HtmlIn.getValue(0);
+
+    
+
+      
+    }
+  }
+  VVVV.Nodes['InjectHTML'].prototype = new Node();
+  
+
+
 
 });

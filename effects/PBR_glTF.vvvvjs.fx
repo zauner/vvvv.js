@@ -87,6 +87,7 @@ fragment_shader:
 #define HAS_OCCLUSIONMAP
 #define MANUAL_SRGB
 #define HAS_METALNESS_SINGLECHANNEL
+#define NO_GAMMA_CORRECTION
 //#define USE_DERIVATIVE_MAP
 //#define HAS_TANGENTS
 //#define USE_POM_SIHLOUETTE
@@ -570,5 +571,9 @@ void main()
     color = mix(color, vec3(metallic), u_ScaleDiffBaseMR.z);
     color = mix(color, vec3(perceptualRoughness), u_ScaleDiffBaseMR.w);
 	color *= pow(2.0, exposure);
+#ifdef NO_GAMMA_CORRECTION
+	gl_FragColor = vec4(color.rgb, baseColor.a*alpha);
+#else
     gl_FragColor = vec4(pow(color,vec3(1.0/2.2)), baseColor.a*alpha);
+#endif
 }
