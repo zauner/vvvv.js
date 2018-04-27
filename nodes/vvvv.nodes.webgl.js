@@ -255,7 +255,7 @@ VVVV.Types.Mesh = function(gl, vertexBuffer, indices) {
     this.numIndices = indices.length;
   }
   
-  this.update32 =function(indices) {
+  this.updateTyped =function(indices) {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.DYNAMIC_DRAW);
     /** @member */
@@ -307,6 +307,7 @@ VVVV.Types.Mesh = function(gl, vertexBuffer, indices) {
 
   /** @member */
   this.instanced = false;
+  this.isUInt32 = false;
 
   /** @member */
   this.instanceCount = 1.0;
@@ -570,7 +571,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   this.auto_nil = false;
 
   this.meta = {
-    authors: ['Matthias Zauner'],
+    authors: ['Matthias Zauner, David Gann'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: ['Always loads in background', 'No reload pin', 'No preload pin (preloading handled by browser)', 'No up and running pin', 'No texture info outputs']
@@ -589,6 +590,10 @@ VVVV.Nodes.FileTexture = function(id, graph) {
 
   var textures = [];
   var prevFilenames = [];//only load new files
+
+    function isPowerOf2(value) {
+  return (value & (value - 1)) == 0;
+}
 
   this.evaluate = function() {
 
@@ -629,10 +634,15 @@ VVVV.Nodes.FileTexture = function(id, graph) {
               gl.bindTexture(gl.TEXTURE_2D, textures[j]);
               //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
               gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textures[j].image);
-              gl.generateMipmap(gl.TEXTURE_2D);
-              gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-              gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+              //if (textures[i] =! undefined && isPowerOf2(textures[i].image.width) && isPowerOf2(textures[i].image.height)) {
+                gl.generateMipmap(gl.TEXTURE_2D);
+              //}else{
+                gl.generateMipmap(gl.TEXTURE_2D);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+               //}
               gl.bindTexture(gl.TEXTURE_2D, null);
+                                       
               outputPin.setValue(j, textures[j]);
             }
           })(i);
@@ -3138,7 +3148,14 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
             this.instanceExt.drawElementsInstancedANGLE(gl[renderState.polygonDrawMode], layer.mesh.numIndices, gl.UNSIGNED_SHORT, 0, layer.mesh.instanceCount);
         }
         else{
+            if(layer.mesh.isUInt32 == true){
+
+            var ext = gl.getExtension('OES_element_index_uint');
+            gl.drawElements(gl[renderState.polygonDrawMode], layer.mesh.numIndices, gl.UNSIGNED_INT, 0);
+            }else{
+                
             gl.drawElements(gl[renderState.polygonDrawMode], layer.mesh.numIndices, gl.UNSIGNED_SHORT, 0);
+            }
         }
 
         // save current states
@@ -4825,6 +4842,7 @@ function attachBuffer(glTF, i) {
 function attachJSON(glTF, i, filename) {
     glTF.data = JSON.parse(this.responseText);
     path = filename.substring(0, filename.lastIndexOf("/"));
+    glTF.data.path = path;
     glTF.data.buffers.forEach(function(element) { //not yet tested against multiple buffers in glTF file
          uri = path + "/" + element.uri;
           loadBuffer(uri, 2000, attachBuffer, glTF, i);
@@ -4844,7 +4862,7 @@ function attachJSON(glTF, i, filename) {
 
             if (prevFilenames[i] != filenamePin.getValue(i)  | Update.getValue(i) == 1) {
                 filename[i] = VVVV.Helpers.prepareFilePath(filenamePin.getValue(i), this.parentPatch);
-               var glTF = {data: {}, buffer: []};
+               var glTF = {data: {}, buffer: [], path: {}};
                         glTF_array[i] = glTF;             
                 (function(i) {        
                 loadFile(filename[i], 2000, attachJSON, glTF_array[i], i, filename[i]);   
@@ -4886,7 +4904,7 @@ VVVV.Nodes.glTFLoader.prototype = new Node();
 function _arrayBuffer2TypedArray(buffer, byteOffset, countOfComponentType, componentType) {
     switch(componentType) {
         // @todo: finish
-        case 5122: return new Int16Array(buffer, byteOffset, countOfComponentType);
+        case 5122: return new Int16Array(buffer, byteOffset, countOfComponentType); 
         case 5123: return new Uint16Array(buffer, byteOffset, countOfComponentType);
         case 5124: return new Int32Array(buffer, byteOffset, countOfComponentType);
         case 5125: return new Uint32Array(buffer, byteOffset, countOfComponentType);
@@ -4979,14 +4997,17 @@ function loadMesh(gl,meshes, glTF, output_index) {
         
         //////////////index buffer///////////////////
         var type = Type2Num(glTF, element.indices);
-        //console.log("index buffer type " + type );
 
         var indices = accessor(glTF, element.indices, type);
-        //console.log(indices);
+        var componentTypeIndex = glTF.data.accessors[ element.indices ].componentType;
         vertexBuffer.update();
 
         mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
-        mesh.update32(indices);
+        mesh.updateTyped(indices);
+        if(componentTypeIndex == 5125 || componentTypeIndex == 5124){
+            mesh.isUInt32 = true;
+        }
+        
         //mesh_array.push(mesh);
         output_index = output_index + iterator;
         meshOut.setValue(output_index, mesh);
@@ -5025,6 +5046,182 @@ function loadMesh(gl,meshes, glTF, output_index) {
 }
 VVVV.Nodes.GeometryGLTF.prototype = new Node();
 
+
+///*
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//   NODE: Textures (glTF)
+//   Author(s): David Gann
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//  */
+
+  VVVV.Nodes.TexturesGLTF = function(id, graph) {
+    this.constructor(id, "Textures (glTF)", graph);
+
+    this.meta = {
+      authors: ['David Gann'],
+      original_authors: ['000.graphics'],
+      credits: [],
+      compatibility_issues: []
+    };
+    
+    //input
+    var glTF_In = this.addInputPin("glTF", [], VVVV.PinTypes.glTF);   
+    var Update= this.addInputPin('Update', [0], VVVV.PinTypes.Value);
+    //output
+
+    var BaseColorOut = this.addOutputPin("Base Color Texture", [], VVVV.PinTypes.WebGlTexture);
+    var BaseColorFileOut = this.addOutputPin("Base Color Path", [], VVVV.PinTypes.String);
+    var NormalOut = this.addOutputPin("Normal Texture", [], VVVV.PinTypes.WebGlTexture);
+    var EmissiveOut = this.addOutputPin("Emissive Texture", [], VVVV.PinTypes.WebGlTexture);
+    var MetallicRoughnessOut = this.addOutputPin("Metallic Roughness Texture", [], VVVV.PinTypes.WebGlTexture);
+    var OcclusionOut = this.addOutputPin("Occlusion Texture", [], VVVV.PinTypes.WebGlTexture);
+
+    
+    
+    var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
+
+   function isPowerOf2(value) {
+  return (value & (value - 1)) == 0;
+}
+var texture = [];
+var source_path = [];
+
+function RemoveFirstDir(the_url)
+{
+    var the_arr = the_url.split('/');
+    the_arr.shift();
+    return( the_arr.join('/') );
+}
+
+function requestTexture(gl, glTF, element, i, textures){
+     var textureIndex = glTF.data.materials[element.material].pbrMetallicRoughness.baseColorTexture.index;
+     var file = glTF.data.images[glTF.data.textures[textureIndex].source].uri;
+     source_path[i] = glTF.data.path + "/" + file;
+     BaseColorFileOut.setValue(i, RemoveFirstDir(source_path[i]) ); //source_path[i]
+        if (!gl){ return;} 
+        textures[i] = gl.createTexture();
+        textures[i].context = gl;
+        var image = new Image();
+        textures[i].image = new Image();
+        textures[i].image.src = source_path[i];
+        textures[i].image.onload = (function(j) {
+            return function() {         
+                gl.bindTexture(gl.TEXTURE_2D, textures[j]);
+                gl.texImage2D(gl.TEXTURE_2D,  0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, textures[j].image);
+                if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
+                    gl.generateMipmap(gl.TEXTURE_2D);
+                } else {
+                    // No, it's not a power of 2. Turn off mips and set wrapping to clamp to edge
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);                       
+                }
+                gl.bindTexture(gl.TEXTURE_2D, null);
+                BaseColorOut.setValue(j, textures[j]); 
+                NormalOut.setValue(j, textures[j]);
+                EmissiveOut.setValue(j, textures[j]);
+                MetallicRoughnessOut.setValue(j, textures[j]);
+                OcclusionOut.setValue(j, textures[j]);
+                    }
+        })(i);
+        
+    //} 
+//    else{// create to render to
+//              // Create a texture.
+//                texture = gl.createTexture();
+//                texture.context = gl;
+//                gl.bindTexture(gl.TEXTURE_2D, texture);
+//
+//                // fill texture with 3x2 pixels
+//                const level = 0;
+//                const internalFormat = gl.RGBA;
+//                const width = 2;
+//                const height = 2;
+//                const border = 0;
+//                const format = gl.RGBA;
+//                const type = gl.UNSIGNED_BYTE;
+//                const data = new Uint8Array([
+//                  255,255,255,255,
+//                  255,255,255,255,
+//                  255,255,255,255,
+//                  255,255,255,255,
+//                ]);
+//                //const alignment = 8;
+//                //gl.pixelStorei(gl.UNPACK_ALIGNMENT, alignment);
+//                gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border,
+//                              format, type, data);
+//                 gl.generateMipmap(gl.TEXTURE_2D);   
+//                 
+//            BaseColorOut.setValue(i, texture);
+//        }                                                      
+
+     
+    
+}
+
+function loadTextures(gl,meshes, glTF, output_index, textures) {
+    var iterator = 0;
+    meshes.primitives.forEach(function(element) { //not yet tested against multiple buffers in glTF file
+        output_index = output_index + iterator;
+        requestTexture(gl, glTF, element, output_index, textures);
+        
+       var textureIndex = glTF.data.materials[element.material].pbrMetallicRoughness.baseColorTexture.index;
+       var file = glTF.data.images[glTF.data.textures[textureIndex].source].uri;
+       var path = glTF.data.path + "/" + file;
+       BaseColorFileOut.setValue(output_index, RemoveFirstDir(path) ); //source_path[i]
+        //console.log(element.material);
+        iterator += 1;
+    }); 
+}
+
+
+    var textures = [];
+    var alignment = 1;
+    
+    
+    
+    this.evaluate = function() { 
+        
+        
+    //if (!this.renderContexts){ return;} 
+    var gl = this.renderContexts[0];
+    //if (!gl){ return;} 
+    if (this.contextChanged) {
+            for (var i=0; i<textures.length; i++) {
+              textures[i].context.deleteTexture(textures[i]);
+            }
+            textures = [];
+    }        
+    
+
+            
+    var maxCount = glTF_In.getSliceCount();
+    var index_offset=0;
+        for (var i=0; i<maxCount; i++) {
+            
+           
+            if ( glTF_In.pinIsChanged() | Update.getValue(i) == 1) {
+            var glTF = glTF_In.getValue(i);  
+            index_offset = i * glTF.data.meshes.length;
+            var iterator = 0;
+            glTF.data.meshes.forEach(function(element) { //not yet tested against multiple buffers in glTF file
+                output_index = iterator * element.primitives.length + index_offset;
+                loadTextures(gl,element, glTF, output_index, textures);
+                iterator += 1;
+            }); 
+            
+            }
+        } 
+        //console.log(glTF[primitives]);
+//        for (var j=0; j<mesh_array.length; j++) {
+//        meshOut.setValue(j, mesh_array[j]);
+//        //console.log(mesh);
+//        }
+        //meshOut.setSliceCount(mesh_array.length);
+        //Success.setSliceCount(mesh_array.length);
+    }
+}
+VVVV.Nodes.TexturesGLTF.prototype = new Node();
 
 
 });

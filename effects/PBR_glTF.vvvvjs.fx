@@ -1,7 +1,8 @@
 vertex_shader:
 #define HAS_NORMALS
 #define HAS_UV
-//#define HAS_TANGENTS
+#define HAS_TANGENTS
+#define HAS_Animation
 #ifdef GL_ES
 precision highp float;
 #endif
@@ -25,9 +26,10 @@ attribute vec4 a_Tangent : TANGENT;
 #ifdef HAS_UV
 attribute vec2 a_UV : TEXCOORD0;
 #endif
-
-uniform mat4 u_MVPMatrix;
-uniform mat4 u_ModelMatrix;
+#ifdef HAS_Animation
+attribute vec4 a_Joints : JOINTS_0;
+attribute vec4 a_Weights : WEIGHTS_0;
+#endif
 
 varying vec3 v_Position;
 varying vec2 v_UV;
@@ -39,6 +41,8 @@ varying mat3 v_TBN;
 varying vec3 v_Normal;
 #endif
 #endif
+
+
 
 varying vec3 NormView;
 varying vec3 PosV;
@@ -82,14 +86,14 @@ fragment_shader:
 #define HAS_UV
 #define USE_IBL
 #define HAS_BASECOLORMAP
-#define HAS_NORMALMAP
-#define HAS_METALROUGHNESSMAP
-#define HAS_OCCLUSIONMAP
+//#define HAS_NORMALMAP
+//#define HAS_METALROUGHNESSMAP
+//#define HAS_OCCLUSIONMAP
 #define MANUAL_SRGB
-#define HAS_METALNESS_SINGLECHANNEL
-#define NO_GAMMA_CORRECTION
+//#define HAS_METALNESS_SINGLECHANNEL
+//#define NO_GAMMA_CORRECTION
 //#define USE_DERIVATIVE_MAP
-//#define HAS_TANGENTS
+#define HAS_TANGENTS
 //#define USE_POM_SIHLOUETTE
 //#define SRGB_FAST_APPROXIMATION 1 ;
 //#define USE_TEX_LOD 0;
