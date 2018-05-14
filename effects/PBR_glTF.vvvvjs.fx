@@ -86,17 +86,17 @@ fragment_shader:
 #define HAS_UV
 #define USE_IBL
 #define HAS_BASECOLORMAP
-#define HAS_NORMALMAP
+//#define HAS_NORMALMAP
 #define HAS_METALROUGHNESSMAP
 #define HAS_OCCLUSIONMAP
-#define MANUAL_SRGB
-#define HAS_METALNESS_SINGLECHANNEL
-#define NO_GAMMA_CORRECTION
+//#define MANUAL_SRGB
+//#define HAS_METALNESS_SINGLECHANNEL
+//#define NO_GAMMA_CORRECTION
 //#define USE_DERIVATIVE_MAP
 //#define HAS_TANGENTS
 //#define USE_POM_SIHLOUETTE
-//#define SRGB_FAST_APPROXIMATION 1 ;
-//#define USE_TEX_LOD 0;
+#define SRGB_FAST_APPROXIMATION
+//#define USE_TEX_LOD
 
 //
 // This fragment shader defines a reference implementation for Physically Based Shading of
@@ -113,6 +113,7 @@ fragment_shader:
 //     https://www.cs.virginia.edu/~jdl/bib/appearance/analytic%20models/schlick94b.pdf
 //#extension GL_EXT_shader_texture_lod: enable
 #extension GL_OES_standard_derivatives : enable
+#extension GL_EXT_shader_texture_lod: enable
 
 precision highp float;
 
@@ -266,7 +267,7 @@ vec3 getIBLContribution(vec3 diffuseColor,vec3 specularColor ,float perceptualRo
     float lod = (perceptualRoughness * mipCount);
     // retrieve a scale and bias to F0. See [1], Figure 3
     vec3 brdf = SRGBtoLINEAR(texture2D(u_brdfLUT, vec2(NdotV, 1.0 - perceptualRoughness))).rgb;
-    vec3 diffuseLight = SRGBtoLINEAR(textureCube(u_DiffuseEnvSampler, n)).rgb;
+    vec3 diffuseLight = SRGBtoLINEAR(textureCube(u_SpecularEnvSampler, n)).rgb;
 
 
     vec3 specularLight = SRGBtoLINEAR(textureCube(u_SpecularEnvSampler, reflection)).rgb;
@@ -550,6 +551,7 @@ void main()
     // Calculate lighting contribution from image based lighting source (IBL)
 #ifdef USE_IBL
     color += getIBLContribution(diffuseColor,specularColor , perceptualRoughness, NdotV, n, reflection);
+	
 #endif
 
     // Apply optional PBR terms for additional (optional) shading

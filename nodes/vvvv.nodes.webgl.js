@@ -34,11 +34,11 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/CookTorrance_Displacement_TriplanarFBM.vvvvjs.fx": undefined,
   "%VVVV%/effects/PBR_POM_FBM_MultiTex.vvvvjs.fx": undefined,
   "%VVVV%/effects/Skybox.vvvvjs.fx": undefined,
-  "%VVVV%/effects/PhysicalBased_SpecularAA.vvvvjs.fx": undefined,
   "%VVVV%/effects/PhysicalBased_Atlas_MultiTex.vvvvjs.fx": undefined,
   "%VVVV%/effects/Constant_Instanced.vvvvjs.fx": undefined,
   "%VVVV%/effects/Deffered_FX.vvvvjs.fx": undefined,
   "%VVVV%/effects/PBR_glTF.vvvvjs.fx": undefined,
+  "%VVVV%/effects/PBR_glTF_static.vvvvjs.fx": undefined,
   "%VVVV%/effects/BillBoard_Particles_Noise.vvvvjs.fx": undefined
   
   
@@ -194,6 +194,16 @@ VVVV.Types.VertexBuffer = function(gl) {
       data: d,
       size: s,
       offset: this.length
+    };
+    this.length += this.subBuffers[u].data.byteLength;
+  }
+  this.setSubBufferTypedStride = function(u, s, d, st ) {
+    this.subBuffers[u] = {
+      usage: u,
+      data: d,
+      size: s,
+      offset: this.length,
+      stride: st
     };
     this.length += this.subBuffers[u].data.byteLength;
   }
@@ -2028,6 +2038,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
   }
 
   this.setupShader = function() {
+      
     var technique = techniqueIn.getValue(0);
     technique = technique.replace(/^\s*/, '').replace(/\s*$/, '');
     var rx = new RegExp(/(vertex_shader|fragment_shader)\{([^\}]+)\}/g);
@@ -2045,7 +2056,6 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     }
     var vsRegEx = new RegExp('vertex_shader(\\{([a-zA-Z0-9]+,\\s*)*'+technique+'(,\\s*[a-zA-Z0-9]+)*\\})?:([\\s\\S]*?)(vertex_shader|fragment_shader)');
     var psRegEx = new RegExp('fragment_shader(\\{([a-zA-Z0-9]+,\\s*)*'+technique+'(,\\s*[a-zA-Z0-9]+)*\\})?:([\\s\\S]*?)(vertex_shader|fragment_shader)');
-
     var match;
 
     match = /STARTOFSTRING((\r?\n|.)*?)(vertex_shader|fragment_shader)/.exec('STARTOFSTRING'+shaderCode);
@@ -2056,16 +2066,17 @@ VVVV.Nodes.GenericShader = function(id, graph) {
       return;
     }
     var vertexShaderCode = match[4];
-
+    vertexShaderCode = VSDefinesIn.getValue(0) + vertexShaderCode; 
     if ((match = psRegEx.exec(shaderCode+'\nfragment_shader'))==undefined) {
       console.log('ERROR: No fragment shader code for technique '+technique+' found');
       return;
     }
     var fragmentShaderCode = match[4];
-
+    fragmentShaderCode = VSDefinesIn.getValue(0) + fragmentShaderCode; 
     shader.setFragmentShader(varDefs+fragmentShaderCode);
     shader.setVertexShader(varDefs+vertexShaderCode);
-
+    //console.log(vertexShaderCode);
+    //console.log(fragmentShaderCode);
   }
 
   this.evaluate = function() {
@@ -3063,20 +3074,26 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
             if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]] || layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position==-1)
               return;
             gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
-            gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, 0, b.offset);
+            gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, b.stride, b.offset);
           });
-
+          
           gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
+            //console.log(JSON.stringify(layer.mesh.semantics));
+            //console.log(JSON.stringify(layer.shader.attributeSpecs));
+            //console.log(JSON.stringify(layer.shader.uniformSpecs));
+            //console.log(JSON.stringify(layer.shader.attribSemanticMap));
+            //console.log(JSON.stringify(layer.shader.uniformSemanticMap));
         }
         if(layer.mesh.instanced == true){ //Instancing
-           //console.log("entering instancing, VertexCount: " + layer.mesh.Buffer1.length);
+            
+          
 
             gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
           _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
             if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]] || layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position==-1)
               return;
             gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
-            gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, 0, b.offset);
+            gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, b.stride, b.offset);
           });
           gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
 
@@ -3151,11 +3168,10 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         }
         else{
             if(layer.mesh.isUInt32 == true){
-
+             
             var ext = gl.getExtension('OES_element_index_uint');
             gl.drawElements(gl[renderState.polygonDrawMode], layer.mesh.numIndices, gl.UNSIGNED_INT, 0);
             }else{
-                
             gl.drawElements(gl[renderState.polygonDrawMode], layer.mesh.numIndices, gl.UNSIGNED_SHORT, 0);
             }
         }
@@ -3424,7 +3440,6 @@ VVVV.Nodes.GeometryFile = function(id, graph) {
                             var posMapped = positionData.map(function(x) { return x * scale; });
                             var texCoords0 = [0,0];  //missing texturecoordinates
                             var indexData = data.indices;
-                            
                             var PosTyped = new Float32Array(posMapped);
                             var normalData = generateNormals(PosTyped, 3, 0, positionData.length/3, indexData);
                             
@@ -3461,9 +3476,7 @@ VVVV.Nodes.GeometryFile = function(id, graph) {
                             vertexBuffer.setSubBufferTyped('NORMAL', 3, normalData);
                             vertexBuffer.setSubBuffer('VERTEXCOLOR', 3, VertexColorData);
                         }
-                 
                               vertexBuffer.update();
-
                               mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indexData);
                               mesh.update(indexData);
                               meshOut.setValue(i, mesh);
@@ -3480,15 +3493,10 @@ VVVV.Nodes.GeometryFile = function(id, graph) {
                })(i);
              }
              prevFilenames[i] = filenamePin.getValue(i);
-
         }   //end of inner for loop
-
     this.contextChanged = false;
      }
   }
-
-
-
 VVVV.Nodes.GeometryFile.prototype = new Node();
 
 /*
@@ -3721,13 +3729,6 @@ VVVV.Nodes.HeightMap = function(id, graph) {
             update[i] = UpdateIn.getValue(i);
             
             if (BufferIn.pinIsChanged() | ScaleIn.pinIsChanged()  | update[i] == 1) {
-                
-            
-               
-
-               
-                           
-                        
             var vertices = [];
             var normals = [];
             var texCoords = [];
@@ -3744,8 +3745,6 @@ VVVV.Nodes.HeightMap = function(id, graph) {
                 texCoords.push(parseFloat(y)/(Res-1));
               }
             }
-            
-            
 
             var indices = [];
             for (var y=0; y<Res-1; y++) {
@@ -3754,7 +3753,6 @@ VVVV.Nodes.HeightMap = function(id, graph) {
                 indices.push(refP);
                 indices.push(refP+1);
                 indices.push(refP+Res+1);
-
                 indices.push(refP+Res+1);
                 indices.push(refP+Res);
                 indices.push(refP);
@@ -3763,7 +3761,6 @@ VVVV.Nodes.HeightMap = function(id, graph) {
             
             var PosTyped = new Float32Array(vertices);
             var normalData = generateNormals(PosTyped, 3, 0, vertices.length/3, indices);
-            
             
             var vertexBuffer = new VVVV.Types.VertexBuffer(gl);
             vertexBuffer.create();
@@ -3966,16 +3963,7 @@ VVVV.Nodes.DataTexture = function(id, graph) {
               gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
               gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-
-              //gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, ResolutionX, ResolutionY, 0, gl.RGBA, gl.FLOAT, float32 );
-              //gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, uint8);
-             // gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
-        //gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
-        //gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST );
-        //gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST );
-        
-        //gl.bindTexture( gl.TEXTURE_2D, null );
-        gl.bindTexture(gl.TEXTURE_2sonsD, null);
+        gl.bindTexture(gl.TEXTURE_2D, null);
         outputPin.setValue(i, textures[i]);
   
         
@@ -4249,7 +4237,7 @@ function attachJSON(glTF, i, filename) {
     glTF.data.path = path;
     glTF.data.buffers.forEach(function(element) { //not yet tested against multiple buffers in glTF file
          uri = path + "/" + element.uri;
-          loadBuffer(uri, 2000, attachBuffer, glTF, i);
+          loadBuffer(uri, 1000000, attachBuffer, glTF, i);
          
     }); 
 }
@@ -4303,9 +4291,10 @@ VVVV.Nodes.glTFLoader.prototype = new Node();
     var Update= this.addInputPin('Update', [0], VVVV.PinTypes.Value);
     //output
     var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
-    var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
+    //var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
 
 function _arrayBuffer2TypedArray(buffer, byteOffset, countOfComponentType, componentType) {
+    console.log("byteoffset " + byteOffset); console.log("count " + countOfComponentType);
     switch(componentType) {
         // @todo: finish
         case 5122: return new Int16Array(buffer, byteOffset, countOfComponentType); 
@@ -4335,7 +4324,13 @@ function Type2Num(glTF, accessor_index){
 function accessor(glTF, accessor_index, type){
     //accessor
     var bufferView_index = glTF.data.accessors[ accessor_index ].bufferView;
-    var byteOffset_accessor = glTF.data.accessors[ accessor_index ].byteOffset ;
+    var byteOffset_accessor = 0;
+    if(glTF.data.accessors[ accessor_index ].byteOffset !== undefined){
+        byteOffset_accessor = glTF.data.accessors[ accessor_index ].byteOffset;
+    }
+    
+    
+    
     var componentType = glTF.data.accessors[ accessor_index ].componentType;
     var ComponentType_count = glTF.data.accessors[ accessor_index ].count;
     //buffer view
@@ -4350,7 +4345,21 @@ function accessor(glTF, accessor_index, type){
     return typedArray;
 }
 
+function getStride(glTF, accessor_index){
+    var bufferView_index = glTF.data.accessors[ accessor_index ].bufferView;
+    var byteStride = 0;
+    if(glTF.data.bufferViews[bufferView_index].byteStride !== undefined){
+    byteStride = glTF.data.bufferViews[bufferView_index].byteStride ;
+    }
+    return byteStride
+}
 
+function AttributeBuffer(glTF, index, attribute_semantic){
+    var type = Type2Num(glTF, index);
+    var stride = getStride(glTF, index);
+    var typedBuffer = accessor(glTF, index, type);
+    vertexBuffer.setSubBufferTypedStride(attribute_semantic, type, typedBuffer, stride);
+}
 
 function loadMesh(gl,meshes, glTF, output_index) {
     var iterator = 0;
@@ -4359,44 +4368,28 @@ function loadMesh(gl,meshes, glTF, output_index) {
         vertexBuffer = new VVVV.Types.VertexBuffer(gl);
         vertexBuffer.create();                  
         if ("POSITION" in element.attributes) {
-            var type = Type2Num(glTF, element.attributes.POSITION);
-            var posTyped = accessor(glTF, element.attributes.POSITION, type);
-            vertexBuffer.setSubBufferTyped('POSITION', type, posTyped);
+            AttributeBuffer(glTF, element.attributes.POSITION, 'POSITION');
         }
         if ("NORMAL" in element.attributes) {
-            var type = Type2Num(glTF, element.attributes.NORMAL);
-            var normalTyped = accessor(glTF, element.attributes.NORMAL, type);
-            vertexBuffer.setSubBufferTyped('NORMAL', type, normalTyped);
+             AttributeBuffer(glTF, element.attributes.NORMAL, 'NORMAL');
         }
         if ("TANGENT" in element.attributes) {
-            var type = Type2Num(glTF, element.attributes.TANGENT);
-            var tangentTyped =  accessor(glTF, element.attributes.TANGENT, type);
-            vertexBuffer.setSubBufferTyped('TANGENT', type, tangentTyped);
+            AttributeBuffer(glTF, element.attributes.TANGENT, 'TANGENT');
         }
         if ("TEXCOORD_0" in element.attributes) {
-            var type = Type2Num(glTF, element.attributes.TEXCOORD_0);
-            var texcoord0Typed = accessor(glTF, element.attributes.TEXCOORD_0, type);
-            vertexBuffer.setSubBufferTyped('TEXCOORD0', type, texcoord0Typed);
+            AttributeBuffer(glTF, element.attributes.TEXCOORD_0, 'TEXCOORD0');
         }
         if ("TEXCOORD_1" in element.attributes) {
-            var type = Type2Num(glTF, element.attributes.TEXCOORD_1);
-            var texcoord1Typed = accessor(glTF, element.attributes.TEXCOORD_1, type);
-            vertexBuffer.setSubBufferTyped('TEXCOORD_1', type, texcoord1Typed);
+            AttributeBuffer(glTF, element.attributes.TEXCOORD_1, 'TEXCOORD_1');
         }
         if ("COLOR_0" in element.attributes) {
-            var type = Type2Num(glTF, element.attributes.COLOR_0);
-            var color0Typed = accessor(glTF, element.attributes.COLOR_0, type);
-            vertexBuffer.setSubBufferTyped('COLOR_0', type, color0Typed); //COLOR_0 can be either vec3 or vec4
+            AttributeBuffer(glTF, element.attributes.COLOR_0, 'COLOR_0'); //COLOR_0 can be either vec3 or vec4
         }
         if ("JOINTS_0" in element.attributes) {
-            var type = Type2Num(glTF, element.attributes.JOINTS_0);
-            var joints0Typed = accessor(glTF, element.attributes.JOINTS_0, type);
-            vertexBuffer.setSubBufferTyped('JOINTS_0', type, joints0Typed);
+            AttributeBuffer(glTF, element.attributes.JOINTS_0, 'JOINTS_0');
         }
         if ("WEIGHTS_0" in element.attributes) {
-            var type = Type2Num(glTF, element.attributes.WEIGHTS_0);
-            var weights0Typed = accessor(glTF, element.attributes.WEIGHTS_0, type);
-            vertexBuffer.setSubBufferTyped('WEIGHTS_0', type, weights0Typed);
+            AttributeBuffer(glTF, element.attributes.WEIGHTS_0, 'WEIGHTS_0');
         }
         
         //////////////index buffer///////////////////
@@ -4423,29 +4416,38 @@ function loadMesh(gl,meshes, glTF, output_index) {
     if (!this.renderContexts){ return;} 
     var gl = this.renderContexts[0];
     if (!gl){ return;} 
-
+    
+    //if(glTF_In.pinIsChanged()){
+    //    meshOut.setSliceCount(1);
+    //    meshOut.setValue(0, undefined);
+    //}
+    
+    
     var maxCount = glTF_In.getSliceCount();
     var index_offset=0;
+    var output_count;
+    var iterator = 0;
         for (var i=0; i<maxCount; i++) {
             if ( glTF_In.pinIsChanged() | Update.getValue(i) == 1) {
             var glTF = glTF_In.getValue(i);  
             index_offset = i * glTF.data.meshes.length;
-            var iterator = 0;
+            
+            var element_primitive_count = 0;
             glTF.data.meshes.forEach(function(element) { //not yet tested against multiple buffers in glTF file
                 output_index = iterator * element.primitives.length + index_offset;
                 loadMesh(gl,element, glTF, output_index);
                 iterator += 1;
+                element_primitive_count += element.primitives.length;
+
             }); 
-            
+
             }
+            
+            
         } 
-        //console.log(glTF[primitives]);
-//        for (var j=0; j<mesh_array.length; j++) {
-//        meshOut.setValue(j, mesh_array[j]);
-//        //console.log(mesh);
-//        }
-        //meshOut.setSliceCount(mesh_array.length);
-        //Success.setSliceCount(mesh_array.length);
+        meshOut.setSliceCount(element_primitive_count);
+        
+
     }
 }
 VVVV.Nodes.GeometryGLTF.prototype = new Node();
@@ -4474,7 +4476,6 @@ VVVV.Nodes.GeometryGLTF.prototype = new Node();
     //output
 
     var BaseColorOut = this.addOutputPin("Base Color Texture", [], VVVV.PinTypes.WebGlTexture);
-    var BaseColorFileOut = this.addOutputPin("Base Color Path", [], VVVV.PinTypes.String);
     var NormalOut = this.addOutputPin("Normal Texture", [], VVVV.PinTypes.WebGlTexture);
     var EmissiveOut = this.addOutputPin("Emissive Texture", [], VVVV.PinTypes.WebGlTexture);
     var MetallicRoughnessOut = this.addOutputPin("Metallic Roughness Texture", [], VVVV.PinTypes.WebGlTexture);
@@ -4497,21 +4498,48 @@ function RemoveFirstDir(the_url)
     return( the_arr.join('/') );
 }
 
-function requestTexture(gl, glTF, element, i, textures){
-     var textureIndex = glTF.data.materials[element.material].pbrMetallicRoughness.baseColorTexture.index;
-     var file = glTF.data.images[glTF.data.textures[textureIndex].source].uri;
-     source_path[i] = glTF.data.path + "/" + file;
-     BaseColorFileOut.setValue(i, RemoveFirstDir(source_path[i]) ); //source_path[i]
+function requestTexture(gl, glTF, element, i, textureIndex, descriptor, IsValid){
+
+        var texture;
         if (!gl){ return;} 
-        textures[i] = gl.createTexture();
-        textures[i].context = gl;
+        texture = gl.createTexture();
+        texture.context = gl;
+        
+
+        var img1x1 = new Uint8Array([ 255, 0, 0, 255 ]);
+        //gl.activeTexture(gl.TEXTURE0 + i);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, img1x1);
+        
+        
+        if(descriptor == "BaseColor"){
+            BaseColorOut.setValue(i, texture); 
+        }
+        if(descriptor == "Normal"){
+            NormalOut.setValue(i, texture); 
+        }
+        if(descriptor == "MetallicRoughness"){
+            MetallicRoughnessOut.setValue(i, texture); 
+        }
+        if(descriptor == "Occlusion"){
+            OcclusionOut.setValue(i, texture); 
+        }
+        if(descriptor == "Emissive"){
+            EmissiveOut.setValue(i, texture); 
+        }
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        
+        if(IsValid == 0){return; }
+        
+        var file = glTF.data.images[glTF.data.textures[textureIndex].source].uri;
+        source_path[i] = glTF.data.path + "/" + file;
         var image = new Image();
-        textures[i].image = new Image();
-        textures[i].image.src = source_path[i];
-        textures[i].image.onload = (function(j) {
+        texture.image = new Image();
+        texture.image.src = source_path[i];
+        texture.image.onload = (function(j) {
             return function() {         
-                gl.bindTexture(gl.TEXTURE_2D, textures[j]);
-                gl.texImage2D(gl.TEXTURE_2D,  0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, textures[j].image);
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+                gl.texImage2D(gl.TEXTURE_2D,  0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, texture.image);
                 if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
                     gl.generateMipmap(gl.TEXTURE_2D);
                 } else {
@@ -4520,60 +4548,71 @@ function requestTexture(gl, glTF, element, i, textures){
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);                       
                 }
+                
+                if(descriptor == "BaseColor"){
+                    BaseColorOut.setValue(j, texture); 
+                }
+                if(descriptor == "Normal"){
+                    NormalOut.setValue(j, texture); 
+                }
+                if(descriptor == "MetallicRoughness"){
+                    MetallicRoughnessOut.setValue(j, texture); 
+                }
+                if(descriptor == "Occlusion"){
+                    BaseColorOut.setValue(j, texture); 
+                }
+                if(descriptor == "Emissive"){
+                    EmissiveOut.setValue(j, texture); 
+                }
                 gl.bindTexture(gl.TEXTURE_2D, null);
-                BaseColorOut.setValue(j, textures[j]); 
-                NormalOut.setValue(j, textures[j]);
-                EmissiveOut.setValue(j, textures[j]);
-                MetallicRoughnessOut.setValue(j, textures[j]);
-                OcclusionOut.setValue(j, textures[j]);
                     }
         })(i);
-        
-    //} 
-//    else{// create to render to
-//              // Create a texture.
-//                texture = gl.createTexture();
-//                texture.context = gl;
-//                gl.bindTexture(gl.TEXTURE_2D, texture);
-//
-//                // fill texture with 3x2 pixels
-//                const level = 0;
-//                const internalFormat = gl.RGBA;
-//                const width = 2;
-//                const height = 2;
-//                const border = 0;
-//                const format = gl.RGBA;
-//                const type = gl.UNSIGNED_BYTE;
-//                const data = new Uint8Array([
-//                  255,255,255,255,
-//                  255,255,255,255,
-//                  255,255,255,255,
-//                  255,255,255,255,
-//                ]);
-//                //const alignment = 8;
-//                //gl.pixelStorei(gl.UNPACK_ALIGNMENT, alignment);
-//                gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border,
-//                              format, type, data);
-//                 gl.generateMipmap(gl.TEXTURE_2D);   
-//                 
-//            BaseColorOut.setValue(i, texture);
-//        }                                                      
-
-     
-    
 }
 
 function loadTextures(gl,meshes, glTF, output_index, textures) {
     var iterator = 0;
     meshes.primitives.forEach(function(element) { //not yet tested against multiple buffers in glTF file
         output_index = output_index + iterator;
-        requestTexture(gl, glTF, element, output_index, textures);
+        var mat = glTF.data.materials[element.material];
         
-       var textureIndex = glTF.data.materials[element.material].pbrMetallicRoughness.baseColorTexture.index;
-       var file = glTF.data.images[glTF.data.textures[textureIndex].source].uri;
-       var path = glTF.data.path + "/" + file;
-       BaseColorFileOut.setValue(output_index, RemoveFirstDir(path) ); //source_path[i]
-        //console.log(element.material);
+        var textureIndex = -1;
+        var IsValid = 0;
+        if(mat.pbrMetallicRoughness.baseColorTexture !== undefined){
+            textureIndex = mat.pbrMetallicRoughness.baseColorTexture.index ;
+            IsValid = 1;
+        }
+        requestTexture(gl, glTF, element, output_index,  textureIndex, "BaseColor", IsValid);
+
+        if(mat.normalTexture !== undefined){
+            textureIndex = mat.normalTexture.index ;
+            IsValid = 1;
+        }else{IsValid = 0;}
+        requestTexture(gl, glTF, element, output_index,  textureIndex, "Normal", IsValid);
+
+        if(mat.pbrMetallicRoughness.metallicRoughnessTexture !== undefined){
+            textureIndex = mat.pbrMetallicRoughness.metallicRoughnessTexture.index ;
+            IsValid = 1;
+        }else{IsValid = 0;}
+        requestTexture(gl, glTF, element, output_index,  textureIndex, "MetallicRoughness", IsValid);
+        
+        if(mat.occlusionTexture !== undefined){
+            textureIndex = mat.occlusionTexture.index ;
+            IsValid = 1;
+        }else{IsValid = 0;}
+        requestTexture(gl, glTF, element, output_index,  textureIndex, "Occlusion", IsValid);
+        
+        if(mat.emissiveTexture !== undefined){
+            textureIndex = mat.emissiveTexture.index ;
+            IsValid = 1;
+        }else{IsValid = 0;}
+        requestTexture(gl, glTF, element, output_index,  textureIndex, "Emissive", IsValid);
+
+
+
+
+
+
+
         iterator += 1;
     }); 
 }
@@ -4587,9 +4626,9 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
     this.evaluate = function() { 
         
         
-    //if (!this.renderContexts){ return;} 
+    if (!this.renderContexts){ return;} 
     var gl = this.renderContexts[0];
-    //if (!gl){ return;} 
+    if (!gl){ return;} 
     if (this.contextChanged) {
             for (var i=0; i<textures.length; i++) {
               textures[i].context.deleteTexture(textures[i]);
@@ -4601,6 +4640,7 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
             
     var maxCount = glTF_In.getSliceCount();
     var index_offset=0;
+    var texture_count = 0;
         for (var i=0; i<maxCount; i++) {
             
            
@@ -4612,6 +4652,7 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
                 output_index = iterator * element.primitives.length + index_offset;
                 loadTextures(gl,element, glTF, output_index, textures);
                 iterator += 1;
+                texture_count += 1;
             }); 
             
             }
@@ -4621,7 +4662,11 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
 //        meshOut.setValue(j, mesh_array[j]);
 //        //console.log(mesh);
 //        }
-        //meshOut.setSliceCount(mesh_array.length);
+        if(texture_count== undefined){
+            texture_count = 1;
+            
+        }
+        BaseColorOut.setSliceCount(texture_count);
         //Success.setSliceCount(mesh_array.length);
     }
 }
