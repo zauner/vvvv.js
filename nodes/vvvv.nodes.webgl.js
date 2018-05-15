@@ -4293,8 +4293,7 @@ VVVV.Nodes.glTFLoader.prototype = new Node();
     var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
     //var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
 
-function _arrayBuffer2TypedArray(buffer, byteOffset, countOfComponentType, componentType) {
-    console.log("byteoffset " + byteOffset); console.log("count " + countOfComponentType);
+function _arrayBuffer2TypedArray(buffer, byteOffset, countOfComponentType, componentType) {  
     switch(componentType) {
         // @todo: finish
         case 5122: return new Int16Array(buffer, byteOffset, countOfComponentType); 
@@ -4481,9 +4480,7 @@ VVVV.Nodes.GeometryGLTF.prototype = new Node();
     var MetallicRoughnessOut = this.addOutputPin("Metallic Roughness Texture", [], VVVV.PinTypes.WebGlTexture);
     var OcclusionOut = this.addOutputPin("Occlusion Texture", [], VVVV.PinTypes.WebGlTexture);
 
-    
-    
-    var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
+    //var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
 
    function isPowerOf2(value) {
   return (value & (value - 1)) == 0;
@@ -4505,12 +4502,9 @@ function requestTexture(gl, glTF, element, i, textureIndex, descriptor, IsValid)
         texture = gl.createTexture();
         texture.context = gl;
         
-
-        var img1x1 = new Uint8Array([ 255, 0, 0, 255 ]);
-        //gl.activeTexture(gl.TEXTURE0 + i);
+        var img1x1 = new Uint8Array([ 255, 255, 255, 255 ]);
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, img1x1);
-        
         
         if(descriptor == "BaseColor"){
             BaseColorOut.setValue(i, texture); 
@@ -4577,11 +4571,22 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
         
         var textureIndex = -1;
         var IsValid = 0;
-        if(mat.pbrMetallicRoughness.baseColorTexture !== undefined){
-            textureIndex = mat.pbrMetallicRoughness.baseColorTexture.index ;
-            IsValid = 1;
+        if(mat.pbrMetallicRoughness !== undefined){  //in case of SpecularGloss Extension pbrMetallicRoughness is missing
+            //get base color
+            if(mat.pbrMetallicRoughness.baseColorTexture !== undefined){
+                textureIndex = mat.pbrMetallicRoughness.baseColorTexture.index ;
+                IsValid = 1;
+            }
+            requestTexture(gl, glTF, element, output_index,  textureIndex, "BaseColor", IsValid);
+            // get MetalRoughness
+            if(mat.pbrMetallicRoughness.metallicRoughnessTexture !== undefined){
+                textureIndex = mat.pbrMetallicRoughness.metallicRoughnessTexture.index ;
+                IsValid = 1;
+            }else{IsValid = 0;}
+            requestTexture(gl, glTF, element, output_index,  textureIndex, "MetallicRoughness", IsValid);
+
         }
-        requestTexture(gl, glTF, element, output_index,  textureIndex, "BaseColor", IsValid);
+       
 
         if(mat.normalTexture !== undefined){
             textureIndex = mat.normalTexture.index ;
@@ -4589,11 +4594,7 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
         }else{IsValid = 0;}
         requestTexture(gl, glTF, element, output_index,  textureIndex, "Normal", IsValid);
 
-        if(mat.pbrMetallicRoughness.metallicRoughnessTexture !== undefined){
-            textureIndex = mat.pbrMetallicRoughness.metallicRoughnessTexture.index ;
-            IsValid = 1;
-        }else{IsValid = 0;}
-        requestTexture(gl, glTF, element, output_index,  textureIndex, "MetallicRoughness", IsValid);
+        
         
         if(mat.occlusionTexture !== undefined){
             textureIndex = mat.occlusionTexture.index ;
@@ -4607,24 +4608,15 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
         }else{IsValid = 0;}
         requestTexture(gl, glTF, element, output_index,  textureIndex, "Emissive", IsValid);
 
-
-
-
-
-
-
         iterator += 1;
     }); 
 }
 
-
     var textures = [];
     var alignment = 1;
     
-    
-    
+
     this.evaluate = function() { 
-        
         
     if (!this.renderContexts){ return;} 
     var gl = this.renderContexts[0];
@@ -4636,8 +4628,6 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
             textures = [];
     }        
     
-
-            
     var maxCount = glTF_In.getSliceCount();
     var index_offset=0;
     var texture_count = 0;
@@ -4657,17 +4647,20 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
             
             }
         } 
-        //console.log(glTF[primitives]);
-//        for (var j=0; j<mesh_array.length; j++) {
-//        meshOut.setValue(j, mesh_array[j]);
-//        //console.log(mesh);
-//        }
+
         if(texture_count== undefined){
             texture_count = 1;
             
         }
         BaseColorOut.setSliceCount(texture_count);
+        NormalOut.setSliceCount(texture_count);
+        EmissiveOut.setSliceCount(texture_count);
+        MetallicRoughnessOut.setSliceCount(texture_count);
+        OcclusionOut.setSliceCount(texture_count);
         //Success.setSliceCount(mesh_array.length);
+
+
+    
     }
 }
 VVVV.Nodes.TexturesGLTF.prototype = new Node();

@@ -86,9 +86,11 @@ fragment_shader:
 #define HAS_UV
 #define USE_IBL
 #define HAS_BASECOLORMAP
-//#define HAS_NORMALMAP
+//////////////////strangly when activating normalmap, textures disappear
+#define HAS_NORMALMAP
 #define HAS_METALROUGHNESSMAP
 #define HAS_OCCLUSIONMAP
+#define HAS_EMISSIVEMAP
 //#define MANUAL_SRGB
 //#define HAS_METALNESS_SINGLECHANNEL
 //#define NO_GAMMA_CORRECTION
@@ -267,8 +269,10 @@ vec3 getIBLContribution(vec3 diffuseColor,vec3 specularColor ,float perceptualRo
     float lod = (perceptualRoughness * mipCount);
     // retrieve a scale and bias to F0. See [1], Figure 3
     vec3 brdf = SRGBtoLINEAR(texture2D(u_brdfLUT, vec2(NdotV, 1.0 - perceptualRoughness))).rgb;
-    vec3 diffuseLight = SRGBtoLINEAR(textureCube(u_SpecularEnvSampler, n)).rgb;
-
+	
+	 //////////////here should be u_SpecularEnvSampler, but it causes the bug where textures are rejected
+    vec3 diffuseLight = SRGBtoLINEAR(textureCube(u_SpecularEnvSampler, n)).rgb;     
+	/////////////////////////////////////////////////////////////////////////////////////////////
 
     vec3 specularLight = SRGBtoLINEAR(textureCube(u_SpecularEnvSampler, reflection)).rgb;
 
