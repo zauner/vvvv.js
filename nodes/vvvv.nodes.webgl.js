@@ -4479,7 +4479,12 @@ VVVV.Nodes.GeometryGLTF.prototype = new Node();
     var EmissiveOut = this.addOutputPin("Emissive Texture", [], VVVV.PinTypes.WebGlTexture);
     var MetallicRoughnessOut = this.addOutputPin("Metallic Roughness Texture", [], VVVV.PinTypes.WebGlTexture);
     var OcclusionOut = this.addOutputPin("Occlusion Texture", [], VVVV.PinTypes.WebGlTexture);
-
+    
+    var NormalScaleOut = this.addOutputPin("NormalScale", [1.0], VVVV.PinTypes.Value);
+    var EmissiveFactorOut = this.addOutputPin("EmissiveFactor", [1.0,1.0,1.0], VVVV.PinTypes.Value);
+    var OcclusionStrengthOut = this.addOutputPin("OcclusionStrength", [1.0], VVVV.PinTypes.Value);
+    var MetallicRoughnessValueOut = this.addOutputPin("BaseColorValue", [1.0,1.0], VVVV.PinTypes.Value);
+    var BaseColorValueOut = this.addOutputPin("BaseColorValue", [1.0,1.0,1.0,1.0], VVVV.PinTypes.Value);
     //var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
 
    function isPowerOf2(value) {
@@ -4566,11 +4571,12 @@ function requestTexture(gl, glTF, element, i, textureIndex, descriptor, IsValid)
 function loadTextures(gl,meshes, glTF, output_index, textures) {
     var iterator = 0;
     meshes.primitives.forEach(function(element) { //not yet tested against multiple buffers in glTF file
+        
         output_index = output_index + iterator;
         var mat = glTF.data.materials[element.material];
-        
         var textureIndex = -1;
         var IsValid = 0;
+        
         if(mat.pbrMetallicRoughness !== undefined){  //in case of SpecularGloss Extension pbrMetallicRoughness is missing
             //get base color
             if(mat.pbrMetallicRoughness.baseColorTexture !== undefined){
@@ -4578,34 +4584,64 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
                 IsValid = 1;
             }
             requestTexture(gl, glTF, element, output_index,  textureIndex, "BaseColor", IsValid);
+            //get baseColor Values
+            if(mat.pbrMetallicRoughness.baseColorFactor !== undefined){
+                var baseColorFactor_arr =  mat.pbrMetallicRoughness.baseColorFactor;
+                console.log(baseColorFactor_arr[0])
+                for (var i=0; i<4; i++) {
+                    BaseColorValueOut.setValue(output_index*4+i, baseColorFactor_arr[i]);
+                }
+            }else{
+                for (var i=0; i<4; i++) {
+                BaseColorValueOut.setValue(output_index*4+i, [1.0]);
+                }
+            }
+            
             // get MetalRoughness
             if(mat.pbrMetallicRoughness.metallicRoughnessTexture !== undefined){
                 textureIndex = mat.pbrMetallicRoughness.metallicRoughnessTexture.index ;
                 IsValid = 1;
             }else{IsValid = 0;}
             requestTexture(gl, glTF, element, output_index,  textureIndex, "MetallicRoughness", IsValid);
-
         }
-       
-
+        //normal Texture
         if(mat.normalTexture !== undefined){
             textureIndex = mat.normalTexture.index ;
             IsValid = 1;
-        }else{IsValid = 0;}
+            //normalScale
+            if(mat.normalTexture.scale !== undefined){
+                    NormalScaleOut.setValue(output_index, mat.normalTexture.scale);
+                }else{NormalScaleOut.setValue(output_index, [0.0]);}
+        }else{
+            IsValid = 0;
+            NormalScaleOut.setValue(output_index, [0.0]);
+        }
         requestTexture(gl, glTF, element, output_index,  textureIndex, "Normal", IsValid);
 
-        
-        
+        //occlusionTexture 
         if(mat.occlusionTexture !== undefined){
             textureIndex = mat.occlusionTexture.index ;
             IsValid = 1;
-        }else{IsValid = 0;}
+            //occlusionStrengh 
+            if(mat.occlusionTexture.strength !== undefined){
+                    OcclusionStrengthOut.setValue(output_index, mat.occlusionTexture.strength);
+                }else{OcclusionStrengthOut.setValue(output_index, [0.0]);}
+        }else{
+            IsValid = 0; 
+            OcclusionStrengthOut.setValue(output_index, [0.0]);
+        }
         requestTexture(gl, glTF, element, output_index,  textureIndex, "Occlusion", IsValid);
-        
+        //emissive Texture
         if(mat.emissiveTexture !== undefined){
             textureIndex = mat.emissiveTexture.index ;
-            IsValid = 1;
+            IsValid = 1;      
         }else{IsValid = 0;}
+        //emissiveFactor is independent of texture
+        if(mat.emissiveFactor !== undefined){
+                for (var i=0; i<3; i++) {
+                    EmissiveFactorOut.setValue(output_index*3+i, mat.emissiveFactor[i]);
+                }
+            }
         requestTexture(gl, glTF, element, output_index,  textureIndex, "Emissive", IsValid);
 
         iterator += 1;
@@ -4657,8 +4693,13 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
         EmissiveOut.setSliceCount(texture_count);
         MetallicRoughnessOut.setSliceCount(texture_count);
         OcclusionOut.setSliceCount(texture_count);
+        
+        NormalScaleOut.setSliceCount(texture_count);
+        EmissiveFactorOut.setSliceCount(texture_count*3);
+        OcclusionStrengthOut.setSliceCount(texture_count);
+        MetallicRoughnessValueOut.setSliceCount(texture_count*2);
+        BaseColorValueOut.setSliceCount(texture_count*4);
         //Success.setSliceCount(mesh_array.length);
-
 
     
     }

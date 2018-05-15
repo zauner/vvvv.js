@@ -87,7 +87,7 @@ fragment_shader:
 #define USE_IBL
 #define HAS_BASECOLORMAP
 //////////////////strangly when activating normalmap, textures disappear
-#define HAS_NORMALMAP
+//#define HAS_NORMALMAP
 #define HAS_METALROUGHNESSMAP
 #define HAS_OCCLUSIONMAP
 #define HAS_EMISSIVEMAP
