@@ -4432,12 +4432,15 @@ function loadMesh(gl,meshes, glTF, output_index) {
             index_offset = i * glTF.data.meshes.length;
             
             var element_primitive_count = 0;
-            glTF.data.meshes.forEach(function(element) { //not yet tested against multiple buffers in glTF file
-                output_index = iterator * element.primitives.length + index_offset;
-                loadMesh(gl,element, glTF, output_index);
-                iterator += 1;
-                element_primitive_count += element.primitives.length;
-
+            glTF.data.nodes.forEach(function(element) { //not yet tested against multiple buffers in glTF file
+                if(element.mesh !== undefined){
+                    var index = element.mesh; 
+                    var mesh = glTF.data.meshes[index];
+                    output_index = iterator * mesh.primitives.length + index_offset;
+                    loadMesh(gl,mesh, glTF, output_index);
+                    iterator += 1;
+                    element_primitive_count += mesh.primitives.length;
+                }
             }); 
 
             }
@@ -4587,7 +4590,6 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
             //get baseColor Values
             if(mat.pbrMetallicRoughness.baseColorFactor !== undefined){
                 var baseColorFactor_arr =  mat.pbrMetallicRoughness.baseColorFactor;
-                console.log(baseColorFactor_arr[0])
                 for (var i=0; i<4; i++) {
                     BaseColorValueOut.setValue(output_index*4+i, baseColorFactor_arr[i]);
                 }
@@ -4674,11 +4676,15 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
             var glTF = glTF_In.getValue(i);  
             index_offset = i * glTF.data.meshes.length;
             var iterator = 0;
-            glTF.data.meshes.forEach(function(element) { //not yet tested against multiple buffers in glTF file
-                output_index = iterator * element.primitives.length + index_offset;
-                loadTextures(gl,element, glTF, output_index, textures);
+            glTF.data.nodes.forEach(function(element) { //not yet tested against multiple buffers in glTF file
+                if(element.mesh !== undefined){
+                    var index = element.mesh; 
+                    var mesh = glTF.data.meshes[index];
+                output_index = iterator * mesh.primitives.length + index_offset;
+                loadTextures(gl,mesh, glTF, output_index, textures);
                 iterator += 1;
                 texture_count += 1;
+                }
             }); 
             
             }
@@ -4706,6 +4712,222 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
 }
 VVVV.Nodes.TexturesGLTF.prototype = new Node();
 
+///*
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//   NODE: Nodes (glTF)
+//   Author(s): David Gann
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//  */
+
+  VVVV.Nodes.NodesGLTF = function(id, graph) {
+    this.constructor(id, "Nodes (glTF Transform)", graph);
+
+    this.meta = {
+      authors: ['David Gann'],
+      original_authors: ['000.graphics'],
+      credits: [],
+      compatibility_issues: []
+    };
+    
+    //input
+    var glTF_In = this.addInputPin("glTF", [], VVVV.PinTypes.glTF);   
+    var Update= this.addInputPin('Update', [0], VVVV.PinTypes.Value);
+    //output
+    var TransformMeshOut = this.addOutputPin("Transform Mesh", [], VVVV.PinTypes.Transform);
+
+
+    function defined(value) {
+        return value !== undefined && value !== null;
+    }
+
+    //As a quick fix for outdated gl-matrix.js lib use the relevant parts from the new lib locally
+    //copyright Brandon Jones, for details see lib/gl-matrix.js in this repo
+    if(!GLMAT_ARRAY_TYPE) {
+        var GLMAT_ARRAY_TYPE = (typeof Float32Array !== 'undefined') ? Float32Array : Array;
+    }
+
+    clone = function(a) {
+        var out = new GLMAT_ARRAY_TYPE(16);
+        out[0] = a[0];
+        out[1] = a[1];
+        out[2] = a[2];
+        out[3] = a[3];
+        out[4] = a[4];
+        out[5] = a[5];
+        out[6] = a[6];
+        out[7] = a[7];
+        out[8] = a[8];
+        out[9] = a[9];
+        out[10] = a[10];
+        out[11] = a[11];
+        out[12] = a[12];
+        out[13] = a[13];
+        out[14] = a[14];
+        out[15] = a[15];
+        return out;
+    };
+
+    create2 = function() {
+      let out = new GLMAT_ARRAY_TYPE(16);
+      out[0] = 1;
+      out[1] = 0;
+      out[2] = 0;
+      out[3] = 0;
+      out[4] = 0;
+      out[5] = 1;
+      out[6] = 0;
+      out[7] = 0;
+      out[8] = 0;
+      out[9] = 0;
+      out[10] = 1;
+      out[11] = 0;
+      out[12] = 0;
+      out[13] = 0;
+      out[14] = 0;
+      out[15] = 1;
+      return out;
+    }
+
+    fromRotationTranslationScale = function(out, q, v, s) {
+      // Quaternion math
+      let x = q[0], y = q[1], z = q[2], w = q[3];
+      let x2 = x + x;
+      let y2 = y + y;
+      let z2 = z + z;
+
+      let xx = x * x2;
+      let xy = x * y2;
+      let xz = x * z2;
+      let yy = y * y2;
+      let yz = y * z2;
+      let zz = z * z2;
+      let wx = w * x2;
+      let wy = w * y2;
+      let wz = w * z2;
+      let sx = s[0];
+      let sy = s[1];
+      let sz = s[2];
+
+      out[0] = (1 - (yy + zz)) * sx;
+      out[1] = (xy + wz) * sx;
+      out[2] = (xz - wy) * sx;
+      out[3] = 0;
+      out[4] = (xy - wz) * sy;
+      out[5] = (1 - (xx + zz)) * sy;
+      out[6] = (yz + wx) * sy;
+      out[7] = 0;
+      out[8] = (xz + wy) * sz;
+      out[9] = (yz - wx) * sz;
+      out[10] = (1 - (xx + yy)) * sz;
+      out[11] = 0;
+      out[12] = v[0];
+      out[13] = v[1];
+      out[14] = v[2];
+      out[15] = 1;
+
+      return out;
+    }
+
+    multiply2 = function(out, a, b) {
+      let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+      let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+      let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+      let a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+
+      // Cache only the current line of the second matrix
+      let b0  = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+      out[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+      out[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+      out[2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+      out[3] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+      b0 = b[4]; b1 = b[5]; b2 = b[6]; b3 = b[7];
+      out[4] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+      out[5] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+      out[6] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+      out[7] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+      b0 = b[8]; b1 = b[9]; b2 = b[10]; b3 = b[11];
+      out[8] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+      out[9] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+      out[10] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+      out[11] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+      b0 = b[12]; b1 = b[13]; b2 = b[14]; b3 = b[15];
+      out[12] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+      out[13] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+      out[14] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+      out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+      return out;
+    }
+
+    var transform_array = [];
+
+    var drawNodeRecursive = function(glTF, node, parentTransform) {
+        var localTransform;
+        if (node.matrix) {
+            localTransform = clone(node.matrix);
+        } else {
+            localTransform = create2();
+            var scale = node.scale ? node.scale : [1.0, 1.0, 1.0];
+            var rotation = node.rotation ? node.rotation : [0.0, 0.0, 0.0, 1.0];
+            var translate = node.translation ? node.translation : [0.0, 0.0, 0.0];
+            fromRotationTranslationScale(localTransform, rotation, translate, scale);
+        }
+        multiply2(localTransform, localTransform, parentTransform);
+        if (defined(node.mesh && node.mesh < glTF.data.meshes.length) ) {  
+            transform_array.push(localTransform);
+        }
+        if (defined(node.children) && node.children.length > 0) {
+            for (var i = 0; i < node.children.length; i++) {
+                drawNodeRecursive(glTF, glTF.data.nodes[node.children[i]], localTransform);
+            }
+        }
+    };
+
+    this.evaluate = function() { 
+    var maxCount = glTF_In.getSliceCount();
+    var index_offset=0;
+    var output_count;
+    var iterator = 0;
+        for (var i=0; i<maxCount; i++) {
+            if ( glTF_In.pinIsChanged() | Update.getValue(i) == 1) {
+            transform_array = []
+            var glTF = glTF_In.getValue(i);  
+            //Recursively traverse scene graph
+            drawNodeRecursive(glTF, glTF.data.nodes[0], create2());
+
+            if(transform_array.length !== 0 || transform_array.length !== undefined){
+                console.log(transform_array.length);
+                for (var j=0; j<transform_array.length; j++) {
+                    var output_transform = Array.from(transform_array[j]);
+                    TransformMeshOut.setValue(j, output_transform);
+                }
+                TransformMeshOut.setSliceCount(transform_array.length);
+            }else{
+                TransformMeshOut.setValue(0, create2());
+                TransformMeshOut.setSliceCount(1);
+            }
+            //var element_primitive_count = 0;
+            //glTF.data.nodes.forEach(function(element) { //not yet tested against multiple buffers in glTF file
+                
+                
+                //if(element.mesh !== undefined){
+                    
+                    //load local transforms
+                //}
+            //}); 
+
+            }
+            
+            
+        } 
+       
+        
+
+    }
+}
+VVVV.Nodes.NodesGLTF.prototype = new Node();
 
 });
 
