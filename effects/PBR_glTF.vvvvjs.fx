@@ -1,7 +1,7 @@
 vertex_shader:
 #define HAS_NORMALS
 #define HAS_UV
-//#define HAS_TANGENTS
+#define HAS_TANGENTS
 //#define HAS_Animation
 #ifdef GL_ES
 precision highp float;
@@ -95,7 +95,7 @@ fragment_shader:
 //#define HAS_METALNESS_SINGLECHANNEL
 //#define NO_GAMMA_CORRECTION
 //#define USE_DERIVATIVE_MAP
-//#define HAS_TANGENTS
+#define HAS_TANGENTS
 //#define USE_POM_SIHLOUETTE
 #define SRGB_FAST_APPROXIMATION
 //#define USE_TEX_LOD

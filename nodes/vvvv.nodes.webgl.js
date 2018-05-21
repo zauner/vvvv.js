@@ -2077,6 +2077,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     shader.setVertexShader(varDefs+vertexShaderCode);
     //console.log(vertexShaderCode);
     //console.log(fragmentShaderCode);
+    console.log("shader " + shader.vertexShaderCode);
   }
 
   this.evaluate = function() {
@@ -2095,7 +2096,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
           thatNode.parentPatch.executionContext.ShaderCodeResources[thatNode.shaderFile].definingNode.showStatus('error', shader.log);
       }
     }
-
+    
     // find out input slice count with respect to the input pin dimension, defined by the shader code
     var maxSize = 0;
     _(this.inputPins).each(function(p) {
@@ -2120,7 +2121,10 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     for (var j=currentLayerCount; j<maxSize; j++) {
       layers[j] = new VVVV.Types.Layer();
       layers[j].mesh = meshIn.getValue(j);
-      layers[j].shader = shader;
+      
+      layers[j].shader = shader; 
+      
+      
       _(shader.uniformSpecs).each(function(u) {
         layers[j].uniformNames.push(u.varname);
         layers[j].uniforms[u.varname] = { uniformSpec: u, value: undefined };
@@ -2133,6 +2137,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     }
     for (var j=0; j<maxSize; j++) {
       layers[j].shader = shader;
+      
     }
 
     for (var i=0; i<shaderPins.length; i++) {
@@ -2227,7 +2232,8 @@ VVVV.Nodes.Quad = function(id, graph) {
   var layers = [];
   var mesh = null;
   var shader = null;
-
+  
+  
   this.evaluate = function() {
 
     if (!this.renderContexts) return;
@@ -4287,10 +4293,12 @@ VVVV.Nodes.glTFLoader.prototype = new Node();
     };
     
     //input
-    var glTF_In = this.addInputPin("glTF", [], VVVV.PinTypes.glTF);   
+    var glTF_In = this.addInputPin("glTF", [], VVVV.PinTypes.glTF); 
+    var MeshIndexIn= this.addInputPin('Mesh Index', [0], VVVV.PinTypes.Value);
     var Update= this.addInputPin('Update', [0], VVVV.PinTypes.Value);
     //output
     var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
+    var VsDefinesOut = this.addOutputPin("VS Defines", [""], VVVV.PinTypes.String);
     //var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
 
 function _arrayBuffer2TypedArray(buffer, byteOffset, countOfComponentType, componentType) {  
@@ -4390,7 +4398,7 @@ function loadMesh(gl,meshes, glTF, output_index) {
         if ("WEIGHTS_0" in element.attributes) {
             AttributeBuffer(glTF, element.attributes.WEIGHTS_0, 'WEIGHTS_0');
         }
-        
+
         //////////////index buffer///////////////////
         var type = Type2Num(glTF, element.indices);
 
@@ -4403,8 +4411,6 @@ function loadMesh(gl,meshes, glTF, output_index) {
         if(componentTypeIndex == 5125 || componentTypeIndex == 5124){
             mesh.isUInt32 = true;
         }
-        
-        //mesh_array.push(mesh);
         output_index = output_index + iterator;
         meshOut.setValue(output_index, mesh);
         iterator += 1;
@@ -4415,37 +4421,47 @@ function loadMesh(gl,meshes, glTF, output_index) {
     if (!this.renderContexts){ return;} 
     var gl = this.renderContexts[0];
     if (!gl){ return;} 
-    
-    //if(glTF_In.pinIsChanged()){
-    //    meshOut.setSliceCount(1);
-    //    meshOut.setValue(0, undefined);
-    //}
-    
-    
+
     var maxCount = glTF_In.getSliceCount();
     var index_offset=0;
     var output_count;
     var iterator = 0;
         for (var i=0; i<maxCount; i++) {
-            if ( glTF_In.pinIsChanged() | Update.getValue(i) == 1) {
+            if ( MeshIndexIn.pinIsChanged() | glTF_In.pinIsChanged() | Update.getValue(i) == 1) {
             var glTF = glTF_In.getValue(i);  
             index_offset = i * glTF.data.meshes.length;
-            
             var element_primitive_count = 0;
-            glTF.data.nodes.forEach(function(element) { //not yet tested against multiple buffers in glTF file
-                if(element.mesh !== undefined){
-                    var index = element.mesh; 
-                    var mesh = glTF.data.meshes[index];
-                    output_index = iterator * mesh.primitives.length + index_offset;
-                    loadMesh(gl,mesh, glTF, output_index);
-                    iterator += 1;
-                    element_primitive_count += mesh.primitives.length;
-                }
-            }); 
+            
+             var mesh_count;
 
-            }
-            
-            
+                if(MeshIndexIn.isConnected()){ //load meshes in order of the Mesh Index from Nodes(glTF) node
+                    mesh_count = MeshIndexIn.getSliceCount();
+                    index_offset = i * mesh_count;
+                    for (var j=0; j<mesh_count; j++) {
+                        var mesh_index = MeshIndexIn.getValue(j);
+                        if(glTF.data.meshes[mesh_index] !== undefined){
+                            var mesh = glTF.data.meshes[mesh_index];
+                            output_index = iterator * mesh.primitives.length + index_offset;
+                            loadMesh(gl,mesh, glTF, output_index);
+                            iterator += 1;
+                            element_primitive_count += mesh.primitives.length;
+                        }
+                    }
+                }else{ //load meshes in order of nodes if mesh index pin is not connected
+                    mesh_count = glTF.data.nodes.length;
+                    index_offset = i * mesh_count;
+                    for (var j=0; j<mesh_count; j++) {
+                        if(glTF.data.nodes[j].mesh !== undefined){
+                            var index = glTF.data.nodes[j].mesh;
+                            var mesh = glTF.data.meshes[index];
+                            output_index = iterator * mesh.primitives.length + index_offset;
+                            loadMesh(gl,mesh, glTF, output_index);
+                            iterator += 1;
+                            element_primitive_count += mesh.primitives.length;
+                        }
+                    }
+                }
+            }  
         } 
         meshOut.setSliceCount(element_primitive_count);
         
@@ -4473,7 +4489,8 @@ VVVV.Nodes.GeometryGLTF.prototype = new Node();
     };
     
     //input
-    var glTF_In = this.addInputPin("glTF", [], VVVV.PinTypes.glTF);   
+    var glTF_In = this.addInputPin("glTF", [], VVVV.PinTypes.glTF);  
+    var MeshIndexIn= this.addInputPin('Mesh Index', [0], VVVV.PinTypes.Value);
     var Update= this.addInputPin('Update', [0], VVVV.PinTypes.Value);
     //output
 
@@ -4486,7 +4503,7 @@ VVVV.Nodes.GeometryGLTF.prototype = new Node();
     var NormalScaleOut = this.addOutputPin("NormalScale", [1.0], VVVV.PinTypes.Value);
     var EmissiveFactorOut = this.addOutputPin("EmissiveFactor", [1.0,1.0,1.0], VVVV.PinTypes.Value);
     var OcclusionStrengthOut = this.addOutputPin("OcclusionStrength", [1.0], VVVV.PinTypes.Value);
-    var MetallicRoughnessValueOut = this.addOutputPin("BaseColorValue", [1.0,1.0], VVVV.PinTypes.Value);
+    var MetallicRoughnessValueOut = this.addOutputPin("MetallicRoughness Value", [1.0,1.0], VVVV.PinTypes.Value);
     var BaseColorValueOut = this.addOutputPin("BaseColorValue", [1.0,1.0,1.0,1.0], VVVV.PinTypes.Value);
     //var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
 
@@ -4599,13 +4616,27 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
                 }
             }
             
-            // get MetalRoughness
+            // get MetalRoughness texture
             if(mat.pbrMetallicRoughness.metallicRoughnessTexture !== undefined){
                 textureIndex = mat.pbrMetallicRoughness.metallicRoughnessTexture.index ;
                 IsValid = 1;
             }else{IsValid = 0;}
             requestTexture(gl, glTF, element, output_index,  textureIndex, "MetallicRoughness", IsValid);
+            
+            //get metallicValue
+            if(mat.pbrMetallicRoughness.metallicFactor !== undefined){
+                    MetallicRoughnessValueOut.setValue(output_index*2, mat.pbrMetallicRoughness.metallicFactor);
+            }else{
+                MetallicRoughnessValueOut.setValue(output_index*2, [1.0]);
+            }
+            //get Roughness Value
+            if(mat.pbrMetallicRoughness.roughnessFactor !== undefined){
+                    MetallicRoughnessValueOut.setValue(output_index*2+1, mat.pbrMetallicRoughness.roughnessFactor);
+            }else{
+                MetallicRoughnessValueOut.setValue(output_index*2+1, [1.0]);
+            }
         }
+        
         //normal Texture
         if(mat.normalTexture !== undefined){
             textureIndex = mat.normalTexture.index ;
@@ -4672,21 +4703,40 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
         for (var i=0; i<maxCount; i++) {
             
            
-            if ( glTF_In.pinIsChanged() | Update.getValue(i) == 1) {
-            var glTF = glTF_In.getValue(i);  
-            index_offset = i * glTF.data.meshes.length;
-            var iterator = 0;
-            glTF.data.nodes.forEach(function(element) { //not yet tested against multiple buffers in glTF file
-                if(element.mesh !== undefined){
-                    var index = element.mesh; 
-                    var mesh = glTF.data.meshes[index];
-                output_index = iterator * mesh.primitives.length + index_offset;
-                loadTextures(gl,mesh, glTF, output_index, textures);
-                iterator += 1;
-                texture_count += 1;
+            if ( MeshIndexIn.pinIsChanged() | glTF_In.pinIsChanged() | Update.getValue(i) == 1) {
+                var glTF = glTF_In.getValue(i);  
+                
+                var iterator = 0;
+                var mesh_count;
+
+                if(MeshIndexIn.isConnected()){ //load textures in order of the Mesh Index from Nodes(glTF) node
+                    mesh_count = MeshIndexIn.getSliceCount()
+                    index_offset = i * mesh_count;
+                    for (var j=0; j<mesh_count; j++) {
+                        var mesh_index = MeshIndexIn.getValue(j)
+                        if(glTF.data.meshes[mesh_index] !== undefined){
+                            var mesh = glTF.data.meshes[mesh_index];
+                            output_index = iterator * mesh.primitives.length + index_offset;
+                            loadTextures(gl,mesh, glTF, output_index, textures);
+                            iterator += 1;
+                            texture_count += 1;
+                        }
+                    }
+                }else{ //load meshes in order of nodes if mesh index pin is not connected
+                    mesh_count = glTF.data.nodes.length;
+                    index_offset = i * mesh_count;
+                    for (var j=0; j<mesh_count; j++) {
+                        if(glTF.data.nodes[j].mesh !== undefined){
+                            var index = glTF.data.nodes[j].mesh; 
+                            var mesh = glTF.data.meshes[index];
+                            output_index = iterator * mesh.primitives.length + index_offset;
+                            loadTextures(gl,mesh, glTF, output_index, textures);
+                            iterator += 1;
+                            texture_count += 1;
+                        }
+                    }
                 }
-            }); 
-            
+                
             }
         } 
 
@@ -4734,6 +4784,7 @@ VVVV.Nodes.TexturesGLTF.prototype = new Node();
     var Update= this.addInputPin('Update', [0], VVVV.PinTypes.Value);
     //output
     var TransformMeshOut = this.addOutputPin("Transform Mesh", [], VVVV.PinTypes.Transform);
+    var MeshIndexOut = this.addOutputPin("Mesh Index", [0], VVVV.PinTypes.Value);
 
 
     function defined(value) {
@@ -4862,6 +4913,7 @@ VVVV.Nodes.TexturesGLTF.prototype = new Node();
     }
 
     var transform_array = [];
+    var mesh_index_array = [];
 
     var drawNodeRecursive = function(glTF, node, parentTransform) {
         var localTransform;
@@ -4877,6 +4929,7 @@ VVVV.Nodes.TexturesGLTF.prototype = new Node();
         multiply2(localTransform, localTransform, parentTransform);
         if (defined(node.mesh && node.mesh < glTF.data.meshes.length) ) {  
             transform_array.push(localTransform);
+            mesh_index_array.push(node.mesh);
         }
         if (defined(node.children) && node.children.length > 0) {
             for (var i = 0; i < node.children.length; i++) {
@@ -4892,16 +4945,17 @@ VVVV.Nodes.TexturesGLTF.prototype = new Node();
     var iterator = 0;
         for (var i=0; i<maxCount; i++) {
             if ( glTF_In.pinIsChanged() | Update.getValue(i) == 1) {
-            transform_array = []
+            transform_array = [];
+            mesh_index_array = [];
             var glTF = glTF_In.getValue(i);  
             //Recursively traverse scene graph
             drawNodeRecursive(glTF, glTF.data.nodes[0], create2());
 
             if(transform_array.length !== 0 || transform_array.length !== undefined){
-                console.log(transform_array.length);
                 for (var j=0; j<transform_array.length; j++) {
                     var output_transform = Array.from(transform_array[j]);
                     TransformMeshOut.setValue(j, output_transform);
+                    MeshIndexOut.setValue(j, mesh_index_array[j]);
                 }
                 TransformMeshOut.setSliceCount(transform_array.length);
             }else{
@@ -4928,6 +4982,164 @@ VVVV.Nodes.TexturesGLTF.prototype = new Node();
     }
 }
 VVVV.Nodes.NodesGLTF.prototype = new Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: glTF_PBR_core (glTF webgl shader)
+ Author(s): Matthias Zauner
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.glTF_PBR_core = function(id, graph) {
+  this.constructor(id, "glTF_PBR_core (glTF webgl shader)", graph);
+
+  this.auto_nil = false;
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['000.graphics'],
+    credits: [],
+    compatibility_issues: ['No Sampler States', 'No texture coord mapping', 'No enable pin', 'Transprent pixels are discarded by default']
+  };
+  this.environments = ['browser'];
+
+  this.auto_evaluate = false;
+
+  var renderStateIn = this.addInputPin("Render State", [], VVVV.PinTypes.WebGlRenderState);
+  this.addInputPin("Transform", [], VVVV.PinTypes.Transform);
+  this.addInputPin("Texture", [], VVVV.PinTypes.WebGlTexture);
+  this.addInputPin("Texture Transform", [], VVVV.PinTypes.Transform);
+  this.addInputPin("Color", [], VVVV.PinTypes.Color);
+
+  var layerOut = this.addOutputPin("Layer", [], VVVV.PinTypes.WebGlResource);
+
+  var initialized = false;
+  var layers = [];
+  var mesh = null;
+  var shader = null;
+
+  this.evaluate = function() {
+
+    if (!this.renderContexts) return;
+    var gl = this.renderContexts[0];
+
+    if (!gl)
+      return;
+
+    if (this.contextChanged) {
+      var vertices = [
+         0.5,  0.5,  0.0,
+        -0.5,  0.5,  0.0,
+         0.5, -0.5,  0.0,
+        -0.5, -0.5,  0.0
+      ];
+
+      var texCoords = [
+        1.0, 0.0,
+        0.0, 0.0,
+        1.0, 1.0,
+        0.0, 1.0
+      ];
+
+      var vertexBuffer = new VVVV.Types.VertexBuffer(gl);
+      vertexBuffer.create();
+      vertexBuffer.setSubBuffer('POSITION', 3, vertices);
+      vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
+      vertexBuffer.update();
+      mesh = new VVVV.Types.Mesh(gl, vertexBuffer, [ 0, 1, 2, 1, 3, 2 ]);
+      mesh.update([ 0, 1, 2, 1, 3, 2 ]);
+
+      // shaders
+
+      var fragmentShaderCode = "#ifdef GL_ES\n";
+      fragmentShaderCode += "precision mediump float;\n";
+      fragmentShaderCode += "#endif\n";
+      fragmentShaderCode += "uniform vec4 col : COLOR = {1.0, 1.0, 1.0, 1.0}; varying vec2 vs2psTexCd; uniform sampler2D Samp0; void main(void) { gl_FragColor = col*texture2D(Samp0, vs2psTexCd); if (gl_FragColor.a==0.0) discard;  }";
+      var vertexShaderCode = "attribute vec3 PosO : POSITION; attribute vec2 TexCd : TEXCOORD0; uniform mat4 tW : WORLD; uniform mat4 tV : VIEW; uniform mat4 tP : PROJECTION; uniform mat4 tTex; varying vec2 vs2psTexCd; void main(void) { gl_Position = tP * tV * tW * vec4(PosO, 1.0); vs2psTexCd = (tTex * vec4(TexCd.xy-.5, 0.0, 1.0)).xy+.5; }";
+
+      shader = new VVVV.Types.ShaderProgram();
+      shader.extractSemantics(fragmentShaderCode + vertexShaderCode);
+      shader.setFragmentShader(fragmentShaderCode);
+      shader.setVertexShader(vertexShaderCode);
+      shader.setup(gl);
+
+    }
+
+    var maxSize = this.getMaxInputSliceCount();
+    var currentLayerCount = layers.length;
+    if (this.contextChanged)
+      currentLayerCount = 0;
+    // shorten layers array, if input slice count decreases
+    if (maxSize<currentLayerCount) {
+      layers.splice(maxSize, currentLayerCount-maxSize);
+    }
+    for (var j=currentLayerCount; j<maxSize; j++) {
+      layers[j] = new VVVV.Types.Layer();
+      layers[j].mesh = mesh;
+      layers[j].shader = shader;
+
+      _(shader.uniformSpecs).each(function(u) {
+        layers[j].uniformNames.push(u.varname);
+        layers[j].uniforms[u.varname] = { uniformSpec: u, value: undefined };
+      });
+    }
+
+    var colorChanged = this.inputPins["Color"].pinIsChanged();
+    var transformChanged = this.inputPins["Transform"].pinIsChanged();
+    var textureChanged = this.inputPins["Texture"].pinIsChanged();
+    var textureTransformChanged = this.inputPins["Texture Transform"].pinIsChanged();
+
+    if (colorChanged || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        var color = this.inputPins["Color"].getValue(i);
+        //var rgba = _(color.split(',')).map(function(x) { return parseFloat(x) });
+        layers[i].uniforms['col'].value = color.rgba;
+      }
+    }
+
+    if (renderStateIn.pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        if (renderStateIn.isConnected())
+          layers[i].renderState = renderStateIn.getValue(i);
+        else
+          layers[i].renderState = VVVV.DefaultRenderState;
+      }
+    }
+
+    if (transformChanged || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        var transform = this.inputPins["Transform"].getValue(i);
+        layers[i].uniforms[layers[i].shader.uniformSemanticMap['WORLD']].value = transform;
+      }
+    }
+
+    if (textureChanged || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["Samp0"].value = this.inputPins["Texture"].getValue(i);
+      }
+    }
+
+    if (textureTransformChanged || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        var transform = this.inputPins["Texture Transform"].getValue(i);
+        layers[i].uniforms["tTex"].value = transform;
+      }
+    }
+
+    this.outputPins["Layer"].setSliceCount(maxSize);
+    for (var i=0; i<maxSize; i++) {
+      this.outputPins["Layer"].setValue(i, layers[i]);
+    }
+
+    this.contextChanged = false;
+
+  }
+
+}
+VVVV.Nodes.glTF_PBR_core.prototype = new Node();
+
+
 
 });
 
