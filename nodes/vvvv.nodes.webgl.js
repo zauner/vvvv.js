@@ -2232,8 +2232,7 @@ VVVV.Nodes.Quad = function(id, graph) {
   var layers = [];
   var mesh = null;
   var shader = null;
-  
-  
+
   this.evaluate = function() {
 
     if (!this.renderContexts) return;
@@ -5007,6 +5006,9 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
   this.auto_evaluate = false;
 
   var renderStateIn = this.addInputPin("Render State", [], VVVV.PinTypes.WebGlRenderState);
+  var meshIn = this.addInputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
+  var VSDefinesIn = this.addInputPin("VS Defines", [''], VVVV.PinTypes.String);
+  var PSDefinesIn = this.addInputPin("PS Defines", [''], VVVV.PinTypes.String);
   this.addInputPin("Transform", [], VVVV.PinTypes.Transform);
   this.addInputPin("Texture", [], VVVV.PinTypes.WebGlTexture);
   this.addInputPin("Texture Transform", [], VVVV.PinTypes.Transform);
@@ -5027,56 +5029,72 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
     if (!gl)
       return;
 
-    if (this.contextChanged) {
-      var vertices = [
-         0.5,  0.5,  0.0,
-        -0.5,  0.5,  0.0,
-         0.5, -0.5,  0.0,
-        -0.5, -0.5,  0.0
-      ];
 
-      var texCoords = [
-        1.0, 0.0,
-        0.0, 0.0,
-        1.0, 1.0,
-        0.0, 1.0
-      ];
-
-      var vertexBuffer = new VVVV.Types.VertexBuffer(gl);
-      vertexBuffer.create();
-      vertexBuffer.setSubBuffer('POSITION', 3, vertices);
-      vertexBuffer.setSubBuffer('TEXCOORD0', 2, texCoords);
-      vertexBuffer.update();
-      mesh = new VVVV.Types.Mesh(gl, vertexBuffer, [ 0, 1, 2, 1, 3, 2 ]);
-      mesh.update([ 0, 1, 2, 1, 3, 2 ]);
-
-      // shaders
-
-      var fragmentShaderCode = "#ifdef GL_ES\n";
-      fragmentShaderCode += "precision mediump float;\n";
-      fragmentShaderCode += "#endif\n";
-      fragmentShaderCode += "uniform vec4 col : COLOR = {1.0, 1.0, 1.0, 1.0}; varying vec2 vs2psTexCd; uniform sampler2D Samp0; void main(void) { gl_FragColor = col*texture2D(Samp0, vs2psTexCd); if (gl_FragColor.a==0.0) discard;  }";
-      var vertexShaderCode = "attribute vec3 PosO : POSITION; attribute vec2 TexCd : TEXCOORD0; uniform mat4 tW : WORLD; uniform mat4 tV : VIEW; uniform mat4 tP : PROJECTION; uniform mat4 tTex; varying vec2 vs2psTexCd; void main(void) { gl_Position = tP * tV * tW * vec4(PosO, 1.0); vs2psTexCd = (tTex * vec4(TexCd.xy-.5, 0.0, 1.0)).xy+.5; }";
-
-      shader = new VVVV.Types.ShaderProgram();
-      shader.extractSemantics(fragmentShaderCode + vertexShaderCode);
-      shader.setFragmentShader(fragmentShaderCode);
-      shader.setVertexShader(vertexShaderCode);
-      shader.setup(gl);
-
-    }
 
     var maxSize = this.getMaxInputSliceCount();
+    
+    
+    if (this.contextChanged) {
+
+    var shaderCode = '';
+    $.ajax({ type: "GET",   
+             url: VVVVContext.Root + '/effects/PBR_glTF.vvvvjs.fx',   
+             async: true,
+             success : function(text)
+             {
+                 shaderCode = text;
+                 var technique = " ";
+                var vsRegEx = new RegExp('vertex_shader(\\{([a-zA-Z0-9]+,\\s*)*'+technique+'(,\\s*[a-zA-Z0-9]+)*\\})?:([\\s\\S]*?)(vertex_shader|fragment_shader)');
+                var psRegEx = new RegExp('fragment_shader(\\{([a-zA-Z0-9]+,\\s*)*'+technique+'(,\\s*[a-zA-Z0-9]+)*\\})?:([\\s\\S]*?)(vertex_shader|fragment_shader)');
+                var match;
+                match = /STARTOFSTRING((\r?\n|.)*?)(vertex_shader|fragment_shader)/.exec('STARTOFSTRING'+shaderCode);
+                if ((match = vsRegEx.exec(shaderCode+'\nfragment_shader'))==undefined) {
+                  console.log('ERROR: No vertex shader code for technique '+technique+' found');
+                  return;
+                }
+                var vertexShaderCode = match[4];
+                vertexShaderCode = VSDefinesIn.getValue(0) + vertexShaderCode; 
+                if ((match = psRegEx.exec(shaderCode+'\nfragment_shader'))==undefined) {
+                  console.log('ERROR: No fragment shader code for technique '+technique+' found');
+                  return;
+                }
+                var fragmentShaderCode = match[4];
+                fragmentShaderCode = VSDefinesIn.getValue(0) + fragmentShaderCode; 
+                
+                 var fragmentShaderCode = "#ifdef GL_ES\n";
+                fragmentShaderCode += "precision mediump float;\n";
+                fragmentShaderCode += "#endif\n";
+                fragmentShaderCode += "uniform vec4 col : COLOR = {1.0, 1.0, 1.0, 1.0}; varying vec2 vs2psTexCd; uniform sampler2D Samp0; void main(void) { gl_FragColor = col*texture2D(Samp0, vs2psTexCd); if (gl_FragColor.a==0.0) discard;  }";
+                var vertexShaderCode = "attribute vec3 PosO : POSITION; attribute vec2 TexCd : TEXCOORD0; uniform mat4 tW : WORLD; uniform mat4 tV : VIEW; uniform mat4 tP : PROJECTION; uniform mat4 tTex; varying vec2 vs2psTexCd; void main(void) { gl_Position = tP * tV * tW * vec4(PosO, 1.0); vs2psTexCd = (tTex * vec4(TexCd.xy-.5, 0.0, 1.0)).xy+.5; }";
+
+                shader = new VVVV.Types.ShaderProgram();
+                shader.extractSemantics(fragmentShaderCode + vertexShaderCode);
+                shader.setFragmentShader(fragmentShaderCode);
+                shader.setVertexShader(vertexShaderCode);
+                shader.setup(gl);
+
+             }
+    });
+
+
+    }
+    
+    
+
     var currentLayerCount = layers.length;
     if (this.contextChanged)
       currentLayerCount = 0;
     // shorten layers array, if input slice count decreases
+    if (!meshIn.isConnected() || meshIn.getValue(0)==undefined){
+      maxSize = 0;}
     if (maxSize<currentLayerCount) {
       layers.splice(maxSize, currentLayerCount-maxSize);
     }
+    
+    
     for (var j=currentLayerCount; j<maxSize; j++) {
       layers[j] = new VVVV.Types.Layer();
-      layers[j].mesh = mesh;
+      layers[j].mesh = meshIn.getValue(j);
       layers[j].shader = shader;
 
       _(shader.uniformSpecs).each(function(u) {

@@ -1463,14 +1463,26 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
    
     var HtmlIn = this.addInputPin("Html In", [" "], VVVV.PinTypes.String);
     var Selector = this.addInputPin("Selector", [" "], VVVV.PinTypes.String);  
-
+    var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
+    var Method = this.addInputPin('Method', ['byTag'], VVVV.PinTypes.Enum);
+    Method.enumOptions = ['byTag', 'byID'];
+ 
 
     this.evaluate = function() {
-      var maxSpreadSize = this.getMaxInputSliceCount();
-      var $selector = $(Selector.getValue(0))
-      if (HtmlIn.pinIsChanged())
-        $selector.innerHTML=HtmlIn.getValue(0);
-
+        
+      var selector = elementIn.getValue(0).element;
+      if (HtmlIn.pinIsChanged()){
+        var html_code = HtmlIn.getValue(0);
+        var html_document;
+        if(Method.getValue(0) == 'byID'){
+        html_document = document.getElementById(selector).innerHTML=html_code;
+        }
+        if(Method.getValue(0) == 'byTag'){
+        document.getElementsByTagName(selector).innerHTML=html_code;
+        }
+        $(selector).html(html_code);
+      console.log(html_code)  
+    }
     
 
       
