@@ -1462,7 +1462,7 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
 
    
     var HtmlIn = this.addInputPin("Html In", [" "], VVVV.PinTypes.String);
-    var Selector = this.addInputPin("Selector", [" "], VVVV.PinTypes.String);  
+ 
     var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
     var Method = this.addInputPin('Method', ['byTag'], VVVV.PinTypes.Enum);
     Method.enumOptions = ['byTag', 'byID'];
