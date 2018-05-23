@@ -513,6 +513,10 @@ VVVV.Types.ShaderProgram = function() {
           thatShader.uniformSemanticMap[match[6]] = match[4];
       }
     }
+    //console.log(JSON.stringify(thatShader.uniformSemanticMap));
+
+    
+    
   }
 
   this.setVertexShader = function(code) {
@@ -2077,7 +2081,7 @@ VVVV.Nodes.GenericShader = function(id, graph) {
     shader.setVertexShader(varDefs+vertexShaderCode);
     //console.log(vertexShaderCode);
     //console.log(fragmentShaderCode);
-    console.log("shader " + shader.vertexShaderCode);
+    //console.log("shader " + shader.vertexShaderCode);
   }
 
   this.evaluate = function() {
@@ -5019,8 +5023,9 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
   var initialized = false;
   var layers = [];
   var mesh = null;
-  var shader = null;
-
+  var shader = [];
+      var shader_HasLoaded = 0;
+  //shader[0] = null;
   this.evaluate = function() {
 
     if (!this.renderContexts) return;
@@ -5031,19 +5036,20 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
 
 
 
-    var maxSize = this.getMaxInputSliceCount();
-    
-    
-    if (this.contextChanged) {
+    var maxSize = meshIn.getSliceCount();//this.getMaxInputSliceCount();
+
+    if (this.contextChanged || meshIn.pinIsChanged()) {
 
     var shaderCode = '';
+    var vertexShaderCode = '';
+    var fragmentShaderCode = '';
     $.ajax({ type: "GET",   
-             url: VVVVContext.Root + '/effects/PBR_glTF.vvvvjs.fx',   
+             url: VVVVContext.Root + '/effects/test_shader.vvvvjs.fx',    //PBR_glTF.vvvvjs.fx
              async: true,
              success : function(text)
              {
-                 shaderCode = text;
-                 var technique = " ";
+                shaderCode = text;
+                var technique = " ";
                 var vsRegEx = new RegExp('vertex_shader(\\{([a-zA-Z0-9]+,\\s*)*'+technique+'(,\\s*[a-zA-Z0-9]+)*\\})?:([\\s\\S]*?)(vertex_shader|fragment_shader)');
                 var psRegEx = new RegExp('fragment_shader(\\{([a-zA-Z0-9]+,\\s*)*'+technique+'(,\\s*[a-zA-Z0-9]+)*\\})?:([\\s\\S]*?)(vertex_shader|fragment_shader)');
                 var match;
@@ -5052,31 +5058,22 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
                   console.log('ERROR: No vertex shader code for technique '+technique+' found');
                   return;
                 }
-                var vertexShaderCode = match[4];
+                vertexShaderCode = match[4];
                 vertexShaderCode = VSDefinesIn.getValue(0) + vertexShaderCode; 
                 if ((match = psRegEx.exec(shaderCode+'\nfragment_shader'))==undefined) {
                   console.log('ERROR: No fragment shader code for technique '+technique+' found');
                   return;
                 }
-                var fragmentShaderCode = match[4];
-                fragmentShaderCode = VSDefinesIn.getValue(0) + fragmentShaderCode; 
-                
-                 var fragmentShaderCode = "#ifdef GL_ES\n";
-                fragmentShaderCode += "precision mediump float;\n";
-                fragmentShaderCode += "#endif\n";
-                fragmentShaderCode += "uniform vec4 col : COLOR = {1.0, 1.0, 1.0, 1.0}; varying vec2 vs2psTexCd; uniform sampler2D Samp0; void main(void) { gl_FragColor = col*texture2D(Samp0, vs2psTexCd); if (gl_FragColor.a==0.0) discard;  }";
-                var vertexShaderCode = "attribute vec3 PosO : POSITION; attribute vec2 TexCd : TEXCOORD0; uniform mat4 tW : WORLD; uniform mat4 tV : VIEW; uniform mat4 tP : PROJECTION; uniform mat4 tTex; varying vec2 vs2psTexCd; void main(void) { gl_Position = tP * tV * tW * vec4(PosO, 1.0); vs2psTexCd = (tTex * vec4(TexCd.xy-.5, 0.0, 1.0)).xy+.5; }";
-
-                shader = new VVVV.Types.ShaderProgram();
-                shader.extractSemantics(fragmentShaderCode + vertexShaderCode);
-                shader.setFragmentShader(fragmentShaderCode);
-                shader.setVertexShader(vertexShaderCode);
-                shader.setup(gl);
-
-             }
+                fragmentShaderCode = match[4];
+                fragmentShaderCode = PSDefinesIn.getValue(0) + fragmentShaderCode; 
+                shader_HasLoaded = 1;
+            }
     });
 
 
+                
+             
+                
     }
     
     
@@ -5085,7 +5082,7 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
     if (this.contextChanged)
       currentLayerCount = 0;
     // shorten layers array, if input slice count decreases
-    if (!meshIn.isConnected() || meshIn.getValue(0)==undefined){
+    if (!meshIn.isConnected() || meshIn.getValue(0)==undefined || shader_HasLoaded == 0){
       maxSize = 0;}
     if (maxSize<currentLayerCount) {
       layers.splice(maxSize, currentLayerCount-maxSize);
@@ -5093,11 +5090,50 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
     
     
     for (var j=currentLayerCount; j<maxSize; j++) {
+            console.log("enter")
+        vertexShaderCode = VSDefinesIn.getValue(0) + vertexShaderCode;  
+        fragmentShaderCode = PSDefinesIn.getValue(0) + fragmentShaderCode; 
+        console.log(vertexShaderCode);       
+        shader[j] = new VVVV.Types.ShaderProgram();
+
+        shader[j].attributeSpecs = {
+            PosO: {varname: "PosO", semantic: "POSITION", position: 0},
+            TexCd: {varname: "TexCd", semantic: "TEXCOORD0", position: 0}
+        };
+
+        shader[j].attribSemanticMap = {POSITION: "PosO", TEXCOORD0: "TexCd"};
+
+        shader[j].uniformSpecs = {
+            "col":{"varname":"col","semantic":"COLOR","position":0,"type":"vec","defaultValue":"1.0, 1.0, 1.0, 1.0","dimension":"4"},
+            "Samp0":{"varname":"Samp0","position":0,"type":"sampler","dimension":"2D"},
+            "tW":{"varname":"tW","semantic":"WORLD","position":0,"type":"mat","dimension":"4"},
+            "tV":{"varname":"tV","semantic":"VIEW","position":0,"type":"mat","dimension":"4"},
+            "tP":{"varname":"tP","semantic":"PROJECTION","position":0,"type":"mat","dimension":"4"},
+            "tTex":{"varname":"tTex","position":0,"type":"mat","dimension":"4"}
+        };
+
+        shader[j].uniformSemanticMap = {
+            "COLOR":"col",
+            "WORLD":"tW",
+            "VIEW":"tV",
+            "PROJECTION":"tP"
+        };
+
+
+         console.log( "loaded");
+
+        shader[j].setFragmentShader(fragmentShaderCode);
+        shader[j].setVertexShader(vertexShaderCode);
+        shader[j].setup(gl);
+         
+          
+          //console.log(shader[0])
+                
       layers[j] = new VVVV.Types.Layer();
       layers[j].mesh = meshIn.getValue(j);
-      layers[j].shader = shader;
+      layers[j].shader = shader[j];
 
-      _(shader.uniformSpecs).each(function(u) {
+      _(shader[j].uniformSpecs).each(function(u) {
         layers[j].uniformNames.push(u.varname);
         layers[j].uniforms[u.varname] = { uniformSpec: u, value: undefined };
       });
@@ -5149,7 +5185,7 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
     for (var i=0; i<maxSize; i++) {
       this.outputPins["Layer"].setValue(i, layers[i]);
     }
-
+    
     this.contextChanged = false;
 
   }
