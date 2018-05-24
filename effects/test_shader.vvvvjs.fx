@@ -35,5 +35,8 @@ color = vec4(0.0,0.0,1.0,1.0);
 #ifdef IS_GREEN
 color = vec4(0.0,1.0,0.0,1.0);
 #endif  
+#ifdef IS_RED
+color = vec4(1.0,0.0,0.0,1.0);
+#endif  
 gl_FragColor = color;
  }

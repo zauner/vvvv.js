@@ -533,6 +533,7 @@ VVVV.Types.ShaderProgram = function() {
     this.log = '';
     vertexShader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertexShader, vertexShaderCode.replace(/((uniform|attribute) [a-zA-Z0-9]+ [a-zA-Z0-9_]+)[^;]*/g, '$1'));
+    
     gl.compileShader(vertexShader);
     if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
       this.log = gl.getShaderInfoLog(vertexShader);
@@ -4995,28 +4996,47 @@ VVVV.Nodes.NodesGLTF.prototype = new Node();
 */
 
 VVVV.Nodes.glTF_PBR_core = function(id, graph) {
-  this.constructor(id, "glTF_PBR_core (glTF webgl shader)", graph);
+    this.constructor(id, "glTF_PBR_core (glTF webgl shader)", graph);
 
-  this.auto_nil = false;
+    this.auto_nil = false;
 
-  this.meta = {
-    authors: ['David Gann'],
-    original_authors: ['000.graphics'],
-    credits: [],
-    compatibility_issues: ['No Sampler States', 'No texture coord mapping', 'No enable pin', 'Transprent pixels are discarded by default']
-  };
-  this.environments = ['browser'];
+    this.meta = {
+      authors: ['David Gann'],
+      original_authors: ['000.graphics'],
+      credits: [],
+      compatibility_issues: ['No Sampler States', 'No texture coord mapping', 'No enable pin', 'Transprent pixels are discarded by default']
+    };
+    this.environments = ['browser'];
 
-  this.auto_evaluate = false;
+    this.auto_evaluate = false;
 
-  var renderStateIn = this.addInputPin("Render State", [], VVVV.PinTypes.WebGlRenderState);
-  var meshIn = this.addInputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
-  var VSDefinesIn = this.addInputPin("VS Defines", [''], VVVV.PinTypes.String);
-  var PSDefinesIn = this.addInputPin("PS Defines", [''], VVVV.PinTypes.String);
-  this.addInputPin("Transform", [], VVVV.PinTypes.Transform);
-  this.addInputPin("Texture", [], VVVV.PinTypes.WebGlTexture);
-  this.addInputPin("Texture Transform", [], VVVV.PinTypes.Transform);
-  this.addInputPin("Color", [], VVVV.PinTypes.Color);
+    var renderStateIn = this.addInputPin("Render State", [], VVVV.PinTypes.WebGlRenderState);
+    var meshIn = this.addInputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
+    var VSDefinesIn = this.addInputPin("VS Defines", [''], VVVV.PinTypes.String);
+    var PSDefinesIn = this.addInputPin("PS Defines", [''], VVVV.PinTypes.String);
+    this.addInputPin("Transform", [], VVVV.PinTypes.Transform);
+    this.addInputPin("LightDirection", [1.0,1.0,1.0], VVVV.PinTypes.Value);
+    this.addInputPin("LightColor", [1.0,1.0,1.0], VVVV.PinTypes.Value);
+    
+    this.addInputPin("Camera", [0.0,0.0,0.0], VVVV.PinTypes.Value);
+    
+    this.addInputPin("DiffuseEnvSampler", [], VVVV.PinTypes.WebGlTexture);
+    this.addInputPin("SpecularEnvSampler", [], VVVV.PinTypes.WebGlTexture);
+    this.addInputPin("brdfLUT", [], VVVV.PinTypes.WebGlTexture);
+    this.addInputPin("BaseColorSampler", [], VVVV.PinTypes.WebGlTexture);
+    this.addInputPin("EmissiveSampler", [], VVVV.PinTypes.WebGlTexture);
+    this.addInputPin("MetallicRoughnessSampler", [], VVVV.PinTypes.WebGlTexture);
+    this.addInputPin("OcclusionSampler", [], VVVV.PinTypes.WebGlTexture);
+    
+    this.addInputPin("BaseColorValue", [1.0,1.0,1.0,1.0], VVVV.PinTypes.Value);
+    this.addInputPin("NormalScale", [1.0,1.0,1.0], VVVV.PinTypes.Value);
+    this.addInputPin("EmissiveFactor", [1.0,1.0,1.0], VVVV.PinTypes.Value);
+    this.addInputPin("OcclusionStrenght", [1.0], VVVV.PinTypes.Value);
+    this.addInputPin("MetallicRoughnessValue", [1.0,1.0], VVVV.PinTypes.Value);
+  
+    this.addInputPin("Exposure", [0.0], VVVV.PinTypes.Value);
+    this.addInputPin("Alpha", [1.0], VVVV.PinTypes.Value);
+  
 
   var layerOut = this.addOutputPin("Layer", [], VVVV.PinTypes.WebGlResource);
 
@@ -5026,84 +5046,19 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
   var shader = [];
       var shader_HasLoaded = 0;
   //shader[0] = null;
-  this.evaluate = function() {
-
-    if (!this.renderContexts) return;
-    var gl = this.renderContexts[0];
-
-    if (!gl)
-      return;
-
-
-
-    var maxSize = meshIn.getSliceCount();//this.getMaxInputSliceCount();
-
-    if (this.contextChanged || meshIn.pinIsChanged()) {
-
-    var shaderCode = '';
-    var vertexShaderCode = '';
-    var fragmentShaderCode = '';
-    $.ajax({ type: "GET",   
-             url: VVVVContext.Root + '/effects/test_shader.vvvvjs.fx',    //PBR_glTF.vvvvjs.fx
-             async: true,
-             success : function(text)
-             {
-                shaderCode = text;
-                var technique = " ";
-                var vsRegEx = new RegExp('vertex_shader(\\{([a-zA-Z0-9]+,\\s*)*'+technique+'(,\\s*[a-zA-Z0-9]+)*\\})?:([\\s\\S]*?)(vertex_shader|fragment_shader)');
-                var psRegEx = new RegExp('fragment_shader(\\{([a-zA-Z0-9]+,\\s*)*'+technique+'(,\\s*[a-zA-Z0-9]+)*\\})?:([\\s\\S]*?)(vertex_shader|fragment_shader)');
-                var match;
-                match = /STARTOFSTRING((\r?\n|.)*?)(vertex_shader|fragment_shader)/.exec('STARTOFSTRING'+shaderCode);
-                if ((match = vsRegEx.exec(shaderCode+'\nfragment_shader'))==undefined) {
-                  console.log('ERROR: No vertex shader code for technique '+technique+' found');
-                  return;
-                }
-                vertexShaderCode = match[4];
-                vertexShaderCode = VSDefinesIn.getValue(0) + vertexShaderCode; 
-                if ((match = psRegEx.exec(shaderCode+'\nfragment_shader'))==undefined) {
-                  console.log('ERROR: No fragment shader code for technique '+technique+' found');
-                  return;
-                }
-                fragmentShaderCode = match[4];
-                fragmentShaderCode = PSDefinesIn.getValue(0) + fragmentShaderCode; 
-                shader_HasLoaded = 1;
-            }
-    });
-
-
-                
-             
-                
-    }
-    
-    
-
-    var currentLayerCount = layers.length;
-    if (this.contextChanged)
-      currentLayerCount = 0;
-    // shorten layers array, if input slice count decreases
-    if (!meshIn.isConnected() || meshIn.getValue(0)==undefined || shader_HasLoaded == 0){
-      maxSize = 0;}
-    if (maxSize<currentLayerCount) {
-      layers.splice(maxSize, currentLayerCount-maxSize);
-    }
-    
-    
-    for (var j=currentLayerCount; j<maxSize; j++) {
-            console.log("enter")
-        vertexShaderCode = VSDefinesIn.getValue(0) + vertexShaderCode;  
-        fragmentShaderCode = PSDefinesIn.getValue(0) + fragmentShaderCode; 
-        console.log(vertexShaderCode);       
-        shader[j] = new VVVV.Types.ShaderProgram();
-
-        shader[j].attributeSpecs = {
+  
+  
+    function initShader(gl, vertexShaderCode, fragmentShaderCode){
+        
+        var  shader = new VVVV.Types.ShaderProgram();
+        shader.attributeSpecs = {
             PosO: {varname: "PosO", semantic: "POSITION", position: 0},
             TexCd: {varname: "TexCd", semantic: "TEXCOORD0", position: 0}
         };
 
-        shader[j].attribSemanticMap = {POSITION: "PosO", TEXCOORD0: "TexCd"};
+        shader.attribSemanticMap = {POSITION: "PosO", TEXCOORD0: "TexCd"};
 
-        shader[j].uniformSpecs = {
+        shader.uniformSpecs = {
             "col":{"varname":"col","semantic":"COLOR","position":0,"type":"vec","defaultValue":"1.0, 1.0, 1.0, 1.0","dimension":"4"},
             "Samp0":{"varname":"Samp0","position":0,"type":"sampler","dimension":"2D"},
             "tW":{"varname":"tW","semantic":"WORLD","position":0,"type":"mat","dimension":"4"},
@@ -5112,45 +5067,105 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
             "tTex":{"varname":"tTex","position":0,"type":"mat","dimension":"4"}
         };
 
-        shader[j].uniformSemanticMap = {
+        shader.uniformSemanticMap = {
             "COLOR":"col",
             "WORLD":"tW",
             "VIEW":"tV",
             "PROJECTION":"tP"
         };
 
+        shader.setFragmentShader(fragmentShaderCode);
+        shader.setVertexShader(vertexShaderCode);
+        shader.setup(gl);
+        return shader;
+    }
+  
+  this.evaluate = function() {
 
-         console.log( "loaded");
+    if (!this.renderContexts) return;
+    var gl = this.renderContexts[0];
 
-        shader[j].setFragmentShader(fragmentShaderCode);
-        shader[j].setVertexShader(vertexShaderCode);
-        shader[j].setup(gl);
+    if (!gl)
+      return;
+
+    if(shader_HasLoaded == 0){
+        $.ajax({ type: "GET",   
+                 url: VVVVContext.Root + '/effects/test_shader.vvvvjs.fx',    //PBR_glTF.vvvvjs.fx /effects/test_shader.vvvvjs.fx
+                 async: true,
+                 success : function(text)
+                 {
+                    shaderCode = text;
+                    var technique = " ";
+                    var vsRegEx = new RegExp('vertex_shader(\\{([a-zA-Z0-9]+,\\s*)*'+technique+'(,\\s*[a-zA-Z0-9]+)*\\})?:([\\s\\S]*?)(vertex_shader|fragment_shader)');
+                    var psRegEx = new RegExp('fragment_shader(\\{([a-zA-Z0-9]+,\\s*)*'+technique+'(,\\s*[a-zA-Z0-9]+)*\\})?:([\\s\\S]*?)(vertex_shader|fragment_shader)');
+                    var match;
+                    match = /STARTOFSTRING((\r?\n|.)*?)(vertex_shader|fragment_shader)/.exec('STARTOFSTRING'+shaderCode);
+                    if ((match = vsRegEx.exec(shaderCode+'\nfragment_shader'))==undefined) {
+                      console.log('ERROR: No vertex shader code for technique '+technique+' found');
+                      return;
+                    }
+                    vertexShaderCode = match[4];
+                    vertexShaderCode = VSDefinesIn.getValue(0) + vertexShaderCode; 
+                    if ((match = psRegEx.exec(shaderCode+'\nfragment_shader'))==undefined) {
+                      console.log('ERROR: No fragment shader code for technique '+technique+' found');
+                      return;
+                    }
+                    fragmentShaderCode = match[4];
+                    fragmentShaderCode = PSDefinesIn.getValue(0) + fragmentShaderCode; 
+                    shader_HasLoaded = 1;
+
+                    
+                    
+                }
+        });
+        
+        
+    }
+  
+
+    if (this.contextChanged || meshIn.pinIsChanged()) {
          
-          
-          //console.log(shader[0])
-                
-      layers[j] = new VVVV.Types.Layer();
-      layers[j].mesh = meshIn.getValue(j);
-      layers[j].shader = shader[j];
+    }
+    
+     var maxSize = Math.max(meshIn.getSliceCount(), this.inputPins["Transform"].getSliceCount());//this.getMaxInputSliceCount();
+    //layer management
+    var currentLayerCount = layers.length;
+    if (this.contextChanged)
+        currentLayerCount = 0;
+    // shorten layers array, if input slice count decreases
+    if (!meshIn.isConnected() || meshIn.getValue(0)==undefined || shader_HasLoaded == 0){
+        maxSize = 0;
+    }
+    if (maxSize<currentLayerCount) {
+        layers.splice(maxSize, currentLayerCount-maxSize);
+    }
+    
+ 
+      
+    for (var j=currentLayerCount; j<maxSize; j++) {
+        console.log("running loop")
+        vertexShaderCode = VSDefinesIn.getValue(j) + vertexShaderCode;  
+        fragmentShaderCode = PSDefinesIn.getValue(j) + fragmentShaderCode; 
+                    
+        shader[j] = null;      
+        shader[j] = initShader(gl, vertexShaderCode, fragmentShaderCode)     
 
-      _(shader[j].uniformSpecs).each(function(u) {
-        layers[j].uniformNames.push(u.varname);
-        layers[j].uniforms[u.varname] = { uniformSpec: u, value: undefined };
-      });
+        layers[j] = new VVVV.Types.Layer();
+        layers[j].mesh = meshIn.getValue(j);
+        layers[j].shader = shader[j];
+
+        _(shader[j].uniformSpecs).each(function(u) {
+            layers[j].uniformNames.push(u.varname);
+            layers[j].uniforms[u.varname] = { uniformSpec: u, value: undefined };
+        });
     }
 
-    var colorChanged = this.inputPins["Color"].pinIsChanged();
+
+   
     var transformChanged = this.inputPins["Transform"].pinIsChanged();
-    var textureChanged = this.inputPins["Texture"].pinIsChanged();
-    var textureTransformChanged = this.inputPins["Texture Transform"].pinIsChanged();
+    var textureChanged = this.inputPins["BaseColorSampler"].pinIsChanged();
 
-    if (colorChanged || currentLayerCount<maxSize) {
-      for (var i=0; i<maxSize; i++) {
-        var color = this.inputPins["Color"].getValue(i);
-        //var rgba = _(color.split(',')).map(function(x) { return parseFloat(x) });
-        layers[i].uniforms['col'].value = color.rgba;
-      }
-    }
+
 
     if (renderStateIn.pinIsChanged() || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
@@ -5158,6 +5173,16 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
           layers[i].renderState = renderStateIn.getValue(i);
         else
           layers[i].renderState = VVVV.DefaultRenderState;
+      }
+    }
+    
+    
+    if (meshIn.pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        if (meshIn.isConnected())
+          layers[i].mesh = meshIn.getValue(i);
+        else
+          layers[i].mesh = null;
       }
     }
 
@@ -5168,18 +5193,15 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
       }
     }
 
-    if (textureChanged || currentLayerCount<maxSize) {
+    if (this.inputPins["BaseColorSampler"].pinIsChanged(); || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
-        layers[i].uniforms["Samp0"].value = this.inputPins["Texture"].getValue(i);
+        layers[i].uniforms["Samp0"].value = this.inputPins["BaseColorSampler"].getValue(i);
       }
     }
 
-    if (textureTransformChanged || currentLayerCount<maxSize) {
-      for (var i=0; i<maxSize; i++) {
-        var transform = this.inputPins["Texture Transform"].getValue(i);
-        layers[i].uniforms["tTex"].value = transform;
-      }
-    }
+    
+
+    
 
     this.outputPins["Layer"].setSliceCount(maxSize);
     for (var i=0; i<maxSize; i++) {
