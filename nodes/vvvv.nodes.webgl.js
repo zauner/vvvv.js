@@ -513,7 +513,8 @@ VVVV.Types.ShaderProgram = function() {
           thatShader.uniformSemanticMap[match[6]] = match[4];
       }
     }
-    //console.log(JSON.stringify(thatShader.uniformSemanticMap));
+    //console.log(JSON.stringify(thatShader.attributeSpecs));
+
 
     
     
@@ -5015,6 +5016,7 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
     var VSDefinesIn = this.addInputPin("VS Defines", [''], VVVV.PinTypes.String);
     var PSDefinesIn = this.addInputPin("PS Defines", [''], VVVV.PinTypes.String);
     this.addInputPin("Transform", [], VVVV.PinTypes.Transform);
+    this.addInputPin("TextureTransform", [], VVVV.PinTypes.Transform);
     this.addInputPin("LightDirection", [1.0,1.0,1.0], VVVV.PinTypes.Value);
     this.addInputPin("LightColor", [1.0,1.0,1.0], VVVV.PinTypes.Value);
     
@@ -5024,15 +5026,16 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
     this.addInputPin("SpecularEnvSampler", [], VVVV.PinTypes.WebGlTexture);
     this.addInputPin("brdfLUT", [], VVVV.PinTypes.WebGlTexture);
     this.addInputPin("BaseColorSampler", [], VVVV.PinTypes.WebGlTexture);
+    this.addInputPin("NormalSampler", [], VVVV.PinTypes.WebGlTexture);
     this.addInputPin("EmissiveSampler", [], VVVV.PinTypes.WebGlTexture);
     this.addInputPin("MetallicRoughnessSampler", [], VVVV.PinTypes.WebGlTexture);
     this.addInputPin("OcclusionSampler", [], VVVV.PinTypes.WebGlTexture);
     
-    this.addInputPin("BaseColorValue", [1.0,1.0,1.0,1.0], VVVV.PinTypes.Value);
+    this.addInputPin("BaseColorFactor", [1.0,1.0,1.0,1.0], VVVV.PinTypes.Value);
     this.addInputPin("NormalScale", [1.0,1.0,1.0], VVVV.PinTypes.Value);
     this.addInputPin("EmissiveFactor", [1.0,1.0,1.0], VVVV.PinTypes.Value);
-    this.addInputPin("OcclusionStrenght", [1.0], VVVV.PinTypes.Value);
-    this.addInputPin("MetallicRoughnessValue", [1.0,1.0], VVVV.PinTypes.Value);
+    this.addInputPin("OcclusionStrength", [1.0], VVVV.PinTypes.Value);
+    this.addInputPin("MetallicRoughnessValues", [1.0,1.0], VVVV.PinTypes.Value);
   
     this.addInputPin("Exposure", [0.0], VVVV.PinTypes.Value);
     this.addInputPin("Alpha", [1.0], VVVV.PinTypes.Value);
@@ -5051,28 +5054,77 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
     function initShader(gl, vertexShaderCode, fragmentShaderCode){
         
         var  shader = new VVVV.Types.ShaderProgram();
-        shader.attributeSpecs = {
-            PosO: {varname: "PosO", semantic: "POSITION", position: 0},
-            TexCd: {varname: "TexCd", semantic: "TEXCOORD0", position: 0}
-        };
-
-        shader.attribSemanticMap = {POSITION: "PosO", TEXCOORD0: "TexCd"};
-
+        
+        
+//        shader.attributeSpecs = {
+//            PosO: {varname: "PosO", semantic: "POSITION", position: 0},
+//            TexCd: {varname: "TexCd", semantic: "TEXCOORD0", position: 0}
+//        };
+//        shader.attribSemanticMap = {
+//            POSITION: "PosO",
+//            TEXCOORD0: "TexCd"};
+//
+//        shader.uniformSpecs = {
+//            "col":{"varname":"col","semantic":"COLOR","position":0,"type":"vec","defaultValue":"1.0, 1.0, 1.0, 1.0","dimension":"4"},
+//            "Samp0":{"varname":"Samp0","position":0,"type":"sampler","dimension":"2D"},
+//            "tW":{"varname":"tW","semantic":"WORLD","position":0,"type":"mat","dimension":"4"},
+//            "tV":{"varname":"tV","semantic":"VIEW","position":0,"type":"mat","dimension":"4"},
+//            "tP":{"varname":"tP","semantic":"PROJECTION","position":0,"type":"mat","dimension":"4"},
+//            "tTex":{"varname":"tTex","position":0,"type":"mat","dimension":"4"}
+//        };
+//
+//        shader.uniformSemanticMap = {
+//            "COLOR":"col",
+//            "WORLD":"tW",
+//            "VIEW":"tV",
+//            "PROJECTION":"tP"
+//        }; 
+        
+        
+        shader.attributeSpecs =  {
+            "a_Position":{"varname":"a_Position","semantic":"POSITION","position":0},
+            "a_Normal":{"varname":"a_Normal","semantic":"NORMAL","position":0},
+            "a_Tangent":{"varname":"a_Tangent","semantic":"TANGENT","position":0},
+            "a_UV":{"varname":"a_UV","semantic":"TEXCOORD0","position":0}
+        };       
+        
+        shader.attribSemanticMap = {
+            "POSITION":"a_Position",
+            "NORMAL":"a_Normal",
+            "TANGENT":"a_Tangent",
+            "TEXCOORD0":"a_UV"
+        };        
+       
         shader.uniformSpecs = {
-            "col":{"varname":"col","semantic":"COLOR","position":0,"type":"vec","defaultValue":"1.0, 1.0, 1.0, 1.0","dimension":"4"},
-            "Samp0":{"varname":"Samp0","position":0,"type":"sampler","dimension":"2D"},
+            "Texture_Transform":{"varname":"Texture_Transform","position":0,"type":"mat","dimension":"4"},
             "tW":{"varname":"tW","semantic":"WORLD","position":0,"type":"mat","dimension":"4"},
             "tV":{"varname":"tV","semantic":"VIEW","position":0,"type":"mat","dimension":"4"},
             "tP":{"varname":"tP","semantic":"PROJECTION","position":0,"type":"mat","dimension":"4"},
-            "tTex":{"varname":"tTex","position":0,"type":"mat","dimension":"4"}
+            "u_LightDirection":{"varname":"u_LightDirection","position":0,"type":"vec","dimension":"3"},
+            "u_LightColor":{"varname":"u_LightColor","position":0,"type":"vec","dimension":"3"},
+            "u_DiffuseEnvSampler":{"varname":"u_DiffuseEnvSampler","position":0,"type":"samplerCube","dimension":"1"},
+            "u_SpecularEnvSampler":{"varname":"u_SpecularEnvSampler","position":0,"type":"samplerCube","dimension":"1"},
+            "u_brdfLUT":{"varname":"u_brdfLUT","position":0,"type":"sampler","dimension":"2D"},
+            "u_BaseColorSampler":{"varname":"u_BaseColorSampler","position":0,"type":"sampler","dimension":"2D"},
+            "u_NormalSampler":{"varname":"u_NormalSampler","position":0,"type":"sampler","dimension":"2D"},
+            "u_NormalScale":{"varname":"u_NormalScale","position":0,"type":"float","dimension":"1"},
+            "u_EmissiveSampler":{"varname":"u_EmissiveSampler","position":0,"type":"sampler","dimension":"2D"},
+            "u_EmissiveFactor":{"varname":"u_EmissiveFactor","position":0,"type":"vec","dimension":"3"},
+            "u_MetallicRoughnessSampler":{"varname":"u_MetallicRoughnessSampler","position":0,"type":"sampler", "dimension":"2D"},
+            "u_OcclusionSampler":{"varname":"u_OcclusionSampler","position":0,"type":"sampler","dimension":"2D"},
+            "u_OcclusionStrength":{"varname":"u_OcclusionStrength","position":0,"type":"float","dimension":"1"},
+            "u_MetallicRoughnessValues":{"varname":"u_MetallicRoughnessValues","position":0,"type":"vec","dimension":"2"},
+            "u_BaseColorFactor":{"varname":"u_BaseColorFactor","position":0,"type":"vec","dimension":"4"},
+            "u_Camera":{"varname":"u_Camera","position":0,"type":"vec","dimension":"3"},
+            "exposure":{"varname":"exposure","position":0,"type":"float","defaultValue":"0.0","dimension":"1"},
+            "alpha":{"varname":"alpha","position":0,"type":"float","defaultValue":"1.0","dimension":"1"}
         };
-
+        
         shader.uniformSemanticMap = {
-            "COLOR":"col",
-            "WORLD":"tW",
-            "VIEW":"tV",
-            "PROJECTION":"tP"
-        };
+             "WORLD":"tW",
+             "VIEW":"tV",
+             "PROJECTION":"tP"
+         };
 
         shader.setFragmentShader(fragmentShaderCode);
         shader.setVertexShader(vertexShaderCode);
@@ -5087,10 +5139,12 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
 
     if (!gl)
       return;
-
+    if (this.contextChanged ) {
+        shader_HasLoaded = 0;
     if(shader_HasLoaded == 0){
         $.ajax({ type: "GET",   
-                 url: VVVVContext.Root + '/effects/test_shader.vvvvjs.fx',    //PBR_glTF.vvvvjs.fx /effects/test_shader.vvvvjs.fx
+                 //url: VVVVContext.Root + '/effects/test_shader.vvvvjs.fx',   
+                 url: VVVVContext.Root + '/effects/PBR_glTF_core.vvvvjs.fx', 
                  async: true,
                  success : function(text)
                  {
@@ -5113,18 +5167,9 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
                     fragmentShaderCode = match[4];
                     fragmentShaderCode = PSDefinesIn.getValue(0) + fragmentShaderCode; 
                     shader_HasLoaded = 1;
-
-                    
-                    
                 }
-        });
-        
-        
-    }
-  
-
-    if (this.contextChanged || meshIn.pinIsChanged()) {
-         
+        });  
+    }    
     }
     
      var maxSize = Math.max(meshIn.getSliceCount(), this.inputPins["Transform"].getSliceCount());//this.getMaxInputSliceCount();
@@ -5192,15 +5237,140 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
         layers[i].uniforms[layers[i].shader.uniformSemanticMap['WORLD']].value = transform;
       }
     }
-
-    if (this.inputPins["BaseColorSampler"].pinIsChanged(); || currentLayerCount<maxSize) {
+    //textures
+    if (this.inputPins["BaseColorSampler"].pinIsChanged() || currentLayerCount<maxSize) {
       for (var i=0; i<maxSize; i++) {
-        layers[i].uniforms["Samp0"].value = this.inputPins["BaseColorSampler"].getValue(i);
+        layers[i].uniforms["u_BaseColorSampler"].value = this.inputPins["BaseColorSampler"].getValue(i);
+      }
+    }
+    if (this.inputPins["NormalSampler"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["u_NormalSampler"].value = this.inputPins["NormalSampler"].getValue(i);
+      }
+    }
+    if (this.inputPins["EmissiveSampler"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["u_EmissiveSampler"].value = this.inputPins["EmissiveSampler"].getValue(i);
+      }
+    }
+    if (this.inputPins["OcclusionSampler"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["u_OcclusionSampler"].value = this.inputPins["OcclusionSampler"].getValue(i);
+      }
+    }
+    if (this.inputPins["MetallicRoughnessSampler"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["u_MetallicRoughnessSampler"].value = this.inputPins["MetallicRoughnessSampler"].getValue(i);
+      }
+    }
+    if (this.inputPins["brdfLUT"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["u_brdfLUT"].value = this.inputPins["brdfLUT"].getValue(i);
+      }
+    }
+    if (this.inputPins["DiffuseEnvSampler"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["u_DiffuseEnvSampler"].value = this.inputPins["DiffuseEnvSampler"].getValue(i);
+      }
+    }
+    if (this.inputPins["SpecularEnvSampler"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["u_SpecularEnvSampler"].value = this.inputPins["SpecularEnvSampler"].getValue(i);
+      }
+    }
+    //uniforms
+    if (this.inputPins["LightDirection"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["u_LightDirection"].value = this.inputPins["LightDirection"].getValue(i,3);
+      }
+    } 
+    if (this.inputPins["LightColor"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["u_LightColor"].value = this.inputPins["LightColor"].getValue(i,3);
+      }
+    }  
+    if (this.inputPins["NormalScale"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["u_NormalScale"].value = this.inputPins["NormalScale"].getValue(i);
+      }
+    } 
+    if (this.inputPins["EmissiveFactor"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["u_EmissiveFactor"].value = this.inputPins["EmissiveFactor"].getValue(i,3);
+      }
+    } 
+    if (this.inputPins["OcclusionStrength"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["u_OcclusionStrength"].value = this.inputPins["OcclusionStrength"].getValue(i);
+      }
+    } 
+    if (this.inputPins["MetallicRoughnessValues"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["u_MetallicRoughnessValues"].value = this.inputPins["MetallicRoughnessValues"].getValue(i,2);
+      }
+    }
+    if (this.inputPins["BaseColorFactor"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["u_BaseColorFactor"].value = this.inputPins["BaseColorFactor"].getValue(i,4);
+      }
+    } 
+    if (this.inputPins["Camera"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["u_Camera"].value = this.inputPins["Camera"].getValue(i,3);
+      }
+    } 
+    if (this.inputPins["Exposure"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["exposure"].value = this.inputPins["Exposure"].getValue(i);
+      }
+    }
+    if (this.inputPins["Alpha"].pinIsChanged() || currentLayerCount<maxSize) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["alpha"].value = this.inputPins["Alpha"].getValue(i);
+      }
+    }  
+    
+      if (this.inputPins["TextureTransform"].pinIsChanged() || currentLayerCount<maxSize) {           
+      for (var i=0; i<maxSize; i++) {
+        var transform = this.inputPins["TextureTransform"].getValue(i);
+        layers[i].uniforms["Texture_Transform"].value = transform;
       }
     }
 
     
 
+//"Texture_Transform":{"varname":"Texture_Transform","position":0,"type":"mat","dimension":"4"},
+//            "tW":{"varname":"tW","semantic":"WORLD","position":0,"type":"mat","dimension":"4"},
+//            "tV":{"varname":"tV","semantic":"VIEW","position":0,"type":"mat","dimension":"4"},
+//            "tP":{"varname":"tP","semantic":"PROJECTION","position":0,"type":"mat","dimension":"4"},
+//            "u_LightDirection":{"varname":"u_LightDirection","position":0,"type":"vec","dimension":"3"},
+//            "u_LightColor":{"varname":"u_LightColor","position":0,"type":"vec","dimension":"3"},
+//            "u_DiffuseEnvSampler":{"varname":"u_DiffuseEnvSampler","position":0,"type":"samplerCube","dimension":"1"},
+//            "u_SpecularEnvSampler":{"varname":"u_SpecularEnvSampler","position":0,"type":"samplerCube","dimension":"1"},
+//            "u_brdfLUT":{"varname":"u_brdfLUT","position":0,"type":"sampler","dimension":"2D"},
+//            "u_BaseColorSampler":{"varname":"u_BaseColorSampler","position":0,"type":"sampler","dimension":"2D"},
+//            "u_NormalSampler":{"varname":"u_NormalSampler","position":0,"type":"sampler","dimension":"2D"},
+//            "u_NormalScale":{"varname":"u_NormalScale","position":0,"type":"float","dimension":"1"},
+//            "u_EmissiveSampler":{"varname":"u_EmissiveSampler","position":0,"type":"sampler","dimension":"2D"},
+//            "u_EmissiveFactor":{"varname":"u_EmissiveFactor","position":0,"type":"vec","dimension":"3"},
+//            "u_MetallicRoughnessSampler":{"varname":"u_MetallicRoughnessSampler","position":0,"type":"sampler", "dimension":"2D"},
+//            "u_OcclusionSampler":{"varname":"u_OcclusionSampler","position":0,"type":"sampler","dimension":"2D"},
+//            "u_OcclusionStrength":{"varname":"u_OcclusionStrength","position":0,"type":"float","dimension":"1"},
+//            "u_MetallicRoughnessValues":{"varname":"u_MetallicRoughnessValues","position":0,"type":"vec","dimension":"2"},
+//            "u_BaseColorFactor":{"varname":"u_BaseColorFactor","position":0,"type":"vec","dimension":"4"},
+//            "u_Camera":{"varname":"u_Camera","position":0,"type":"vec","dimension":"3"},
+//            "exposure":{"varname":"exposure","position":0,"type":"float","defaultValue":"0.0","dimension":"1"},
+//            "alpha":{"varname":"alpha","position":0,"type":"float","defaultValue":"1.0","dimension":"1"}
+    
+// this.addInputPin("BaseColorValue", [1.0,1.0,1.0,1.0], VVVV.PinTypes.Value);
+//    this.addInputPin("NormalScale", [1.0,1.0,1.0], VVVV.PinTypes.Value);
+//    this.addInputPin("EmissiveFactor", [1.0,1.0,1.0], VVVV.PinTypes.Value);
+//    this.addInputPin("OcclusionStrenght", [1.0], VVVV.PinTypes.Value);
+//    this.addInputPin("MetallicRoughnessValue", [1.0,1.0], VVVV.PinTypes.Value);
+//  
+//    this.addInputPin("Exposure", [0.0], VVVV.PinTypes.Value);
+//    this.addInputPin("Alpha", [1.0], VVVV.PinTypes.Value);   
+    
     
 
     this.outputPins["Layer"].setSliceCount(maxSize);
