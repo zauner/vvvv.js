@@ -87,7 +87,7 @@ fragment_shader:
 #define USE_IBL
 #define HAS_BASECOLORMAP
 //////////////////strangly when activating normalmap, textures disappear
-//#define HAS_NORMALMAP
+#define HAS_NORMALMAP
 #define HAS_METALROUGHNESSMAP
 #define HAS_OCCLUSIONMAP
 #define HAS_EMISSIVEMAP
@@ -157,7 +157,7 @@ uniform float u_OcclusionStrength;
 
 uniform vec2 u_MetallicRoughnessValues;
 uniform vec4 u_BaseColorFactor;
-uniform vec2 u_ScaleIBLAmbient;
+//uniform vec2 u_ScaleIBLAmbient;
 uniform vec3 u_Camera;
 
 uniform float exposure = 0.0;
@@ -262,7 +262,7 @@ vec3 getIBLContribution(vec3 diffuseColor,vec3 specularColor ,float perceptualRo
     vec3 brdf = SRGBtoLINEAR(texture2D(u_brdfLUT, vec2(NdotV, 1.0 - perceptualRoughness))).rgb;
 	
 	 //////////////here should be u_SpecularEnvSampler, but it causes the bug where textures are rejected
-    vec3 diffuseLight = SRGBtoLINEAR(textureCube(u_SpecularEnvSampler, n)).rgb;     
+    vec3 diffuseLight = SRGBtoLINEAR(textureCube(u_DiffuseEnvSampler, n)).rgb;     
 	/////////////////////////////////////////////////////////////////////////////////////////////
 
     vec3 specularLight = SRGBtoLINEAR(textureCube(u_SpecularEnvSampler, reflection)).rgb;
@@ -272,8 +272,8 @@ vec3 getIBLContribution(vec3 diffuseColor,vec3 specularColor ,float perceptualRo
     vec3 specular = specularLight * (specularColor * brdf.x + brdf.y);
 
     // For presentation, this allows us to disable IBL terms
-    diffuse *= u_ScaleIBLAmbient.x;
-    specular *= u_ScaleIBLAmbient.y;
+    //diffuse *= u_ScaleIBLAmbient.x;
+    //specular *= u_ScaleIBLAmbient.y;
 
     return diffuse + specular;
 }

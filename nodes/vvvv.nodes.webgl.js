@@ -4309,6 +4309,8 @@ VVVV.Nodes.glTFLoader.prototype = new Node();
 function _arrayBuffer2TypedArray(buffer, byteOffset, countOfComponentType, componentType) {  
     switch(componentType) {
         // @todo: finish
+        case 5120: return new Int8Array(buffer, byteOffset, countOfComponentType); 
+        case 5121: return new UInt8Array(buffer, byteOffset, countOfComponentType); 
         case 5122: return new Int16Array(buffer, byteOffset, countOfComponentType); 
         case 5123: return new Uint16Array(buffer, byteOffset, countOfComponentType);
         case 5124: return new Int32Array(buffer, byteOffset, countOfComponentType);
@@ -4327,7 +4329,11 @@ var Type2NumOfComponent = {
     'MAT3': 9,
     'MAT4': 16
 };
-
+ function defined(value) {
+        return value !== undefined && value !== null;
+    }
+    
+    
 function Type2Num(glTF, accessor_index){
     var vec_type = glTF.data.accessors[accessor_index].type;
     return Type2NumOfComponent[vec_type];
@@ -4336,21 +4342,18 @@ function Type2Num(glTF, accessor_index){
 function accessor(glTF, accessor_index, type){
     //accessor
     var bufferView_index = glTF.data.accessors[ accessor_index ].bufferView;
-    var byteOffset_accessor = 0;
-    if(glTF.data.accessors[ accessor_index ].byteOffset !== undefined){
-        byteOffset_accessor = glTF.data.accessors[ accessor_index ].byteOffset;
-    }
     
-    
-    
-    var componentType = glTF.data.accessors[ accessor_index ].componentType;
-    var ComponentType_count = glTF.data.accessors[ accessor_index ].count;
-    //buffer view
+
+    //get buffer view
     var byteLength = glTF.data.bufferViews[bufferView_index].byteLength; 
-    var byteOffset_bufferview = glTF.data.bufferViews[bufferView_index].byteOffset ; 
-    
+    var byteOffset_bufferview = defined(glTF.data.bufferViews[bufferView_index].byteOffset) ? glTF.data.bufferViews[bufferView_index].byteOffset : 0; 
     var buffer_data = glTF.buffer[glTF.data.bufferViews[bufferView_index].buffer];
     var accessor_buffer_data = buffer_data.slice(byteOffset_bufferview, byteOffset_bufferview + byteLength);
+    
+    //get typed array by accessor from buffer view
+    var componentType = glTF.data.accessors[ accessor_index ].componentType;
+    var ComponentType_count = glTF.data.accessors[ accessor_index ].count;
+    var byteOffset_accessor = defined(glTF.data.accessors[ accessor_index ].byteOffset) ? glTF.data.accessors[ accessor_index ].byteOffset : 0; 
     
     var typedArray = _arrayBuffer2TypedArray(accessor_buffer_data, byteOffset_accessor,  type * ComponentType_count, componentType);
     //var typedArray = _arrayBuffer2TypedArray(glTF.buffer[glTF.data.bufferViews[bufferView_index].buffer], byteOffset,  type * ComponentType_count, componentType);
@@ -4679,6 +4682,10 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
                 for (var i=0; i<3; i++) {
                     EmissiveFactorOut.setValue(output_index*3+i, mat.emissiveFactor[i]);
                 }
+            }else{
+                EmissiveFactorOut.setValue(output_index*3, 0);
+                EmissiveFactorOut.setValue(output_index*3+1, 0);
+                EmissiveFactorOut.setValue(output_index*3+2, 0);
             }
         requestTexture(gl, glTF, element, output_index,  textureIndex, "Emissive", IsValid);
 
