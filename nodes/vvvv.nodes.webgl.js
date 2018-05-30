@@ -573,6 +573,9 @@ VVVV.Types.ShaderProgram = function() {
 
 }
 
+
+
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: FileTexture (EX9.Texture)
@@ -3598,12 +3601,10 @@ VVVV.Nodes.InstancerDynamic = function(id, graph) {
                     Geometry = meshIn.getValue(i%geometryCount);
                     Geometry.instanced = true;
                     Geometry.instanceCount = CountIn.getValue(i%CountIn.getSliceCount());
-                    //Geometry.Buffer1 = objectBuffer.data; //new Float32Array(offsetData);
                     Geometry.updateInstancedArray(Buffers);
                     Geometry.addSemantics(semanticsArray);
                     Geometry.addVectorSize(vecSize);
                     Geometry.addDivisor(divisorArray);
-                    //console.log("updatedBuffer");
                     Geometry.instancedBufferChanged = true;
         meshOut.setValue(i, Geometry);
         }   //end of inner for loop
@@ -4347,15 +4348,15 @@ function accessor(glTF, accessor_index, type){
     //get buffer view
     var byteLength = glTF.data.bufferViews[bufferView_index].byteLength; 
     var byteOffset_bufferview = defined(glTF.data.bufferViews[bufferView_index].byteOffset) ? glTF.data.bufferViews[bufferView_index].byteOffset : 0; 
-    var buffer_data = glTF.buffer[glTF.data.bufferViews[bufferView_index].buffer];
-    var accessor_buffer_data = buffer_data.slice(byteOffset_bufferview, byteOffset_bufferview + byteLength);
+    //var buffer_data = glTF.buffer[glTF.data.bufferViews[bufferView_index].buffer];
+    //var accessor_buffer_data = buffer_data.slice(byteOffset_bufferview, byteOffset_bufferview + byteLength);
     
     //get typed array by accessor from buffer view
     var componentType = glTF.data.accessors[ accessor_index ].componentType;
     var ComponentType_count = glTF.data.accessors[ accessor_index ].count;
     var byteOffset_accessor = defined(glTF.data.accessors[ accessor_index ].byteOffset) ? glTF.data.accessors[ accessor_index ].byteOffset : 0; 
     
-    var typedArray = _arrayBuffer2TypedArray(accessor_buffer_data, byteOffset_accessor,  type * ComponentType_count, componentType);
+    var typedArray = _arrayBuffer2TypedArray(glTF.buffer[glTF.data.bufferViews[bufferView_index].buffer], byteOffset_bufferview + byteOffset_accessor,  type * ComponentType_count, componentType);
     //var typedArray = _arrayBuffer2TypedArray(glTF.buffer[glTF.data.bufferViews[bufferView_index].buffer], byteOffset,  type * ComponentType_count, componentType);
     return typedArray;
 }
@@ -4405,6 +4406,12 @@ function loadMesh(gl,meshes, glTF, output_index) {
         }
         if ("WEIGHTS_0" in element.attributes) {
             AttributeBuffer(glTF, element.attributes.WEIGHTS_0, 'WEIGHTS_0');
+        }
+        if ("JOINTS_1" in element.attributes) {
+            AttributeBuffer(glTF, element.attributes.JOINTS_1, 'JOINTS_1');
+        }
+        if ("WEIGHTS_1" in element.attributes) {
+            AttributeBuffer(glTF, element.attributes.WEIGHTS_1, 'WEIGHTS_1');
         }
 
         //////////////index buffer///////////////////
@@ -4793,9 +4800,12 @@ VVVV.Nodes.TexturesGLTF.prototype = new Node();
     
     //input
     var glTF_In = this.addInputPin("glTF", [], VVVV.PinTypes.glTF);   
+    
+    var AnimationFrame_In = this.addInputPin("AnimationFrame", [ ], VVVV.PinTypes.AnimationFrame);  
     var Update= this.addInputPin('Update', [0], VVVV.PinTypes.Value);
     //output
     var TransformMeshOut = this.addOutputPin("Transform Mesh", [], VVVV.PinTypes.Transform);
+    var JointMatrixArrayOut = this.addOutputPin("JointMatrixArray UniformBuffer", [], VVVV.PinTypes.JointMatrixArray);
     var MeshIndexOut = this.addOutputPin("Mesh Index", [0], VVVV.PinTypes.Value);
 
 
@@ -4923,11 +4933,16 @@ VVVV.Nodes.TexturesGLTF.prototype = new Node();
       out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
       return out;
     }
+    
+    
+    
+    
+    
 
     var transform_array = [];
     var mesh_index_array = [];
 
-    var drawNodeRecursive = function(glTF, node, parentTransform) {
+    var drawNodeRecursive = function(glTF, node, parentTransform, currentIndex) {
         var localTransform;
         if (node.matrix) {
             localTransform = clone(node.matrix);
@@ -4937,15 +4952,21 @@ VVVV.Nodes.TexturesGLTF.prototype = new Node();
             var rotation = node.rotation ? node.rotation : [0.0, 0.0, 0.0, 1.0];
             var translate = node.translation ? node.translation : [0.0, 0.0, 0.0];
             fromRotationTranslationScale(localTransform, rotation, translate, scale);
+            
+            
         }
         multiply2(localTransform, localTransform, parentTransform);
-        if (defined(node.mesh && node.mesh < glTF.data.meshes.length) ) {  
+        
+        
+        
+        
+        if (defined(node.mesh)  ) {    //&& node.mesh < glTF.data.meshes.length
             transform_array.push(localTransform);
             mesh_index_array.push(node.mesh);
         }
         if (defined(node.children) && node.children.length > 0) {
             for (var i = 0; i < node.children.length; i++) {
-                drawNodeRecursive(glTF, glTF.data.nodes[node.children[i]], localTransform);
+                drawNodeRecursive(glTF, glTF.data.nodes[node.children[i]], localTransform, node.children[i]);
             }
         }
     };
@@ -4957,32 +4978,29 @@ VVVV.Nodes.TexturesGLTF.prototype = new Node();
     var iterator = 0;
         for (var i=0; i<maxCount; i++) {
             if ( glTF_In.pinIsChanged() | Update.getValue(i) == 1) {
-            transform_array = [];
-            mesh_index_array = [];
-            var glTF = glTF_In.getValue(i);  
-            //Recursively traverse scene graph
-            drawNodeRecursive(glTF, glTF.data.nodes[0], create2());
-
-            if(transform_array.length !== 0 || transform_array.length !== undefined){
-                for (var j=0; j<transform_array.length; j++) {
-                    var output_transform = Array.from(transform_array[j]);
-                    TransformMeshOut.setValue(j, output_transform);
-                    MeshIndexOut.setValue(j, mesh_index_array[j]);
+                transform_array = [];
+                mesh_index_array = [];
+                var glTF = glTF_In.getValue(i);  
+                //Recursively traverse scene graph
+                var scene_index = defined(glTF.data.scene) ? glTF.data.scene : 0;
+                var scene = glTF.data.scenes[scene_index]
+                var max_root_nodes = scene.nodes.length;    
+                for (var k=0; k<max_root_nodes ; k++) {
+                    var root_node_index = scene.nodes[k];
+                    drawNodeRecursive(glTF, glTF.data.nodes[root_node_index], create2(), 0);
                 }
-                TransformMeshOut.setSliceCount(transform_array.length);
-            }else{
-                TransformMeshOut.setValue(0, create2());
-                TransformMeshOut.setSliceCount(1);
-            }
-            //var element_primitive_count = 0;
-            //glTF.data.nodes.forEach(function(element) { //not yet tested against multiple buffers in glTF file
-                
-                
-                //if(element.mesh !== undefined){
-                    
-                    //load local transforms
-                //}
-            //}); 
+                if(transform_array.length !== 0 || transform_array.length !== undefined){
+                    for (var j=0; j<transform_array.length; j++) {
+                        var output_transform = Array.from(transform_array[j]);
+                        TransformMeshOut.setValue(j, output_transform);
+                        MeshIndexOut.setValue(j, mesh_index_array[j]);
+                    }
+                    TransformMeshOut.setSliceCount(transform_array.length);
+                }else{
+                    TransformMeshOut.setValue(0, create2());
+                    TransformMeshOut.setSliceCount(1);
+                }
+
 
             }
             
@@ -4994,6 +5012,298 @@ VVVV.Nodes.TexturesGLTF.prototype = new Node();
     }
 }
 VVVV.Nodes.NodesGLTF.prototype = new Node();
+
+
+
+///*
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//   NODE: Animation (glTF)
+//   Author(s): David Gann
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//  */
+
+  VVVV.Nodes.AnimationGLTF = function(id, graph) {
+    this.constructor(id, "Animation (glTF)", graph);
+
+    this.meta = {
+      authors: ['David Gann'],
+      original_authors: ['000.graphics'],
+      credits: [],
+      compatibility_issues: []
+    };
+    
+    //input
+    var glTF_In = this.addInputPin("glTF", [], VVVV.PinTypes.glTF);   
+    var Time_in = this.addInputPin("GlobalTime", [0.0], VVVV.PinTypes.Value);  
+    var AnimationIndex_In = this.addInputPin("Animation Index", [0], VVVV.PinTypes.Value);  
+    var Update = this.addInputPin("Update", [0], VVVV.PinTypes.Value);  
+    //output
+    var AnimationFrame_Out = this.addOutputPin("Node Animation", [], VVVV.PinTypes.AnimationFrame)
+
+
+    function defined(value) {
+        return value !== undefined && value !== null;
+    }
+
+    //As a quick fix for outdated gl-matrix.js lib use the relevant parts from the new lib locally
+    //copyright Brandon Jones, for details see lib/gl-matrix.js in this repo
+    if(!GLMAT_ARRAY_TYPE) {
+        var GLMAT_ARRAY_TYPE = (typeof Float32Array !== 'undefined') ? Float32Array : Array;
+    }
+
+    clone = function(a) {
+        var out = new GLMAT_ARRAY_TYPE(16);
+        out[0] = a[0];
+        out[1] = a[1];
+        out[2] = a[2];
+        out[3] = a[3];
+        out[4] = a[4];
+        out[5] = a[5];
+        out[6] = a[6];
+        out[7] = a[7];
+        out[8] = a[8];
+        out[9] = a[9];
+        out[10] = a[10];
+        out[11] = a[11];
+        out[12] = a[12];
+        out[13] = a[13];
+        out[14] = a[14];
+        out[15] = a[15];
+        return out;
+    };
+
+    create2 = function() {
+      let out = new GLMAT_ARRAY_TYPE(16);
+      out[0] = 1;
+      out[1] = 0;
+      out[2] = 0;
+      out[3] = 0;
+      out[4] = 0;
+      out[5] = 1;
+      out[6] = 0;
+      out[7] = 0;
+      out[8] = 0;
+      out[9] = 0;
+      out[10] = 1;
+      out[11] = 0;
+      out[12] = 0;
+      out[13] = 0;
+      out[14] = 0;
+      out[15] = 1;
+      return out;
+    }
+
+    fromRotationTranslationScale = function(out, q, v, s) {
+      // Quaternion math
+      let x = q[0], y = q[1], z = q[2], w = q[3];
+      let x2 = x + x;
+      let y2 = y + y;
+      let z2 = z + z;
+
+      let xx = x * x2;
+      let xy = x * y2;
+      let xz = x * z2;
+      let yy = y * y2;
+      let yz = y * z2;
+      let zz = z * z2;
+      let wx = w * x2;
+      let wy = w * y2;
+      let wz = w * z2;
+      let sx = s[0];
+      let sy = s[1];
+      let sz = s[2];
+
+      out[0] = (1 - (yy + zz)) * sx;
+      out[1] = (xy + wz) * sx;
+      out[2] = (xz - wy) * sx;
+      out[3] = 0;
+      out[4] = (xy - wz) * sy;
+      out[5] = (1 - (xx + zz)) * sy;
+      out[6] = (yz + wx) * sy;
+      out[7] = 0;
+      out[8] = (xz + wy) * sz;
+      out[9] = (yz - wx) * sz;
+      out[10] = (1 - (xx + yy)) * sz;
+      out[11] = 0;
+      out[12] = v[0];
+      out[13] = v[1];
+      out[14] = v[2];
+      out[15] = 1;
+
+      return out;
+    }
+
+    multiply2 = function(out, a, b) {
+      let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+      let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+      let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+      let a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+
+      // Cache only the current line of the second matrix
+      let b0  = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+      out[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+      out[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+      out[2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+      out[3] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+      b0 = b[4]; b1 = b[5]; b2 = b[6]; b3 = b[7];
+      out[4] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+      out[5] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+      out[6] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+      out[7] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+      b0 = b[8]; b1 = b[9]; b2 = b[10]; b3 = b[11];
+      out[8] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+      out[9] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+      out[10] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+      out[11] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+      b0 = b[12]; b1 = b[13]; b2 = b[14]; b3 = b[15];
+      out[12] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+      out[13] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+      out[14] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+      out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+      return out;
+    }
+    
+
+var targetAnimation_array = []
+
+function _arrayBuffer2TypedArray(buffer, byteOffset, countOfComponentType, componentType) {  
+    switch(componentType) {
+        // @todo: finish
+        case 5120: return new Int8Array(buffer, byteOffset, countOfComponentType); 
+        case 5121: return new UInt8Array(buffer, byteOffset, countOfComponentType); 
+        case 5122: return new Int16Array(buffer, byteOffset, countOfComponentType); 
+        case 5123: return new Uint16Array(buffer, byteOffset, countOfComponentType);
+        case 5124: return new Int32Array(buffer, byteOffset, countOfComponentType);
+        case 5125: return new Uint32Array(buffer, byteOffset, countOfComponentType);
+        case 5126: return new Float32Array(buffer, byteOffset, countOfComponentType);
+        default: return null; 
+    }
+}  
+
+
+var Type2NumOfComponent = {
+    'SCALAR': 1,
+    'VEC2': 2,
+    'VEC3': 3,
+    'VEC4': 4,
+    'MAT2': 4,
+    'MAT3': 9,
+    'MAT4': 16
+};
+
+
+
+function accessor(glTF, accessor_index){
+    //accessor
+    var bufferView_index = glTF.data.accessors[ accessor_index ].bufferView;
+    var vec_type = glTF.data.accessors[accessor_index].type;
+    var type = Type2NumOfComponent[vec_type];
+    
+    var byteLength = glTF.data.bufferViews[bufferView_index].byteLength; 
+    var byteOffset_bufferview = defined(glTF.data.bufferViews[bufferView_index].byteOffset) ? glTF.data.bufferViews[bufferView_index].byteOffset : 0; 
+    
+    //var buffer_data = glTF.buffer[glTF.data.bufferViews[bufferView_index].buffer];
+    //var accessor_buffer_data = buffer_data.slice(byteOffset_bufferview, byteOffset_bufferview + byteLength);
+    
+    var componentType = glTF.data.accessors[ accessor_index ].componentType;
+    var ComponentType_count = glTF.data.accessors[ accessor_index ].count;
+    var byteOffset_accessor = defined(glTF.data.accessors[ accessor_index ].byteOffset) ? glTF.data.accessors[ accessor_index ].byteOffset : 0; 
+    var typedArray = _arrayBuffer2TypedArray(glTF.buffer[glTF.data.bufferViews[bufferView_index].buffer], byteOffset_bufferview + byteOffset_accessor,  type * ComponentType_count, componentType);
+    return typedArray;
+}
+
+var Animations_array = [];
+
+var Animations = function(data) {
+    this.data = [];
+    this.animation_count = 0;
+
+    this.setAnimation = function(index, input, output, target_node, target_transform ) {
+      this.data[index] = {
+        input: input,
+        output: output,
+        target_node: target_node,
+        target_transform: target_transform,
+      };
+      this.target_count += 1;
+    }
+  }
+
+
+
+
+function getAnimationFrame(glTF, i, anim_index, time, AnimationFrame){
+    
+    var animation = glTF.data.animations[AnimationIndex_In.getValue(i)]
+    //console.log("channel count" + animation.channels.length)
+    var input_array = null;
+    var output_array = null;
+    for (var i=0; i<animation.channels.length; i++) {
+        var sampler_index = animation.channels[i].sampler;
+        var input_index = animation.samplers[sampler_index].input;
+        var output_index = animation.samplers[sampler_index].output;
+        
+        input_array =  accessor(glTF, input_index);
+        output_array =  accessor(glTF, output_index);
+        
+    }
+    
+    //if (currentIndex == glTF.data.animations[0].channels[0].target.node) {
+    //        console.log("animation available")
+    //    }
+    
+    var index = 0;
+    var data = [1.0,1.0,1.0];
+    var target_node = 0;
+    var target_transform = "rotation";
+    AnimationFrame.setTargetFrame(index, data, target_node, target_transform);
+}
+
+
+    this.evaluate = function() { 
+    var maxCount = glTF_In.getSliceCount();    
+    
+//    if (  glTF_In.pinIsChanged() | Update.getValue(i) == 1) {    
+//        Animations_array = [];
+//        for (var i=0; i<maxCount; i++) {
+//            var glTF = glTF_In.getValue(i); 
+//            loadAnimation(glTF, i);
+//            console.log(Animation_array)
+//            //console.log(Animation_array)
+//        }
+//    }
+        
+    
+    var index_offset=0;
+    var output_count;
+    var iterator = 0;
+        for (var i=0; i<maxCount; i++) {
+            var glTF = glTF_In.getValue(i);  
+            var AnimationFrame = new VVVV.Types.AnimationFrame();
+            if(defined(glTF.data.animations)){
+                var anim_index = AnimationIndex_In.getValue(i);
+                var time = Time_in.getValue(i);
+                
+                
+                getAnimationFrame(glTF, i, anim_index, time, AnimationFrame);
+                //console.log(JSON.stringify(AnimationFrame));
+            }
+            
+            AnimationFrame_Out.setValue(i, AnimationFrame);    
+                
+                
+                
+                
+        } 
+        
+        //var default_AnimationFrame = new VVVV.Types.JointMatrixArray();
+        
+    }
+}
+VVVV.Nodes.AnimationGLTF.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -5344,41 +5654,6 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
       }
     }
 
-    
-
-//"Texture_Transform":{"varname":"Texture_Transform","position":0,"type":"mat","dimension":"4"},
-//            "tW":{"varname":"tW","semantic":"WORLD","position":0,"type":"mat","dimension":"4"},
-//            "tV":{"varname":"tV","semantic":"VIEW","position":0,"type":"mat","dimension":"4"},
-//            "tP":{"varname":"tP","semantic":"PROJECTION","position":0,"type":"mat","dimension":"4"},
-//            "u_LightDirection":{"varname":"u_LightDirection","position":0,"type":"vec","dimension":"3"},
-//            "u_LightColor":{"varname":"u_LightColor","position":0,"type":"vec","dimension":"3"},
-//            "u_DiffuseEnvSampler":{"varname":"u_DiffuseEnvSampler","position":0,"type":"samplerCube","dimension":"1"},
-//            "u_SpecularEnvSampler":{"varname":"u_SpecularEnvSampler","position":0,"type":"samplerCube","dimension":"1"},
-//            "u_brdfLUT":{"varname":"u_brdfLUT","position":0,"type":"sampler","dimension":"2D"},
-//            "u_BaseColorSampler":{"varname":"u_BaseColorSampler","position":0,"type":"sampler","dimension":"2D"},
-//            "u_NormalSampler":{"varname":"u_NormalSampler","position":0,"type":"sampler","dimension":"2D"},
-//            "u_NormalScale":{"varname":"u_NormalScale","position":0,"type":"float","dimension":"1"},
-//            "u_EmissiveSampler":{"varname":"u_EmissiveSampler","position":0,"type":"sampler","dimension":"2D"},
-//            "u_EmissiveFactor":{"varname":"u_EmissiveFactor","position":0,"type":"vec","dimension":"3"},
-//            "u_MetallicRoughnessSampler":{"varname":"u_MetallicRoughnessSampler","position":0,"type":"sampler", "dimension":"2D"},
-//            "u_OcclusionSampler":{"varname":"u_OcclusionSampler","position":0,"type":"sampler","dimension":"2D"},
-//            "u_OcclusionStrength":{"varname":"u_OcclusionStrength","position":0,"type":"float","dimension":"1"},
-//            "u_MetallicRoughnessValues":{"varname":"u_MetallicRoughnessValues","position":0,"type":"vec","dimension":"2"},
-//            "u_BaseColorFactor":{"varname":"u_BaseColorFactor","position":0,"type":"vec","dimension":"4"},
-//            "u_Camera":{"varname":"u_Camera","position":0,"type":"vec","dimension":"3"},
-//            "exposure":{"varname":"exposure","position":0,"type":"float","defaultValue":"0.0","dimension":"1"},
-//            "alpha":{"varname":"alpha","position":0,"type":"float","defaultValue":"1.0","dimension":"1"}
-    
-// this.addInputPin("BaseColorValue", [1.0,1.0,1.0,1.0], VVVV.PinTypes.Value);
-//    this.addInputPin("NormalScale", [1.0,1.0,1.0], VVVV.PinTypes.Value);
-//    this.addInputPin("EmissiveFactor", [1.0,1.0,1.0], VVVV.PinTypes.Value);
-//    this.addInputPin("OcclusionStrenght", [1.0], VVVV.PinTypes.Value);
-//    this.addInputPin("MetallicRoughnessValue", [1.0,1.0], VVVV.PinTypes.Value);
-//  
-//    this.addInputPin("Exposure", [0.0], VVVV.PinTypes.Value);
-//    this.addInputPin("Alpha", [1.0], VVVV.PinTypes.Value);   
-    
-    
 
     this.outputPins["Layer"].setSliceCount(maxSize);
     for (var i=0; i<maxSize; i++) {

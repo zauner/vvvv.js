@@ -298,4 +298,48 @@ VVVV.PinTypes.glTF = {
   }
 }
 
+
+VVVV.Types.JointMatrixArray = function(data) {
+  this.data = [];
+  this.joint_count = 65; //max bone count
+  }
+
+var default_JointMatrixArray = new VVVV.Types.JointMatrixArray();
+
+VVVV.PinTypes.JointMatrixArray = {
+  typeName: "JointMatrixArray",
+  reset_on_disconnect: true,
+  defaultValue: function() {
+    return default_JointMatrixArray;
+  }
+}
+
+
+
+VVVV.Types.AnimationFrame = function(data) {
+  this.data = [];
+  this.target_count = 0;
+  
+  this.setTargetFrame = function(index, data, target_node, target_transform ) {
+    this.data[index] = {
+      data: data,
+      target_node: target_node,
+      target_transform: target_transform,
+    };
+    this.target_count += 1;
+  }
+  }
+
+var default_AnimationFrame = new VVVV.Types.AnimationFrame();
+
+VVVV.PinTypes.AnimationFrame = {
+  typeName: "AnimationFrame",
+  reset_on_disconnect: true,
+  defaultValue: function() {
+    return default_AnimationFrame;
+  }
+}
+
+
+
 });
