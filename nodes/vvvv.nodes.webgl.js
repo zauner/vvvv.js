@@ -39,7 +39,8 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/Deffered_FX.vvvvjs.fx": undefined,
   "%VVVV%/effects/PBR_glTF.vvvvjs.fx": undefined,
   "%VVVV%/effects/PBR_glTF_static.vvvvjs.fx": undefined,
-  "%VVVV%/effects/BillBoard_Particles_Noise.vvvvjs.fx": undefined
+  "%VVVV%/effects/BillBoard_Particles_Noise.vvvvjs.fx": undefined,
+  "%VVVV%/effects/HBAO.vvvvjs.fx": undefined
   
   
   
@@ -317,7 +318,7 @@ VVVV.Types.Mesh = function(gl, vertexBuffer, indices) {
 
   /** @member */
   this.instanced = false;
-  this.isUInt32 = false;
+  this.isUint32 = false;
 
   /** @member */
   this.instanceCount = 1.0;
@@ -2672,6 +2673,10 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
   var bbufTexture;
   var depthTexture;
 
+  function defined(value) {
+    return value !== undefined && value !== null;
+  }
+    
    function getExtension(gl, name){
             var vendorPrefixes = ["", "WEBKIT_", "MOZ_"];
             var i, ext;
@@ -3078,11 +3083,11 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         if (!renderState)
           renderState = defaultWebGlRenderState;
         if (renderState!=currentRenderState)
-          renderState.apply(gl);
-
+          renderState.apply(gl);      
+        var isInstanced = defined(layer.mesh.instanced) ? layer.mesh.instanced : false;
+        
         if (layer.mesh != currentMesh || layer.shader.shaderProgram != currentShaderProgram) {
-
-        if(layer.mesh.instanced == false){
+        if(isInstanced == false){
           gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
           _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
             if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]] || layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position==-1)
@@ -3090,49 +3095,44 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
             gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
             gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, b.stride, b.offset);
           });
-          
+         gl.bindBuffer(gl.ARRAY_BUFFER, null);
           gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
-            //console.log(JSON.stringify(layer.mesh.semantics));
-            //console.log(JSON.stringify(layer.shader.attributeSpecs));
-            //console.log(JSON.stringify(layer.shader.uniformSpecs));
-            //console.log(JSON.stringify(layer.shader.attribSemanticMap));
-            //console.log(JSON.stringify(layer.shader.uniformSemanticMap));
+
         }
-        if(layer.mesh.instanced == true){ //Instancing
-            
-          
+        if(isInstanced == true){ //Instancing
 
             gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.vertexBuffer.vbo);
-          _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
-            if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]] || layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position==-1)
-              return;
-            gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
-            gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, b.stride, b.offset);
-          });
-          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
-
-             //console.log(JSON.stringify(layer.mesh.semantics));
-           //console.log(JSON.stringify(layer.shader.attributeSpecs));
+            _(layer.mesh.vertexBuffer.subBuffers).each(function(b) {
+              if (!layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]] || layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position==-1)
+                return;
+              gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
+              gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, b.stride, b.offset);
+            });
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            
+            
+//quick access to shader attribute and uniform debugging
+//           console.log(JSON.stringify(layer.mesh.semantics));
+//           console.log(JSON.stringify(layer.shader.attributeSpecs));
 //           console.log(JSON.stringify(layer.shader.uniformSpecs));
-           //console.log(JSON.stringify(layer.shader.attribSemanticMap));
+//           console.log(JSON.stringify(layer.shader.attribSemanticMap));
 //           console.log(JSON.stringify(layer.shader.uniformSemanticMap));
 //           console.log(JSON.stringify(layer.mesh.Buffer1));
 //           console.log(JSON.stringify(layer.mesh.Buffer2));
 //           console.log(JSON.stringify(layer.mesh.instanceCount));
 
-//           var OffsetBuffer;
-//           OffsetBuffer = gl.createBuffer();
-//                    gl.bindBuffer(gl.ARRAY_BUFFER, OffsetBuffer);
-//                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(layer.mesh.Buffer1), gl.STATIC_DRAW);
-         for (var i=0; i<layer.mesh.semantics.length; i++) {
-           var semantic = layer.mesh.semantics[i];
-           gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.instanceBuffers[i]);
-           gl.enableVertexAttribArray(layer.shader.attributeSpecs[semantic].position);
-           gl.vertexAttribPointer(layer.shader.attributeSpecs[semantic].position, layer.mesh.VectorSize[i], gl.FLOAT, false, 0, 0);  //stride can be 12 or 0
-           this.instanceExt.vertexAttribDivisorANGLE(layer.shader.attributeSpecs[semantic].position, layer.mesh.Divisor[i]);
-        }
+            for (var i=0; i<layer.mesh.semantics.length; i++) {
+               var semantic = layer.mesh.semantics[i];
+               gl.bindBuffer(gl.ARRAY_BUFFER, layer.mesh.instanceBuffers[i]);
+               gl.enableVertexAttribArray(layer.shader.attributeSpecs[semantic].position);
+               gl.vertexAttribPointer(layer.shader.attributeSpecs[semantic].position, layer.mesh.VectorSize[i], gl.FLOAT, false, 0, 0);  //stride can be 12 or 0
+               this.instanceExt.vertexAttribDivisorANGLE(layer.shader.attributeSpecs[semantic].position, layer.mesh.Divisor[i]);
+                gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            }
+            
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, layer.mesh.indexBuffer);
 
-            } //end if case of instanced
+        } //end if case of instanced
 
         }
 
@@ -3177,11 +3177,11 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
           }
           loopstart = new Date().getTime();
         }
-        if(layer.mesh.instanced == true){
+        if(isInstanced == true){
             this.instanceExt.drawElementsInstancedANGLE(gl[renderState.polygonDrawMode], layer.mesh.numIndices, gl.UNSIGNED_SHORT, 0, layer.mesh.instanceCount);
         }
         else{
-            if(layer.mesh.isUInt32 == true){
+            if(layer.mesh.isUint32 == true){
              
             var ext = gl.getExtension('OES_element_index_uint');
             gl.drawElements(gl[renderState.polygonDrawMode], layer.mesh.numIndices, gl.UNSIGNED_INT, 0);
@@ -3194,6 +3194,8 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
         currentShaderProgram = layer.shader.shaderProgram;
         currentRenderState = renderState;
         currentMesh = layer.mesh;
+        
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
       }
 
       gl.bindTexture(gl.TEXTURE_2D, null);
@@ -4011,7 +4013,7 @@ VVVV.Nodes.DataTexture.prototype = new Node();
     //this.environments = ['nodejs'];
 
     this.meta = {
-      authors: ['Matthias Zauner'],
+      authors: ['David Gann'],
       original_authors: ['VVVV Group'],
       credits: [],
       compatibility_issues: []
@@ -4195,65 +4197,111 @@ VVVV.Nodes.DataTexture.prototype = new Node();
    var prevFilenames = [];
    var filename = [];
    var glTF_array = [];
+
+    function defined(value) {
+           return value !== undefined && value !== null;
+       }
+
+
+   //callback functions for subsequent async loading of JSON and binary buffers
+   function loadFile(url, timeout, callback) {
+       var args = Array.prototype.slice.call(arguments, 3);
+       var xhr = new XMLHttpRequest();
+       xhr.ontimeout = function () {
+           console.error("The request for " + url + " timed out.");
+       };
+       xhr.onload = function() {
+           if (xhr.readyState === 4) {
+               if (xhr.status === 200) {
+                   callback.apply(xhr, args);
+               } else {
+                   console.error(xhr.statusText);
+               }
+           }
+       };
+       xhr.open("GET", url, true);
+       xhr.timeout = timeout;
+       xhr.send(null);
+   }
+   function loadBuffer(url, timeout, callback) {
+       var args = Array.prototype.slice.call(arguments, 3);
+       var xhr = new XMLHttpRequest();
+       xhr.responseType = 'arraybuffer';
+       xhr.ontimeout = function () {
+           console.error("The request for " + url + " timed out.");
+       };
+       xhr.onload = function() {
+           if (xhr.readyState === 4) {
+               if (xhr.status === 200) {
+                   callback.apply(xhr, args);
+               } else {
+                   console.error(xhr.statusText);
+               }
+           }
+       };
+       xhr.open("GET", url, true);
+       xhr.timeout = timeout;
+       xhr.send(null);
+   }
+
+   function attachBuffer(glTF, i) {
+       glTF.buffer.push(this.response);
+       //Write to the Pin
+       glTF_Out.setValue(i, glTF);
+   }
    
-//callback functions for subsequent async loading of JSON and binary buffers
-function loadFile(url, timeout, callback) {
-    var args = Array.prototype.slice.call(arguments, 3);
-    var xhr = new XMLHttpRequest();
-    xhr.ontimeout = function () {
-        console.error("The request for " + url + " timed out.");
-    };
-    xhr.onload = function() {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                callback.apply(xhr, args);
-            } else {
-                console.error(xhr.statusText);
+    var ScenePrimitves = function(glTF, node, mesh_primitive_array ) {   
+        if (defined(node.mesh)  ) {    //&& node.mesh < glTF.data.meshes.length
+            //mesh_index_array.push(node.mesh);
+            var Primitve_index = 0;
+            var count = glTF.data.meshes[node.mesh].primitives.length;
+            for (var i = 0; i < count; i++) {
+                var element = {mesh_id: node.mesh, primitive_id: Primitve_index}
+                mesh_primitive_array.push(element);
+                
+                Primitve_index += 1;
             }
         }
-    };
-    xhr.open("GET", url, true);
-    xhr.timeout = timeout;
-    xhr.send(null);
-}
-function loadBuffer(url, timeout, callback) {
-    var args = Array.prototype.slice.call(arguments, 3);
-    var xhr = new XMLHttpRequest();
-    xhr.responseType = 'arraybuffer';
-    xhr.ontimeout = function () {
-        console.error("The request for " + url + " timed out.");
-    };
-    xhr.onload = function() {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                callback.apply(xhr, args);
-            } else {
-                console.error(xhr.statusText);
+        if (defined(node.children) && node.children.length > 0) {
+            for (var i = 0; i < node.children.length; i++) {
+                mesh_primitive_array = ScenePrimitves(glTF, glTF.data.nodes[node.children[i]], mesh_primitive_array);   
             }
+            return mesh_primitive_array;
+        }else{    
+        return mesh_primitive_array;
         }
-    };
-    xhr.open("GET", url, true);
-    xhr.timeout = timeout;
-    xhr.send(null);
-}
+    }
 
-function attachBuffer(glTF, i) {
-    glTF.buffer.push(this.response);
-    //Write to the Pin
-    glTF_Out.setValue(i, glTF);
-}
-  
-function attachJSON(glTF, i, filename) {
-    glTF.data = JSON.parse(this.responseText);
-    path = filename.substring(0, filename.lastIndexOf("/"));
-    glTF.data.path = path;
-    glTF.data.buffers.forEach(function(element) { //not yet tested against multiple buffers in glTF file
-         uri = path + "/" + element.uri;
-          loadBuffer(uri, 1000000, attachBuffer, glTF, i);
-         
-    }); 
-}
+    
+    
+   function attachJSON(glTF, i, filename) {
+       glTF.data = JSON.parse(this.responseText);
+       path = filename.substring(0, filename.lastIndexOf("/"));
+       glTF.data.path = path;
+       glTF.data.buffers.forEach(function(element) { //not yet tested against multiple buffers in glTF file
+            uri = path + "/" + element.uri;
+             loadBuffer(uri, 1000000, attachBuffer, glTF, i);
 
+       }); 
+       //traverse node graph for scene primitves
+       var mesh_primitive_array = [];
+       
+       var scene_index = defined(glTF.data.scene) ? glTF.data.scene : 0;
+       var scene = glTF.data.scenes[scene_index];
+       var max_root_nodes = scene.nodes.length;   
+       
+       for (var k=0; k<max_root_nodes ; k++) {
+           var root_node_index = scene.nodes[k];
+           mesh_primitive_array = ScenePrimitves(glTF, glTF.data.nodes[root_node_index], mesh_primitive_array);
+           
+       }
+       glTF.data.mesh_primitives = mesh_primitive_array;
+       
+   }
+
+
+    
+    
     this.evaluate = function() { 
     //if (!this.renderContexts){ return;} 
     //var gl = this.renderContexts[0];
@@ -4271,7 +4319,10 @@ function attachJSON(glTF, i, filename) {
                 (function(i) {        
                 loadFile(filename[i], 2000, attachJSON, glTF_array[i], i, filename[i]);   
                 })(i);
-
+                
+                
+                
+                
                 prevFilenames[i] = filenamePin.getValue(i);
             }
         } 
@@ -4311,7 +4362,7 @@ function _arrayBuffer2TypedArray(buffer, byteOffset, countOfComponentType, compo
     switch(componentType) {
         // @todo: finish
         case 5120: return new Int8Array(buffer, byteOffset, countOfComponentType); 
-        case 5121: return new UInt8Array(buffer, byteOffset, countOfComponentType); 
+        case 5121: return new Uint8Array(buffer, byteOffset, countOfComponentType); 
         case 5122: return new Int16Array(buffer, byteOffset, countOfComponentType); 
         case 5123: return new Uint16Array(buffer, byteOffset, countOfComponentType);
         case 5124: return new Int32Array(buffer, byteOffset, countOfComponentType);
@@ -4424,7 +4475,7 @@ function loadMesh(gl,meshes, glTF, output_index) {
         mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
         mesh.updateTyped(indices);
         if(componentTypeIndex == 5125 || componentTypeIndex == 5124){
-            mesh.isUInt32 = true;
+            mesh.isUint32 = true;
         }
         output_index = output_index + iterator;
         meshOut.setValue(output_index, mesh);
@@ -4441,9 +4492,13 @@ function loadMesh(gl,meshes, glTF, output_index) {
     var index_offset=0;
     var output_count;
     var iterator = 0;
+   
         for (var i=0; i<maxCount; i++) {
             if ( MeshIndexIn.pinIsChanged() | glTF_In.pinIsChanged() | Update.getValue(i) == 1) {
             var glTF = glTF_In.getValue(i);  
+            
+             console.log(glTF.data.mesh_primitives); //presorted primitves
+             
             index_offset = i * glTF.data.meshes.length;
             var element_primitive_count = 0;
             
@@ -4467,7 +4522,7 @@ function loadMesh(gl,meshes, glTF, output_index) {
                     index_offset = i * mesh_count;
                     for (var j=0; j<mesh_count; j++) {
                         if(glTF.data.nodes[j].mesh !== undefined){
-                            var index = glTF.data.nodes[j].mesh;
+                            var index = glTF.data.nodes[j].mesh; 
                             var mesh = glTF.data.meshes[index];
                             output_index = iterator * mesh.primitives.length + index_offset;
                             loadMesh(gl,mesh, glTF, output_index);
@@ -4522,8 +4577,8 @@ VVVV.Nodes.GeometryGLTF.prototype = new Node();
     var BaseColorValueOut = this.addOutputPin("BaseColorValue", [1.0,1.0,1.0,1.0], VVVV.PinTypes.Value);
     //var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
 
-   function isPowerOf2(value) {
-  return (value & (value - 1)) == 0;
+    function isPowerOf2(value) {
+     return (value & (value - 1)) == 0;
 }
 var texture = [];
 var source_path = [];
@@ -4535,6 +4590,10 @@ function RemoveFirstDir(the_url)
     return( the_arr.join('/') );
 }
 
+function defined(value) {
+        return value !== undefined && value !== null;
+    }
+    
 function requestTexture(gl, glTF, element, i, textureIndex, descriptor, IsValid){
 
         var texture;
@@ -4570,17 +4629,20 @@ function requestTexture(gl, glTF, element, i, textureIndex, descriptor, IsValid)
         var image = new Image();
         texture.image = new Image();
         texture.image.src = source_path[i];
+        console.log(descriptor + " " + texture.image.src)
         texture.image.onload = (function(j) {
             return function() {         
                 gl.bindTexture(gl.TEXTURE_2D, texture);
                 gl.texImage2D(gl.TEXTURE_2D,  0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, texture.image);
                 if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
                     gl.generateMipmap(gl.TEXTURE_2D);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST); 
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
                 } else {
                     // No, it's not a power of 2. Turn off mips and set wrapping to clamp to edge
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);                       
+                                       
                 }
                 
                 if(descriptor == "BaseColor"){
@@ -4598,8 +4660,10 @@ function requestTexture(gl, glTF, element, i, textureIndex, descriptor, IsValid)
                 if(descriptor == "Emissive"){
                     EmissiveOut.setValue(j, texture); 
                 }
+                       
                 gl.bindTexture(gl.TEXTURE_2D, null);
                     }
+              
         })(i);
 }
 
@@ -4608,7 +4672,7 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
     meshes.primitives.forEach(function(element) { //not yet tested against multiple buffers in glTF file
         
         output_index = output_index + iterator;
-        var mat = glTF.data.materials[element.material];
+        var mat = defined(glTF.data.materials[element.material]) ? glTF.data.materials[element.material] : "undefined";
         var textureIndex = -1;
         var IsValid = 0;
         
@@ -4650,8 +4714,7 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
             }else{
                 MetallicRoughnessValueOut.setValue(output_index*2+1, [1.0]);
             }
-        }
-        
+        } 
         //normal Texture
         if(mat.normalTexture !== undefined){
             textureIndex = mat.normalTexture.index ;
@@ -4722,7 +4785,7 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
         for (var i=0; i<maxCount; i++) {
             
            
-            if ( MeshIndexIn.pinIsChanged() | glTF_In.pinIsChanged() | Update.getValue(i) == 1) {
+            if ( MeshIndexIn.pinIsChanged() | glTF_In.pinIsChanged() | Update.pinIsChanged()) {
                 var glTF = glTF_In.getValue(i);  
                 
                 var iterator = 0;
@@ -4803,7 +4866,9 @@ VVVV.Nodes.TexturesGLTF.prototype = new Node();
     
     var AnimationFrame_In = this.addInputPin("AnimationFrame", [ ], VVVV.PinTypes.AnimationFrame);  
     var Update= this.addInputPin('Update', [0], VVVV.PinTypes.Value);
+    var trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
     //output
+    var glTF_Out = this.addOutputPin("glTF", [], VVVV.PinTypes.glTF);  
     var TransformMeshOut = this.addOutputPin("Transform Mesh", [], VVVV.PinTypes.Transform);
     var JointMatrixArrayOut = this.addOutputPin("JointMatrixArray UniformBuffer", [], VVVV.PinTypes.JointMatrixArray);
     var MeshIndexOut = this.addOutputPin("Mesh Index", [0], VVVV.PinTypes.Value);
@@ -4860,219 +4925,8 @@ VVVV.Nodes.TexturesGLTF.prototype = new Node();
       out[15] = 1;
       return out;
     }
-
-    fromRotationTranslationScale = function(out, q, v, s) {
-      // Quaternion math
-      let x = q[0], y = q[1], z = q[2], w = q[3];
-      let x2 = x + x;
-      let y2 = y + y;
-      let z2 = z + z;
-
-      let xx = x * x2;
-      let xy = x * y2;
-      let xz = x * z2;
-      let yy = y * y2;
-      let yz = y * z2;
-      let zz = z * z2;
-      let wx = w * x2;
-      let wy = w * y2;
-      let wz = w * z2;
-      let sx = s[0];
-      let sy = s[1];
-      let sz = s[2];
-
-      out[0] = (1 - (yy + zz)) * sx;
-      out[1] = (xy + wz) * sx;
-      out[2] = (xz - wy) * sx;
-      out[3] = 0;
-      out[4] = (xy - wz) * sy;
-      out[5] = (1 - (xx + zz)) * sy;
-      out[6] = (yz + wx) * sy;
-      out[7] = 0;
-      out[8] = (xz + wy) * sz;
-      out[9] = (yz - wx) * sz;
-      out[10] = (1 - (xx + yy)) * sz;
-      out[11] = 0;
-      out[12] = v[0];
-      out[13] = v[1];
-      out[14] = v[2];
-      out[15] = 1;
-
-      return out;
-    }
-
-    multiply2 = function(out, a, b) {
-      let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
-      let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
-      let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
-      let a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
-
-      // Cache only the current line of the second matrix
-      let b0  = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
-      out[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-      out[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-      out[2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-      out[3] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-
-      b0 = b[4]; b1 = b[5]; b2 = b[6]; b3 = b[7];
-      out[4] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-      out[5] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-      out[6] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-      out[7] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-
-      b0 = b[8]; b1 = b[9]; b2 = b[10]; b3 = b[11];
-      out[8] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-      out[9] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-      out[10] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-      out[11] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-
-      b0 = b[12]; b1 = b[13]; b2 = b[14]; b3 = b[15];
-      out[12] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-      out[13] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-      out[14] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-      out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-      return out;
-    }
     
-    
-    
-    
-    
-
-    var transform_array = [];
-    var mesh_index_array = [];
-
-    var drawNodeRecursive = function(glTF, node, parentTransform, currentIndex) {
-        var localTransform;
-        if (node.matrix) {
-            localTransform = clone(node.matrix);
-        } else {
-            localTransform = create2();
-            var scale = node.scale ? node.scale : [1.0, 1.0, 1.0];
-            var rotation = node.rotation ? node.rotation : [0.0, 0.0, 0.0, 1.0];
-            var translate = node.translation ? node.translation : [0.0, 0.0, 0.0];
-            fromRotationTranslationScale(localTransform, rotation, translate, scale);
-            
-            
-        }
-        multiply2(localTransform, localTransform, parentTransform);
-        
-        
-        
-        
-        if (defined(node.mesh)  ) {    //&& node.mesh < glTF.data.meshes.length
-            transform_array.push(localTransform);
-            mesh_index_array.push(node.mesh);
-        }
-        if (defined(node.children) && node.children.length > 0) {
-            for (var i = 0; i < node.children.length; i++) {
-                drawNodeRecursive(glTF, glTF.data.nodes[node.children[i]], localTransform, node.children[i]);
-            }
-        }
-    };
-
-    this.evaluate = function() { 
-    var maxCount = glTF_In.getSliceCount();
-    var index_offset=0;
-    var output_count;
-    var iterator = 0;
-        for (var i=0; i<maxCount; i++) {
-            if ( glTF_In.pinIsChanged() | Update.getValue(i) == 1) {
-                transform_array = [];
-                mesh_index_array = [];
-                var glTF = glTF_In.getValue(i);  
-                //Recursively traverse scene graph
-                var scene_index = defined(glTF.data.scene) ? glTF.data.scene : 0;
-                var scene = glTF.data.scenes[scene_index]
-                var max_root_nodes = scene.nodes.length;    
-                for (var k=0; k<max_root_nodes ; k++) {
-                    var root_node_index = scene.nodes[k];
-                    drawNodeRecursive(glTF, glTF.data.nodes[root_node_index], create2(), 0);
-                }
-                if(transform_array.length !== 0 || transform_array.length !== undefined){
-                    for (var j=0; j<transform_array.length; j++) {
-                        var output_transform = Array.from(transform_array[j]);
-                        TransformMeshOut.setValue(j, output_transform);
-                        MeshIndexOut.setValue(j, mesh_index_array[j]);
-                    }
-                    TransformMeshOut.setSliceCount(transform_array.length);
-                }else{
-                    TransformMeshOut.setValue(0, create2());
-                    TransformMeshOut.setSliceCount(1);
-                }
-
-
-            }
-            
-            
-        } 
-       
-        
-
-    }
-}
-VVVV.Nodes.NodesGLTF.prototype = new Node();
-
-
-
-///*
-//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//   NODE: Animation (glTF)
-//   Author(s): David Gann
-//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  */
-
-  VVVV.Nodes.AnimationGLTF = function(id, graph) {
-    this.constructor(id, "Animation (glTF)", graph);
-
-    this.meta = {
-      authors: ['David Gann'],
-      original_authors: ['000.graphics'],
-      credits: [],
-      compatibility_issues: []
-    };
-    
-    //input
-    var glTF_In = this.addInputPin("glTF", [], VVVV.PinTypes.glTF);   
-    var Time_in = this.addInputPin("GlobalTime", [0.0], VVVV.PinTypes.Value);  
-    var AnimationIndex_In = this.addInputPin("Animation Index", [0], VVVV.PinTypes.Value);  
-    var Update = this.addInputPin("Update", [0], VVVV.PinTypes.Value);  
-    //output
-    var AnimationFrame_Out = this.addOutputPin("Node Animation", [], VVVV.PinTypes.AnimationFrame)
-
-
-    function defined(value) {
-        return value !== undefined && value !== null;
-    }
-
-    //As a quick fix for outdated gl-matrix.js lib use the relevant parts from the new lib locally
-    //copyright Brandon Jones, for details see lib/gl-matrix.js in this repo
-    if(!GLMAT_ARRAY_TYPE) {
-        var GLMAT_ARRAY_TYPE = (typeof Float32Array !== 'undefined') ? Float32Array : Array;
-    }
-
-    clone = function(a) {
-        var out = new GLMAT_ARRAY_TYPE(16);
-        out[0] = a[0];
-        out[1] = a[1];
-        out[2] = a[2];
-        out[3] = a[3];
-        out[4] = a[4];
-        out[5] = a[5];
-        out[6] = a[6];
-        out[7] = a[7];
-        out[8] = a[8];
-        out[9] = a[9];
-        out[10] = a[10];
-        out[11] = a[11];
-        out[12] = a[12];
-        out[13] = a[13];
-        out[14] = a[14];
-        out[15] = a[15];
-        return out;
-    };
-
-    create2 = function() {
+    create_conversion_mat4x4 = function() {
       let out = new GLMAT_ARRAY_TYPE(16);
       out[0] = 1;
       out[1] = 0;
@@ -5084,7 +4938,7 @@ VVVV.Nodes.NodesGLTF.prototype = new Node();
       out[7] = 0;
       out[8] = 0;
       out[9] = 0;
-      out[10] = 1;
+      out[10] = -1;
       out[11] = 0;
       out[12] = 0;
       out[13] = 0;
@@ -5166,6 +5020,235 @@ VVVV.Nodes.NodesGLTF.prototype = new Node();
       return out;
     }
     
+    
+var    vec3_fromValues = function(x, y, z) {
+    var out = new GLMAT_ARRAY_TYPE(3);
+    out[0] = x;
+    out[1] = y;
+    out[2] = z;
+    return out;
+};
+  
+var quat_rotateY = function (out, a, rad) {
+    rad *= 0.5; 
+
+    var ax = a[0], ay = a[1], az = a[2], aw = a[3],
+        by = Math.sin(rad), bw = Math.cos(rad);
+
+    out[0] = ax * bw - az * by;
+    out[1] = ay * bw + aw * by;
+    out[2] = az * bw + ax * by;
+    out[3] = aw * bw - ay * by;
+    return out;
+};
+
+    var transform_array = [];
+    var mesh_index_array = [];
+
+    var drawNodeRecursive = function(glTF, node, parentTransform, currentIndex, animation, isRoot) {
+        
+        var frame_idx = animation.node_list.indexOf(currentIndex);
+        var target = "none"
+        
+        if(frame_idx !== -1){
+            var target = animation.data[frame_idx].target_transform;
+        }
+        
+        var localTransform = create2();
+        
+        if (node.matrix) { //get the matrix property from the node if available
+            
+            localTransform = clone(node.matrix);
+            
+        } else { 
+            
+            localTransform = create2();
+            
+            if(target == "scale"){
+                var scale = animation.data[frame_idx].frame_value;
+            }else{
+                var scale = node.scale ? node.scale : [1.0, 1.0, 1.0];
+            }
+            
+            if(target == "rotation"){
+                var rotation = animation.data[frame_idx].frame_value;
+            }else{
+                var rotation = node.rotation ? node.rotation : [0.0, 0.0, 0.0, 1.0];
+            }
+            
+            if(target == "translation"){
+                var translate = animation.data[frame_idx].frame_value;
+            }else{
+                var translate = node.translation ? node.translation : [0.0, 0.0, 0.0];
+            }
+            
+            fromRotationTranslationScale(localTransform, rotation, translate, scale);
+   
+        }
+
+        multiply2(localTransform, parentTransform, localTransform);
+
+        if (defined(node.mesh)  ) {    //&& node.mesh < glTF.data.meshes.length
+            transform_array.push(localTransform);
+            mesh_index_array.push(node.mesh);
+        }
+        if (defined(node.children) && node.children.length > 0) {
+            for (var i = 0; i < node.children.length; i++) {
+                drawNodeRecursive(glTF, glTF.data.nodes[node.children[i]], localTransform, node.children[i], animation, false);
+            }
+        }
+    };
+
+    this.evaluate = function() { 
+    var maxCount = glTF_In.getSliceCount();
+    var index_offset=0;
+    var output_count;
+    var iterator = 0;
+        for (var i=0; i<maxCount; i++) {
+            if ( glTF_In.pinIsChanged() | Update.getValue(i) == 1 | AnimationFrame_In.pinIsChanged() || trIn.pinIsChanged()) {
+                transform_array = [];
+                mesh_index_array = [];
+                var glTF = glTF_In.getValue(i);  
+                var animation = AnimationFrame_In.getValue(i);
+                var scene_index = defined(glTF.data.scene) ? glTF.data.scene : 0;
+                var scene = glTF.data.scenes[scene_index]
+                var max_root_nodes = scene.nodes.length;    
+                for (var k=0; k<max_root_nodes ; k++) {
+                    var root_node_index = scene.nodes[k];
+                    var ParentConversion = create_conversion_mat4x4();
+                    drawNodeRecursive(glTF, glTF.data.nodes[root_node_index], trIn.getValue(i), root_node_index, animation, true);
+                    
+                    
+                
+                }
+                if(transform_array.length !== 0 || transform_array.length !== undefined){
+                    for (var j=0; j<transform_array.length; j++) {
+                        var output_transform = Array.from(transform_array[j]);
+                        TransformMeshOut.setValue(j, output_transform);
+                        MeshIndexOut.setValue(j, mesh_index_array[j]);
+                    }
+                    TransformMeshOut.setSliceCount(transform_array.length);
+                    MeshIndexOut.setSliceCount(transform_array.length);
+                }else{
+                    TransformMeshOut.setValue(0, create2());
+                    TransformMeshOut.setSliceCount(1);
+                }
+                glTF_Out.setValue(i, glTF);
+                glTF_Out.setSliceCount(maxCount);
+            }
+            
+            
+        } 
+       
+        
+
+    }
+}
+VVVV.Nodes.NodesGLTF.prototype = new Node();
+
+
+
+///*
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//   NODE: Animation (glTF)
+//   Author(s): David Gann
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//  */
+
+  VVVV.Nodes.AnimationGLTF = function(id, graph) {
+    this.constructor(id, "Animation (glTF)", graph);
+
+    this.meta = {
+      authors: ['David Gann'],
+      original_authors: ['000.graphics'],
+      credits: [],
+      compatibility_issues: []
+    };
+    
+    //input
+    var glTF_In = this.addInputPin("glTF", [], VVVV.PinTypes.glTF);   
+    var Time_in = this.addInputPin("GlobalTime", [0.0], VVVV.PinTypes.Value);  
+    var AnimationIndex_In = this.addInputPin("Animation Index", [0], VVVV.PinTypes.Value);  
+    var Update = this.addInputPin("Update", [0], VVVV.PinTypes.Value);  
+    //output
+    var AnimationFrame_Out = this.addOutputPin("Node Animation", [], VVVV.PinTypes.AnimationFrame)
+
+    //As a quick fix for outdated gl-matrix.js lib use the relevant parts from the new lib locally
+    //copyright Brandon Jones, for details see lib/gl-matrix.js in this repo
+    if(!GLMAT_ARRAY_TYPE) {
+        var GLMAT_ARRAY_TYPE = (typeof Float32Array !== 'undefined') ? Float32Array : Array;
+    }
+    
+/**
+ * Creates a new, empty vec4
+ *
+ * @returns {vec4} a new 4D vector
+ */
+vec4_create = function() {
+    var out = new GLMAT_ARRAY_TYPE(4);
+    out[0] = 0;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    return out;
+};
+/**
+ * Creates a new, empty vec3
+ *
+ * @returns {vec3} a new 3D vector
+ */
+vec3_create = function() {
+    var out = new GLMAT_ARRAY_TYPE(3);
+    out[0] = 0;
+    out[1] = 0;
+    out[2] = 0;
+    return out;
+};
+var quat_slerp = function (out, a, b, t) {
+    var ax = a[3], ay = a[0], az = a[1], aw = a[2],
+        bx = b[3], by = b[0], bz = b[1], bw = a[2];
+
+    var cosHalfTheta = ax * bx + ay * by + az * bz + aw * bw,
+        halfTheta,
+        sinHalfTheta,
+        ratioA,
+        ratioB;
+
+    if (Math.abs(cosHalfTheta) >= 1.0) {
+        if (out !== a) {
+            out[0] = ax;
+            out[1] = ay;
+            out[2] = az;
+            out[3] = aw;
+        }
+        return out;
+    }
+
+    halfTheta = Math.acos(cosHalfTheta);
+    sinHalfTheta = Math.sqrt(1.0 - cosHalfTheta * cosHalfTheta);
+
+    if (Math.abs(sinHalfTheta) < 0.001) {
+        out[0] = (ax * 0.5 + bx * 0.5);
+        out[1] = (ay * 0.5 + by * 0.5);
+        out[2] = (az * 0.5 + bz * 0.5);
+        out[3] = (aw * 0.5 + bw * 0.5);
+        return out;
+    }
+
+    ratioA = Math.sin((1 - t) * halfTheta) / sinHalfTheta;
+    ratioB = Math.sin(t * halfTheta) / sinHalfTheta;
+
+    out[0] = (ax * ratioA + bx * ratioB);
+    out[1] = (ay * ratioA + by * ratioB);
+    out[2] = (az * ratioA + bz * ratioB);
+    out[3] = (aw * ratioA + bw * ratioB);
+
+    return out;
+};
+
+    function defined(value) {
+        return value !== undefined && value !== null;
+    }
 
 var targetAnimation_array = []
 
@@ -5173,7 +5256,7 @@ function _arrayBuffer2TypedArray(buffer, byteOffset, countOfComponentType, compo
     switch(componentType) {
         // @todo: finish
         case 5120: return new Int8Array(buffer, byteOffset, countOfComponentType); 
-        case 5121: return new UInt8Array(buffer, byteOffset, countOfComponentType); 
+        case 5121: return new Uint8Array(buffer, byteOffset, countOfComponentType); 
         case 5122: return new Int16Array(buffer, byteOffset, countOfComponentType); 
         case 5123: return new Uint16Array(buffer, byteOffset, countOfComponentType);
         case 5124: return new Int32Array(buffer, byteOffset, countOfComponentType);
@@ -5182,7 +5265,6 @@ function _arrayBuffer2TypedArray(buffer, byteOffset, countOfComponentType, compo
         default: return null; 
     }
 }  
-
 
 var Type2NumOfComponent = {
     'SCALAR': 1,
@@ -5193,8 +5275,6 @@ var Type2NumOfComponent = {
     'MAT3': 9,
     'MAT4': 16
 };
-
-
 
 function accessor(glTF, accessor_index){
     //accessor
@@ -5215,51 +5295,147 @@ function accessor(glTF, accessor_index){
     return typedArray;
 }
 
-var Animations_array = [];
+function map_range(value, low1, high1, low2, high2) {
+    return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
+}
 
-var Animations = function(data) {
-    this.data = [];
-    this.animation_count = 0;
-
-    this.setAnimation = function(index, input, output, target_node, target_transform ) {
-      this.data[index] = {
-        input: input,
-        output: output,
-        target_node: target_node,
-        target_transform: target_transform,
-      };
-      this.target_count += 1;
+function map_normalized(input, time_min, time_max){
+    var output = ((time_max + (input - time_min) % time_max) % time_max)  / time_max;
+    if (isNaN(output)){
+        output = 0;
     }
-  }
+
+   
+    return output
+}
+
+/**
+ * Performs a linear interpolation between two vec4's
+ *
+ * @param {vec4} out the receiving vector
+ * @param {vec4} a the first operand
+ * @param {vec4} b the second operand
+ * @param {Number} t interpolation amount between the two inputs
+ * @returns {vec4} out
+ */
+var vec4_lerp = function (out, a, b, t) {
+    var ax = a[0],
+        ay = a[1],
+        az = a[2],
+        aw = a[3];
+    out[0] = ax + t * (b[0] - ax);
+    out[1] = ay + t * (b[1] - ay);
+    out[2] = az + t * (b[2] - az);
+    out[3] = aw + t * (b[3] - aw);
+    return out;
+};
+/**
+ * Performs a linear interpolation between two vec3's
+ *
+ * @param {vec3} out the receiving vector
+ * @param {vec3} a the first operand
+ * @param {vec3} b the second operand
+ * @param {Number} t interpolation amount between the two inputs
+ * @returns {vec3} out
+ */
+var vec3_lerp = function (out, a, b, t) {
+    var ax = a[0],
+        ay = a[1],
+        az = a[2];
+    out[0] = ax + t * (b[0] - ax);
+    out[1] = ay + t * (b[1] - ay);
+    out[2] = az + t * (b[2] - az);
+    return out;
+};
 
 
-
-
-function getAnimationFrame(glTF, i, anim_index, time, AnimationFrame){
+function getAnimationFrame(glTF, anim_index, t, AnimationFrame){
     
-    var animation = glTF.data.animations[AnimationIndex_In.getValue(i)]
+    var animation = glTF.data.animations[anim_index]
     //console.log("channel count" + animation.channels.length)
     var input_array = null;
     var output_array = null;
+
     for (var i=0; i<animation.channels.length; i++) {
+        if(defined(animation.channels[i].target.node) == false) { 
+        continue; 
+        }
         var sampler_index = animation.channels[i].sampler;
+
         var input_index = animation.samplers[sampler_index].input;
         var output_index = animation.samplers[sampler_index].output;
         
-        input_array =  accessor(glTF, input_index);
-        output_array =  accessor(glTF, output_index);
+        var input_array =  accessor(glTF, input_index);
+        var output_array =  accessor(glTF, output_index);
         
+        var t_max = glTF.data.accessors[input_index].max;
+        var t_min = glTF.data.accessors[input_index].min;
+        var rel_t_max = t_max - t_min;
+        var count = glTF.data.accessors[input_index].count;
+
+        var curIdx = 0;
+        if (t > t_max) {
+            t -= rel_t_max * Math.ceil((t - t_max) / rel_t_max);
+            curIdx = 0;
+        }
+
+        while (curIdx <= count - 2 && t >= input_array[curIdx + 1]) {
+            curIdx++;
+        }
+
+        if (curIdx >= count - 1) {
+            // loop
+            t -= rel_t_max;
+            curIdx = 0;
+        }
+        
+        var vec_type = glTF.data.accessors[output_index].type;
+        var type_count = Type2NumOfComponent[vec_type];
+        
+        var o = i * type_count;
+        var on = o + type_count;
+        
+        var u = Math.max(0, t - input_array[curIdx]) / ( input_array[curIdx + 1] - input_array[curIdx ])
+        
+        var target_transform = animation.channels[i].target.path;
+         
+        if(target_transform == "rotation"){
+            
+            var animationOutputValueVec4a = vec4_create();
+            var animationOutputValueVec4b = vec4_create();
+            for (var j = 0; j < type_count; j++ ) {
+                animationOutputValueVec4a[j] = output_array[o + j];
+                animationOutputValueVec4b[j] = output_array[on + j];
+            }
+            var output_value = vec4_create();
+            //This quat_slerp has a w x y z layout, opposed to the original gl.matrix which has x y z w - adapting to the glTF specs here
+            quat_slerp(output_value, animationOutputValueVec4a, animationOutputValueVec4b, u);
+            
+        }else{   //if "scale" or "translate"
+            var animationOutputValueVec3a = vec3_create();
+            var animationOutputValueVec3b = vec3_create();
+            for (var j = 0; j < type_count; j++ ) {
+                animationOutputValueVec3a[j] = output_array[o + j];
+                animationOutputValueVec3b[j] = output_array[on + j];
+            }
+            var output_value = vec3_create();
+            vec3_lerp(output_value, animationOutputValueVec3a, animationOutputValueVec3b, u);
+        }    
+           
+ 
+        
+        //console.log(output_value ) 
+
+        var target_node = animation.channels[i].target.node;
+       
+        AnimationFrame.setTargetFrame(i, output_value, target_node, target_transform);
     }
     
     //if (currentIndex == glTF.data.animations[0].channels[0].target.node) {
     //        console.log("animation available")
     //    }
     
-    var index = 0;
-    var data = [1.0,1.0,1.0];
-    var target_node = 0;
-    var target_transform = "rotation";
-    AnimationFrame.setTargetFrame(index, data, target_node, target_transform);
+
 }
 
 
@@ -5288,8 +5464,8 @@ function getAnimationFrame(glTF, i, anim_index, time, AnimationFrame){
                 var time = Time_in.getValue(i);
                 
                 
-                getAnimationFrame(glTF, i, anim_index, time, AnimationFrame);
-                //console.log(JSON.stringify(AnimationFrame));
+                getAnimationFrame(glTF, anim_index, time, AnimationFrame);
+                
             }
             
             AnimationFrame_Out.setValue(i, AnimationFrame);    
@@ -5505,7 +5681,7 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
  
       
     for (var j=currentLayerCount; j<maxSize; j++) {
-        console.log("running loop")
+
         vertexShaderCode = VSDefinesIn.getValue(j) + vertexShaderCode;  
         fragmentShaderCode = PSDefinesIn.getValue(j) + fragmentShaderCode; 
                     

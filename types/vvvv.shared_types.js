@@ -286,6 +286,8 @@ VVVV.PinTypes.SceneBuffer = {
 VVVV.Types.glTF = function() {
   this.data = {};
   this.buffer = {};
+  this.primitive_count = 1;
+  this.nodes_
 }
 
 var default_glTF = new VVVV.Types.glTF();
@@ -319,26 +321,21 @@ VVVV.PinTypes.JointMatrixArray = {
 VVVV.Types.AnimationFrame = function(data) {
   this.data = [];
   this.target_count = 0;
+  this.node_list = [];
   
   this.setTargetFrame = function(index, data, target_node, target_transform ) {
     this.data[index] = {
-      data: data,
+      frame_value: data,
       target_node: target_node,
       target_transform: target_transform,
     };
     this.target_count += 1;
+    this.node_list.push(target_node);
   }
   }
 
 var default_AnimationFrame = new VVVV.Types.AnimationFrame();
 
-VVVV.PinTypes.AnimationFrame = {
-  typeName: "AnimationFrame",
-  reset_on_disconnect: true,
-  defaultValue: function() {
-    return default_AnimationFrame;
-  }
-}
 
 
 
