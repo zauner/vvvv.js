@@ -4250,13 +4250,86 @@ VVVV.Nodes.DataTexture.prototype = new Node();
        glTF_Out.setValue(i, glTF);
    }
    
+function getDefines(glTF, mesh_id, primitive_id){
+    var defines = {
+        HAS_NORMALS: true,
+        HAS_TANGENTS: false,
+        HAS_UV0: true,
+        HAS_UV1: true,
+        HAS_ANIMATION: false,
+        USE_IBL: true,
+        HAS_BASECOLORMAP: true,
+        HAS_NORMALMAP: false,
+        HAS_EMISSIVEMAP: false,
+        HAS_METALROUGHNESSMAP: false,
+        HAS_OCCLUSIONMAP: false,
+        MANUAL_SRGB: false,
+        SRGB_FAST_APPROXIMATION: false,
+        NO_GAMMA_CORRECTION: false,
+        HAS_MORPHTARGETS : false,
+        HAS_JOINTS0 : false,
+        HAS_WEIGHTS0 : false,
+        HAS_WEIGHTS1 : false   
+    }
+    
+    var primitive = glTF.data.meshes[mesh_id].primitives[primitive_id];
+
+    var atr = defined(primitive.attributes) ? primitive.attributes : {};
+    
+    var mat = defined(glTF.data.materials) ? glTF.data.materials[primitive.material] : {};
+
+    
+    var pbrMetRough = defined(mat.pbrMetallicRoughness) ? glTF.data.materials[primitive.material].pbrMetallicRoughness : {};
+    
+    
+    defines.HAS_BASECOLORMAP = defined(pbrMetRough.baseColorTexture) ? true : false;
+    
+    
+    defines.HAS_METALROUGHNESSMAP = defined(pbrMetRough.metallicRoughnessTexture) ? true : false;
+    
+
+    defines.HAS_NORMALMAP = defined(mat.normalTexture) ? true : false;
+
+    defines.HAS_OCCLUSIONMAP = defined(mat.occlusionTexture) ? true : false;
+    
+    defines.HAS_EMISSIVEMAP = defined(mat.emissiveTexture) ? true : false;    
+    
+    defines.HAS_NORMALS = defined(atr.NORMAL) ? true : false;
+    
+    defines.HAS_TANGENTS = defined(atr.TANGENT) ? true : false;
+    
+    defines.HAS_UV0 = defined(atr.TEXCOORD_0) ? true : false;
+    
+    defines.HAS_UV1 = defined(atr.TEXCOORD_1) ? true : false;
+    
+    defines.HAS_WEIGHTS0 = defined(atr.WEIGHTS_0) ? true : false;
+    
+    defines.HAS_WEIGHTS1 = defined(atr.WEIGHTS_1) ? true : false;
+    
+    defines.HAS_JOINTS0 = defined(atr.JOINTS_0) ? true : false;
+    
+    defines.HAS_MORPHTARGETS = defined(primitive.targets) ? true : false;
+    
+    //console.log( JSON.stringify(defines));
+    
+    return defines;
+}
+   
     var ScenePrimitves = function(glTF, node, mesh_primitive_array ) {   
         if (defined(node.mesh)  ) {    //&& node.mesh < glTF.data.meshes.length
             //mesh_index_array.push(node.mesh);
             var Primitve_index = 0;
+            
             var count = glTF.data.meshes[node.mesh].primitives.length;
+            
             for (var i = 0; i < count; i++) {
-                var element = {mesh_id: node.mesh, primitive_id: Primitve_index}
+                var defines = getDefines(glTF, node.mesh, Primitve_index);
+                var element = {
+                    mesh_id: node.mesh,
+                    primitive_id: Primitve_index,
+                    defines: defines
+                }
+                
                 mesh_primitive_array.push(element);
                 
                 Primitve_index += 1;
@@ -4303,18 +4376,14 @@ VVVV.Nodes.DataTexture.prototype = new Node();
     
     
     this.evaluate = function() { 
-    //if (!this.renderContexts){ return;} 
-    //var gl = this.renderContexts[0];
-    //if (!gl){ return;} 
-
-        //import {vec3, vec4, quat, mat4} from 'gl-matrix';
+   
     var maxCount = filenamePin.getSliceCount();
         for (var i=0; i<maxCount; i++) {
           
-
             if (prevFilenames[i] != filenamePin.getValue(i)  | Update.getValue(i) == 1) {
+                
                 filename[i] = VVVV.Helpers.prepareFilePath(filenamePin.getValue(i), this.parentPatch);
-               var glTF = {data: {}, buffer: [], path: {}};
+                var glTF = {data: {}, buffer: [], path: {}};
                         glTF_array[i] = glTF;             
                 (function(i) {        
                 loadFile(filename[i], 2000, attachJSON, glTF_array[i], i, filename[i]);   
@@ -4351,7 +4420,6 @@ VVVV.Nodes.glTFLoader.prototype = new Node();
     
     //input
     var glTF_In = this.addInputPin("glTF", [], VVVV.PinTypes.glTF); 
-    var MeshIndexIn= this.addInputPin('Mesh Index', [0], VVVV.PinTypes.Value);
     var Update= this.addInputPin('Update', [0], VVVV.PinTypes.Value);
     //output
     var meshOut = this.addOutputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
@@ -4428,59 +4496,61 @@ function AttributeBuffer(glTF, index, attribute_semantic){
     vertexBuffer.setSubBufferTypedStride(attribute_semantic, type, typedBuffer, stride);
 }
 
-function loadMesh(gl,meshes, glTF, output_index) {
-    var iterator = 0;
-    meshes.primitives.forEach(function(element) { //not yet tested against multiple buffers in glTF file
-        var mesh = null;
-        vertexBuffer = new VVVV.Types.VertexBuffer(gl);
-        vertexBuffer.create();                  
-        if ("POSITION" in element.attributes) {
-            AttributeBuffer(glTF, element.attributes.POSITION, 'POSITION');
-        }
-        if ("NORMAL" in element.attributes) {
-             AttributeBuffer(glTF, element.attributes.NORMAL, 'NORMAL');
-        }
-        if ("TANGENT" in element.attributes) {
-            AttributeBuffer(glTF, element.attributes.TANGENT, 'TANGENT');
-        }
-        if ("TEXCOORD_0" in element.attributes) {
-            AttributeBuffer(glTF, element.attributes.TEXCOORD_0, 'TEXCOORD0');
-        }
-        if ("TEXCOORD_1" in element.attributes) {
-            AttributeBuffer(glTF, element.attributes.TEXCOORD_1, 'TEXCOORD_1');
-        }
-        if ("COLOR_0" in element.attributes) {
-            AttributeBuffer(glTF, element.attributes.COLOR_0, 'COLOR_0'); //COLOR_0 can be either vec3 or vec4
-        }
-        if ("JOINTS_0" in element.attributes) {
-            AttributeBuffer(glTF, element.attributes.JOINTS_0, 'JOINTS_0');
-        }
-        if ("WEIGHTS_0" in element.attributes) {
-            AttributeBuffer(glTF, element.attributes.WEIGHTS_0, 'WEIGHTS_0');
-        }
-        if ("JOINTS_1" in element.attributes) {
-            AttributeBuffer(glTF, element.attributes.JOINTS_1, 'JOINTS_1');
-        }
-        if ("WEIGHTS_1" in element.attributes) {
-            AttributeBuffer(glTF, element.attributes.WEIGHTS_1, 'WEIGHTS_1');
-        }
+function loadMesh(gl, glTF, output_index, mesh_primitive_idx) {
+    
 
-        //////////////index buffer///////////////////
-        var type = Type2Num(glTF, element.indices);
+    var element = glTF.data.meshes[mesh_primitive_idx.mesh_id].primitives[mesh_primitive_idx.primitive_id];
 
-        var indices = accessor(glTF, element.indices, type);
-        var componentTypeIndex = glTF.data.accessors[ element.indices ].componentType;
-        vertexBuffer.update();
 
-        mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
-        mesh.updateTyped(indices);
-        if(componentTypeIndex == 5125 || componentTypeIndex == 5124){
-            mesh.isUint32 = true;
-        }
-        output_index = output_index + iterator;
-        meshOut.setValue(output_index, mesh);
-        iterator += 1;
-    }); 
+    vertexBuffer = new VVVV.Types.VertexBuffer(gl);
+    vertexBuffer.create();                  
+    if ("POSITION" in element.attributes) {
+        AttributeBuffer(glTF, element.attributes.POSITION, 'POSITION');
+    }
+    if ("NORMAL" in element.attributes) {
+         AttributeBuffer(glTF, element.attributes.NORMAL, 'NORMAL');
+    }
+    if ("TANGENT" in element.attributes) {
+        AttributeBuffer(glTF, element.attributes.TANGENT, 'TANGENT');
+    }
+    if ("TEXCOORD_0" in element.attributes) {
+        AttributeBuffer(glTF, element.attributes.TEXCOORD_0, 'TEXCOORD0');
+    }
+    if ("TEXCOORD_1" in element.attributes) {
+        AttributeBuffer(glTF, element.attributes.TEXCOORD_1, 'TEXCOORD_1');
+    }
+    if ("COLOR_0" in element.attributes) {
+        AttributeBuffer(glTF, element.attributes.COLOR_0, 'COLOR_0'); //COLOR_0 can be either vec3 or vec4
+    }
+    if ("JOINTS_0" in element.attributes) {
+        AttributeBuffer(glTF, element.attributes.JOINTS_0, 'JOINTS_0');
+    }
+    if ("WEIGHTS_0" in element.attributes) {
+        AttributeBuffer(glTF, element.attributes.WEIGHTS_0, 'WEIGHTS_0');
+    }
+    if ("JOINTS_1" in element.attributes) {
+        AttributeBuffer(glTF, element.attributes.JOINTS_1, 'JOINTS_1');
+    }
+    if ("WEIGHTS_1" in element.attributes) {
+        AttributeBuffer(glTF, element.attributes.WEIGHTS_1, 'WEIGHTS_1');
+    }
+
+    //////////////index buffer///////////////////
+    var type = Type2Num(glTF, element.indices);
+
+    var indices = accessor(glTF, element.indices, type);
+    var componentTypeIndex = glTF.data.accessors[ element.indices ].componentType;
+    vertexBuffer.update();
+
+    mesh = new VVVV.Types.Mesh(gl, vertexBuffer, indices);
+    mesh.updateTyped(indices);
+    if(componentTypeIndex == 5125 || componentTypeIndex == 5124){
+        mesh.isUint32 = true;
+    }
+
+    meshOut.setValue(output_index, mesh);
+
+  
 }
 
     this.evaluate = function() { 
@@ -4494,46 +4564,31 @@ function loadMesh(gl,meshes, glTF, output_index) {
     var iterator = 0;
    
         for (var i=0; i<maxCount; i++) {
-            if ( MeshIndexIn.pinIsChanged() | glTF_In.pinIsChanged() | Update.getValue(i) == 1) {
+            if (  glTF_In.pinIsChanged() | Update.getValue(i) == 1) {
             var glTF = glTF_In.getValue(i);  
             
-             console.log(glTF.data.mesh_primitives); //presorted primitves
              
-            index_offset = i * glTF.data.meshes.length;
-            var element_primitive_count = 0;
+             
             
-             var mesh_count;
+            
 
-                if(MeshIndexIn.isConnected()){ //load meshes in order of the Mesh Index from Nodes(glTF) node
-                    mesh_count = MeshIndexIn.getSliceCount();
-                    index_offset = i * mesh_count;
+                    var mesh_count = glTF.data.mesh_primitives.length;
+                    
+                    index_offset = i *  mesh_count;
+                    
                     for (var j=0; j<mesh_count; j++) {
-                        var mesh_index = MeshIndexIn.getValue(j);
-                        if(glTF.data.meshes[mesh_index] !== undefined){
-                            var mesh = glTF.data.meshes[mesh_index];
-                            output_index = iterator * mesh.primitives.length + index_offset;
-                            loadMesh(gl,mesh, glTF, output_index);
-                            iterator += 1;
-                            element_primitive_count += mesh.primitives.length;
-                        }
+                    
+                        var mesh_primitive_idx = glTF.data.mesh_primitives[j];            
+                        
+                        var output_index = index_offset + j;
+ 
+                        loadMesh(gl, glTF, output_index, mesh_primitive_idx);
+     
                     }
-                }else{ //load meshes in order of nodes if mesh index pin is not connected
-                    mesh_count = glTF.data.nodes.length;
-                    index_offset = i * mesh_count;
-                    for (var j=0; j<mesh_count; j++) {
-                        if(glTF.data.nodes[j].mesh !== undefined){
-                            var index = glTF.data.nodes[j].mesh; 
-                            var mesh = glTF.data.meshes[index];
-                            output_index = iterator * mesh.primitives.length + index_offset;
-                            loadMesh(gl,mesh, glTF, output_index);
-                            iterator += 1;
-                            element_primitive_count += mesh.primitives.length;
-                        }
-                    }
-                }
+                
             }  
         } 
-        meshOut.setSliceCount(element_primitive_count);
+        meshOut.setSliceCount(mesh_count);
         
 
     }
@@ -4560,7 +4615,6 @@ VVVV.Nodes.GeometryGLTF.prototype = new Node();
     
     //input
     var glTF_In = this.addInputPin("glTF", [], VVVV.PinTypes.glTF);  
-    var MeshIndexIn= this.addInputPin('Mesh Index', [0], VVVV.PinTypes.Value);
     var Update= this.addInputPin('Update', [0], VVVV.PinTypes.Value);
     //output
 
@@ -4570,11 +4624,12 @@ VVVV.Nodes.GeometryGLTF.prototype = new Node();
     var MetallicRoughnessOut = this.addOutputPin("Metallic Roughness Texture", [], VVVV.PinTypes.WebGlTexture);
     var OcclusionOut = this.addOutputPin("Occlusion Texture", [], VVVV.PinTypes.WebGlTexture);
     
+    var BaseColorValueOut = this.addOutputPin("BaseColorValue", [1.0,1.0,1.0,1.0], VVVV.PinTypes.Value);
     var NormalScaleOut = this.addOutputPin("NormalScale", [1.0], VVVV.PinTypes.Value);
     var EmissiveFactorOut = this.addOutputPin("EmissiveFactor", [1.0,1.0,1.0], VVVV.PinTypes.Value);
     var OcclusionStrengthOut = this.addOutputPin("OcclusionStrength", [1.0], VVVV.PinTypes.Value);
     var MetallicRoughnessValueOut = this.addOutputPin("MetallicRoughness Value", [1.0,1.0], VVVV.PinTypes.Value);
-    var BaseColorValueOut = this.addOutputPin("BaseColorValue", [1.0,1.0,1.0,1.0], VVVV.PinTypes.Value);
+    
     //var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
 
     function isPowerOf2(value) {
@@ -4629,15 +4684,16 @@ function requestTexture(gl, glTF, element, i, textureIndex, descriptor, IsValid)
         var image = new Image();
         texture.image = new Image();
         texture.image.src = source_path[i];
-        console.log(descriptor + " " + texture.image.src)
         texture.image.onload = (function(j) {
             return function() {         
                 gl.bindTexture(gl.TEXTURE_2D, texture);
                 gl.texImage2D(gl.TEXTURE_2D,  0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, texture.image);
                 if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
                     gl.generateMipmap(gl.TEXTURE_2D);
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST); 
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR);  
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
                 } else {
                     // No, it's not a power of 2. Turn off mips and set wrapping to clamp to edge
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -4655,7 +4711,7 @@ function requestTexture(gl, glTF, element, i, textureIndex, descriptor, IsValid)
                     MetallicRoughnessOut.setValue(j, texture); 
                 }
                 if(descriptor == "Occlusion"){
-                    BaseColorOut.setValue(j, texture); 
+                    OcclusionOut.setValue(j, texture); 
                 }
                 if(descriptor == "Emissive"){
                     EmissiveOut.setValue(j, texture); 
@@ -4667,100 +4723,109 @@ function requestTexture(gl, glTF, element, i, textureIndex, descriptor, IsValid)
         })(i);
 }
 
-function loadTextures(gl,meshes, glTF, output_index, textures) {
+function loadTextures(gl, glTF, output_index, mesh_primitive_idx) {
     var iterator = 0;
-    meshes.primitives.forEach(function(element) { //not yet tested against multiple buffers in glTF file
-        
-        output_index = output_index + iterator;
-        var mat = defined(glTF.data.materials[element.material]) ? glTF.data.materials[element.material] : "undefined";
-        var textureIndex = -1;
-        var IsValid = 0;
-        
-        if(mat.pbrMetallicRoughness !== undefined){  //in case of SpecularGloss Extension pbrMetallicRoughness is missing
-            //get base color
-            if(mat.pbrMetallicRoughness.baseColorTexture !== undefined){
-                textureIndex = mat.pbrMetallicRoughness.baseColorTexture.index ;
-                IsValid = 1;
-            }
-            requestTexture(gl, glTF, element, output_index,  textureIndex, "BaseColor", IsValid);
-            //get baseColor Values
-            if(mat.pbrMetallicRoughness.baseColorFactor !== undefined){
-                var baseColorFactor_arr =  mat.pbrMetallicRoughness.baseColorFactor;
-                for (var i=0; i<4; i++) {
-                    BaseColorValueOut.setValue(output_index*4+i, baseColorFactor_arr[i]);
-                }
-            }else{
-                for (var i=0; i<4; i++) {
-                BaseColorValueOut.setValue(output_index*4+i, [1.0]);
-                }
-            }
-            
-            // get MetalRoughness texture
-            if(mat.pbrMetallicRoughness.metallicRoughnessTexture !== undefined){
-                textureIndex = mat.pbrMetallicRoughness.metallicRoughnessTexture.index ;
-                IsValid = 1;
-            }else{IsValid = 0;}
-            requestTexture(gl, glTF, element, output_index,  textureIndex, "MetallicRoughness", IsValid);
-            
-            //get metallicValue
-            if(mat.pbrMetallicRoughness.metallicFactor !== undefined){
-                    MetallicRoughnessValueOut.setValue(output_index*2, mat.pbrMetallicRoughness.metallicFactor);
-            }else{
-                MetallicRoughnessValueOut.setValue(output_index*2, [1.0]);
-            }
-            //get Roughness Value
-            if(mat.pbrMetallicRoughness.roughnessFactor !== undefined){
-                    MetallicRoughnessValueOut.setValue(output_index*2+1, mat.pbrMetallicRoughness.roughnessFactor);
-            }else{
-                MetallicRoughnessValueOut.setValue(output_index*2+1, [1.0]);
-            }
-        } 
-        //normal Texture
-        if(mat.normalTexture !== undefined){
-            textureIndex = mat.normalTexture.index ;
-            IsValid = 1;
-            //normalScale
-            if(mat.normalTexture.scale !== undefined){
-                    NormalScaleOut.setValue(output_index, mat.normalTexture.scale);
-                }else{NormalScaleOut.setValue(output_index, [0.0]);}
-        }else{
-            IsValid = 0;
-            NormalScaleOut.setValue(output_index, [0.0]);
-        }
-        requestTexture(gl, glTF, element, output_index,  textureIndex, "Normal", IsValid);
+    var element = glTF.data.meshes[mesh_primitive_idx.mesh_id].primitives[mesh_primitive_idx.primitive_id];
+   
+    var mat = defined(glTF.data.materials) ? glTF.data.materials[element.material] : {};
+    var textureIndex = -1;
+    var IsValid = 0;
 
-        //occlusionTexture 
-        if(mat.occlusionTexture !== undefined){
-            textureIndex = mat.occlusionTexture.index ;
+    if(mat.pbrMetallicRoughness !== undefined){  //in case of SpecularGloss Extension pbrMetallicRoughness is missing
+        //get base color
+        if(defined(mat.pbrMetallicRoughness.baseColorTexture)){
+            textureIndex = mat.pbrMetallicRoughness.baseColorTexture.index ;
             IsValid = 1;
-            //occlusionStrengh 
-            if(mat.occlusionTexture.strength !== undefined){
-                    OcclusionStrengthOut.setValue(output_index, mat.occlusionTexture.strength);
-                }else{OcclusionStrengthOut.setValue(output_index, [0.0]);}
-        }else{
-            IsValid = 0; 
-            OcclusionStrengthOut.setValue(output_index, [0.0]);
         }
-        requestTexture(gl, glTF, element, output_index,  textureIndex, "Occlusion", IsValid);
-        //emissive Texture
-        if(mat.emissiveTexture !== undefined){
-            textureIndex = mat.emissiveTexture.index ;
-            IsValid = 1;      
+        requestTexture(gl, glTF, element, output_index,  textureIndex, "BaseColor", IsValid);
+        //get baseColor Values
+        if(mat.pbrMetallicRoughness.baseColorFactor !== undefined){
+            var baseColorFactor_arr =  mat.pbrMetallicRoughness.baseColorFactor;
+            for (var i=0; i<4; i++) {
+                BaseColorValueOut.setValue(output_index*4+i, baseColorFactor_arr[i]);
+            }
+        }else{
+            for (var i=0; i<4; i++) {
+            BaseColorValueOut.setValue(output_index*4+i, [1.0]);
+            }
+        }
+
+        // get MetalRoughness texture
+        if(mat.pbrMetallicRoughness.metallicRoughnessTexture !== undefined){
+            textureIndex = mat.pbrMetallicRoughness.metallicRoughnessTexture.index ;
+            IsValid = 1;
         }else{IsValid = 0;}
-        //emissiveFactor is independent of texture
-        if(mat.emissiveFactor !== undefined){
-                for (var i=0; i<3; i++) {
-                    EmissiveFactorOut.setValue(output_index*3+i, mat.emissiveFactor[i]);
-                }
-            }else{
-                EmissiveFactorOut.setValue(output_index*3, 0);
-                EmissiveFactorOut.setValue(output_index*3+1, 0);
-                EmissiveFactorOut.setValue(output_index*3+2, 0);
-            }
-        requestTexture(gl, glTF, element, output_index,  textureIndex, "Emissive", IsValid);
+        requestTexture(gl, glTF, element, output_index,  textureIndex, "MetallicRoughness", IsValid);
 
-        iterator += 1;
-    }); 
+        //get metallicValue
+        if(mat.pbrMetallicRoughness.metallicFactor !== undefined){
+                MetallicRoughnessValueOut.setValue(output_index*2, mat.pbrMetallicRoughness.metallicFactor);
+        }else{
+            MetallicRoughnessValueOut.setValue(output_index*2, [1.0]);
+        }
+        //get Roughness Value
+        if(mat.pbrMetallicRoughness.roughnessFactor !== undefined){
+                MetallicRoughnessValueOut.setValue(output_index*2+1, mat.pbrMetallicRoughness.roughnessFactor);
+        }else{
+            MetallicRoughnessValueOut.setValue(output_index*2+1, [1.0]);
+        }
+    }else{
+        IsValid = 0;
+        textureIndex = -1;
+        requestTexture(gl, glTF, element, output_index,  textureIndex, "BaseColor", IsValid);
+        for (var i=0; i<4; i++) {
+            BaseColorValueOut.setValue(output_index*4+i, [1.0]);
+        }
+        requestTexture(gl, glTF, element, output_index,  textureIndex, "MetallicRoughness", IsValid);
+        MetallicRoughnessValueOut.setValue(output_index*2, [1.0]);
+        MetallicRoughnessValueOut.setValue(output_index*2+1, [1.0]);
+    } 
+    //normal Texture
+    if(mat.normalTexture !== undefined){
+        textureIndex = mat.normalTexture.index ;
+        IsValid = 1;
+        //normalScale
+        if(mat.normalTexture.scale !== undefined){
+                NormalScaleOut.setValue(output_index, mat.normalTexture.scale);
+            }else{NormalScaleOut.setValue(output_index, [0.0]);}
+    }else{
+        IsValid = 0;
+        NormalScaleOut.setValue(output_index, [0.0]);
+    }
+    requestTexture(gl, glTF, element, output_index,  textureIndex, "Normal", IsValid);
+
+    //occlusionTexture 
+    if(mat.occlusionTexture !== undefined){
+        textureIndex = mat.occlusionTexture.index ;
+        IsValid = 1;
+        //occlusionStrengh 
+        if(mat.occlusionTexture.strength !== undefined){
+                OcclusionStrengthOut.setValue(output_index, mat.occlusionTexture.strength);
+            }else{OcclusionStrengthOut.setValue(output_index, [0.0]);}
+    }else{
+        IsValid = 0; 
+        OcclusionStrengthOut.setValue(output_index, [0.0]);
+    }
+    requestTexture(gl, glTF, element, output_index,  textureIndex, "Occlusion", IsValid);
+    //emissive Texture
+    if(mat.emissiveTexture !== undefined){
+        textureIndex = mat.emissiveTexture.index ;
+        IsValid = 1;      
+    }else{IsValid = 0;}
+    //emissiveFactor is independent of texture
+    if(mat.emissiveFactor !== undefined){
+            for (var i=0; i<3; i++) {
+                EmissiveFactorOut.setValue(output_index*3+i, mat.emissiveFactor[i]);
+            }
+        }else{
+            EmissiveFactorOut.setValue(output_index*3, 0);
+            EmissiveFactorOut.setValue(output_index*3+1, 0);
+            EmissiveFactorOut.setValue(output_index*3+2, 0);
+        }
+    requestTexture(gl, glTF, element, output_index,  textureIndex, "Emissive", IsValid);
+
+  
+    
 }
 
     var textures = [];
@@ -4783,43 +4848,28 @@ function loadTextures(gl,meshes, glTF, output_index, textures) {
     var index_offset=0;
     var texture_count = 0;
         for (var i=0; i<maxCount; i++) {
-            
-           
-            if ( MeshIndexIn.pinIsChanged() | glTF_In.pinIsChanged() | Update.pinIsChanged()) {
+
+            if ( glTF_In.pinIsChanged() | Update.pinIsChanged()) {
                 var glTF = glTF_In.getValue(i);  
                 
                 var iterator = 0;
                 var mesh_count;
 
-                if(MeshIndexIn.isConnected()){ //load textures in order of the Mesh Index from Nodes(glTF) node
-                    mesh_count = MeshIndexIn.getSliceCount()
+                    mesh_count = glTF.data.mesh_primitives.length
+                    
                     index_offset = i * mesh_count;
+                    
                     for (var j=0; j<mesh_count; j++) {
-                        var mesh_index = MeshIndexIn.getValue(j)
-                        if(glTF.data.meshes[mesh_index] !== undefined){
-                            var mesh = glTF.data.meshes[mesh_index];
-                            output_index = iterator * mesh.primitives.length + index_offset;
-                            loadTextures(gl,mesh, glTF, output_index, textures);
-                            iterator += 1;
-                            texture_count += 1;
-                        }
-                    }
-                }else{ //load meshes in order of nodes if mesh index pin is not connected
-                    mesh_count = glTF.data.nodes.length;
-                    index_offset = i * mesh_count;
-                    for (var j=0; j<mesh_count; j++) {
-                        if(glTF.data.nodes[j].mesh !== undefined){
-                            var index = glTF.data.nodes[j].mesh; 
-                            var mesh = glTF.data.meshes[index];
-                            output_index = iterator * mesh.primitives.length + index_offset;
-                            loadTextures(gl,mesh, glTF, output_index, textures);
-                            iterator += 1;
-                            texture_count += 1;
-                        }
-                    }
-                }
-                
+
+                        var mesh_primitive_idx = glTF.data.mesh_primitives[j];
+                        
+                        var output_index = index_offset + j;
+                        
+                        loadTextures(gl, glTF, output_index, mesh_primitive_idx);
+
+                    }      
             }
+            texture_count += mesh_count;
         } 
 
         if(texture_count== undefined){
@@ -4868,11 +4918,8 @@ VVVV.Nodes.TexturesGLTF.prototype = new Node();
     var Update= this.addInputPin('Update', [0], VVVV.PinTypes.Value);
     var trIn = this.addInputPin("Transform In", [], VVVV.PinTypes.Transform);
     //output
-    var glTF_Out = this.addOutputPin("glTF", [], VVVV.PinTypes.glTF);  
     var TransformMeshOut = this.addOutputPin("Transform Mesh", [], VVVV.PinTypes.Transform);
     var JointMatrixArrayOut = this.addOutputPin("JointMatrixArray UniformBuffer", [], VVVV.PinTypes.JointMatrixArray);
-    var MeshIndexOut = this.addOutputPin("Mesh Index", [0], VVVV.PinTypes.Value);
-
 
     function defined(value) {
         return value !== undefined && value !== null;
@@ -5047,7 +5094,7 @@ var quat_rotateY = function (out, a, rad) {
 
     var drawNodeRecursive = function(glTF, node, parentTransform, currentIndex, animation, isRoot) {
         
-        var frame_idx = animation.node_list.indexOf(currentIndex);
+        var frame_idx = defined(animation.node_list) ? animation.node_list.indexOf(currentIndex) : -1;
         var target = "none"
         
         if(frame_idx !== -1){
@@ -5089,8 +5136,10 @@ var quat_rotateY = function (out, a, rad) {
         multiply2(localTransform, parentTransform, localTransform);
 
         if (defined(node.mesh)  ) {    //&& node.mesh < glTF.data.meshes.length
+            var count = glTF.data.meshes[node.mesh].primitives.length;
+            for (var i = 0; i < count; i++) {
             transform_array.push(localTransform);
-            mesh_index_array.push(node.mesh);
+            }
         }
         if (defined(node.children) && node.children.length > 0) {
             for (var i = 0; i < node.children.length; i++) {
@@ -5102,8 +5151,8 @@ var quat_rotateY = function (out, a, rad) {
     this.evaluate = function() { 
     var maxCount = glTF_In.getSliceCount();
     var index_offset=0;
-    var output_count;
-    var iterator = 0;
+
+
         for (var i=0; i<maxCount; i++) {
             if ( glTF_In.pinIsChanged() | Update.getValue(i) == 1 | AnimationFrame_In.pinIsChanged() || trIn.pinIsChanged()) {
                 transform_array = [];
@@ -5117,24 +5166,17 @@ var quat_rotateY = function (out, a, rad) {
                     var root_node_index = scene.nodes[k];
                     var ParentConversion = create_conversion_mat4x4();
                     drawNodeRecursive(glTF, glTF.data.nodes[root_node_index], trIn.getValue(i), root_node_index, animation, true);
-                    
-                    
-                
+ 
                 }
                 if(transform_array.length !== 0 || transform_array.length !== undefined){
                     for (var j=0; j<transform_array.length; j++) {
                         var output_transform = Array.from(transform_array[j]);
                         TransformMeshOut.setValue(j, output_transform);
-                        MeshIndexOut.setValue(j, mesh_index_array[j]);
                     }
                     TransformMeshOut.setSliceCount(transform_array.length);
-                    MeshIndexOut.setSliceCount(transform_array.length);
                 }else{
                     TransformMeshOut.setValue(0, create2());
-                    TransformMeshOut.setSliceCount(1);
                 }
-                glTF_Out.setValue(i, glTF);
-                glTF_Out.setSliceCount(maxCount);
             }
             
             
@@ -5352,7 +5394,7 @@ var vec3_lerp = function (out, a, b, t) {
 function getAnimationFrame(glTF, anim_index, t, AnimationFrame){
     
     var animation = glTF.data.animations[anim_index]
-    //console.log("channel count" + animation.channels.length)
+
     var input_array = null;
     var output_array = null;
 
@@ -5422,9 +5464,7 @@ function getAnimationFrame(glTF, anim_index, t, AnimationFrame){
             vec3_lerp(output_value, animationOutputValueVec3a, animationOutputValueVec3b, u);
         }    
            
- 
-        
-        //console.log(output_value ) 
+
 
         var target_node = animation.channels[i].target.node;
        
@@ -5441,17 +5481,6 @@ function getAnimationFrame(glTF, anim_index, t, AnimationFrame){
 
     this.evaluate = function() { 
     var maxCount = glTF_In.getSliceCount();    
-    
-//    if (  glTF_In.pinIsChanged() | Update.getValue(i) == 1) {    
-//        Animations_array = [];
-//        for (var i=0; i<maxCount; i++) {
-//            var glTF = glTF_In.getValue(i); 
-//            loadAnimation(glTF, i);
-//            console.log(Animation_array)
-//            //console.log(Animation_array)
-//        }
-//    }
-        
     
     var index_offset=0;
     var output_count;
@@ -5508,6 +5537,7 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
     var meshIn = this.addInputPin("Mesh", [], VVVV.PinTypes.WebGlResource);
     var VSDefinesIn = this.addInputPin("VS Defines", [''], VVVV.PinTypes.String);
     var PSDefinesIn = this.addInputPin("PS Defines", [''], VVVV.PinTypes.String);
+    var definesIn = this.addInputPin("Defines", [], VVVV.PinTypes.Defines);
     this.addInputPin("Transform", [], VVVV.PinTypes.Transform);
     this.addInputPin("TextureTransform", [], VVVV.PinTypes.Transform);
     this.addInputPin("LightDirection", [1.0,1.0,1.0], VVVV.PinTypes.Value);
@@ -5625,6 +5655,22 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
         return shader;
     }
   
+function addDefines(code, defines){
+    
+    var define_string = ""; 
+   
+    Object.keys(defines.defines).forEach(function(key) { //not yet tested against multiple buffers in glTF file 
+       if(defines.defines[key]){
+           define_string += "#define " + key + "\n"; 
+       }
+    }); 
+    //console.log(define_string)  
+    code = define_string + code;
+
+    return code
+}
+  
+  
   this.evaluate = function() {
 
     if (!this.renderContexts) return;
@@ -5676,17 +5722,33 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
     }
     if (maxSize<currentLayerCount) {
         layers.splice(maxSize, currentLayerCount-maxSize);
+        console.log(layers)
     }
-    
- 
-      
-    for (var j=currentLayerCount; j<maxSize; j++) {
+    var update = false;
+    if ( definesIn.pinIsChanged() ) {
+        update = true;
+    }
+    if(update){  
+        console.log(maxSize)
+    for (var j=0; j<maxSize; j++) {
 
-        vertexShaderCode = VSDefinesIn.getValue(j) + vertexShaderCode;  
-        fragmentShaderCode = PSDefinesIn.getValue(j) + fragmentShaderCode; 
-                    
-        shader[j] = null;      
-        shader[j] = initShader(gl, vertexShaderCode, fragmentShaderCode)     
+        //vertexShaderCode = VSDefinesIn.getValue(j) + vertexShaderCode;  
+        //fragmentShaderCode = PSDefinesIn.getValue(j) + fragmentShaderCode; 
+        
+        var defines = definesIn.getValue(j);
+        
+        var vertexShaderCode_def = addDefines(vertexShaderCode, defines);
+        var fragmentShaderCode_def = addDefines(fragmentShaderCode, defines);
+        
+        
+        
+        
+          
+        shader[j] = null;
+        
+        
+        
+        shader[j] = initShader(gl, vertexShaderCode_def, fragmentShaderCode_def)     
 
         layers[j] = new VVVV.Types.Layer();
         layers[j].mesh = meshIn.getValue(j);
@@ -5697,7 +5759,7 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
             layers[j].uniforms[u.varname] = { uniformSpec: u, value: undefined };
         });
     }
-
+    }
 
    
     var transformChanged = this.inputPins["Transform"].pinIsChanged();
@@ -5731,99 +5793,99 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
       }
     }
     //textures
-    if (this.inputPins["BaseColorSampler"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["BaseColorSampler"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["u_BaseColorSampler"].value = this.inputPins["BaseColorSampler"].getValue(i);
       }
     }
-    if (this.inputPins["NormalSampler"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["NormalSampler"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["u_NormalSampler"].value = this.inputPins["NormalSampler"].getValue(i);
       }
     }
-    if (this.inputPins["EmissiveSampler"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["EmissiveSampler"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["u_EmissiveSampler"].value = this.inputPins["EmissiveSampler"].getValue(i);
       }
     }
-    if (this.inputPins["OcclusionSampler"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["OcclusionSampler"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["u_OcclusionSampler"].value = this.inputPins["OcclusionSampler"].getValue(i);
       }
     }
-    if (this.inputPins["MetallicRoughnessSampler"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["MetallicRoughnessSampler"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["u_MetallicRoughnessSampler"].value = this.inputPins["MetallicRoughnessSampler"].getValue(i);
       }
     }
-    if (this.inputPins["brdfLUT"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["brdfLUT"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["u_brdfLUT"].value = this.inputPins["brdfLUT"].getValue(i);
       }
     }
-    if (this.inputPins["DiffuseEnvSampler"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["DiffuseEnvSampler"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["u_DiffuseEnvSampler"].value = this.inputPins["DiffuseEnvSampler"].getValue(i);
       }
     }
-    if (this.inputPins["SpecularEnvSampler"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["SpecularEnvSampler"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["u_SpecularEnvSampler"].value = this.inputPins["SpecularEnvSampler"].getValue(i);
       }
     }
     //uniforms
-    if (this.inputPins["LightDirection"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["LightDirection"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["u_LightDirection"].value = this.inputPins["LightDirection"].getValue(i,3);
       }
     } 
-    if (this.inputPins["LightColor"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["LightColor"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["u_LightColor"].value = this.inputPins["LightColor"].getValue(i,3);
       }
     }  
-    if (this.inputPins["NormalScale"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["NormalScale"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["u_NormalScale"].value = this.inputPins["NormalScale"].getValue(i);
       }
     } 
-    if (this.inputPins["EmissiveFactor"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["EmissiveFactor"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["u_EmissiveFactor"].value = this.inputPins["EmissiveFactor"].getValue(i,3);
       }
     } 
-    if (this.inputPins["OcclusionStrength"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["OcclusionStrength"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["u_OcclusionStrength"].value = this.inputPins["OcclusionStrength"].getValue(i);
       }
     } 
-    if (this.inputPins["MetallicRoughnessValues"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["MetallicRoughnessValues"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["u_MetallicRoughnessValues"].value = this.inputPins["MetallicRoughnessValues"].getValue(i,2);
       }
     }
-    if (this.inputPins["BaseColorFactor"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["BaseColorFactor"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["u_BaseColorFactor"].value = this.inputPins["BaseColorFactor"].getValue(i,4);
       }
     } 
-    if (this.inputPins["Camera"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["Camera"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["u_Camera"].value = this.inputPins["Camera"].getValue(i,3);
       }
     } 
-    if (this.inputPins["Exposure"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["Exposure"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["exposure"].value = this.inputPins["Exposure"].getValue(i);
       }
     }
-    if (this.inputPins["Alpha"].pinIsChanged() || currentLayerCount<maxSize) {
+    if (this.inputPins["Alpha"].pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         layers[i].uniforms["alpha"].value = this.inputPins["Alpha"].getValue(i);
       }
     }  
     
-      if (this.inputPins["TextureTransform"].pinIsChanged() || currentLayerCount<maxSize) {           
+      if (this.inputPins["TextureTransform"].pinIsChanged() || update) {           
       for (var i=0; i<maxSize; i++) {
         var transform = this.inputPins["TextureTransform"].getValue(i);
         layers[i].uniforms["Texture_Transform"].value = transform;
@@ -5837,13 +5899,86 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
     }
     
     this.contextChanged = false;
-
+    update = false;
   }
 
 }
 VVVV.Nodes.glTF_PBR_core.prototype = new Node();
 
+///*
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//   NODE: Defines (glTF)
+//   Author(s): David Gann
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//  */
 
+  VVVV.Nodes.DefinesGLTF = function(id, graph) {
+    this.constructor(id, "Defines (glTF)", graph);
+
+    this.meta = {
+      authors: ['David Gann'],
+      original_authors: ['000.graphics'],
+      credits: [],
+      compatibility_issues: []
+    };
+    
+    //input
+    var glTF_In = this.addInputPin("glTF", [], VVVV.PinTypes.glTF); 
+    var Update= this.addInputPin('Update', [0], VVVV.PinTypes.Value);
+    //output
+    var definesOut = this.addOutputPin("Defines", [], VVVV.PinTypes.Defines);
+    var VsDefinesOut = this.addOutputPin("VS Defines", [""], VVVV.PinTypes.String);
+    //var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
+
+
+ function defined(value) {
+        return value !== undefined && value !== null;
+    }
+
+
+    this.evaluate = function() { 
+
+
+    var maxCount = glTF_In.getSliceCount();
+    var index_offset=0;
+    var output_count;
+    var iterator = 0;
+    if(glTF_In.isConnected()){
+        for (var i=0; i<maxCount; i++) {
+            if (  glTF_In.pinIsChanged()) {
+                
+                var glTF = glTF_In.getValue(i);  
+
+                var mesh_count = glTF.data.mesh_primitives.length;
+
+                index_offset = i *  mesh_count;
+
+                for (var j=0; j<mesh_count; j++) {
+                    
+                    var defines = new VVVV.Types.Defines();
+                    
+                    defines.setDefines(glTF.data.mesh_primitives[j].defines)
+
+                    var output_index = index_offset + j;
+                    
+                    definesOut.setValue(j, defines.data)
+                    
+                }
+                
+            }  
+        } 
+    definesOut.setSliceCount(mesh_count);    
+    }else{
+        var defaultDefine = new VVVV.Types.Defines();
+        definesOut.setValue(0, defaultDefine.data)
+        definesOut.setSliceCount(1);
+    }    
+        
+        
+
+    }
+}
+VVVV.Nodes.DefinesGLTF.prototype = new Node();
 
 });
 

@@ -1,7 +1,7 @@
 vertex_shader:
-#define HAS_NORMALS
-#define HAS_UV
-#define HAS_TANGENTS
+//#define HAS_NORMALS
+//#define HAS_UV0
+//#define HAS_TANGENTS
 //#define HAS_Animation
 #ifdef GL_ES
 precision highp float;
@@ -23,10 +23,10 @@ attribute vec4 a_Normal : NORMAL;
 #ifdef HAS_TANGENTS
 attribute vec4 a_Tangent : TANGENT;
 #endif
-#ifdef HAS_UV
+#ifdef HAS_UV0
 attribute vec2 a_UV : TEXCOORD0;
 #endif
-#ifdef HAS_Animation
+#ifdef HAS_ANIMATION
 attribute vec4 a_Joints : JOINTS_0;
 attribute vec4 a_Weights : WEIGHTS_0;
 #endif
@@ -67,7 +67,7 @@ void main()
   #endif
   PosV = vec3(tWV * vec4(a_Position.xyz, 1.0));
   NormView = normalize(vec3(tWV * vec4(a_Normal.xyz, 0.0))).xyz;
-  #ifdef HAS_UV
+  #ifdef HAS_UV0
   v_UV = (Texture_Transform * vec4(a_UV, 0, 1)).xy; 
   #else
   v_UV = vec2(0.,0.);
@@ -82,22 +82,22 @@ fragment_shader:
 
 
 
-#define HAS_NORMALS
-#define HAS_UV
-#define USE_IBL
-#define HAS_BASECOLORMAP
+//#define HAS_NORMALS
+//#define HAS_UV0
+//#define USE_IBL
+//#define HAS_BASECOLORMAP
 //////////////////strangly when activating normalmap, textures disappear
-#define HAS_NORMALMAP
-#define HAS_METALROUGHNESSMAP
-#define HAS_OCCLUSIONMAP
-#define HAS_EMISSIVEMAP
+//#define HAS_NORMALMAP
+//#define HAS_METALROUGHNESSMAP
+//#define HAS_OCCLUSIONMAP
+//#define HAS_EMISSIVEMAP
 //#define MANUAL_SRGB
-//#define HAS_METALNESS_SINGLECHANNEL
+
 //#define NO_GAMMA_CORRECTION
-//#define USE_DERIVATIVE_MAP
-#define HAS_TANGENTS
+
+//#define HAS_TANGENTS
 //#define USE_POM_SIHLOUETTE
-#define SRGB_FAST_APPROXIMATION
+//#define SRGB_FAST_APPROXIMATION
 //#define USE_TEX_LOD
 
 //
@@ -128,10 +128,6 @@ uniform samplerCube u_SpecularEnvSampler;
 uniform sampler2D u_brdfLUT;
 #endif
 
-#ifdef USE_DERIVATIVE_MAP
-uniform sampler2D u_HeightMap;
-#endif
-
 #ifdef HAS_BASECOLORMAP
 uniform sampler2D u_BaseColorSampler;
 #endif
@@ -145,9 +141,6 @@ uniform vec3 u_EmissiveFactor;
 #endif
 #ifdef HAS_METALROUGHNESSMAP
 uniform sampler2D u_MetallicRoughnessSampler;
-#endif
-#ifdef HAS_METALNESS_SINGLECHANNEL
-uniform sampler2D u_Metallic;
 #endif
 
 #ifdef HAS_OCCLUSIONMAP
@@ -411,8 +404,9 @@ void main()
 #endif
 
     // Apply optional PBR terms for additional (optional) shading
-    float ao = texture2D(u_OcclusionSampler, uv).r;
+    
 #ifdef HAS_OCCLUSIONMAP
+	float ao = texture2D(u_OcclusionSampler, uv).r;
     color = mix(color, color * ao, u_OcclusionStrength);
 #endif
 

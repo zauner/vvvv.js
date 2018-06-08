@@ -337,6 +337,27 @@ VVVV.Types.AnimationFrame = function(data) {
 var default_AnimationFrame = new VVVV.Types.AnimationFrame();
 
 
+VVVV.Types.Defines = function(data) {
+  this.data = {};
+  this.setDefines = function(defines ) {
+    this.data = {
+      defines: defines 
+    };
+
+  }
+  }
+
+var default_Defines = new VVVV.Types.Defines();
+
+
+
+//VVVV.PinTypes.Defines = {
+//  typeName: "defines",
+//  reset_on_disconnect: true,
+//  defaultValue: function() {
+//    return new VVVV.Types.Defines()
+//  }
+//}
 
 
 });
