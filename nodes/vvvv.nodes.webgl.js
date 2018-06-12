@@ -4269,7 +4269,10 @@ function getDefines(glTF, mesh_id, primitive_id){
         HAS_MORPHTARGETS : false,
         HAS_JOINTS0 : false,
         HAS_WEIGHTS0 : false,
-        HAS_WEIGHTS1 : false   
+        HAS_WEIGHTS1 : false,
+        USE_SPEC_GLOSS : false,
+        HAS_DIFFUSEMAP : false,
+        HAS_SPEC_GLOSS_MAP : false
     }
     
     var primitive = glTF.data.meshes[mesh_id].primitives[primitive_id];
@@ -4310,7 +4313,18 @@ function getDefines(glTF, mesh_id, primitive_id){
     
     defines.HAS_MORPHTARGETS = defined(primitive.targets) ? true : false;
     
-    //console.log( JSON.stringify(defines));
+     var ext = defined(mat.extensions) ? mat.extensions : {};
+    
+    defines.USE_SPEC_GLOSS = defined(ext.KHR_materials_pbrSpecularGlossiness) ? true : false;
+    
+    var ext_spec_gloss = defined(ext.KHR_materials_pbrSpecularGlossiness) ? ext.KHR_materials_pbrSpecularGlossiness : {};
+    
+    defines.HAS_DIFFUSEMAP = defined(ext_spec_gloss.diffuseTexture) ? true : false;
+    if(defines.HAS_DIFFUSEMAP){defines.HAS_BASECOLORMAP = true;}  //overwriting Basecolor with diffuse
+    console.log(defines.HAS_BASECOLORMAP)
+    defines.HAS_SPEC_GLOSS_MAP = defined(ext_spec_gloss.specularGlossinessTexture) ? true : false;
+    if(defines.HAS_SPEC_GLOSS_MAP){defines.HAS_METALROUGHNESSMAP = true;} //overwriting spec_gloss with metallic_roughness
+ 
     
     return defines;
 }
@@ -4629,12 +4643,15 @@ VVVV.Nodes.GeometryGLTF.prototype = new Node();
     var EmissiveFactorOut = this.addOutputPin("EmissiveFactor", [1.0,1.0,1.0], VVVV.PinTypes.Value);
     var OcclusionStrengthOut = this.addOutputPin("OcclusionStrength", [1.0], VVVV.PinTypes.Value);
     var MetallicRoughnessValueOut = this.addOutputPin("MetallicRoughness Value", [1.0,1.0], VVVV.PinTypes.Value);
-    
-    //var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
+   
+    var specularFactorOut = this.addOutputPin("spec_gloss_specularFactor", [1.0,1.0,1.0,1.0], VVVV.PinTypes.Value);
 
-    function isPowerOf2(value) {
+
+
+function isPowerOf2(value) {
      return (value & (value - 1)) == 0;
 }
+
 var texture = [];
 var source_path = [];
 
@@ -4681,6 +4698,7 @@ function requestTexture(gl, glTF, element, i, textureIndex, descriptor, IsValid)
         
         var file = glTF.data.images[glTF.data.textures[textureIndex].source].uri;
         source_path[i] = glTF.data.path + "/" + file;
+        console.log(source_path[i])
         var image = new Image();
         texture.image = new Image();
         texture.image.src = source_path[i];
@@ -4724,96 +4742,110 @@ function requestTexture(gl, glTF, element, i, textureIndex, descriptor, IsValid)
 }
 
 function loadTextures(gl, glTF, output_index, mesh_primitive_idx) {
-    var iterator = 0;
+    
+   
     var element = glTF.data.meshes[mesh_primitive_idx.mesh_id].primitives[mesh_primitive_idx.primitive_id];
    
     var mat = defined(glTF.data.materials) ? glTF.data.materials[element.material] : {};
     var textureIndex = -1;
     var IsValid = 0;
-
-    if(mat.pbrMetallicRoughness !== undefined){  //in case of SpecularGloss Extension pbrMetallicRoughness is missing
-        //get base color
-        if(defined(mat.pbrMetallicRoughness.baseColorTexture)){
-            textureIndex = mat.pbrMetallicRoughness.baseColorTexture.index ;
-            IsValid = 1;
-        }
-        requestTexture(gl, glTF, element, output_index,  textureIndex, "BaseColor", IsValid);
-        //get baseColor Values
-        if(mat.pbrMetallicRoughness.baseColorFactor !== undefined){
-            var baseColorFactor_arr =  mat.pbrMetallicRoughness.baseColorFactor;
-            for (var i=0; i<4; i++) {
-                BaseColorValueOut.setValue(output_index*4+i, baseColorFactor_arr[i]);
-            }
+    var defines = mesh_primitive_idx.defines;
+    var pbr_met_rough =  defined(mat.pbrMetallicRoughness) ? mat.pbrMetallicRoughness : {};
+    var ext = defined(mat.extensions) ? mat.extensions : {};
+    var ext = defined(mat.extensions) ? mat.extensions : {};
+    var ext_spec_gloss = defined(ext.KHR_materials_pbrSpecularGlossiness) ? ext.KHR_materials_pbrSpecularGlossiness : {};
+    
+    
+    if(defines.HAS_BASECOLORMAP){  
+        if(defines.HAS_DIFFUSEMAP){
+            console.log("loading diffuse map")
+            var tex_index = mat.extensions.KHR_materials_pbrSpecularGlossiness.diffuseTexture.index;
         }else{
-            for (var i=0; i<4; i++) {
-            BaseColorValueOut.setValue(output_index*4+i, [1.0]);
-            }
+            var tex_index = pbr_met_rough.baseColorTexture.index;
         }
-
-        // get MetalRoughness texture
-        if(mat.pbrMetallicRoughness.metallicRoughnessTexture !== undefined){
-            textureIndex = mat.pbrMetallicRoughness.metallicRoughnessTexture.index ;
-            IsValid = 1;
-        }else{IsValid = 0;}
-        requestTexture(gl, glTF, element, output_index,  textureIndex, "MetallicRoughness", IsValid);
-
-        //get metallicValue
-        if(mat.pbrMetallicRoughness.metallicFactor !== undefined){
-                MetallicRoughnessValueOut.setValue(output_index*2, mat.pbrMetallicRoughness.metallicFactor);
-        }else{
-            MetallicRoughnessValueOut.setValue(output_index*2, [1.0]);
-        }
-        //get Roughness Value
-        if(mat.pbrMetallicRoughness.roughnessFactor !== undefined){
-                MetallicRoughnessValueOut.setValue(output_index*2+1, mat.pbrMetallicRoughness.roughnessFactor);
-        }else{
-            MetallicRoughnessValueOut.setValue(output_index*2+1, [1.0]);
-        }
+        requestTexture(gl, glTF, element, output_index,  tex_index, "BaseColor", 1);
     }else{
-        IsValid = 0;
-        textureIndex = -1;
-        requestTexture(gl, glTF, element, output_index,  textureIndex, "BaseColor", IsValid);
+        BaseColorOut.setValue(output_index, null); 
+    }
+    
+    if(defines.HAS_METALROUGHNESSMAP || defines.HAS_SPEC_GLOSS_MAP){ 
+        if(defines.HAS_SPEC_GLOSS_MAP){
+            var tex_index = mat.extensions.KHR_materials_pbrSpecularGlossiness.specularGlossinessTexture.index;
+            
+        }else{
+            var tex_index = pbr_met_rough.metallicRoughnessTexture.index;
+        }
+        requestTexture(gl, glTF, element, output_index,  tex_index, "MetallicRoughness", 1);
+    }else{
+        MetallicRoughnessOut.setValue(output_index, null); 
+    }
+    
+    if(defines.HAS_NORMALMAP){ 
+        requestTexture(gl, glTF, element, output_index,  mat.normalTexture.index, "Normal", 1);
+    }else{
+        NormalOut.setValue(output_index, null); 
+    }
+    
+    if(defines.HAS_OCCLUSIONMAP){ 
+        requestTexture(gl, glTF, element, output_index,  mat.occlusionTexture.index, "Occlusion", 1);
+    }else{
+        OcclusionOut.setValue(output_index, null); 
+    }
+    
+    if(defines.HAS_EMISSIVEMAP){ 
+        requestTexture(gl, glTF, element, output_index,  mat.emissiveTexture.index, "Emissive", 1);
+    }else{
+        EmissiveOut.setValue(output_index, null); 
+    }
+    
+
+
+    if(defined(pbr_met_rough.baseColorFactor) || defined(ext_spec_gloss.diffuseFactor)){
+        if(defined(ext_spec_gloss.diffuseFactor)){
+            var baseColorFactor_arr = ext_spec_gloss.diffuseFactor;
+        }else{
+            var baseColorFactor_arr =  pbr_met_rough.baseColorFactor;
+        }
         for (var i=0; i<4; i++) {
-            BaseColorValueOut.setValue(output_index*4+i, [1.0]);
+            BaseColorValueOut.setValue(output_index*4+i, baseColorFactor_arr[i]);
         }
-        requestTexture(gl, glTF, element, output_index,  textureIndex, "MetallicRoughness", IsValid);
-        MetallicRoughnessValueOut.setValue(output_index*2, [1.0]);
-        MetallicRoughnessValueOut.setValue(output_index*2+1, [1.0]);
-    } 
-    //normal Texture
-    if(mat.normalTexture !== undefined){
-        textureIndex = mat.normalTexture.index ;
-        IsValid = 1;
-        //normalScale
-        if(mat.normalTexture.scale !== undefined){
-                NormalScaleOut.setValue(output_index, mat.normalTexture.scale);
-            }else{NormalScaleOut.setValue(output_index, [0.0]);}
     }else{
-        IsValid = 0;
-        NormalScaleOut.setValue(output_index, [0.0]);
+        for (var i=0; i<4; i++) {
+        BaseColorValueOut.setValue(output_index*4+i, [1.0]);
+        }
     }
-    requestTexture(gl, glTF, element, output_index,  textureIndex, "Normal", IsValid);
 
-    //occlusionTexture 
-    if(mat.occlusionTexture !== undefined){
-        textureIndex = mat.occlusionTexture.index ;
-        IsValid = 1;
-        //occlusionStrengh 
-        if(mat.occlusionTexture.strength !== undefined){
-                OcclusionStrengthOut.setValue(output_index, mat.occlusionTexture.strength);
-            }else{OcclusionStrengthOut.setValue(output_index, [0.0]);}
+        
+
+    if(defined(pbr_met_rough.metallicFactor)){
+            MetallicRoughnessValueOut.setValue(output_index*2, pbr_met_rough.metallicFactor);
     }else{
-        IsValid = 0; 
-        OcclusionStrengthOut.setValue(output_index, [0.0]);
+        MetallicRoughnessValueOut.setValue(output_index*2, [1.0]);
     }
-    requestTexture(gl, glTF, element, output_index,  textureIndex, "Occlusion", IsValid);
-    //emissive Texture
-    if(mat.emissiveTexture !== undefined){
-        textureIndex = mat.emissiveTexture.index ;
-        IsValid = 1;      
-    }else{IsValid = 0;}
-    //emissiveFactor is independent of texture
-    if(mat.emissiveFactor !== undefined){
+
+
+    if(defined(pbr_met_rough.roughnessFactor)){
+            MetallicRoughnessValueOut.setValue(output_index*2+1, pbr_met_rough.roughnessFactor);
+    }else{
+        MetallicRoughnessValueOut.setValue(output_index*2+1, [1.0]);
+    }
+    
+    
+    var norm = defined(mat.normalTexture) ? mat.normalTexture : {};
+        if(defined(norm.scale)){
+                NormalScaleOut.setValue(output_index, norm.scale);
+            }else{NormalScaleOut.setValue(output_index, [0.0]);}
+
+
+
+    var occ = defined(mat.occlusionTexture) ? mat.occlusionTexture : {};
+        if(defined(occ.strength)){
+                OcclusionStrengthOut.setValue(output_index, occ.strength);
+            }else{OcclusionStrengthOut.setValue(output_index, [0.0]);}
+ 
+
+
+    if(defined(mat.emissiveFactor)){
             for (var i=0; i<3; i++) {
                 EmissiveFactorOut.setValue(output_index*3+i, mat.emissiveFactor[i]);
             }
@@ -4822,8 +4854,30 @@ function loadTextures(gl, glTF, output_index, mesh_primitive_idx) {
             EmissiveFactorOut.setValue(output_index*3+1, 0);
             EmissiveFactorOut.setValue(output_index*3+2, 0);
         }
-    requestTexture(gl, glTF, element, output_index,  textureIndex, "Emissive", IsValid);
+        
+        
+        
 
+        
+    if(defined(ext_spec_gloss.specularFactor)){
+            for (var i=0; i<3; i++) {
+                specularFactorOut.setValue(output_index*4+i, ext_spec_gloss.specularFactor[i]);
+            }
+            
+        }else{
+            specularFactorOut.setValue(output_index*4, 1);
+            specularFactorOut.setValue(output_index*4+1, 1);
+            specularFactorOut.setValue(output_index*4+2, 1);
+
+        }
+
+    if(defined(ext_spec_gloss.glossinessFactor)){
+                specularFactorOut.setValue(output_index*4+3, ext_spec_gloss.glossinessFactor);
+        }else{
+            specularFactorOut.setValue(output_index*4+3, 1);
+        }
+    
+      
   
     
 }
@@ -4852,7 +4906,7 @@ function loadTextures(gl, glTF, output_index, mesh_primitive_idx) {
             if ( glTF_In.pinIsChanged() | Update.pinIsChanged()) {
                 var glTF = glTF_In.getValue(i);  
                 
-                var iterator = 0;
+                
                 var mesh_count;
 
                     mesh_count = glTF.data.mesh_primitives.length
@@ -4887,6 +4941,7 @@ function loadTextures(gl, glTF, output_index, mesh_primitive_idx) {
         OcclusionStrengthOut.setSliceCount(texture_count);
         MetallicRoughnessValueOut.setSliceCount(texture_count*2);
         BaseColorValueOut.setSliceCount(texture_count*4);
+        specularFactorOut.setSliceCount(texture_count*4);
         //Success.setSliceCount(mesh_array.length);
 
     
@@ -5470,11 +5525,6 @@ function getAnimationFrame(glTF, anim_index, t, AnimationFrame){
        
         AnimationFrame.setTargetFrame(i, output_value, target_node, target_transform);
     }
-    
-    //if (currentIndex == glTF.data.animations[0].channels[0].target.node) {
-    //        console.log("animation available")
-    //    }
-    
 
 }
 
@@ -5559,6 +5609,9 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
     this.addInputPin("EmissiveFactor", [1.0,1.0,1.0], VVVV.PinTypes.Value);
     this.addInputPin("OcclusionStrength", [1.0], VVVV.PinTypes.Value);
     this.addInputPin("MetallicRoughnessValues", [1.0,1.0], VVVV.PinTypes.Value);
+    
+    this.addInputPin("spec_gloss_specularFactor", [1.0,1.0,1.0,1.0], VVVV.PinTypes.Value);
+
   
     this.addInputPin("Exposure", [0.0], VVVV.PinTypes.Value);
     this.addInputPin("Alpha", [1.0], VVVV.PinTypes.Value);
@@ -5577,32 +5630,7 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
     function initShader(gl, vertexShaderCode, fragmentShaderCode){
         
         var  shader = new VVVV.Types.ShaderProgram();
-        
-        
-//        shader.attributeSpecs = {
-//            PosO: {varname: "PosO", semantic: "POSITION", position: 0},
-//            TexCd: {varname: "TexCd", semantic: "TEXCOORD0", position: 0}
-//        };
-//        shader.attribSemanticMap = {
-//            POSITION: "PosO",
-//            TEXCOORD0: "TexCd"};
-//
-//        shader.uniformSpecs = {
-//            "col":{"varname":"col","semantic":"COLOR","position":0,"type":"vec","defaultValue":"1.0, 1.0, 1.0, 1.0","dimension":"4"},
-//            "Samp0":{"varname":"Samp0","position":0,"type":"sampler","dimension":"2D"},
-//            "tW":{"varname":"tW","semantic":"WORLD","position":0,"type":"mat","dimension":"4"},
-//            "tV":{"varname":"tV","semantic":"VIEW","position":0,"type":"mat","dimension":"4"},
-//            "tP":{"varname":"tP","semantic":"PROJECTION","position":0,"type":"mat","dimension":"4"},
-//            "tTex":{"varname":"tTex","position":0,"type":"mat","dimension":"4"}
-//        };
-//
-//        shader.uniformSemanticMap = {
-//            "COLOR":"col",
-//            "WORLD":"tW",
-//            "VIEW":"tV",
-//            "PROJECTION":"tP"
-//        }; 
-        
+
         
         shader.attributeSpecs =  {
             "a_Position":{"varname":"a_Position","semantic":"POSITION","position":0},
@@ -5640,7 +5668,10 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
             "u_BaseColorFactor":{"varname":"u_BaseColorFactor","position":0,"type":"vec","dimension":"4"},
             "u_Camera":{"varname":"u_Camera","position":0,"type":"vec","dimension":"3"},
             "exposure":{"varname":"exposure","position":0,"type":"float","defaultValue":"0.0","dimension":"1"},
-            "alpha":{"varname":"alpha","position":0,"type":"float","defaultValue":"1.0","dimension":"1"}
+            "alpha":{"varname":"alpha","position":0,"type":"float","defaultValue":"1.0","dimension":"1"},
+
+            "spec_gloss_specularFactor":{"varname":"spec_gloss_specularFactor","position":0,"type":"vec","dimension":"4"},
+
         };
         
         shader.uniformSemanticMap = {
@@ -5664,7 +5695,6 @@ function addDefines(code, defines){
            define_string += "#define " + key + "\n"; 
        }
     }); 
-    //console.log(define_string)  
     code = define_string + code;
 
     return code
@@ -5722,14 +5752,14 @@ function addDefines(code, defines){
     }
     if (maxSize<currentLayerCount) {
         layers.splice(maxSize, currentLayerCount-maxSize);
-        console.log(layers)
     }
     var update = false;
+    
     if ( definesIn.pinIsChanged() ) {
         update = true;
     }
+    
     if(update){  
-        console.log(maxSize)
     for (var j=0; j<maxSize; j++) {
 
         //vertexShaderCode = VSDefinesIn.getValue(j) + vertexShaderCode;  
@@ -5767,7 +5797,7 @@ function addDefines(code, defines){
 
 
 
-    if (renderStateIn.pinIsChanged() || currentLayerCount<maxSize) {
+    if (renderStateIn.pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         if (renderStateIn.isConnected())
           layers[i].renderState = renderStateIn.getValue(i);
@@ -5777,7 +5807,7 @@ function addDefines(code, defines){
     }
     
     
-    if (meshIn.pinIsChanged() || currentLayerCount<maxSize) {
+    if (meshIn.pinIsChanged() || update) {
       for (var i=0; i<maxSize; i++) {
         if (meshIn.isConnected())
           layers[i].mesh = meshIn.getValue(i);
@@ -5786,7 +5816,7 @@ function addDefines(code, defines){
       }
     }
 
-    if (transformChanged || currentLayerCount<maxSize) {
+    if (transformChanged || update) {
       for (var i=0; i<maxSize; i++) {
         var transform = this.inputPins["Transform"].getValue(i);
         layers[i].uniforms[layers[i].shader.uniformSemanticMap['WORLD']].value = transform;
@@ -5891,6 +5921,15 @@ function addDefines(code, defines){
         layers[i].uniforms["Texture_Transform"].value = transform;
       }
     }
+    
+    if (this.inputPins["spec_gloss_specularFactor"].pinIsChanged() || update) {
+      for (var i=0; i<maxSize; i++) {
+        layers[i].uniforms["spec_gloss_specularFactor"].value = this.inputPins["spec_gloss_specularFactor"].getValue(i,4);
+      }
+    } 
+
+
+
 
 
     this.outputPins["Layer"].setSliceCount(maxSize);

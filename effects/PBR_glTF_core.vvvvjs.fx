@@ -131,6 +131,11 @@ uniform sampler2D u_brdfLUT;
 #ifdef HAS_BASECOLORMAP
 uniform sampler2D u_BaseColorSampler;
 #endif
+// #ifdef HAS_DIFFUSEMAP
+// uniform sampler2D u_BaseColorSampler;
+// #endif
+
+
 #ifdef HAS_NORMALMAP
 uniform sampler2D u_NormalSampler;
 uniform float u_NormalScale;
@@ -141,6 +146,12 @@ uniform vec3 u_EmissiveFactor;
 #endif
 #ifdef HAS_METALROUGHNESSMAP
 uniform sampler2D u_MetallicRoughnessSampler;
+#endif
+
+#ifdef USE_SPEC_GLOSS
+
+uniform vec4 spec_gloss_specularFactor;
+
 #endif
 
 #ifdef HAS_OCCLUSIONMAP
@@ -321,17 +332,37 @@ void main()
     // Metallic and Roughness material properties are packed together
     // In glTF, these factors can be specified by fixed scalar values
     // or from a metallic-roughness map
+#ifdef USE_SPEC_GLOSS
+	float perceptualRoughness = spec_gloss_specularFactor.a;
+	vec3 specular_Factor = spec_gloss_specularFactor.rgb;
+#else
     float perceptualRoughness = u_MetallicRoughnessValues.y;
+#endif
     float metallic = u_MetallicRoughnessValues.x;
 #ifdef HAS_METALROUGHNESSMAP
     // Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel.
     // This layout intentionally reserves the 'r' channel for (optional) occlusion map data
     vec4 mrSample = texture2D(u_MetallicRoughnessSampler, uv);
     perceptualRoughness = mrSample.g * perceptualRoughness;
+	
 
 	metallic = mrSample.b * metallic;
-
 #endif
+#ifdef HAS_SPEC_GLOSS_MAP
+    // Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel.
+    // This layout intentionally reserves the 'r' channel for (optional) occlusion map data
+    vec4 spec_gloss_Sample = texture2D(u_MetallicRoughnessSampler, uv);
+    perceptualRoughness = spec_gloss_Sample.a * perceptualRoughness;
+
+	specular_Factor = SRGBtoLINEAR(spec_gloss_Sample).rgb * specular_Factor;
+	
+	metallic = mrSample.b * metallic;
+#endif
+#ifdef USE_SPEC_GLOSS
+	perceptualRoughness = 1.0 - perceptualRoughness;
+#endif
+	
+    
     perceptualRoughness = clamp(perceptualRoughness, c_MinRoughness, 1.0);
     metallic = clamp(metallic, 0.0, 1.0);
     // Roughness is authored as perceptual roughness; as is convention,
@@ -340,16 +371,26 @@ void main()
 
     // The albedo may be defined from a base texture or a flat color
 #ifdef HAS_BASECOLORMAP
-    vec4 baseColor = SRGBtoLINEAR(texture2D(u_BaseColorSampler, uv)) * u_BaseColorFactor;
+	vec4 baseColor_Samp =  texture2D(u_BaseColorSampler, uv);
+    vec4 baseColor = SRGBtoLINEAR(baseColor_Samp) * u_BaseColorFactor;
+	float discard_alpha = baseColor_Samp.a * u_BaseColorFactor.a;
 #else
     vec4 baseColor = u_BaseColorFactor;
+	float discard_alpha = u_BaseColorFactor.a;
 #endif
+	if(discard_alpha < 0.9){
+			discard;
+	}
+#ifdef USE_SPEC_GLOSS
 
+	vec3 specularColor = specular_Factor;	
+	vec3 diffuseColor = baseColor.rgb ;  
+#else
     vec3 f0 = vec3(0.04);
     vec3 diffuseColor = baseColor.rgb * (vec3(1.0) - f0);
     diffuseColor *= 1.0 - metallic;
     vec3 specularColor = mix(f0, baseColor.rgb, metallic);
-
+#endif
     // Compute reflectance.
     float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);
 
@@ -415,7 +456,6 @@ void main()
     color += emissive;
 #endif
 
-   
 	color *= pow(2.0, exposure);
 #ifdef NO_GAMMA_CORRECTION
 	gl_FragColor = vec4(color.rgb, baseColor.a*alpha);
