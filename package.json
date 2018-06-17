@@ -5,13 +5,14 @@
   "license": "MIT",
   "dependencies": {
     "amdefine": "=1.0.0",
-    "minimist": "*",
-    "npm": "*",
-    "james-browser-launcher": "*",
     "cheerio": "=0.22.0",
     "finalhandler": "*",
+    "googleapis": "^32.0.0",
+    "james-browser-launcher": "*",
     "jsdom": "=7.0.2",
+    "minimist": "*",
     "nodejs-websocket": "*",
+    "npm": "*",
     "serve-static": "*",
     "sqlite3": "*"
   },
