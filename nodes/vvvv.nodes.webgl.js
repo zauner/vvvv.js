@@ -40,7 +40,9 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/PBR_glTF.vvvvjs.fx": undefined,
   "%VVVV%/effects/PBR_glTF_static.vvvvjs.fx": undefined,
   "%VVVV%/effects/BillBoard_Particles_Noise.vvvvjs.fx": undefined,
-  "%VVVV%/effects/HBAO.vvvvjs.fx": undefined
+  "%VVVV%/effects/HBAO.vvvvjs.fx": undefined, 
+  "%VVVV%/effects/SpriteSheet.vvvvjs.fx": undefined
+  
 
 
 
@@ -3015,6 +3017,11 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
     }
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+
+    if (this.contextChanged || enableDepthBufIn.pinIsChanged()) {
+        gl.enable(gl.SAMPLE_ALPHA_TO_COVERAGE);
+    }
 
     if (this.contextChanged || enableDepthBufIn.pinIsChanged()) {
       if (enableDepthBufIn.getValue(0)=='NONE')

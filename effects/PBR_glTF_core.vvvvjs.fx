@@ -379,7 +379,7 @@ void main()
 	float discard_alpha = u_BaseColorFactor.a;
 #endif
 	if(discard_alpha < 0.9){
-			discard;
+			//discard;
 	}
 #ifdef USE_SPEC_GLOSS
 
