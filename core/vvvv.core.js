@@ -53,6 +53,7 @@ define(function(require, exports) {
   require('nodes/vvvv.nodes.buffer');
   require('nodes/vvvv.nodes.game');
   require('nodes/vvvv.nodes.react');
+    require('nodes/vvvv.nodes.webgl2');
 
   exports.MainLoop = require('mainloop/vvvv.mainloop');
   exports.Pin = require('core/vvvv.core.pin');

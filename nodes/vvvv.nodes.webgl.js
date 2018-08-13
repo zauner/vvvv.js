@@ -40,9 +40,10 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/PBR_glTF.vvvvjs.fx": undefined,
   "%VVVV%/effects/PBR_glTF_static.vvvvjs.fx": undefined,
   "%VVVV%/effects/BillBoard_Particles_Noise.vvvvjs.fx": undefined,
-  "%VVVV%/effects/HBAO.vvvvjs.fx": undefined, 
-  "%VVVV%/effects/SpriteSheet.vvvvjs.fx": undefined
-  
+  "%VVVV%/effects/HBAO.vvvvjs.fx": undefined,
+  "%VVVV%/effects/SpriteSheet.vvvvjs.fx": undefined,
+  "%VVVV%/effects/PBR_gltf_core_shader.vvvvjs.fx": undefined
+
 
 
 

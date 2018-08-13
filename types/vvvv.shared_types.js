@@ -322,7 +322,7 @@ VVVV.Types.AnimationFrame = function(data) {
   this.data = [];
   this.target_count = 0;
   this.node_list = [];
-  
+
   this.setTargetFrame = function(index, data, target_node, target_transform ) {
     this.data[index] = {
       frame_value: data,
@@ -341,23 +341,16 @@ VVVV.Types.Defines = function(data) {
   this.data = {};
   this.setDefines = function(defines ) {
     this.data = {
-      defines: defines 
+      defines: defines
     };
 
   }
   }
 
+
 var default_Defines = new VVVV.Types.Defines();
 
 
-
-//VVVV.PinTypes.Defines = {
-//  typeName: "defines",
-//  reset_on_disconnect: true,
-//  defaultValue: function() {
-//    return new VVVV.Types.Defines()
-//  }
-//}
 
 
 });
