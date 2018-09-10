@@ -607,6 +607,8 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   var typeIn = this.addInputPin("Type", ["Texture"], VVVV.PinTypes.Enum);
   var Apply= this.addInputPin('Apply', [1], VVVV.PinTypes.Value);
   var outputPin = this.addOutputPin("Texture Out", [], VVVV.PinTypes.WebGlTexture);
+  var WidthOut = this.addOutputPin("Width", [], VVVV.PinTypes.Value);
+  var HeightOut = this.addOutputPin("Height", [], VVVV.PinTypes.Value);
 
 
   typeIn.enumOptions = ["Texture", "Cube Texture", "Cube Texture Flip Y"];
@@ -658,14 +660,30 @@ VVVV.Nodes.FileTexture = function(id, graph) {
               //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
               gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textures[j].image);
               //if (textures[i] =! undefined && isPowerOf2(textures[i].image.width) && isPowerOf2(textures[i].image.height)) {
-                gl.generateMipmap(gl.TEXTURE_2D);
-              //}else{
-                gl.generateMipmap(gl.TEXTURE_2D);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-               //}
+
+              if (isPowerOf2(textures[j].image.width) && isPowerOf2(textures[j].image.height)) {
+                  gl.generateMipmap(gl.TEXTURE_2D);
+              } else {
+                  // No, it's not a power of 2. Turn off mips and set wrapping to clamp to edge
+                  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+               }
+               ///
+
+
+                //gl.generateMipmap(gl.TEXTURE_2D);
+
+                //gl.generateMipmap(gl.TEXTURE_2D);
+                //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+
               gl.bindTexture(gl.TEXTURE_2D, null);
 
+
+
+              WidthOut.setValue(j, textures[j].image.width);
+              HeightOut.setValue(j, textures[j].image.height);
               outputPin.setValue(j, textures[j]);
             }
           })(i);
@@ -2818,17 +2836,26 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
                     }
 
     this.floatExt = getExtension(gl, "OES_texture_float");
-                    if(!this.depthExt) {
+                    if(!this.floatExt) {
                         console.log("OES_texture_float not supported")
                     }
-    this.floatExt = getExtension(gl, "OES_texture_float_linear");
-                    if(!this.depthExt) {
+    this.float_linear_Ext = getExtension(gl, "OES_texture_float_linear");
+                    if(!this.float_linear_Ext) {
                         console.log("OES_texture_float_linear not supported")
                     }
-    this.floatExt = getExtension(gl, "OES_element_index_uint");
-                    if(!this.depthExt) {
+    this.uint_index_Ext = getExtension(gl, "OES_element_index_uint");
+                    if(!this.uint_index_Ext) {
                         console.log("OES_element_index_uint not supported")
                     }
+    this.shader_texture_lod_Ext = getExtension(gl, "EXT_shader_texture_lod");
+                    if(!this.shader_texture_lod_Ext) {
+                        console.log("EXT_shader_texture_lod not supported")
+                    }
+    this.aniso_Ext = getExtension(gl, "EXT_texture_filter_anisotropic");
+                    if(!this.aniso_Ext) {
+                        console.log("EXT_texture_filter_anisotropic not supported")
+                    }
+
 
 
 
