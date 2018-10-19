@@ -508,4 +508,117 @@ VVVV.Nodes.FPS = function(id, graph) {
 }
 VVVV.Nodes.FPS.prototype = new Node();
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: TouchEvents
+ Author(s): David Gann
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.TouchEvents = function(id, graph) {
+  this.constructor(id, "TouchEvents (System)", graph);
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: [],
+    compatibility_issues: []
+  };
+  this.auto_evaluate = true;
+   var id = this.addInputPin("target ID", ["TouchArea"], VVVV.PinTypes.String);
+  
+   var positions = this.addOutputPin("positions", [0.0,0.0], VVVV.PinTypes.Value);
+   var rel_positions = this.addOutputPin("relative positions", [0.0,0.0], VVVV.PinTypes.Value);
+   
+   var touchstartOut = this.addOutputPin("touchstart", [0.0], VVVV.PinTypes.Value);
+   var touchmoveOut = this.addOutputPin("touchmove", [0.0], VVVV.PinTypes.Value);   
+   var touchendOut = this.addOutputPin("touchend", [0.0], VVVV.PinTypes.Value);   
+
+  function defined(value) {
+    return value !== undefined && value !== null;
+  }
+
+ 
+
+  
+  this.evaluate = function() {
+
+var obj = document.getElementById(id.getValue(0));
+
+//touchstartOut.setValue(0,0 );
+//touchmoveOut.setValue(0,0 );
+//touchendOut.setValue(0,0 );
+
+if(defined(obj)){
+    
+var w = obj.offsetWidth;
+var h = obj.offsetHeight;
+
+obj.addEventListener('touchmove', function(event) {
+
+    touchmoveOut.setValue(0,1 );
+  var max_count = event.targetTouches.length
+  for (var j=0; j<max_count; j++){
+    var touch = event.targetTouches[j];
+    // Place element where the finger is
+    
+    var x = touch.pageX;
+    var y = touch.pageY;
+    positions.setValue(j*2,x );
+    positions.setValue(j*2+1,y );
+    
+    var relX = x / w;
+    var relY = y / h;
+    
+    rel_positions.setValue(j*2,relX );
+    rel_positions.setValue(j*2+1,relY );
+    
+  }
+}, false);
+
+obj.addEventListener('touchstart', function(event) {
+
+  touchstartOut.setValue(0,1 );
+  var max_count = event.targetTouches.length
+  for (var j=0; j<max_count; j++){
+    var touch = event.targetTouches[j];
+    
+    var x = touch.pageX;
+    var y = touch.pageY;
+    positions.setValue(j*2,x );
+    positions.setValue(j*2+1,y );
+    
+    var relX = x / w;
+    var relY = y / h;
+    
+    rel_positions.setValue(j*2,relX );
+    rel_positions.setValue(j*2+1,relY );
+  }
+}, false);
+
+obj.addEventListener('touchend', function(event) {
+
+  touchendOut.setValue(0,1 );
+  var max_count = event.targetTouches.length
+  for (var j=0; j<max_count; j++){
+    var touch = event.targetTouches[j];
+
+    var x = touch.pageX;
+    var y = touch.pageY;
+    positions.setValue(j*2,x );
+    positions.setValue(j*2+1,y );
+    
+    var relX = x / w;
+    var relY = y / h;
+    
+    rel_positions.setValue(j*2,relX );
+    rel_positions.setValue(j*2+1,relY );
+  }
+}, false);
+    }
+  }
+  
+}
+VVVV.Nodes.TouchEvents.prototype = new Node();
+
 });
