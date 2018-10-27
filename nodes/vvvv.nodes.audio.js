@@ -453,16 +453,16 @@ VVVV.Nodes.FFT.prototype = new WebAudioNode('Analyser');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: MediaElementSource (HTML5 Audio)
+ NODE: AudioPlayer (HTML5 Audio MediaElementSource)
  Author(s): 'Lukas Winter'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-VVVV.Nodes.MediaElementSource = function(id, graph) {
-  WebAudioNode.call(this, id, 'MediaElementSource (HTML5 Audio)', graph);
+VVVV.Nodes.AudioPlayer = function(id, graph) {
+  WebAudioNode.call(this, id, 'AudioPlayer (HTML5 Audio MediaElementSource)', graph);
 
   this.meta = {
-    authors: ['Lukas Winter'],
+    authors: ['Lukas Winter, David Gann'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -470,10 +470,33 @@ VVVV.Nodes.MediaElementSource = function(id, graph) {
 
   this.environments = ['browser'];
 
-  var audioIn = this.addInputPin('Audio', [], this);
+
   var audioOut = this.addOutputPin('Output', [], VVVV.PinTypes.WebAudio);
   audioOut.apiName = 0;
   this.audioOutputPins.push(audioOut);
+
+  ////////////////////////////////////
+    var networkStates = [ 'NETWORK_EMPTY', 'NETWORK_IDLE', 'NETWORK_LOADING', 'NETWORK_NO_SOURCE' ];
+    var readyStates = [ 'HAVE_NOTHING', 'HAVE_METADATA', 'HAVE_FUTURE_DATA', 'HAVE_ENOUGH_DATA', 'HAVE_CURRENT_DATA' ];
+
+    var playIn = this.addInputPin('Play', [1], VVVV.PinTypes.Value);
+    var loopIn = this.addInputPin('Loop', [0], VVVV.PinTypes.Value);
+    var startTimeIn = this.addInputPin('Start Time', [0.0], VVVV.PinTypes.Value);
+    var endTimeIn = this.addInputPin('End Time', [-1.0], VVVV.PinTypes.Value);
+    var doSeekIn = this.addInputPin('Do Seek', [0], VVVV.PinTypes.Value);
+    var seekPosIn = this.addInputPin('Seek Position', [0.0], VVVV.PinTypes.Value);
+    var filenameIn = this.addInputPin('Filename', ['http://html5doctor.com/demos/video-canvas-magic/video.ogg'], VVVV.PinTypes.String);
+
+    var durationOut = this.addOutputPin('Duration', [0.0], VVVV.PinTypes.Value);
+    var positionOut = this.addOutputPin('Position', [0.0], VVVV.PinTypes.Value);
+    var networkStatusOut = this.addOutputPin('Network Status', [''], VVVV.PinTypes.String);
+    var readyStatusOut = this.addOutputPin('Ready Status', [''], VVVV.PinTypes.String);
+
+    var videos = [];
+
+
+  ///////////////////////////////////////
+
 
   this.initialize = function() {};
 
@@ -481,15 +504,47 @@ VVVV.Nodes.MediaElementSource = function(id, graph) {
 
   this.evaluate = function()
   {
-    if(audioIn.pinIsChanged())
-    {
-      var n = this.getMaxInputSliceCount();
-      audioOut.setSliceCount(n);
-      mediaElements.length = n;
+    /////////////////////////////////Filestream///////////
 
-      for(var i = 0; i < n; i++)
+    var maxSpreadSize = this.getMaxInputSliceCount();
+
+    if (filenameIn.pinIsChanged()) {
+      for (var i=0; i<maxSpreadSize; i++) {
+        filename = VVVV.Helpers.prepareFilePath(filenameIn.getValue(i), this.parentPatch);
+        if (videos[i]==undefined) {
+          var $video = $('<audio loop><source src="" type="audio/mp3">   </audio>');
+          $('body').append($video);
+          videos[i] = $video[0];
+          videos[i].volume = 0;
+          var updateStatus = (function(j) {
+            return function() {
+
+            }
+          })(i);
+          videos[i].onprogress = updateStatus;
+          videos[i].oncanplay = updateStatus;
+          videos[i].oncanplaythrough = updateStatus;
+        }
+        if (filename!=videos[i].currentSrc) {
+          $(videos[i]).find('source').first().attr('src', filename);
+          videos[i].load();
+          if (playIn.getValue(i)>0.5)
+            videos[i].play();
+          else
+            videos[i].pause();
+
+          videos[i].loaded = true;
+
+        }
+      }
+
+
+      audioOut.setSliceCount(maxSpreadSize);
+      mediaElements.length = maxSpreadSize;
+
+      for(var i = 0; i < maxSpreadSize; i++)
       {
-        var inElement = audioIn.getValue(i);
+        var inElement = videos[i];
         if(inElement && inElement != mediaElements[i])
         {
           mediaElements[i] = inElement;
@@ -498,12 +553,82 @@ VVVV.Nodes.MediaElementSource = function(id, graph) {
           audioOut.setValue(i, new WebAudioOutputSlice(this.apiMultiNode[i], 0));
         }
       }
+
+
     }
+
+    if (playIn.pinIsChanged()) {
+      for (var i=0; i<maxSpreadSize; i++) {
+        if (playIn.getValue(i)>0.5)
+          videos[i].play();
+        else
+          videos[i].pause();
+      }
+    }
+
+    if (doSeekIn.pinIsChanged()) {
+      for (var i=0; i<maxSpreadSize; i++) {
+        if (videos[i%videos.length].loaded && doSeekIn.getValue(i)>=.5) {
+          videos[i%videos.length].currentTime = seekPosIn.getValue(i);
+          if (playIn.getValue(i)>.5)
+            videos[i].play();
+        }
+      }
+    }
+
+    for (var i=0; i<maxSpreadSize; i++) {
+
+
+      //loop
+console.log(videos[0]);
+      if (loopIn.getValue(i)>=.5){
+        //videos[i].createAttribute("loop");
+        }
+      else{
+        videos[i].removeAttribute("loop");
+        }
+
+      if (!videos[i].paused) {
+        if (durationOut.getValue(i)!=videos[i].duration)
+          durationOut.setValue(i, videos[i].duration);
+        positionOut.setValue(i, videos[i].currentTime);
+        var endTime = endTimeIn.getValue(i);
+        var startTime = startTimeIn.getValue(i);
+        if (videos[i].currentTime<startTime)
+          videos[i].currentTime = startTime;
+        if (videos[i].currentTime>=videos[i].duration || (endTime>=0 && videos[i].currentTime>=endTime)) {
+          if (loopIn.getValue(i)>=.5){
+            console.log("trying to loop")
+            videos[i].currentTime = startTime;
+            }
+          else{
+            videos[i].pause();
+            }
+        }
+      }
+
+      if (networkStatusOut.getValue(i)!=networkStates[videos[i].networkState])
+        networkStatusOut.setValue(i, networkStates[videos[i].networkState]);
+      if (readyStatusOut.getValue(i)!=readyStates[videos[i].readyState])
+        readyStatusOut.setValue(i, readyStates[videos[i].readyState]);
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
 
     this.updateAudioConnections();
   }
 }
-VVVV.Nodes.MediaElementSource.prototype = new WebAudioNode('MediaElementSource');
+VVVV.Nodes.AudioPlayer.prototype = new WebAudioNode('MediaElementSource');
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1022,5 +1147,8 @@ VVVV.Nodes.BeatDetector = function(id, graph) {
 }
 VVVV.Nodes.BeatDetector.prototype = new WebAudioNode('Analyser');
 VVVV.Nodes.BeatDetector.requirements = ["beatdetektor"];
+
+
+
 
 });
