@@ -1321,6 +1321,8 @@ VVVV.Nodes.GetAttributeHTML = function(id, graph) {
   var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
   var attributeIn = this.addInputPin("Attribute Name", [''], VVVV.PinTypes.String);
   var binSizeIn = this.addInputPin("Attribute Bin Size", [-1], VVVV.PinTypes.Value);
+  //added --cnisidis
+  var refreshIn = this.addInputPin("Refresh", [0], VVVV.PinTypes.Value);
 
   var valueOut = this.addOutputPin("Attribute Value", [''], VVVV.PinTypes.String);
 
@@ -1336,7 +1338,8 @@ VVVV.Nodes.GetAttributeHTML = function(id, graph) {
   }
 
   this.evaluate = function() {
-    var observedAttribsChanged = attributeIn.pinIsChanged() || binSizeIn.pinIsChanged();
+    //added --cnisidis [* || refreshIn.pinIsChanged *]
+    var observedAttribsChanged = attributeIn.pinIsChanged() || binSizeIn.pinIsChanged() || refreshIn.pinIsChanged();
 
     var attrIdx = 0;
     var attrCount = attributeIn.getSliceCount();
@@ -1344,7 +1347,7 @@ VVVV.Nodes.GetAttributeHTML = function(id, graph) {
     var elementCount = elementIn.getSliceCount();
     if (elementIn.isConnected() && elementIn.getValue(0).tagName!='') {
       for (var i=0; i<elementCount; i++) {
-        if (targets[i]!=undefined && (targets[i]!=elementIn.getValue(i).element[0] || observedAttribsChanged)) {
+        if (targets[i]!=undefined && (targets[i]!=elementIn.getValue(i).element[0] || observedAttribsChanged || this.refreshIn)) {
           observers[i].disconnect();
           observers[i] = undefined;
         }
@@ -1460,16 +1463,16 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
       compatibility_issues: []
     };
 
-   
+
     var HtmlIn = this.addInputPin("Html In", [" "], VVVV.PinTypes.String);
- 
+
     var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
     var Method = this.addInputPin('Method', ['byTag'], VVVV.PinTypes.Enum);
     Method.enumOptions = ['byTag', 'byID'];
- 
+
 
     this.evaluate = function() {
-        
+
       var selector = elementIn.getValue(0).element;
       if (HtmlIn.pinIsChanged()){
         var html_code = HtmlIn.getValue(0);
@@ -1481,15 +1484,15 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
         document.getElementsByTagName(selector).innerHTML=html_code;
         }
         $(selector).html(html_code);
-      console.log(html_code)  
+      console.log(html_code)
     }
-    
 
-      
+
+
     }
   }
   VVVV.Nodes['InjectHTML'].prototype = new Node();
-  
+
 
 
 
