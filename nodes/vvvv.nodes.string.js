@@ -1122,11 +1122,55 @@ VVVV.Nodes.UnzipString = function(id, graph) {
     }
     for (var j=0; j<outputCount; j++) {
     outputOut[j].setSliceCount( slicecount_value[j%slicecount_value.length]);
-    
+
     }
   }
 
 }
 VVVV.Nodes.UnzipString.prototype = new Node();
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Tokenizer (String)
+ Author(s): 'Constantine Nisidis'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.TokenizerString = function(id, graph) {
+  this.constructor(id, "Tokenizer (String)", graph);
+
+  this.meta = {
+    authors: ['Constantine Nisidis'],
+    original_authors: [''],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var inputIn = this.addInputPin("Input", [""], VVVV.PinTypes.String);
+
+  var separatorIn = this.addInputPin("Separator", ["''"], VVVV.PinTypes.String);
+
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [''], VVVV.PinTypes.String);
+
+  this.evaluate = function() {
+    var sliceCount = this.getMaxInputSliceCount();
+    //jdx = 0;
+    for (var i=0; i<sliceCount; i++) {
+
+        outputOut.setValue(i, strArray[i]);
+        outputOut.setSliceCount(sliceCount);
+    }
+
+  }
+}
+VVVV.Nodes.TokenizerString.prototype = new Node();
+
+
 });
+
+
+/* ---------- ADDED cnisidis -----------------*/

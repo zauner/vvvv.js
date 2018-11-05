@@ -269,4 +269,151 @@ VVVV.Nodes.SwitchColorInput = function(id, graph) {
 }
 VVVV.Nodes.SwitchColorInput.prototype = new Node();
 
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: FromHEX (Color)
+ Author(s): Constantine Nisidis
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.FromHEX = function(id, graph) {
+  this.constructor(id, "FromHEX (Color)", graph);
+
+  this.meta = {
+    authors: ['Constantine Nisidis'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var hexPin = this.addInputPin("HEXcode", ["ffffff"], VVVV.PinTypes.String);
+  var opacityPin = this.addInputPin("opacity", [1.0], VVVV.PinTypes.Value);
+
+  var outPin = this.addOutputPin("Output", [], VVVV.PinTypes.Color);
+
+  var colors = [];
+  var h, s, v, a, rgb;
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+
+    for (var i=0; i<maxSize; i++) {
+      hexTable = hexMap(hexPin.getValue(i));
+
+      if (!colors[i])
+        colors[i] = new VVVV.Types.Color("0.0, 0.0, 0.0, 0.0");
+
+      colors[i].rgba[0] = hexTable[0];
+      colors[i].rgba[1] = hexTable[1];
+      colors[i].rgba[2] = hexTable[2];
+      colors[i].rgba[3] = opacityPin.getValue(i);
+
+      outPin.setValue(i, colors[i]);
+    }
+    colors.length = maxSize;
+    outPin.setSliceCount(maxSize);
+
+
+  }
+  function hexMap(hexcode){
+    if(hexcode.startsWith("#"))
+      hexcode = hexcode.substr(1,6);
+
+    hexTable = hexcode.split("");
+    if(hexTable.length > 6){
+        hexTable = hexTable.splice(0,6);
+    }
+    if(hexTable.length == 3){
+      hexRepeat=[];
+      for (i=0; i<3; i++){
+        hexRepeat.push(hexTable[i].concat(hexTable[i]));
+      }
+      hexTable = hexRepeat.join('');
+    }
+    console.log(hexTable);
+
+    colorTable = [];
+    for (i=0; i<6; i++){
+      if(i%2==0)
+        colorTable.push(hexTable[i]+hexTable[i+1]);
+    }
+    //console.log(colorTable);
+    for (i=0; i<colorTable.length; i++){
+      colorTable[i] = parseInt(colorTable[i] , 16) / 255;
+    }
+    return colorTable;
+  }
+
+}
+VVVV.Nodes.FromHEX.prototype = new Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: ToHEX (Color)
+ Author(s): Constantine Nisidis
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+//convert Color Input to hex web safe color
+VVVV.Nodes.ToHEX = function(id, graph) {
+  this.constructor(id, "ToHEX (Color)", graph);
+
+  this.meta = {
+    authors: ['Constantine Nisidis'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var colorPin = this.addInputPin("Color", [], VVVV.PinTypes.Color);
+  var hashPin = this.addInputPin("Hash", [0], VVVV.PinTypes.Value);
+  //var opacityPin = this.addInputPin("opacity", [1.0], VVVV.PinTypes.Value);
+
+  var outPin = this.addOutputPin("Output", [], VVVV.PinTypes.String);
+
+  var hexColor = [];
+  var h, s, v, a, rgb;
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+
+    for (var i=0; i<maxSize; i++) {
+      hexColor[i] = colorMap(colorPin.getValue(i));
+
+      if (!hexColor[i])
+        hexColor[i] = new VVVV.Types.String("000000");
+
+      outPin.setValue(i, hexColor[i].toString());
+    }
+    hexColor.length = maxSize;
+    outPin.setSliceCount(maxSize);
+
+  }
+  function colorMap(color){
+    hexTable = [];
+    for(i=0; i<3; i++){
+      hex = (Math.round((color.rgba[i]*255))).toString(16);
+      if(hex=="0")
+        hex = hex.concat("0");
+      else if (hex.length==1) {
+        hex = "0".concat(hex);
+      }
+      hexTable.push(hex);
+
+    }
+    console.log(hexTable);
+    hex = hexTable.join('');
+    if(hashPin.getValue(0) != 0){
+      return "#".concat(hex);
+    }
+
+    console.log(hex);
+    return hex;
+  }
+}
+
+VVVV.Nodes.ToHEX.prototype = new Node();
 });

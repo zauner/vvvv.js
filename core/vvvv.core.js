@@ -54,6 +54,7 @@ define(function(require, exports) {
   require('nodes/vvvv.nodes.game');
   require('nodes/vvvv.nodes.react');
     require('nodes/vvvv.nodes.webgl2');
+      require('nodes/vvvv.nodes.d3');
 
   exports.MainLoop = require('mainloop/vvvv.mainloop');
   exports.Pin = require('core/vvvv.core.pin');
