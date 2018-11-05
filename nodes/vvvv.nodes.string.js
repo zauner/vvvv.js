@@ -1148,7 +1148,7 @@ VVVV.Nodes.TokenizerString = function(id, graph) {
     compatibility_issues: []
   };
 
-  var inputIn = this.addInputPin("Input", [""], VVVV.PinTypes.String);
+  var inputIn = this.addInputPin("Input", ["vvvvjs"], VVVV.PinTypes.String);
 
   var separatorIn = this.addInputPin("Separator", ["''"], VVVV.PinTypes.String);
 
@@ -1159,11 +1159,23 @@ VVVV.Nodes.TokenizerString = function(id, graph) {
   this.evaluate = function() {
     var sliceCount = this.getMaxInputSliceCount();
     //jdx = 0;
+    strArray=[];
     for (var i=0; i<sliceCount; i++) {
 
-        outputOut.setValue(i, strArray[i]);
-        outputOut.setSliceCount(sliceCount);
+        word = inputIn.getValue(i);
+        chars = (word.split(''));
+        for( j=0; j<chars.length; j++){
+            strArray.push(chars[j]);
+            console.log(chars[j]);
+
+        }
+
     }
+    outSliceCount = strArray.length;
+    for(i=0; i<outSliceCount; i++)
+      outputOut.setValue(i, strArray[i]);
+    //console.log(strArray);
+    outputOut.setSliceCount(outSliceCount);
 
   }
 }
