@@ -1182,7 +1182,117 @@ VVVV.Nodes.TokenizerString = function(id, graph) {
 VVVV.Nodes.TokenizerString.prototype = new Node();
 
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Substitute (String)
+ Author(s): 'Constantine Nisidis'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.SubstituteString = function(id, graph) {
+  this.constructor(id, "Substitute (String)", graph);
+
+  this.meta = {
+    authors: ['Constantine Nisidis'],
+    original_authors: [''],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var inputIn = this.addInputPin("Input", ["vvvvjs"], VVVV.PinTypes.String);
+  var fromIn = this.addInputPin("From", ["vvvvjs"], VVVV.PinTypes.String);
+  var toIn = this.addInputPin("To", ["vvvvjs"], VVVV.PinTypes.String);
+
+
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [''], VVVV.PinTypes.String);
+
+  this.evaluate = function() {
+    var sliceCount = this.getMaxInputSliceCount();
+    //jdx = 0;
+    strArray=[];
+    var maxIn = Math.max(fromIn.getSliceCount(), toIn.getSliceCount());
+    for (var i=0; i<sliceCount; i++) {
+        word = inputIn.getValue(i);
+        for( j=0; j<maxIn; j++){
+              if(word == fromIn.getValue(j)){
+                  outputOut.setValue(i, toIn.getValue(j));
+              }
+        }
+
+    }
+    outSliceCount = sliceCount;
+    //for(i=0; i<outSliceCount; i++)
+    //console.log(strArray);
+    outputOut.setSliceCount(outSliceCount);
+
+  }
+}
+VVVV.Nodes.SubstituteString.prototype = new Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Occurrence (VVVV)
+ Author(s): Constantine Nisidis
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.OccurrenceString = function(id, graph) {
+  this.constructor(id, "Occurrence (String)", graph);
+
+  this.meta = {
+    authors: ['c nisidis'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: [ 'with bin size']
+  };
+
+  var inputIn = this.addInputPin("Input", [''], VVVV.PinTypes.String);
+  var UniqueOut = this.addOutputPin("Unique", [''], VVVV.PinTypes.String);
+  var binOut = this.addOutputPin("Bins", [0], VVVV.PinTypes.String);
+  var init = 1.0;
+  this.auto_evaluate = true;
+
+  function uniqueAndBinSize(arr) {
+
+    var a = [], b = [], prev;
+      arr.sort();
+      for ( var i = 0; i < arr.length; i++ ) {
+          if ( arr[i] !== prev ) {
+              a.push(arr[i]);
+              b.push(1);
+          } else {
+              b[b.length-1]++;
+          }
+          prev = arr[i];
+      }
+
+      return [a, b];
+  }
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+
+    var Input = inputIn.getValue(0, maxSize);
+    var unique = uniqueAndBinSize(Input);
+    for (var i=0; i<unique[0].length; i++) {
+      UniqueOut.setValue(i, unique[0][i]);
+      binOut.setValue(i, unique[1][i]);
+    }
+    UniqueOut.setSliceCount(unique[0].length);
+    binOut.setSliceCount(unique[1].length);
+  }
+
+  }
+
+VVVV.Nodes.OccurrenceString.prototype = new Node();
+
 });
+
+
 
 
 /* ---------- ADDED cnisidis -----------------*/
