@@ -44,12 +44,6 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/SpriteSheet.vvvvjs.fx": undefined,
   "%VVVV%/effects/PBR_gltf_core_shader.vvvvjs.fx": undefined
 
-
-
-
-
-
-
 };
 
 /**
