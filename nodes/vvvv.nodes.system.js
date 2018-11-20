@@ -531,25 +531,24 @@ VVVV.Nodes.TouchEvents = function(id, graph) {
    var positions = this.addOutputPin("positions", [0.0,0.0], VVVV.PinTypes.Value);
    var rel_positions = this.addOutputPin("relative positions", [0.0,0.0], VVVV.PinTypes.Value);
 
-   var touchstartOut = this.addOutputPin("touchstart", [0.0], VVVV.PinTypes.Value);
-   var touchmoveOut = this.addOutputPin("touchmove", [0.0], VVVV.PinTypes.Value);
-   var touchendOut = this.addOutputPin("touchend", [0.0], VVVV.PinTypes.Value);
+
+
 
   function defined(value) {
     return value !== undefined && value !== null;
   }
 
-
+  var touch_array = [];
+  var initial_index = [];
 
   this.evaluate = function() {
+
+    var eventFire = false;
 
     if(applyIn.getValue(0) == 1){
 
     var obj = document.getElementById(id.getValue(0));
 
-    //touchstartOut.setValue(0,0 );
-    //touchmoveOut.setValue(0,0 );
-    //touchendOut.setValue(0,0 );
 
     if(defined(obj)){
 
@@ -558,30 +557,38 @@ VVVV.Nodes.TouchEvents = function(id, graph) {
 
     obj.addEventListener('touchmove', function(event) {
 
-        touchmoveOut.setValue(0,1 );
         var max_count = event.targetTouches.length
         for (var j=0; j<max_count; j++){
-        var touch = event.targetTouches[j];
+          touch_array[j] = 1;
 
-        var x = touch.pageX;
-        var y = touch.pageY;
-        positions.setValue(j*2,x );
-        positions.setValue(j*2+1,y );
 
-        var relX = x / w;
-        var relY = y / h;
+          var touch = event.targetTouches[j];
 
-        rel_positions.setValue(j*2,relX );
-        rel_positions.setValue(j*2+1,relY );
+          var x = touch.pageX;
+          var y = touch.pageY;
+          positions.setValue(j*2,x );
+          positions.setValue(j*2+1,y );
+
+          var relX = x / w;
+          var relY = y / h;
+
+          rel_positions.setValue(j*2,relX );
+          rel_positions.setValue(j*2+1,relY );
+
+          rel_positions.setSliceCount(max_count*2);
+          positions.setSliceCount(max_count*2);
+          eventFire = true;
 
       }
     }, {passive: true});
 
     obj.addEventListener('touchstart', function(event) {
 
-      touchstartOut.setValue(0,1 );
       var max_count = event.targetTouches.length
+
       for (var j=0; j<max_count; j++){
+
+
         var touch = event.targetTouches[j];
 
         var x = touch.pageX;
@@ -594,32 +601,62 @@ VVVV.Nodes.TouchEvents = function(id, graph) {
 
         rel_positions.setValue(j*2,relX );
         rel_positions.setValue(j*2+1,relY );
+
+
+        rel_positions.setSliceCount(max_count*2);
+        positions.setSliceCount(max_count*2);
+
       }
     }, {passive: true});
 
     obj.addEventListener('touchend', function(event) {
+       console.log("touchend");
 
-      touchendOut.setValue(0,1 );
+
       var max_count = event.targetTouches.length
-      for (var j=0; j<max_count; j++){
-        var touch = event.targetTouches[j];
 
-        var x = touch.pageX;
+      for (var j=0; j<max_count; j++){
+        touch_array[j] = 0;
+
+        var touch = event.targetTouches;
+
+       var x = touch.pageX;
         var y = touch.pageY;
         positions.setValue(j*2,x );
-        positions.setValue(j*2+1,y );
+       positions.setValue(j*2+1,y );
 
         var relX = x / w;
         var relY = y / h;
 
         rel_positions.setValue(j*2,relX );
         rel_positions.setValue(j*2+1,relY );
+
+
+        rel_positions.setSliceCount(max_count*2);
+        positions.setSliceCount(max_count*2);
+
       }
+
+      if (max_count == 0){
+        rel_positions.setSliceCount(0);
+        positions.setSliceCount(0);
+      }
+
+
     }, {passive: true});
 
 
   }  //endif defined
 }  //endif applied
+
+
+
+
+  if(eventFire==false){
+
+    //rel_positions.setSliceCount(0);
+    //positions.setSliceCount(0);
+  }
 
 
   }
