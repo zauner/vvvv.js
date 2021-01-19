@@ -610,7 +610,7 @@ VVVV.Nodes.TouchEvents = function(id, graph) {
     }, {passive: true});
 
     obj.addEventListener('touchend', function(event) {
-       console.log("touchend");
+      
 
 
       var max_count = event.targetTouches.length
