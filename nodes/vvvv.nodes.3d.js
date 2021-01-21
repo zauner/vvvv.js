@@ -413,4 +413,142 @@ VVVV.Nodes.Multiply4dVector = function(id, graph) {
 }
 VVVV.Nodes.Multiply4dVector.prototype = new Node();
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Cross (3d)
+ Author(s): 'David Gann'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Cross3d = function(id, graph) {
+  this.constructor(id, "Cross (3d)", graph);
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  this.auto_evaluate = false;
+
+  // input pins
+  var xinIn = this.addInputPin('X In', [0], VVVV.PinTypes.Value);
+  var yinIn = this.addInputPin('Y In', [0], VVVV.PinTypes.Value);
+  var zinIn = this.addInputPin('Z In', [0], VVVV.PinTypes.Value);
+  var includeupperIn = this.addInputPin('Include Upper', [1], VVVV.PinTypes.Value);
+  var includelowerIn = this.addInputPin('Include Lower', [1], VVVV.PinTypes.Value);
+  var includeequalIn = this.addInputPin('Include Equal', [1], VVVV.PinTypes.Value);
+
+  // output pins
+  var xoutOut = this.addOutputPin('X Out', [0], VVVV.PinTypes.Value);
+  var youtOut = this.addOutputPin('Y Out', [0], VVVV.PinTypes.Value);
+  var zoutOut = this.addOutputPin('Z Out', [0], VVVV.PinTypes.Value);
+
+  // evaluate() will be called each frame
+  // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
+  this.evaluate = function() {
+
+    var idx = 0;
+    for (var k=0;k<zinIn.getSliceCount(); k++) {
+        for (var i=0; i<yinIn.getSliceCount(); i++) {
+          for (var j=0; j<xinIn.getSliceCount(); j++) {
+            if (includeupperIn.getValue(0)<0.5 && i>j)
+              continue;
+            if (includelowerIn.getValue(0)<0.5 && i<j)
+              continue;
+            if (includeequalIn.getValue(0)<0.5 && i==j)
+              continue;
+            zoutOut.setValue(idx, xinIn.getValue(k));
+            xoutOut.setValue(idx, xinIn.getValue(j));
+            youtOut.setValue(idx, yinIn.getValue(i));
+            idx++;
+          }
+        }
+    }
+    xoutOut.setSliceCount(idx);
+    youtOut.setSliceCount(idx);
+    youtOut.setSliceCount(idx);
+  }
+
+}
+VVVV.Nodes.Cross3d.prototype = new Node();
+
+/////////////////////////////////////////////////////////
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: distance (3d)
+ Author(s): David Gann
+ Original Node Author(s): VVVV Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.Distance3d = function(id, graph) {
+  this.constructor(id, "Distance (3d)", graph);
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+
+  var xyz1In = this.addInputPin("XYZ1", [0.0], VVVV.PinTypes.Value);
+  var xyz2In = this.addInputPin("XYZ2", [0.0], VVVV.PinTypes.Value);
+
+
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+
+  var xs = 0;
+  var ys = 0;
+  var idx = 0;
+
+
+  var distance = function(pointAx,pointAy,pointAz, pointBx,pointBy,pointBz){
+      var dx = pointBx - pointAx;
+      var dy = pointBy - pointAy;
+      var dz = pointBz - pointAz;
+
+      var dist = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2) + Math.pow(dz, 2));
+
+      return dist;
+  }
+
+
+  this.evaluate = function() {
+     var maxSize = this.getMaxInputSliceCount();
+
+
+      for (var i=0; i<maxSize/3; i++)
+	  {
+
+              var pointAx = xyz1In.getValue(idx);
+              var pointAy = xyz1In.getValue(idx+1);
+              var pointAz = xyz1In.getValue(idx+2);
+
+              var pointBx = xyz2In.getValue(idx);
+              var pointBy = xyz2In.getValue(idx+1);
+              var pointBz = xyz2In.getValue(idx+2);
+
+              var dist = distance(pointAx,pointAy,pointAz, pointBx,pointBy,pointBz);
+
+              idx=idx+3;
+
+		          outputOut.setValue(i,dist);
+
+      }
+     outputOut.setSliceCount(maxSize/3);
+    }
+
+  }
+
+
+VVVV.Nodes.Distance3d.prototype = new Node();
+
+
+
+
 });

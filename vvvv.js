@@ -28,6 +28,7 @@ var aliases = {
   d3: 'lib/d3-v3/d3.v3.min',
   underscore: 'lib/underscore/underscore',
   glMatrix: 'lib/glMatrix-0.9.5.min',
+  //glMatrix2: 'lib/gl-matrix',
 }
 
 var VVVVBrowserContext = {name: 'browser'};

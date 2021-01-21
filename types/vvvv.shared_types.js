@@ -283,4 +283,74 @@ VVVV.PinTypes.SceneBuffer = {
   }
 }
 
+VVVV.Types.glTF = function() {
+  this.data = {};
+  this.buffer = {};
+  this.primitive_count = 1;
+  this.nodes_
+}
+
+var default_glTF = new VVVV.Types.glTF();
+
+VVVV.PinTypes.glTF = {
+  typeName: "glTF",
+  reset_on_disconnect: true,
+  defaultValue: function() {
+    return default_glTF
+  }
+}
+
+
+VVVV.Types.JointMatrixArray = function(data) {
+  this.data = [];
+  this.joint_count = 65; //max bone count
+  }
+
+var default_JointMatrixArray = new VVVV.Types.JointMatrixArray();
+
+VVVV.PinTypes.JointMatrixArray = {
+  typeName: "JointMatrixArray",
+  reset_on_disconnect: true,
+  defaultValue: function() {
+    return default_JointMatrixArray;
+  }
+}
+
+
+
+VVVV.Types.AnimationFrame = function(data) {
+  this.data = [];
+  this.target_count = 0;
+  this.node_list = [];
+
+  this.setTargetFrame = function(index, data, target_node, target_transform ) {
+    this.data[index] = {
+      frame_value: data,
+      target_node: target_node,
+      target_transform: target_transform,
+    };
+    this.target_count += 1;
+    this.node_list.push(target_node);
+  }
+  }
+
+var default_AnimationFrame = new VVVV.Types.AnimationFrame();
+
+
+VVVV.Types.Defines = function(data) {
+  this.data = {};
+  this.setDefines = function(defines ) {
+    this.data = {
+      defines: defines
+    };
+
+  }
+  }
+
+
+var default_Defines = new VVVV.Types.Defines();
+
+
+
+
 });

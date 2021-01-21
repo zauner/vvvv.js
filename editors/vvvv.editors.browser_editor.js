@@ -3,6 +3,17 @@ if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node
 
 define(function(require,exports) {
 
+var pin_scale_x = 7;
+var pin_scale_y = 7;
+var node_scale_y =24;
+var node_outline_color = "#999";
+var iobox_outline_color = "#999";
+var connection_color = "#999";
+var background_color = "#999";
+var connection_new_color = '#28edae';
+var font_size = 10;
+var font_color = 10;
+var node_label_offset = node_scale_y/2 + font_size/2 -1;
 
 var $ = require('jquery');
 require('d3');
@@ -72,7 +83,9 @@ VVVV.PinTypes.Value.makeLabel = VVVV.PinTypes.String.makeLabel = function(elemen
         return i*12+12;
       })
       .attr('dx', 4)
-      .attr('font-size', 10)
+      .attr('dy', node_label_offset)
+      .attr('font-size', font_size)
+      .style('fill', "#f27900")
       .attr('font-family', "'Lucida Sans Unicode', sans-serif")
       //.attr('clip-path', 'url(#clip-path-'+node.id+')')
   }
@@ -580,8 +593,8 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           chart.select('.vvvv-link.current-link').remove();
           $('.resettable', thatWin.window.document).remove();
           chart.selectAll('.vvvv-input-pin rect, .vvvv-output-pin rect')
-            .attr('width', 4)
-            .attr('height', 4)
+            .attr('width', pin_scale_x)
+            .attr('height', pin_scale_y)
             .attr('x', 0)
             .attr('y', 0)
             .attr('class', '')
@@ -827,8 +840,8 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
         thatWin.state = UIState.Idle;
         $('.resettable', thatWin.window.document).remove();
         chart.selectAll('.vvvv-input-pin rect, .vvvv-output-pin rect')
-          .attr('width', 4)
-          .attr('height', 4)
+          .attr('width', pin_scale_x)
+          .attr('height', pin_scale_y)
           .attr('x', 0)
           .attr('y', 0)
           .attr('class', '')
@@ -970,9 +983,9 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
 
     nodes.append('svg:rect')
       .attr('class', 'vvvv-node-background')
-      .attr('height', function(d) { return d.getHeight(); })
+      .attr('height', function(d) { return node_scale_y; })  //return d.getHeight();
       .attr('width', function(d) { return d.getWidth() + 4; })
-      .attr('x', -2)
+      .attr('x', 0)
       .attr('rx', 2)
       .attr('ry', 2)
       .attr('fill', function(d) {
@@ -987,7 +1000,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
         else
           return '#999';
       })
-      .attr('stroke', function(d) { return d.isIOBox ? '#999' : 'none'})
+      .attr('stroke', function(d) { return d.isIOBox ? '#ff8300' : 'none'})
       .attr('stroke-width', 1)
 
     nodes.append('svg:rect')
@@ -1098,6 +1111,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
               return i*12+12;
             })
             .attr('dx', 4)
+            .attr('dy', node_label_offset)
             .attr('font-size', 10)
             .attr('font-family', "'Lucida Sans Unicode', sans-serif")
       }
@@ -1126,8 +1140,8 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
         })
 
     inputPins.append('svg:rect')
-      .attr('width', 4)
-      .attr('height', 4)
+      .attr('width', pin_scale_x)
+      .attr('height', pin_scale_y)
       .attr('ry', 1)
       .attr('rx', 1)
       .attr('fill', function(d) { return d.node.isComment() ? 'rgba(0,0,0,0)' : (d.clusterEdge ? '#FFFF00' : '#666666') })
@@ -1170,7 +1184,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           pinOffset = 0;
           if (_(d.node.outputPins).size()>1)
             pinOffset = (d.node.getWidth()-4)/(_(d.node.outputPins).size()-1);
-          d.y = d.node.getHeight()-4+1;
+          d.y = node_scale_y-pin_scale_y/2 -2;
           d.x = i*pinOffset;
           //if (d.node.isIOBox)
           //  d.x = d.node.getWidth() - d.x - 4;
@@ -1178,8 +1192,8 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
         });
 
     outputPins.append('svg:rect')
-      .attr('width', 4)
-      .attr('height', 4)
+      .attr('width', pin_scale_x)
+      .attr('height', pin_scale_y)
       .attr('ry', 1)
       .attr('rx', 1)
       .attr('fill', function(d) { return d.node.isComment() ? 'rgba(0,0,0,0)' : (d.clusterEdge ? '#FFFF00' : '#666666') })
@@ -1187,10 +1201,10 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
         chart.selectAll('#vvvv-node-'+d.node.id+' g.vvvv-output-pin').filter(function(d, j) { return j==i }).each(function() {
           d3.select(this).append('svg:rect')
             .attr('class', 'vvvv-output-pin-highlight')
-            .attr('width', 4)
-            .attr('height', 4)
-            .attr('fill', 'rgba(0,0,0,1)')
-            .attr('y', -4)
+            .attr('width', pin_scale_x)
+            .attr('height', pin_scale_y)
+            .attr('fill', 'rgba(255,0,0,1)')
+            .attr('y', pin_scale_y)
 
           if (d.values.code) {
             var f = new Function("patch", d.generateStaticCode(false));
@@ -1311,7 +1325,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           var that = this;
           chart.append('svg:line')
             .attr('class', 'vvvv-link current-link resettable')
-            .attr('stroke', '#000')
+            .attr('stroke', connection_new_color)
             .attr('stroke-width', 1)
             .attr('x1', d.x + d.node.x + 2 + .5)
             .attr('y1', d.y + d.node.y + 2 + .5)
@@ -1341,8 +1355,8 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
                 return false;
               return true;
             })
-            .attr('width', 6)
-            .attr('height', 6)
+            .attr('width', pin_scale_x)
+            .attr('height', pin_scale_y)
             .attr('x', -1)
             .attr('y', function(d) { return d.direction==VVVV.PinDirection.Input ? -2 : 0})
             .attr('class', 'vvvv-connection-highlight')

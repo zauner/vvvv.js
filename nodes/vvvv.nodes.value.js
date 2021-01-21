@@ -1045,6 +1045,82 @@ VVVV.Nodes.PowerValue = function(id, graph) {
 }
 VVVV.Nodes.PowerValue.prototype = new Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: Math (Value)
+ Author(s): 'Constantnine Nisidis'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.MathValue = function(id, graph) {
+  this.constructor(id, "Math (Value)", graph);
+
+  String.prototype.replaceAll = function(search, replacement) {
+    var target = this;
+    return target.split(search).join(replacement);
+  };
+
+  this.meta = {
+    authors: ['c nisidis'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['dont make use of reserved words - avoid single letters - better use words like myVar']
+  };
+
+  this.auto_evaluate = false;
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [0], VVVV.PinTypes.Value);
+
+  // invisible pins
+  var inputcountIn = this.addInvisiblePin('Input Count', [2], VVVV.PinTypes.Value);
+  var expressionIn = this.addInputPin('Expression', ['Math.pow(myVar0, myVar1);'], VVVV.PinTypes.String);
+
+  //input pins
+  var variablesIn = this.addInvisiblePin('Variables', ['myVar0,myVar1'], VVVV.PinTypes.String);
+  var inputPins = [];
+
+  var variablesT = variablesIn.getValue(0).split(",");
+
+  var variables = [{}];
+
+  this.configure = function() {
+    variablesT = variablesIn.getValue(0).split(",");
+    console.log(variablesT);
+    var inputCount = variablesT.length; //Math.max(2, inputcountIn.getValue(0));
+    VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
+      pinName = variablesT[i].trim();
+
+      return this.addInputPin(variablesT[i].trim(), [0.0], VVVV.PinTypes.Value);
+    })
+  }
+
+  this.evaluate = function() {
+    var maxSize = this.getMaxInputSliceCount();
+
+    for (var i=0; i<maxSize; i++) {
+      var result = inputPins[0].getValue(i);
+      exprIn = expressionIn.getValue(i);
+      for(k=0; k<variablesT.length; k++){
+        varIn = variablesT[k];
+
+
+        exprIn = exprIn.replaceAll(variablesT[k], inputPins[k].getValue(i));
+        console.log(varIn, exprIn);
+      }
+
+      result = eval(exprIn);
+
+      outputOut.setValue(i, result);
+    }
+
+    outputOut.setSliceCount(maxSize);
+  }
+
+}
+VVVV.Nodes.MathValue.prototype = new Node();
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1429,6 +1505,9 @@ VVVV.Nodes.Occurrence = function(id, graph) {
   }
 
 VVVV.Nodes.Occurrence.prototype = new Node();
+
+
+
 
 
 });

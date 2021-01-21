@@ -3,12 +3,16 @@
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
 
+
 if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node_modules/amdefine')(module, VVVVContext.getRelativeRequire(require)) }
 define(function(require,exports) {
 
 var Node = require('core/vvvv.core.node');
 var VVVV = require('core/vvvv.core.defines');
 var $ = require('jquery');
+
+
+
 
 VVVV.PinTypes.Socket = {
   typeName: "Socket",
@@ -791,5 +795,77 @@ VVVV.Nodes.TCPSend = function(id, graph) {
 
 }
 VVVV.Nodes.TCPSend.prototype = new Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: CalendarGoogleAPI
+ Author(s): 'David Gann'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.CalendarGoogleAPI = function(id, graph) {
+  this.constructor(id, "Calendar (Google API Service Account)", graph);
+
+  this.meta = {
+    authors: ['David Gann'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  this.auto_evaluate = true;
+  this.environments = ['nodejs'];
+  
+  var googleapis = undefined;
+  var googleAuth 
+  
+  this.initialize = function() {
+    googleapis = window.server_req('googleapis');
+    googleAuth = window.server_req('google-auth-library');
+    if (googleapis){
+      console.log(googleapis.calendar_v3)
+    }
+  }
+  
+
+  var doSendIn = this.addInputPin("Do Send", [0], VVVV.PinTypes.Value);
+    var LogOut = this.addOutputPin("Log Out", [" "], VVVV.PinTypes.String);
+//LogOut.auto_reset = true;
+  var thatNode = this;
+
+
+
+  this.evaluate = function() {
+ 
+  this.initialize();
+  var test = googleapis.abusiveexperiencereport.sites.get("test");
+//
+//    var client;
+//    googleapis
+//        .discover('plus', 'v1')
+//        .execute(function(err, data) {
+//            client = data;
+//        });
+//
+//      var CLIENT_ID = env.googleapis.client_id;
+//var CLIENT_SECRET = env.googleapis.client_secret;
+//var oauth2 = new googleapis.OAuth2Client(CLIENT_ID, CLIENT_SECRET, 'postmessage');
+//
+//var SERVICE_ACCOUNT_EMAIL = 'email@serviceaccount.com';
+//var SERVICE_ACCOUNT_KEY_FILE = '/path/to/decrypted/key/file';
+//var jwt = new googleapis.auth.JWT(
+//        SERVICE_ACCOUNT_EMAIL,
+//        SERVICE_ACCOUNT_KEY_FILE,
+//        null,
+//        ['https://www.googleapis.com/auth/analytics.readonly']);
+      
+      LogOut.setValue(0, typeof jwt)
+      
+
+  }
+
+}
+VVVV.Nodes.CalendarGoogleAPI.prototype = new Node();
+VVVV.Nodes.CalendarGoogleAPI.requirements = ['googleapis'];
 
 });
