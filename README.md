@@ -29,11 +29,14 @@ VVVV.js is freely distributable under the MIT license (see details in LICENCE fi
 This software uses jQuery, underscore.js, d3.js and glMatrix.js. See the corrensponding licence files in the lib folder for details.
 
 Installation 
+-------------
 
 In this short tutorial, I will show you how easy it is to get started with VVVV.js, the visual programming environment based on Javascript and WebGL. It runs on any platform (Windows/Linux/OSX) in a modern browser (Chrome recommended).
 We will install Node.js and have a look at how we can use the browser-based visual programming editor of VVVV.js locally on your computer. Since I am working on Windows the few command-line codes will be for Windows (But should be easy to find out what it is for Linux / OSX).  
 
 Step 1: Download or Clone Repository
+-------------
+
 First, you need to download or clone my VVVV.js repository from GitHub:
 
   https://github.com/tekcor/vvvv.js
@@ -49,7 +52,10 @@ Now your folder should look like this:
 /vvvv_dev
          /vvvv.js
          /vvvv.js-examples
+		 
 Step 2: Install Node.js
+-------------
+
 Head over to Node.js and install it on your computer if you haven`t done it before already. After the installation, you have to check if Node.js is in your path environment. So fire up your terminal / command-line and type "node". If it does not show you the command list, chances are good you have to go and google how to add Node.js to your PATH.
 
 If it is added to the path, you can navigate to /vvvv_dev/vvvv.js and type:
@@ -67,6 +73,8 @@ timeout 10
 Now that you have everything setup you are ready to go to start your Node.js server and launch the first VVVV.js patch.
 
 Step3: Launch Node Server
+-------------
+
 Everytime when you want to work on a VVVV.js project, you need to start the Node.js server before.
 
 For this navigate to your /vvvv-dev/vvvv.js folder and type the following command:
@@ -83,6 +91,7 @@ timeout 10
 Now that we have your server running, let's open a patch!
 
 Step 4: Starting the Patch
+-------------
 
 Now we want to start one of the patches in the vvvv.js-example folder. First, we open up the Chrome browser and type the local address of the examples:
 http://localhost:5000/vvvv.js-examples/01_CookTorrance.html
