@@ -1,20 +1,25 @@
 {
-  "name": "vvvv-js",
-  "repository": "zauner/vvvv.js",
-  "description": "VVVV.js",
-  "license": "MIT",
-  "dependencies": {
-    "amdefine": "=1.0.0",
-    "cheerio": "=0.22.0",
-    "dotenv": "^7.0.0",
-    "finalhandler": "*",
-    "james-browser-launcher": "*",
-    "jsdom": "=7.0.2",
-    "minimist": "*",
-    "nodejs-websocket": "*",
-    "npm": "*",
-    "serve-static": "*",
-    "sqlite3": "*"
-  },
-  "version": "2.0.0-alpha.1"
+    "name": "vvvv-js",
+    "repository": "zauner/vvvv.js",
+    "description": "VVVV.js",
+    "license": "MIT",
+    "scripts": {
+        "build": "webpack"
+    },
+    "dependencies": {
+        "amdefine": "=1.0.0",
+        "cheerio": "=0.22.0",
+        "finalhandler": "*",
+        "james-browser-launcher": "*",
+        "jsdom": "=7.0.2",
+        "minimist": "*",
+        "nodejs-websocket": "*",
+        "npm": "*",
+        "serve-static": "*",
+        "sqlite3": "*"
+    },
+    "version": "2.0.0-alpha.1",
+    "devDependencies": {
+        "dotenv": "^7.0.0"
+    }
 }

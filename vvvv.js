@@ -2,13 +2,10 @@
 // (c) 2011 Matthias Zauner
 // VVVV.js is freely distributable under the MIT license.
 // Additional authors of sub components are mentioned at the specific code locations.
-
-
 (function() {
-
-/** @define {string} */
-VVVV_ENV = 'development';
-
+  var dotenv = require('dotenv').config();
+  /** @define {string} */
+  VVVV_ENV = process.env.VVVV_ENV;
 // some prerequisites ...
 /*$.ajaxPrefilter(function( options, originalOptions, jqXHR ) {
   if ( options.dataType == 'script' || originalOptions.dataType == 'script' ) {
