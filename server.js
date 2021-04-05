@@ -140,6 +140,7 @@ VVVVContext.init('./', 'full', function (vvvv) {
       if (req.save) {
         if (!edit_mode)
           return;
+        console.log("saving on server");
         var p = patch.executionContext.Patches[vvvv.Helpers.prepareFilePath(req.patch)][0];
         fs.writeFile(vvvv.Helpers.prepareFilePath(req.patch)+".xml", p.toXML(), function() {
           console.log('saved '+req.patch+".xml");

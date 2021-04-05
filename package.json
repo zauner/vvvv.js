@@ -9,12 +9,14 @@
     "finalhandler": "*",
     "googleapis": "^32.0.0",
     "james-browser-launcher": "*",
+    "jquery": "*",
     "jsdom": "=7.0.2",
     "minimist": "*",
     "nodejs-websocket": "*",
     "npm": "*",
     "serve-static": "*",
-    "sqlite3": "*"
+    "sqlite3": "*",
+    "three": "^0.126.1"
   },
   "version": "2.0.0-alpha.1"
 }

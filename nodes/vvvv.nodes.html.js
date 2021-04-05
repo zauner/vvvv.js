@@ -9,6 +9,8 @@ define(function(require,exports) {
 var Node = require('core/vvvv.core.node');
 var VVVV = require('core/vvvv.core.defines');
 
+
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Element (HTML)
@@ -1742,7 +1744,7 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
                 property_distribution[i] = {};
               property_distribution[i][names[k]] = true;
               styleOut.setValue(i, styles[i]);
-              console.log(styles[i].style_properties);
+              //console.log(styles[i].style_properties);
           }
 
 
@@ -1764,6 +1766,99 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
     }
   }
   VVVV.Nodes.StyleTextHTML.prototype = new Node();
+
+
+
+  /*
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   NODE: Drag (HTML)
+   Author(s): Luna Nane
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  */
+
+  VVVV.Nodes.DragSnapHTML = function(id, graph) {
+    this.constructor(id, "DragSnap (HTML)", graph);
+
+    this.meta = {
+      authors: ['Matthias Zauner'],
+      original_authors: [],
+      credits: [],
+      compatibility_issues: []
+    };
+
+    this.environments = ['browser'];
+
+    var selectorIn = this.addInputPin("Selector", [""], VVVV.PinTypes.String);
+    var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
+    //var spaceIn = this.addInputPin("Space", ["Pixels"], VVVV.PinTypes.Enum);
+    //spaceIn.enumOptions = ["Pixels", "Document [-1, +1]"];
+    var absoluteIn = this.addInputPin("Absolute Position", [1], VVVV.PinTypes.Value);
+    var IsDragging = this.addOutputPin("Dragging", [0], VVVV.PinTypes.Value);
+
+    const setMarkerCenter = (el, pos) => el.css({ left: pos - 25 + 'px' })
+
+    var styles = [];
+
+    this.evaluate = function() {
+      var maxSpreadSize = this.getMaxInputSliceCount();
+
+    var tag =  elementIn.getValue(0).element;
+
+    console.log(elementIn.getValue(0))
+
+    var element = selectorIn.getValue(0);
+
+
+
+
+$(tag).draggable({
+
+  drag: () => {
+    IsDragging.setValue(0, 1);
+
+    //ui.position.left
+  },
+  stop: (event, ui) => {
+    IsDragging.setValue(0, 0);
+  },
+
+  axis: "x"
+
+
+
+
+ });
+    //console.log(e);
+
+    // $('.timeline__marker').draggable({
+    //   start: () => {
+    //     //setIdle(true)
+    //   },
+    //   drag: () => {
+    //     e.addClass('active')
+    //     //ondrag output to change visible state
+    //   },
+    //   stop: (event, ui) => {
+    //     //setIdle(false)
+    //     e.removeClass('active')
+    //     //const nearest = findNearest(Object.values(g.positions.values), ui.position.left),
+    //     //      element = Object.keys(g.positions.values).find(key => g.positions.values[key] === nearest),
+    //   //        toNum = parseInt(element.split('_')[0])
+    //   //        center = g.positions.centers[toNum]
+    //
+    //     //g.currentScene.prev = g.currentScene.next
+    //     //g.currentScene.next = toNum
+    //     //setMarkerCenter($timelineMarker, center)
+    //
+    //   },
+    //   axis: 'x',
+    // })
+
+
+    }
+  }
+  VVVV.Nodes.DragSnapHTML.prototype = new Node();
+
 
 
 });

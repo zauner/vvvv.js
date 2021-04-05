@@ -31,6 +31,7 @@ var UIState = {
   'Resizing': 7
 }
 
+
 function getAllUpstreamNodes(origin_node, node) {
   if (node==undefined)
     node = origin_node;
@@ -354,7 +355,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
   var focusedNodes = [];
 
   if (!selector)
-    this.window = window.open(pageURL, p.nodename, "location=no, left=250, width="+p.windowWidth+", height="+p.windowHeight+", toolbar=no" );
+    this.window = window.open(pageURL, p.nodename, "location=no, left=250, width="+p.windowWidth+", height="+p.windowHeight+", toolbar=yes" );
   else
     this.window = window;
 
@@ -600,9 +601,9 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
             .attr('class', '')
           thatWin.state = UIState.Idle;
         }
-        d3.event.stopPropagation();
-        d3.event.preventDefault();
-        return false;
+        //d3.event.stopPropagation();
+        //d3.event.preventDefault();
+        //return false;
       })
       .on('mouseup', function() {
         if (thatWin.state==UIState.Moving) {
@@ -860,6 +861,13 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
       $(thatWin.window.document).keydown(setModifierKeys);
       $(thatWin.window.document).keyup(setModifierKeys);
 
+
+      $( '#save_button' ,thatWin.window.document ).click(function() {
+        //$( ".navi_top" ,thatWin.window.document).append( "<p>Test</p>" );
+        editor.save(patch);
+      });
+      $(".CanvasDiv").append( "<p>Test</p>" );
+
       $(thatWin.window.document).keydown(function(e) {
         // DELETE key
         if ((e.which==46 || e.which==8) && selectedNodes.length>0) {
@@ -883,7 +891,7 @@ BrowserEditor.PatchWindow = function(p, editor, selector) {
           selectedNodes = [];
         }
         // CTRL + S / Save
-        else if ((e.which==115 || e.which==83) && e.ctrlKey) {
+        if ( (e.which==115 || e.which==83) && e.ctrlKey ) {   //(e.which==115 || e.which==83) && e.ctrlKey
           editor.save(patch);
           e.preventDefault();
           return false;
@@ -1699,6 +1707,7 @@ BrowserEditor.Interface = function() {
 
   this.save = function(node) {
     var path = VVVV.Helpers.prepareFilePath(node.nodename, node.parentPatch)
+    console.log(path);
     if (patches[path][0].serverSync.isConnected()) {
       if (!patches[path][0].isPersisted && window.confirm("Do you want to save the patch "+node.nodename+"?")) {
         patches[path][0].serverSync.sendPatchSave(patches[path][0]);

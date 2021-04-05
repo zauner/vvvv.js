@@ -6,6 +6,12 @@ h1{
   fill: #e6e6e6;
 }
 
+.navi-top{
+ position: fixed;
+width: 100%;
+min-width: 980px;
+  }
+
 .vvvv-node.selected .vvvv-node-background{
   fill: #444;
 }

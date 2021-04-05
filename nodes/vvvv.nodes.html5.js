@@ -366,6 +366,54 @@ VVVV.Nodes.FileStreamHTML = function(id, graph) {
 }
 VVVV.Nodes.FileStreamHTML.prototype = new Node();
 
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: FileStream (HTML VVVVjs)
+ Author(s): Matthias Zauner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.ScrubVideo = function(id, graph) {
+  this.constructor(id, "ScrubVideo (HTML)", graph);
+
+  this.meta = {
+    authors: ['Luna Nane'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  this.auto_evaluate = true;
+
+  var frameIn = this.addInputPin('FrameNumber', [0], VVVV.PinTypes.Value);
+  var doSeekIn = this.addInputPin('Do Seek', [0], VVVV.PinTypes.Value);
+  var seekPosIn = this.addInputPin('Seek Position', [0.0], VVVV.PinTypes.Value);
+  var filenameIn = this.addInputPin('Filename', ['http://html5doctor.com/demos/video-canvas-magic/video.ogg'], VVVV.PinTypes.String);
+
+    var durationOut = this.addOutputPin('Duration', [0.0], VVVV.PinTypes.Value);
+  var positionOut = this.addOutputPin('Position', [0.0], VVVV.PinTypes.Value);
+
+
+  var videos = [];
+
+  this.evaluate = function() {
+
+    var maxSpreadSize = this.getMaxInputSliceCount();
+
+    vid = document.getElementById('v0');
+
+    var frameNumber = frameIn.getValue(0);
+    vid.currentTime = frameNumber;
+
+
+
+
+  }
+}
+VVVV.Nodes.ScrubVideo.prototype = new Node();
+
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: AudioOut (HTML5 VVVVjs)
