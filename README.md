@@ -41,7 +41,7 @@ VVVV.js に直接触れるには、 [VVVV.js Lab](http://lab.vvvvjs.com)に行�
 
 2. VVVV.js を `/your/project/directory/vvvv_js` にダウンロードまたはクローンします。
 
-3. コンソール/ターミナルで vvvv.js ディレクトリに移動し、`npm install` を実行します。
+3. コンソール/ターミナルで vvvv.js ディレクトリに移動し、`yarn install` を実行します。
 
 4. この時点で、VVVV.js のテンプレートを [VVVV.js template](https://github.com/zauner/vvvv.js-template) を`/your/project/directory/vvvvjs-template`にダウンロード/クローンすることができます。このテンプレートを使用することに決めた場合は、7.をスキップできます。
 
@@ -70,7 +70,7 @@ VVVV.js に直接触れるには、 [VVVV.js Lab](http://lab.vvvvjs.com)に行�
 
     $ node vvvv_js/server.js . -e
 
-これにより、VVV.jsのウェブサーバが実行されます。 また、`-e`オプションを付けるとパッチ編集が可能になります。
+これにより、VVVV.jsのウェブサーバが実行されます。 また、`-e`オプションを付けるとパッチ編集が可能になります。
 
     http://localhost:5000
 
@@ -117,7 +117,7 @@ Webサイトに埋め込まれたパッチをロードしてレンダリング�
 
     <div id='patch'>Your browser does not support the VVVViewer</div>
 
-上記の例では、パッチのコンストラクタnew VVV.Core.Patch("mypatch.v4p", ...)が、リモートサーバからVVVパッチファイルをロードしていますが、ファイル名ではなく、実際のVVV XML Codeをコンストラクタに渡すことも可能です。これは、フォーラムの投稿やブログのエントリに含まれる VVVV コードを表示する場合などに適しています。
+上記の例では、パッチのコンストラクタ`new VVVV.Core.Patch("mypatch.v4p", ...)`が、リモートサーバからVVVVパッチファイルをロードしていますが、ファイル名ではなく、実際のVVV XML Codeをコンストラクタに渡すことも可能です。これは、フォーラムの投稿やブログのエントリに含まれる VVVV コードを表示する場合などに適しています。
 
 ### More Information
 
