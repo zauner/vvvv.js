@@ -120,14 +120,14 @@ exports.Helpers = {
       return path.replace('%VVVV%', VVVVContext.Root);
 
     if (path.match(/^%PAGE%/)) { // hosting HTML page path
-      if (VVVVContext.name=="browser")
+      if (VVVVContext.name==="browser")
         return path.replace('%PAGE%', location.pathname);
       else
         return path.replace('%PAGE%', VVVVContext.DocumentRoot + VVVVContext.AppRoot);
     }
 
     if (path.match(/^(\/|.+:\/\/)/)) { // path starting with / or an URL protocol (http://, ftp://, ..)
-      if (VVVVContext.name=="browser")
+      if (VVVVContext.name==="browser")
         return path;
       else
         return VVVVContext.DocumentRoot + path;
@@ -136,7 +136,7 @@ exports.Helpers = {
     if (patch)
       path = patch.getAbsolutePath()+path;
 
-    if (VVVVContext.name=="nodejs")
+    if (VVVVContext.name==="nodejs")
       path = VVVVContext.DocumentRoot + VVVVContext.AppRoot + path;
 
     return path;
@@ -151,11 +151,11 @@ exports.Helpers = {
    * @param {Function} create_callback the function which actually creates the pin
    */
   dynamicPins: function(node, pins, count, create_callback) {
-    var currentCount = pins.length;
-    for (var i=currentCount; i<count; i++) {
+    const currentCount = pins.length;
+    for (let i=currentCount; i<count; i++) {
       pins[i] = create_callback.call(node, i);
     }
-    for (var i=count; i<pins.length; i++) {
+    for (let i=count; i<pins.length; i++) {
       node.removeInputPin(pins[i].pinname);
     }
     pins.length = count;

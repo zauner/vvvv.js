@@ -7,19 +7,19 @@ if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node
 
 define(function(require,exports) {
 
-/** Define 3rd party libraries, that should be loaded on demand here.
- * Use
- * VVVV.Nodes.YourNode.requirements = ["exampleLib"]
- * after your nodes's code to define, that the library is required.
- */
-VVVVContext.ThirdPartyLibs = {
-  //"exampleLib": "lib/examplelib.js"
-  "beatdetektor": "lib/beatdetektor.js",
-  "GLUtil": "lib/gl-util.js",
-  "meshUtils": "lib/mesh-utils.js"
-}
+  /** Define 3rd party libraries, that should be loaded on demand here.
+   * Use
+   * VVVV.Nodes.YourNode.requirements = ["exampleLib"]
+   * after your nodes's code to define, that the library is required.
+   */
+  VVVVContext.ThirdPartyLibs = {
+    //"exampleLib": "lib/examplelib.js"
+    "beatdetektor": "lib/beatdetektor.js",
+    "GLUtil": "lib/gl-util.js",
+    "meshUtils": "lib/mesh-utils.js"
+  }
 
-// ... and just leave this
-VVVVContext.LoadedLibs = {};
+  // ... and just leave this
+  VVVVContext.LoadedLibs = {};
 
 });
