@@ -10,16 +10,16 @@
         "amdefine": "=1.0.0",
         "cheerio": "=0.22.0",
         "finalhandler": "*",
-        "james-browser-launcher": "*",
+        "james-browser-launcher": "^1.3.1",
         "jsdom": "=7.0.2",
         "minimist": "*",
         "nodejs-websocket": "*",
-        "npm": "*",
+        "npm": "6.14.12",
         "serve-static": "*",
         "sqlite3": "*"
     },
     "version": "2.0.0-alpha.1",
     "devDependencies": {
-        "dotenv": "^7.0.0"
+        "dotenv": "^8.2.0"
     }
 }
