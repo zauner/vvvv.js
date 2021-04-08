@@ -3,7 +3,7 @@ if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node
 
 define(function(require,exports) {
 
-  var SharedRessourceStore = function() {
+  const SharedRessourceStore = function() {
     this.data = {};
     this.registeredNodes = [];
   }

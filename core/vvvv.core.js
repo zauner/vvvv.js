@@ -56,7 +56,7 @@ define(function (require, exports) {
   exports.Node = require("core/vvvv.core.node");
   exports.Patch = require("core/vvvv.core.patch");
   exports.Link = require("core/vvvv.core.link");
-  const patch = new exports.Patch("");
+  let patch = new exports.Patch("");
   _(defs.Nodes).each(function (nodes) {
     const x = new nodes(0, patch);
     if (VVVV_ENV === "development") console.log("Registering " + x.nodename);
