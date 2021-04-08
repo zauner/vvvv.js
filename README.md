@@ -1,4 +1,5 @@
-** NOTICE: これは不安定なマスターです。http://vvvvjs.com の既存のドキュメントは v1.0 のタグを参照しており、このバージョンとは異なる可能性があります。**
+**NOTICE: これは不安定なマスターです。http://vvvvjs.com の既存のドキュメントは v1.0 のタグを参照しており、このバージョンとは異なる可能性があります。**
+**また、本リポジトリの内容はzauner氏の開発したvvvv.jsの内容を2021年現在のフロントエンド技術に組み込めるように改良中のものであり、動作が不安定であることがあります。**
 
 VVVV.js - Visual Web Client Programming
 =======================================
@@ -37,11 +38,11 @@ VVVV.js に直接触れるには、 [VVVV.js Lab](http://lab.vvvvjs.com)に行�
 
 ただし、ここではインストールの手順を紹介します。
 
-1.  [Node.js 6.x](http://nodejs.org)をダウンロードしてインストールします。
+1.  [Node.js 14.x](http://nodejs.org)をダウンロードしてインストールします。本家ではNode.js6系を推奨していますが、本リポジトリの内容はNode.js14系を利用していても動作します。
 
 2. VVVV.js を `/your/project/directory/vvvv_js` にダウンロードまたはクローンします。
 
-3. コンソール/ターミナルで vvvv.js ディレクトリに移動し、`yarn install` を実行します。
+3. コンソール/ターミナルで vvvv.js ディレクトリに移動し、`npm i` を実行します。
 
 4. この時点で、VVVV.js のテンプレートを [VVVV.js template](https://github.com/zauner/vvvv.js-template) を`/your/project/directory/vvvvjs-template`にダウンロード/クローンすることができます。このテンプレートを使用することに決めた場合は、7.をスキップできます。
 
@@ -53,10 +54,10 @@ VVVV.js に直接触れるには、 [VVVV.js Lab](http://lab.vvvvjs.com)に行�
 
     <head>
     ...
-    <script language="JavaScript" src="/vvvvjs/lib/require.js"></script>
-    <script language="JavaScript" src="/vvvvjs/vvvv.js"></script>
+    <script type="text/javascript" src="/vvvvjs/lib/require.js"></script>
+    <script type="text/javascript" src="/vvvvjs/vvvv.js"></script>
     <link rel="VVVV" href="main.v4p"/>
-    <script language="JavaScript">
+    <script type="text/javascript">
       VVVVContext.init("/vvvv_js/", 'full', function() {
         console.log('VVVV.js initialized');
       });
@@ -89,9 +90,9 @@ VVVV.js に直接触れるには、 [VVVV.js Lab](http://lab.vvvvjs.com)に行�
 
     <head>
     ...
-    <script language="JavaScript" src="/vvvv_js/lib/require.js"></script>
-    <script language="JavaScript" src="/vvvv_js/vvvv.js"></script>
-    <script language="JavaScript">
+    <script type="text/javascript" src="/vvvv_js/lib/require.js"></script>
+    <script type="text/javascript" src="/vvvv_js/vvvv.js"></script>
+    <script type="text/javascript">
       VVVVContext.init("javascripts/vvvv_js/", 'full', function(VVVV) {
         console.log('VVVV.js initialized');
 
