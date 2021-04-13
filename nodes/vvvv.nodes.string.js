@@ -1085,7 +1085,7 @@ VVVV.Nodes.ReplaceString.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Unzip (String)
- Author(s): David Gann
+ Author(s): Luna Nane
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -1094,7 +1094,7 @@ VVVV.Nodes.UnzipString = function(id, graph) {
   this.constructor(id, "Unzip (String)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []

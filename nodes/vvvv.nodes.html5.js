@@ -369,8 +369,8 @@ VVVV.Nodes.FileStreamHTML.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- NODE: FileStream (HTML VVVVjs)
- Author(s): Matthias Zauner
+ NODE: ScrubVideo (HTML VVVVjs)
+ Author(s): Luna Nane
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 

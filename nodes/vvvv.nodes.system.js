@@ -473,7 +473,7 @@ VVVV.Nodes.DefineNode.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: FPS (Debug PerfMeter)
- Author(s): David Gann
+ Author(s): Luna Nane
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -481,7 +481,7 @@ VVVV.Nodes.FPS = function(id, graph) {
   this.constructor(id, "FPS (Debug PerfMeter)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     compatibility_issues: []
   };
@@ -512,7 +512,7 @@ VVVV.Nodes.FPS.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: TouchEvents
- Author(s): David Gann
+ Author(s): Luna Nane
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -520,7 +520,7 @@ VVVV.Nodes.TouchEvents = function(id, graph) {
   this.constructor(id, "TouchEvents (System)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     compatibility_issues: []
   };
@@ -610,7 +610,7 @@ VVVV.Nodes.TouchEvents = function(id, graph) {
     }, {passive: true});
 
     obj.addEventListener('touchend', function(event) {
-      
+
 
 
       var max_count = event.targetTouches.length

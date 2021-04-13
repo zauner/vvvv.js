@@ -462,7 +462,7 @@ VVVV.Nodes.AudioPlayer = function(id, graph) {
   WebAudioNode.call(this, id, 'AudioPlayer (HTML5 Audio MediaElementSource)', graph);
 
   this.meta = {
-    authors: ['Lukas Winter, David Gann'],
+    authors: ['Lukas Winter, Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -528,11 +528,13 @@ VVVV.Nodes.AudioPlayer = function(id, graph) {
         if (filename!=videos[i].currentSrc) {
           $(videos[i]).find('source').first().attr('src', filename);
           videos[i].load();
-          if (playIn.getValue(i)>0.5)
+          if (playIn.getValue(i)>0.5){
             videos[i].play();
-          else
+            console.log("playing");
+            }
+          else{
             videos[i].pause();
-
+            }
           videos[i].loaded = true;
 
         }
@@ -580,7 +582,7 @@ VVVV.Nodes.AudioPlayer = function(id, graph) {
 
 
       //loop
-console.log(videos[0]);
+//console.log(videos[0]);
       if (loopIn.getValue(i)>=.5){
         //videos[i].createAttribute("loop");
         }
@@ -1147,6 +1149,13 @@ VVVV.Nodes.BeatDetector = function(id, graph) {
 }
 VVVV.Nodes.BeatDetector.prototype = new WebAudioNode('Analyser');
 VVVV.Nodes.BeatDetector.requirements = ["beatdetektor"];
+
+
+
+
+
+
+
 
 
 

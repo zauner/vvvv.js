@@ -25,7 +25,7 @@ VVVV.PinTypes.Scene = {
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: ReactTest (react)
- Author(s): David Gann
+ Author(s): Luna Nane
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -35,7 +35,7 @@ VVVV.PinTypes.Scene = {
         this.constructor(id, "ReactTest (react)", graph);
 
         this.meta = {
-          authors: ['David Gann'],
+          authors: ['Luna Nane'],
           original_authors: [],
           credits: [],
           compatibility_issues: []
@@ -51,17 +51,17 @@ VVVV.PinTypes.Scene = {
           this.evaluate = function()
           {
 
-            var input = InputPin1.getValue(0); 
-                 
+            var input = InputPin1.getValue(0);
+
             OutputPin1.setValue(input, 0);
-                 
+
 
           }
     }
     VVVV.Nodes.ReactTest.prototype = new Node();
     //VVVV.Nodes.ReactTest.requirements = ["react-dom"];
     //VVVV.Nodes.ReactTest.requirements = ["react"];
-   
+
 
 
 });

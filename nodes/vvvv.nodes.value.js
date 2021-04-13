@@ -1379,7 +1379,7 @@ VVVV.Nodes.Sift.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Sqrt (Value)
- Author(s): David Gann
+ Author(s): Luna Nane
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -1423,7 +1423,7 @@ VVVV.Nodes.SqrtValue.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: OnOpen (VVVV)
- Author(s): David Gann
+ Author(s): Luna Nane
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -1432,7 +1432,7 @@ VVVV.Nodes.OnOpenVVVV = function(id, graph) {
   this.constructor(id, "OnOpen (VVVV)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: [ 'not working, needs probably framecounter solution']
@@ -1467,7 +1467,7 @@ VVVV.Nodes.OnOpenVVVV.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Occurrence (VVVV)
- Author(s): David Gann
+ Author(s): Luna Nane
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -1476,7 +1476,7 @@ VVVV.Nodes.Occurrence = function(id, graph) {
   this.constructor(id, "Occurrence (Value)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: [ 'have only unique out pin']

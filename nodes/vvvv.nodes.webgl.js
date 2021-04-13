@@ -588,7 +588,7 @@ VVVV.Nodes.FileTexture = function(id, graph) {
   this.auto_nil = false;
 
   this.meta = {
-    authors: ['Matthias Zauner, David Gann'],
+    authors: ['Matthias Zauner, Luna Nane'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: ['Always loads in background', 'No reload pin', 'No preload pin (preloading handled by browser)', 'No up and running pin', 'No texture info outputs']
@@ -778,7 +778,7 @@ VVVV.Nodes.FileTexture.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: TextureLoader (WebGL)
- Author(s): David Gann
+ Author(s): Luna Nane
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -789,7 +789,7 @@ VVVV.Nodes.TextureLoader = function(id, graph) {
   this.auto_nil = false;
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: ['Always loads in background', 'No reload pin', 'No preload pin (preloading handled by browser)', 'No up and running pin', 'No texture info outputs']
@@ -1302,7 +1302,7 @@ VVVV.Nodes.Grid.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Box (EX9.Geometry)
- Author(s): David Gann
+ Author(s): Luna Nane
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -1313,7 +1313,7 @@ VVVV.Nodes.Box = function(id, graph) {
   this.auto_nil = false;
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
@@ -3350,7 +3350,7 @@ VVVV.Nodes.DefineEffect.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: GeometryFile (WebGl Geometry)
- Author(s): David Gann
+ Author(s): Luna Nane
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -3361,8 +3361,8 @@ VVVV.Nodes.GeometryFile = function(id, graph) {
   this.auto_nil = false;
 
   this.meta = {
-    authors: ['David Gann'],
-    original_authors: ['David Gann'],
+    authors: ['Luna Nane'],
+    original_authors: ['Luna Nane'],
     credits: [],
     compatibility_issues: []
   };
@@ -3545,7 +3545,7 @@ VVVV.Nodes.GeometryFile.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Instancer (WebGl Geometry Dynamic)
- Author(s): David Gann
+ Author(s): Luna Nane
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -3556,8 +3556,8 @@ VVVV.Nodes.InstancerDynamic = function(id, graph) {
   this.auto_nil = false;
 
   this.meta = {
-    authors: ['David Gann'],
-    original_authors: ['David Gann'],
+    authors: ['Luna Nane'],
+    original_authors: ['Luna Nane'],
     credits: [],
     compatibility_issues: []
   };
@@ -3647,7 +3647,7 @@ VVVV.Nodes.InstancerDynamic.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: HeightMap (Buffer Geometry)
- Author(s): David Gann
+ Author(s): Luna Nane
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -3658,8 +3658,8 @@ VVVV.Nodes.HeightMap = function(id, graph) {
   this.auto_nil = false;
 
   this.meta = {
-    authors: ['David Gann'],
-    original_authors: ['David Gann'],
+    authors: ['Luna Nane'],
+    original_authors: ['Luna Nane'],
     credits: [],
     compatibility_issues: []
   };
@@ -3824,7 +3824,7 @@ VVVV.Nodes.HeightMap.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Primitives (EX9.Geometry)
- Author(s): David Gann
+ Author(s): Luna Nane
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -3835,7 +3835,7 @@ VVVV.Nodes.Primitives = function(id, graph) {
   this.auto_nil = false;
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -4021,7 +4021,7 @@ VVVV.Nodes.DataTexture.prototype = new Node();
 /*
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    NODE: FileSelection (WebGL Texture HTML5 Input)
-   Author(s): David Gann
+   Author(s): Luna Nane
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   */
 
@@ -4031,7 +4031,7 @@ VVVV.Nodes.DataTexture.prototype = new Node();
     //this.environments = ['nodejs'];
 
     this.meta = {
-      authors: ['David Gann'],
+      authors: ['Luna Nane'],
       original_authors: ['VVVV Group'],
       credits: [],
       compatibility_issues: []
@@ -4191,7 +4191,7 @@ VVVV.Nodes.DataTexture.prototype = new Node();
 ///*
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //   NODE: glTF Loader (glTF)
-//   Author(s): David Gann
+//   Author(s): Luna Nane
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //  */
 
@@ -4199,7 +4199,7 @@ VVVV.Nodes.DataTexture.prototype = new Node();
     this.constructor(id, "glTF Loader (glTF Scene)", graph);
 
     this.meta = {
-      authors: ['David Gann'],
+      authors: ['Luna Nane'],
       original_authors: ['000.graphics'],
       credits: [],
       compatibility_issues: []
@@ -4436,7 +4436,7 @@ VVVV.Nodes.glTFLoader.prototype = new Node();
 ///*
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //   NODE: Geometry (glTF)
-//   Author(s): David Gann
+//   Author(s): Luna Nane
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //  */
 
@@ -4444,7 +4444,7 @@ VVVV.Nodes.glTFLoader.prototype = new Node();
     this.constructor(id, "Geometry (glTF)", graph);
 
     this.meta = {
-      authors: ['David Gann'],
+      authors: ['Luna Nane'],
       original_authors: ['000.graphics'],
       credits: [],
       compatibility_issues: []
@@ -4631,7 +4631,7 @@ VVVV.Nodes.GeometryGLTF.prototype = new Node();
 ///*
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //   NODE: Textures (glTF)
-//   Author(s): David Gann
+//   Author(s): Luna Nane
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //  */
 
@@ -4639,7 +4639,7 @@ VVVV.Nodes.GeometryGLTF.prototype = new Node();
     this.constructor(id, "Textures (glTF)", graph);
 
     this.meta = {
-      authors: ['David Gann'],
+      authors: ['Luna Nane'],
       original_authors: ['000.graphics'],
       credits: [],
       compatibility_issues: []
@@ -4970,7 +4970,7 @@ VVVV.Nodes.TexturesGLTF.prototype = new Node();
 ///*
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //   NODE: Nodes (glTF)
-//   Author(s): David Gann
+//   Author(s): Luna Nane
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //  */
 
@@ -4978,7 +4978,7 @@ VVVV.Nodes.TexturesGLTF.prototype = new Node();
     this.constructor(id, "Nodes (glTF Transform)", graph);
 
     this.meta = {
-      authors: ['David Gann'],
+      authors: ['Luna Nane'],
       original_authors: ['000.graphics'],
       credits: [],
       compatibility_issues: []
@@ -5266,7 +5266,7 @@ VVVV.Nodes.NodesGLTF.prototype = new Node();
 ///*
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //   NODE: Animation (glTF)
-//   Author(s): David Gann
+//   Author(s): Luna Nane
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //  */
 
@@ -5274,7 +5274,7 @@ VVVV.Nodes.NodesGLTF.prototype = new Node();
     this.constructor(id, "Animation (glTF)", graph);
 
     this.meta = {
-      authors: ['David Gann'],
+      authors: ['Luna Nane'],
       original_authors: ['000.graphics'],
       credits: [],
       compatibility_issues: []
@@ -5592,7 +5592,7 @@ VVVV.Nodes.glTF_PBR_core = function(id, graph) {
     this.auto_nil = false;
 
     this.meta = {
-      authors: ['David Gann'],
+      authors: ['Luna Nane'],
       original_authors: ['000.graphics'],
       credits: [],
       compatibility_issues: ['No Sampler States', 'No texture coord mapping', 'No enable pin', 'Transprent pixels are discarded by default']
@@ -5971,7 +5971,7 @@ VVVV.Nodes.glTF_PBR_core.prototype = new Node();
 ///*
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //   NODE: Defines (glTF)
-//   Author(s): David Gann
+//   Author(s): Luna Nane
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //  */
 
@@ -5979,7 +5979,7 @@ VVVV.Nodes.glTF_PBR_core.prototype = new Node();
     this.constructor(id, "Defines (glTF)", graph);
 
     this.meta = {
-      authors: ['David Gann'],
+      authors: ['Luna Nane'],
       original_authors: ['000.graphics'],
       credits: [],
       compatibility_issues: []

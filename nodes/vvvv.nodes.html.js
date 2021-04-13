@@ -1641,7 +1641,7 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
     this.auto_nil = false;
 
     this.meta = {
-      authors: ['David Gann'],
+      authors: ['Luna Nane'],
       original_authors: [],
       credits: [],
       compatibility_issues: []
@@ -1699,7 +1699,6 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
     var styleIn = this.addInputPin("Style In", [], VVVV.PinTypes.HTMLStyle);
     var cssIn = this.addInputPin("css (text)", [], VVVV.PinTypes.String);
 
-
     var styleOut = this.addOutputPin("Style Out", [], VVVV.PinTypes.HTMLStyle);
 
     var styles = [];
@@ -1747,9 +1746,6 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
               //console.log(styles[i].style_properties);
           }
 
-
-
-
         }
 
       }
@@ -1771,7 +1767,7 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
 
   /*
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   NODE: Drag (HTML)
+   NODE: DragSnap (HTML)
    Author(s): Luna Nane
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   */
@@ -1780,7 +1776,7 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
     this.constructor(id, "DragSnap (HTML)", graph);
 
     this.meta = {
-      authors: ['Matthias Zauner'],
+      authors: ['Luna Nane'],
       original_authors: [],
       credits: [],
       compatibility_issues: []
@@ -1788,14 +1784,98 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
 
     this.environments = ['browser'];
 
-    var selectorIn = this.addInputPin("Selector", [""], VVVV.PinTypes.String);
+
     var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
-    //var spaceIn = this.addInputPin("Space", ["Pixels"], VVVV.PinTypes.Enum);
-    //spaceIn.enumOptions = ["Pixels", "Document [-1, +1]"];
-    var absoluteIn = this.addInputPin("Absolute Position", [1], VVVV.PinTypes.Value);
+    var snapIn = this.addInputPin("Snap Active", [0], VVVV.PinTypes.Value);
+    var snapValuesIn = this.addInputPin("Snap Values", [0], VVVV.PinTypes.Value);
+    var positionIn = this.addInputPin("Set Position", [0], VVVV.PinTypes.Value);
+    var setPositionIn = this.addInputPin("Set", [0], VVVV.PinTypes.Value);
+
     var IsDragging = this.addOutputPin("Dragging", [0], VVVV.PinTypes.Value);
+    var nearestOut = this.addOutputPin("Nearest", [0], VVVV.PinTypes.Value);
+    var indexOut = this.addOutputPin("Index", [0], VVVV.PinTypes.Value);
 
     const setMarkerCenter = (el, pos) => el.css({ left: pos - 25 + 'px' })
+    const findNearest = (arr, num) => arr.reduce((prev, curr) => Math.abs(curr - num) < Math.abs(prev - num) ? curr : prev)
+
+    this.evaluate = function() {
+
+    var snapValues = snapValuesIn.getValue(0, snapValuesIn.getSliceCount()  );
+
+    var tag =  elementIn.getValue(0).element;
+
+      var neaerest = snapValues[0];
+
+      $(tag).draggable({
+
+        drag: () => {
+          IsDragging.setValue(0, 1);
+
+          //ui.position.left
+        },
+        stop: (event, ui) => {
+          nearest = findNearest(snapValues, ui.position.left);
+
+          indexOut.setValue(0, snapValues.indexOf(nearest) );
+          nearestOut.setValue(0, nearest);
+
+          $( tag ).animate({
+            left: nearest - 25 + 'px',
+
+          }, 50, function() {
+            // Animation complete.
+          });
+
+
+          IsDragging.setValue(0, 0);
+        },
+
+        axis: "x"
+
+       });
+
+       if(setPositionIn.getValue(0) == 1){
+         $( tag ).animate({
+           left: positionIn.getValue(0) + 'px',
+
+         }, 50, function() {
+           // Animation complete.
+         });
+       }
+
+
+
+    }
+  }
+  VVVV.Nodes.DragSnapHTML.prototype = new Node();
+
+  /*
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   NODE: Drag (HTML)
+   Author(s): Luna Nane
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  */
+
+  VVVV.Nodes.CalcCenterHTML = function(id, graph) {
+    this.constructor(id, "CalcCenter (HTML)", graph);
+
+    this.meta = {
+      authors: ['Luna Nane'],
+      original_authors: [],
+      credits: [],
+      compatibility_issues: []
+    };
+
+    this.environments = ['browser'];
+
+
+    var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
+    var refreshIn = this.addInputPin("Refresh", [0], VVVV.PinTypes.Value);
+
+    var CenterOut = this.addOutputPin("Center", [0], VVVV.PinTypes.Value);
+    var WidthOut = this.addOutputPin("Width", [0], VVVV.PinTypes.Value);
+
+    const getElementCenter = el => Math.floor(el.offset().left + el.width() / 2)
 
     var styles = [];
 
@@ -1804,61 +1884,70 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
 
     var tag =  elementIn.getValue(0).element;
 
-    console.log(elementIn.getValue(0))
-
-    var element = selectorIn.getValue(0);
 
 
 
+    if (elementIn.isConnected() && !this.hasNilInputs() && elementIn.getValue(0).tagName!='') {
 
-$(tag).draggable({
+      for (var i=0; i<maxSpreadSize; i++) {
+        var tag =  elementIn.getValue(i).element;
+        var center = getElementCenter(tag);
+        CenterOut.setValue(i, center);
+        WidthOut.setValue(i, $(tag).width());
+      }
 
-  drag: () => {
-    IsDragging.setValue(0, 1);
+      CenterOut.setSliceCount(maxSpreadSize);
+      WidthOut.setSliceCount(maxSpreadSize);
 
-    //ui.position.left
-  },
-  stop: (event, ui) => {
-    IsDragging.setValue(0, 0);
-  },
-
-  axis: "x"
-
-
-
-
- });
-    //console.log(e);
-
-    // $('.timeline__marker').draggable({
-    //   start: () => {
-    //     //setIdle(true)
-    //   },
-    //   drag: () => {
-    //     e.addClass('active')
-    //     //ondrag output to change visible state
-    //   },
-    //   stop: (event, ui) => {
-    //     //setIdle(false)
-    //     e.removeClass('active')
-    //     //const nearest = findNearest(Object.values(g.positions.values), ui.position.left),
-    //     //      element = Object.keys(g.positions.values).find(key => g.positions.values[key] === nearest),
-    //   //        toNum = parseInt(element.split('_')[0])
-    //   //        center = g.positions.centers[toNum]
-    //
-    //     //g.currentScene.prev = g.currentScene.next
-    //     //g.currentScene.next = toNum
-    //     //setMarkerCenter($timelineMarker, center)
-    //
-    //   },
-    //   axis: 'x',
-    // })
+    }
 
 
     }
   }
-  VVVV.Nodes.DragSnapHTML.prototype = new Node();
+  VVVV.Nodes.CalcCenterHTML.prototype = new Node();
 
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: OnResize (HTML)
+ Author(s): Luna Nane
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.OnResizeHTML = function(id, graph) {
+  this.constructor(id, "OnResize (HTML)", graph);
+
+  this.meta = {
+    authors: ['Luna Nane'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  this.environments = ['browser'];
+
+
+
+
+  var ResizeOut = this.addOutputPin("Resized", [0], VVVV.PinTypes.Value);
+
+
+  this.evaluate = function() {
+
+    $( window ).resize(function() {
+
+        ResizeOut.setValue(0,1);
+        resizeId = setTimeout(doneResizing, 500);
+
+    });
+    function doneResizing(){
+        ResizeOut.setValue(0,0);
+    }
+
+  }
+}
+VVVV.Nodes.OnResizeHTML.prototype = new Node();
 
 
 });

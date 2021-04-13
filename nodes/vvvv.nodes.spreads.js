@@ -951,7 +951,7 @@ spreadable_types.forEach(function(type) {
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: GetSpread (Spreads)
- Author(s): David Gann
+ Author(s): Luna Nane
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -960,7 +960,7 @@ VVVV.Nodes.GetSpreadSpreads = function(id, graph) {
   this.constructor(id, "GetSpread (Spreads)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: ['no spreadable offset and count']

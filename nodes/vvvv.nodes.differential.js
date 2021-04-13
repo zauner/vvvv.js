@@ -97,7 +97,7 @@ VVVV.Nodes.IntegrateMinMax = function(id, graph) {
 
   this.evaluate = function() {
 
-    
+
     dt = this.parentPatch.mainloop.deltaT/1000.0;
     var maxSize = this.getMaxInputSliceCount();
     for (var i=0; i<maxSize; i++) {

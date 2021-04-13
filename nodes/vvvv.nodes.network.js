@@ -799,7 +799,7 @@ VVVV.Nodes.TCPSend.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: CalendarGoogleAPI
- Author(s): 'David Gann'
+ Author(s): 'Luna Nane'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -807,7 +807,7 @@ VVVV.Nodes.CalendarGoogleAPI = function(id, graph) {
   this.constructor(id, "Calendar (Google API Service Account)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -815,10 +815,10 @@ VVVV.Nodes.CalendarGoogleAPI = function(id, graph) {
 
   this.auto_evaluate = true;
   this.environments = ['nodejs'];
-  
+
   var googleapis = undefined;
-  var googleAuth 
-  
+  var googleAuth
+
   this.initialize = function() {
     googleapis = window.server_req('googleapis');
     googleAuth = window.server_req('google-auth-library');
@@ -826,7 +826,7 @@ VVVV.Nodes.CalendarGoogleAPI = function(id, graph) {
       console.log(googleapis.calendar_v3)
     }
   }
-  
+
 
   var doSendIn = this.addInputPin("Do Send", [0], VVVV.PinTypes.Value);
     var LogOut = this.addOutputPin("Log Out", [" "], VVVV.PinTypes.String);
@@ -836,7 +836,7 @@ VVVV.Nodes.CalendarGoogleAPI = function(id, graph) {
 
 
   this.evaluate = function() {
- 
+
   this.initialize();
   var test = googleapis.abusiveexperiencereport.sites.get("test");
 //
@@ -858,9 +858,9 @@ VVVV.Nodes.CalendarGoogleAPI = function(id, graph) {
 //        SERVICE_ACCOUNT_KEY_FILE,
 //        null,
 //        ['https://www.googleapis.com/auth/analytics.readonly']);
-      
+
       LogOut.setValue(0, typeof jwt)
-      
+
 
   }
 

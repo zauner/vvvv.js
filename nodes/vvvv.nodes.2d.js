@@ -432,7 +432,7 @@ VVVV.Nodes.ConnectAll2d.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: distance (2d)
- Author(s): David Gann
+ Author(s): Luna Nane
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -441,7 +441,7 @@ VVVV.Nodes.Distance2d = function(id, graph) {
   this.constructor(id, "Distance (2d)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []

@@ -524,7 +524,7 @@ function defined(value) {
       /*
       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
        NODE: PrimitivesWebGL2 (WebGL2)
-       Author(s): David Gann
+       Author(s): Luna Nane
        Original Node Author(s): VVVV Group
       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       */
@@ -537,7 +537,7 @@ function defined(value) {
         this.auto_evaluate = true;
 
         this.meta = {
-          authors: ['David Gann'],
+          authors: ['Luna Nane'],
         };
         var selectIn = this.addInputPin("Primitive Index", [0.0], VVVV.PinTypes.Value);
 
@@ -625,7 +625,7 @@ function defined(value) {
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: ConstantVS (WebGL2 VertexShader)
- Author(s): David Gann
+ Author(s): Luna Nane
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -635,7 +635,7 @@ function defined(value) {
         this.constructor(id, "ConstantVS (WebGL2 VertexShader)", graph);
 
         this.meta = {
-          authors: ['David Gann'],
+          authors: ['Luna Nane'],
         };
 
         this.auto_evaluate = true;
@@ -693,7 +693,7 @@ function defined(value) {
     /*
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      NODE: ConstantPS (WebGL2 VertexShader)
-     Author(s): David Gann
+     Author(s): Luna Nane
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     */
@@ -703,7 +703,7 @@ function defined(value) {
             this.constructor(id, "ConstantPS (WebGL2 PixelShader)", graph);
 
             this.meta = {
-              authors: ['David Gann'],
+              authors: ['Luna Nane'],
             };
 
             this.auto_evaluate = true;
@@ -752,7 +752,7 @@ function defined(value) {
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: LayerComposer (WebGL2)
- Author(s): David Gann
+ Author(s): Luna Nane
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -762,7 +762,7 @@ function defined(value) {
         this.constructor(id, "LayerComposer (WebGL2)", graph);
 
         this.meta = {
-          authors: ['David Gann'],
+          authors: ['Luna Nane'],
         };
 
         this.auto_evaluate = true;
@@ -800,7 +800,7 @@ function defined(value) {
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Renderer (WebGL2)
- Author(s): David Gann
+ Author(s): Luna Nane
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -810,7 +810,7 @@ function defined(value) {
         this.constructor(id, "Renderer (WebGL2)", graph);
 
         this.meta = {
-          authors: ['David Gann'],
+          authors: ['Luna Nane'],
           original_authors: [],
           credits: [],
           compatibility_issues: []
@@ -1026,7 +1026,7 @@ function defined(value) {
     /*
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      NODE: Camera (WebGL2)
-     Author(s): David Gann
+     Author(s): Luna Nane
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     */
@@ -1036,7 +1036,7 @@ function defined(value) {
             this.constructor(id, "Camera (WebGL2)", graph);
 
             this.meta = {
-              authors: ['David Gann'],
+              authors: ['Luna Nane'],
             };
 
             this.auto_evaluate = true;

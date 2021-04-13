@@ -26,7 +26,7 @@ VVVV.PinTypes.Scene = {
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: SceneFile (Game Scene)
- Author(s): David Gann
+ Author(s): Luna Nane
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -37,7 +37,7 @@ VVVV.Nodes.SceneFile = function(id, graph) {
   this.auto_nil = false;
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -110,7 +110,7 @@ VVVV.Nodes.SceneFile = function(id, graph) {
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: AnimationFile (Game Animation)
- Author(s): David Gann
+ Author(s): Luna Nane
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -121,7 +121,7 @@ VVVV.Nodes.AnimationFile = function(id, graph) {
   this.auto_nil = false;
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -197,7 +197,7 @@ VVVV.Nodes.AnimationFile = function(id, graph) {
  /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE:AnimationBuffer (Game Animation Buffer)
- Author(s): David Gann
+ Author(s): Luna Nane
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -208,7 +208,7 @@ VVVV.Nodes.AnimationBuffer = function(id, graph) {
   this.auto_nil = false;
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -411,7 +411,7 @@ VVVV.Nodes.AnimationBuffer = function(id, graph) {
  /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE:BotanyBuffer (Game Botany Buffer)
- Author(s): David Gann
+ Author(s): Luna Nane
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -422,7 +422,7 @@ VVVV.Nodes.BotanyBuffer = function(id, graph) {
   this.auto_nil = false;
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -636,7 +636,7 @@ VVVV.Nodes.BotanyBuffer = function(id, graph) {
  /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: ElementBuffer (Game Scene Buffer)
- Author(s): David Gann
+ Author(s): Luna Nane
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -647,7 +647,7 @@ VVVV.Nodes.ElementBuffer = function(id, graph) {
   this.auto_nil = false;
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -697,23 +697,23 @@ VVVV.Nodes.ElementBuffer = function(id, graph) {
     var buffer = [];
     var bufferIDArray = [];
     var offsetCountArr = [];
-    
+
     var scene_count = SceneIn.getSliceCount();
     var selector_count = selectorIn.getSliceCount();
     var update_count = UpdateIn.getSliceCount();
-    
+
         for (var i=0; i<maxCount; i++) {
             var Update = UpdateIn.getValue(i%update_count);
             if (Update == 1.0 ){ //|| update_count.pinIsChanged()
-                
+
             var selector = selectorIn.getValue(i%selector_count);
             var offsetKey = "data."+selector+".offset";
             var countKey = "data."+selector+".count";
             var idKey = "data."+selector+".id";
             var bufferKey = "data."+selector+".buffer";
-    
-    
-            
+
+
+
             var bufferID = [];
             var scene = SceneIn.getValue(i%scene_count);
             if(scene !== undefined){
@@ -753,7 +753,7 @@ VVVV.Nodes.ElementBuffer = function(id, graph) {
             if(offsetCount.length !== undefined){
             BinSizeOut.setValue(i, offsetCount.length);
             }else{BinSizeOut.setValue(i, 0); }
-            
+
             }//Update End
 
             //ChangedOut.setValue(i, changed[i]);
@@ -784,7 +784,7 @@ VVVV.Nodes.ElementBuffer = function(id, graph) {
   /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: TranslateBuffer (Game Buffer)
- Author(s): David Gann
+ Author(s): Luna Nane
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -795,7 +795,7 @@ VVVV.Nodes.TransformBuffer = function(id, graph) {
   this.auto_nil = false;
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -859,7 +859,7 @@ VVVV.Nodes.TransformBuffer = function(id, graph) {
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: MergeBuffers (Game Buffer)
- Author(s): David Gann
+ Author(s): Luna Nane
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -870,7 +870,7 @@ VVVV.Nodes.MergeBuffers = function(id, graph) {
   this.auto_nil = false;
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -923,7 +923,7 @@ VVVV.Nodes.MergeBuffers = function(id, graph) {
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: GetMatrixBuffers (Transform Buffers 4x4)
- Author(s): David Gann
+ Author(s): Luna Nane
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -932,8 +932,8 @@ VVVV.Nodes.GetMatrixBuffers = function(id, graph) {
   this.constructor(id, "GetMatrixBuffers (Transform Buffer)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
-    original_authors: ['David Gann'],
+    authors: ['Luna Nane'],
+    original_authors: ['Luna Nane'],
     credits: [],
     compatibility_issues: []
   };
@@ -1002,7 +1002,7 @@ VVVV.Nodes.GetMatrixBuffers.prototype = new Node();
   /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Buffer (Game Buffer Value)
- Author(s): David Gann
+ Author(s): Luna Nane
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -1011,7 +1011,7 @@ VVVV.Nodes.Buffer = function(id, graph) {
   this.constructor(id, "Buffer (Game Buffer Value)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -1043,7 +1043,7 @@ VVVV.Nodes.Buffer = function(id, graph) {
     /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: GetBuffer (Game Buffer)
- Author(s): David Gann
+ Author(s): Luna Nane
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -1054,7 +1054,7 @@ VVVV.Nodes.GetBuffer = function(id, graph) {
   this.auto_nil = false;
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -1092,7 +1092,7 @@ VVVV.Nodes.GetBuffer = function(id, graph) {
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: TerrainPicking (Game Collision)
- Author(s): 'David Gann'
+ Author(s): 'Luna Nane'
  Original Node Author(s): '000.graphics'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -1105,7 +1105,7 @@ VVVV.Nodes.TerrainPicking = function(id, graph) {
   this.constructor(id, "TerrainPicking (Game Collision)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -1432,7 +1432,7 @@ VVVV.Nodes.TerrainPicking.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: TerrainCollision (game)
- Author(s): 'David Gann'
+ Author(s): 'Luna Nane'
  Original Node Author(s): '000.graphics'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -1445,7 +1445,7 @@ VVVV.Nodes.TerrainCollisionGame = function(id, graph) {
   this.constructor(id, "TerrainCollision (game buffer)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -1696,7 +1696,7 @@ VVVV.Nodes.TerrainCollisionGame.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Move (game collision)
- Author(s): 'David Gann'
+ Author(s): 'Luna Nane'
  Original Node Author(s): 'VVVV Group'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -1705,7 +1705,7 @@ VVVV.Nodes.Move = function(id, graph) {
   this.constructor(id, "Move (Game Collsion)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -1901,7 +1901,7 @@ VVVV.Nodes.Move.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: CollisionBoxPoint (Game Collision )
- Author(s): 'David Gann'
+ Author(s): 'Luna Nane'
  Original Node Author(s): 'VVVV Group'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -1910,7 +1910,7 @@ VVVV.Nodes.CollisionBoxPoint = function(id, graph) {
   this.constructor(id, "CollisionBoxPoint (Game Collision)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -1999,7 +1999,7 @@ VVVV.Nodes.CollisionBoxPoint.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: CollisionBoxBox (Game Collision)
- Author(s): 'David Gann'
+ Author(s): 'Luna Nane'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -2007,7 +2007,7 @@ VVVV.Nodes.CollisionBoxBox = function(id, graph) {
   this.constructor(id, "CollisionBoxBox (Game Collision)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -2103,7 +2103,7 @@ VVVV.Nodes.CollisionBoxBox.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: CollisionBoxSweep (Game Collision)
- Author(s): 'David Gann'
+ Author(s): 'Luna Nane'
  Original Node Author(s): 'VVVV Group'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -2112,7 +2112,7 @@ VVVV.Nodes.CollisionBoxSweep = function(id, graph) {
   this.constructor(id, "CollisionBoxSweep (Game Collision)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -2179,7 +2179,7 @@ VVVV.Nodes.CollisionBoxSweep = function(id, graph) {
         var maxZ2 = Box2Position.getValue(2+idx) + Box2Scale.getValue(3+idx) /2 ;
 
         var vX = -1*(Box1Velocity.getValue(iidx) - Box2Velocity.getValue(idx));
-        var vY = 1*(Box1Velocity.getValue(iidx+1) - Box2Velocity.getValue(idx+1));  
+        var vY = 1*(Box1Velocity.getValue(iidx+1) - Box2Velocity.getValue(idx+1));
         var vZ = -1*(Box1Velocity.getValue(iidx+2) - Box2Velocity.getValue(idx+2));
 
         if (vX==0.0){vX=0.00000000001;}
@@ -2199,7 +2199,7 @@ VVVV.Nodes.CollisionBoxSweep = function(id, graph) {
             var LateTimeX = (minX2 - maxX1) / vX;
             var normalDirX = -1;
             var MTDx = maxX2 + Box1Scale.getValue(iidx) /2;
-            
+
         }
 
         if(vY > 0){
@@ -2249,7 +2249,7 @@ VVVV.Nodes.CollisionBoxSweep = function(id, graph) {
            CollisionTimeArray.push(T0);
 
            CollisionTime.setValue(b1iix, CollisionTimeArray[b1iix]);
-           
+
            var normal =[0,0,0];
            var MTD =[0,0,0];
            //Apply Normals from Collission Surface and Minimum Translation Distance (MTD) for repositioning the colliding object to not overlap anymore (avoids tunneling bugs)
@@ -2275,7 +2275,7 @@ VVVV.Nodes.CollisionBoxSweep = function(id, graph) {
            MTD_Out.setValue(niix, MTDArray[niix]);
            MTD_Out.setValue(niix+1, MTDArray[niix+1]);
            MTD_Out.setValue(niix+2, MTDArray[niix+2]);
-           
+
            b1iix++;
 
            niix=niix+3;
@@ -2316,7 +2316,7 @@ VVVV.Nodes.CollisionBoxSweep.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Trajectory (Game Collision)
- Author(s): 'David Gann'
+ Author(s): 'Luna Nane'
  Original Node Author(s): 'VVVV Group'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -2325,7 +2325,7 @@ VVVV.Nodes.Trajectory = function(id, graph) {
   this.constructor(id, "Trajectory (Game Collision)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -2340,8 +2340,8 @@ VVVV.Nodes.Trajectory = function(id, graph) {
    var Gravitation = this.addInputPin("Gravitation Vector", [0.0,0.0,0.0], VVVV.PinTypes.Value);
    var massIn = this.addInputPin("mass", [1.0], VVVV.PinTypes.Value);
    var elasticityIn = this.addInputPin("elasticity", [1.0], VVVV.PinTypes.Value);
-   
-   
+
+
    var Create = this.addInputPin("Create", [0], VVVV.PinTypes.Value);
 
    var DestroyIndex = this.addInputPin("Destroy Index", [0.0,0.0,0.0], VVVV.PinTypes.Value);
@@ -2390,7 +2390,7 @@ VVVV.Nodes.Trajectory = function(id, graph) {
     }
 
     if(Update.getValue(0)==1){
-        
+
         for(var j=0; j<UpdateIndex.getSliceCount(); j++){
             var currentUpdateIndex = UpdateIndex.getValue(j);
             Vel[currentUpdateIndex*3]= NewVel.getValue(j*3);
@@ -2408,7 +2408,7 @@ VVVV.Nodes.Trajectory = function(id, graph) {
             Elasticity.splice([DestroyIndex[k]],1);
             Mass.splice([DestroyIndex[k]],1);
             MaxAgeArray.splice([DestroyIndex[k]],1);
-            
+
         }
     }
     var maxSize= Math.max(Pos.length/3,Vel.length/3);
@@ -2423,17 +2423,17 @@ VVVV.Nodes.Trajectory = function(id, graph) {
     var landet = [];
     if(maxSize != 0 || Create.getValue(0)==1){
         for(var n=0; n<maxSize; n++){
-            
-            if( updateIndexArray.indexOf(n) != -1){ //Update.getValue(0)==1 
+
+            if( updateIndexArray.indexOf(n) != -1){ //Update.getValue(0)==1
             Pos[n*3] = Pos[n*3]+ Vel[n*3]  ;
             Pos[n*3+1] = MTDIn.getValue(1) + Vel[n*3+1] ;
-            Pos[n*3+2] = Pos[n*3+2]+ Vel[n*3+2] ; 
+            Pos[n*3+2] = Pos[n*3+2]+ Vel[n*3+2] ;
             //////////limit Pos to the Minimal Translation Distance
 
                 //Pos[n*3+1] == MTDIn.getValue(uix*3+1);
 
-            
-            
+
+
             uix += 1;
             }else{
             Vel[n*3] += g[0]*Mass[n];
@@ -2510,7 +2510,7 @@ VVVV.Nodes.Trajectory.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: CollisionResponse (Game)
- Author(s): 'David Gann'
+ Author(s): 'Luna Nane'
  Original Node Author(s): 'VVVV Group'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -2519,7 +2519,7 @@ VVVV.Nodes.CollisionResponse = function(id, graph) {
   this.constructor(id, "CollisionResponse (Game Collision)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -2558,7 +2558,7 @@ VVVV.Nodes.CollisionResponse = function(id, graph) {
                 velX = -velX;
                 }
             if(Math.abs(Normals.getValue(i*3+1))>0.0){
-                velY = velY; 
+                velY = velY;
                 }
             if(Math.abs(Normals.getValue(i*3+2))>0.0){
                 velZ = -velZ;
@@ -2600,7 +2600,7 @@ VVVV.Nodes.CollisionResponse.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: RayTriangleIntersect (Game Collision)
- Author(s): 'David Gann'
+ Author(s): 'Luna Nane'
  Original Node Author(s): ''
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -2609,7 +2609,7 @@ VVVV.Nodes.RayTriangleIntersect = function(id, graph) {
   this.constructor(id, "RayTriangleIntersect (Game Collision)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []
@@ -2723,7 +2723,7 @@ VVVV.Nodes.RayTriangleIntersect.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: TerrainGrid (Game)
- Author(s): 'David Gann'
+ Author(s): 'Luna Nane'
  Original Node Author(s): '000.graphics'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -2735,7 +2735,7 @@ VVVV.Nodes.TerrainGridGame = function(id, graph) {
   this.constructor(id, "TerrainGrid (Game)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: [],
     credits: [],
     compatibility_issues: []

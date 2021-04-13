@@ -841,7 +841,7 @@ VVVV.Nodes.ApplyTransform.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: Ortho (Transform)
- Author(s): David Gann
+ Author(s): Luna Nane
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -850,7 +850,7 @@ VVVV.Nodes.Ortho = function(id, graph) {
   this.constructor(id, "Ortho (Transform)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: ['Not spreadable']
@@ -893,7 +893,7 @@ VVVV.Nodes.Ortho.prototype = new Node();
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  NODE: GetMatrix (Transform)
- Author(s): David Gann
+ Author(s): Luna Nane
  Original Node Author(s): VVVV Group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -955,7 +955,7 @@ VVVV.Nodes.TransposeTransform = function(id, graph) {
   this.constructor(id, "Transpose (Transform)", graph);
 
   this.meta = {
-    authors: ['David Gann'],
+    authors: ['Luna Nane'],
     original_authors: ['VVVV Group'],
     credits: [],
     compatibility_issues: []
@@ -987,8 +987,8 @@ VVVV.Nodes.TransposeTransform = function(id, graph) {
                         matrix[1], matrix[5], matrix[9], matrix[13],
                         matrix[2], matrix[6], matrix[10], matrix[14],
                         matrix[3], matrix[7], matrix[11], matrix[15]];
-          
-      
+
+
       trOut.setValue(i, new_matrix);
     }
     trOut.setSliceCount(maxSize);
