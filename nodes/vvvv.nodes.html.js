@@ -1834,7 +1834,7 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
 
        });
 
-       if(setPositionIn.getValue(0) == 1){
+       if(setPositionIn.getValue(0) == 1 ){
          $( tag ).animate({
            left: positionIn.getValue(0) + 'px',
 

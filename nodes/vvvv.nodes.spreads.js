@@ -992,4 +992,69 @@ VVVV.Nodes.GetSpreadSpreads = function(id, graph) {
 }
 VVVV.Nodes.GetSpreadSpreads.prototype = new Node();
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: DeleteSlice (*)
+ Author(s): 'Luna Nane'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.DeleteSlice = function(id, graph) {
+  this.constructor(id, "DeleteSlice (Spreads)", graph);
+
+  this.meta = {
+    authors: ['Luna Nane'],
+    original_authors: ['VVVV Group'],
+    credits: [],
+    compatibility_issues: ['no bin size']
+  };
+
+  this.auto_evaluate = false;
+  this.auto_nil = false;
+
+  var spreadIn = this.addInputPin("Spread", [0.0], VVVV.PinTypes.Value);
+
+  var indexIn = this.addInputPin("Index", [0], VVVV.PinTypes.Value);
+
+  var outputOut = this.addOutputPin("Output", [0.0], VVVV.PinTypes.Value);
+
+  this.evaluate = function() {
+    var spreadSize = spreadIn.getSliceCount();
+    var indexSize = indexIn.getSliceCount();
+    spread = [];
+    if(spreadSize <= 1){
+      spread[0] = spreadIn.getValue(0, spreadSize);
+    }
+    else {
+      spread = spreadIn.getValue(0, spreadSize);
+    }
+
+    //spread.insert(indexIn.getValue(0), inputIn.getValue(0))
+    console.log(spread);
+    for (var i=0; i<=indexSize-1; i++) {
+      index = indexIn.getValue(i);
+      index = index-i;
+      spread.splice(index, 1);
+      console.log(i, spread);
+    }
+
+    var outputsize = spread.length;
+    if(outputsize < 1 ){outputsize = 1};
+
+    for (var i=0; i<=outputsize-1; i++) {
+      outputOut.setValue(i, spread[i]);
+    }
+
+
+    outputOut.setSliceCount(outputsize);
+
+
+  }
+
+}
+VVVV.Nodes.DeleteSlice.prototype = new Node();
+
+
+
 });

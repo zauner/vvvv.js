@@ -13,10 +13,9 @@
     "jsdom": "=7.0.2",
     "minimist": "*",
     "nodejs-websocket": "*",
-    "npm": "*",
+    "npm": "6.14.11",
     "serve-static": "*",
-    "sqlite3": "*",
-    "three": "^0.126.1"
+    "sqlite3": "*"
   },
   "version": "2.0.0-alpha.1"
 }
