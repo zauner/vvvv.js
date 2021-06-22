@@ -389,9 +389,9 @@ VVVV.Nodes.ScrubVideo = function(id, graph) {
   var frameIn = this.addInputPin('FrameNumber', [0], VVVV.PinTypes.Value);
   var doSeekIn = this.addInputPin('Do Seek', [0], VVVV.PinTypes.Value);
   var seekPosIn = this.addInputPin('Seek Position', [0.0], VVVV.PinTypes.Value);
-  var filenameIn = this.addInputPin('Filename', ['http://html5doctor.com/demos/video-canvas-magic/video.ogg'], VVVV.PinTypes.String);
+  var idIn = this.addInputPin('id', ['v0'], VVVV.PinTypes.String);
 
-    var durationOut = this.addOutputPin('Duration', [0.0], VVVV.PinTypes.Value);
+  var durationOut = this.addOutputPin('Duration', [0.0], VVVV.PinTypes.Value);
   var positionOut = this.addOutputPin('Position', [0.0], VVVV.PinTypes.Value);
 
 
@@ -400,15 +400,11 @@ VVVV.Nodes.ScrubVideo = function(id, graph) {
   this.evaluate = function() {
 
     var maxSpreadSize = this.getMaxInputSliceCount();
-
-    vid = document.getElementById('v0');
-
-    var frameNumber = frameIn.getValue(0);
-    vid.currentTime = frameNumber;
-
-
-
-
+    for (var i=0; i<maxSpreadSize; i++) {
+      videos[i] = document.getElementById(idIn.getValue(i));
+      var frameNumber = frameIn.getValue(i);
+      videos[i].currentTime = frameNumber;
+    }
   }
 }
 VVVV.Nodes.ScrubVideo.prototype = new Node();

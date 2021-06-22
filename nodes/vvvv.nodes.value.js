@@ -1087,7 +1087,7 @@ VVVV.Nodes.MathValue = function(id, graph) {
 
   this.configure = function() {
     variablesT = variablesIn.getValue(0).split(",");
-    console.log(variablesT);
+    //console.log(variablesT);
     var inputCount = variablesT.length; //Math.max(2, inputcountIn.getValue(0));
     VVVV.Helpers.dynamicPins(this, inputPins, inputCount, function(i) {
       pinName = variablesT[i].trim();
@@ -1107,7 +1107,7 @@ VVVV.Nodes.MathValue = function(id, graph) {
 
 
         exprIn = exprIn.replaceAll(variablesT[k], inputPins[k].getValue(i));
-        console.log(varIn, exprIn);
+        //console.log(varIn, exprIn);
       }
 
       result = eval(exprIn);

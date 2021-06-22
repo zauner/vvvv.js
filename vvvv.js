@@ -26,9 +26,11 @@ VVVV_ENV = 'development';
 var aliases = {
   jquery: 'lib/jquery/jquery-1.8.2.min',
   "jquery-ui": 'lib/jquery/jquery-ui.min',
+  "jquery-ui-touch-punch": 'lib/jquery/jquery.ui.touch-punch.min',
   d3: 'lib/d3-v3/d3.v3.min',
   underscore: 'lib/underscore/underscore',
   glMatrix: 'lib/glMatrix-0.9.5.min',
+  babylon: 'lib/babylon/babylon'
   //glMatrix2: 'lib/gl-matrix',
 }
 
@@ -60,7 +62,7 @@ VVVVBrowserContext.init = function (path_to_vvvv, mode, callback) {
 
   if (VVVV_ENV=='development') console.log('loading vvvv.js ...');
 
-  require(['core/vvvv.core', 'jquery', 'jquery-ui'], function(vvvv, $) {
+  require(['core/vvvv.core', 'jquery', 'jquery-ui', 'jquery-ui-touch-punch', 'babylon'], function(vvvv, $) {
     initialisationComplete(vvvv, $);
   });
 

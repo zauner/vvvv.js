@@ -1210,27 +1210,59 @@ VVVV.Nodes.SubstituteString = function(id, graph) {
   var outputOut = this.addOutputPin('Output', [''], VVVV.PinTypes.String);
 
   this.evaluate = function() {
-    var sliceCount = this.getMaxInputSliceCount();
-    //jdx = 0;
-    strArray=[];
-    var maxIn = Math.max(fromIn.getSliceCount(), toIn.getSliceCount());
-    for (var i=0; i<sliceCount; i++) {
-        word = inputIn.getValue(i);
-        for( j=0; j<maxIn; j++){
-              if(word == fromIn.getValue(j)){
-                  outputOut.setValue(i, toIn.getValue(j));
-              }
-        }
 
-    }
-    outSliceCount = sliceCount;
-    //for(i=0; i<outSliceCount; i++)
-    //console.log(strArray);
-    outputOut.setSliceCount(outSliceCount);
+    var string = inputIn.getValue(0);
+    var from = fromIn.getValue(0);
+    var to = toIn.getValue(0);
+
+
+    var replace = string.replace(from  , to );
+    outputOut.setValue(0, replace);
+    outputOut.setSliceCount(1);
 
   }
 }
 VVVV.Nodes.SubstituteString.prototype = new Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: SubstituteNewLine (String)
+ Author(s): 'Luna Nane'
+ Original Node Author(s): 'VVVV Group'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.SubstituteNewLineString = function(id, graph) {
+  this.constructor(id, "SubstituteNewLine (String HTML)", graph);
+
+  this.meta = {
+    authors: ['Luna Nane'],
+    original_authors: [''],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  var inputIn = this.addInputPin("Input", ["vvvvjs"], VVVV.PinTypes.String);
+
+
+
+
+  // output pins
+  var outputOut = this.addOutputPin('Output', [''], VVVV.PinTypes.String);
+
+  this.evaluate = function() {
+
+    var string = inputIn.getValue(0);
+
+
+
+    var replace = string.replace(/\\n/g  , "<br>" );
+    outputOut.setValue(0, replace);
+    outputOut.setSliceCount(1);
+
+  }
+}
+VVVV.Nodes.SubstituteNewLineString.prototype = new Node();
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1031,12 +1031,11 @@ VVVV.Nodes.DeleteSlice = function(id, graph) {
     }
 
     //spread.insert(indexIn.getValue(0), inputIn.getValue(0))
-    console.log(spread);
     for (var i=0; i<=indexSize-1; i++) {
       index = indexIn.getValue(i);
       index = index-i;
       spread.splice(index, 1);
-      console.log(i, spread);
+
     }
 
     var outputsize = spread.length;

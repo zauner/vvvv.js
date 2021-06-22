@@ -1807,9 +1807,11 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
       var neaerest = snapValues[0];
 
       $(tag).draggable({
+        //containment: "parent"
 
         drag: () => {
           IsDragging.setValue(0, 1);
+
 
           //ui.position.left
         },
@@ -1834,13 +1836,23 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
 
        });
 
-       if(setPositionIn.getValue(0) == 1 ){
+
+       if(setPositionIn.getValue(0) >= 0.5 ){
+         var pos = positionIn.getValue(0);
+         $(tag).css({left: positionIn.getValue(0)+25})
+         IsDragging.setValue(0, 1);
+       }
+       if(setPositionIn.getValue(0) <= 0.5 && setPositionIn.pinIsChanged()){
+         nearest = findNearest(snapValues, $(tag).position().left  -25);
+         indexOut.setValue(0, snapValues.indexOf(nearest) );
+         nearestOut.setValue(0, nearest);
          $( tag ).animate({
-           left: positionIn.getValue(0) + 'px',
+           left: nearest - 25 + 'px',
 
          }, 50, function() {
            // Animation complete.
          });
+         IsDragging.setValue(0, 0);
        }
 
 
@@ -1851,7 +1863,7 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
 
   /*
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   NODE: Drag (HTML)
+   NODE: CalcCenter (HTML)
    Author(s): Luna Nane
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   */
@@ -1948,6 +1960,51 @@ VVVV.Nodes.OnResizeHTML = function(id, graph) {
   }
 }
 VVVV.Nodes.OnResizeHTML.prototype = new Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: ApplyStyle (HTML)
+ Author(s): Luna Nane
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.DisplayNoneHTML = function(id, graph) {
+  this.constructor(id, "DisplayNone (HTML)", graph);
+
+  this.meta = {
+    authors: ['Luna Nane'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  this.environments = ['browser'];
+
+  var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
+  var displayIn = this.addInputPin("Display", [1], VVVV.PinTypes.Value);
+  var displayType = this.addInputPin("Display Type", ["block"], VVVV.PinTypes.String);
+
+  this.evaluate = function() {
+    var maxSpreadSize = this.getMaxInputSliceCount();
+    var displaytype = displayType.getValue(0);
+    var element;
+    for (var i=0; i<maxSpreadSize; i++) {
+      element = elementIn.getValue(i);
+      if(displayIn.getValue(i)>=0.5){
+        $(element.element).css({display: displaytype})
+      }
+      else{
+        $(element.element).css({display: "none"})
+      }
+
+      //element.style = styleIn.getValue(i);
+      //element.style.apply(element);
+    }
+  }
+}
+VVVV.Nodes.DisplayNoneHTML.prototype = new Node();
+
+
 
 
 });

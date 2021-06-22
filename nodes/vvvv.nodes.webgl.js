@@ -42,7 +42,12 @@ VVVV.ShaderCodeResources = {
   "%VVVV%/effects/BillBoard_Particles_Noise.vvvvjs.fx": undefined,
   "%VVVV%/effects/HBAO.vvvvjs.fx": undefined,
   "%VVVV%/effects/SpriteSheet.vvvvjs.fx": undefined,
-  "%VVVV%/effects/PBR_gltf_core_shader.vvvvjs.fx": undefined
+  "%VVVV%/effects/PBR_gltf_core_shader.vvvvjs.fx": undefined,
+  "%VVVV%/effects/BillBoard_Particles_FI.vvvvjs.fx": undefined,
+  "%VVVV%/effects/BillBoard_Particles_rawbuffer.vvvvjs.fx": undefined,
+  "%VVVV%/effects/BillBoard_Particles_PointCloud.vvvvjs.fx": undefined,
+
+
 
 };
 
@@ -137,6 +142,10 @@ VVVV.Types.WebGlRenderState = function() {
     else
       gl.disable(gl.BLEND);
     gl.blendFunc(gl[this.srcBlendMode], gl[this.destBlendMode]);
+    gl.blendEquation(gl.FUNC_ADD);
+    //gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+	   //gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
+     //gl.blendEquationSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE)
 
     if (this.cullFace!==undefined) {
       gl.enable(gl.CULL_FACE);
@@ -305,12 +314,35 @@ VVVV.Types.Mesh = function(gl, vertexBuffer, indices) {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(bufferData), gl.STATIC_DRAW);
   }
 
-  this.updateInstancedArray =function(Buffer) {
+  this.updateInstancedArray =function(Buffer, BufferType) {
     for (var i=0; i<Buffer.length; i++) {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.instanceBuffers[i]);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(Buffer[i].data), gl.STATIC_DRAW);
+
+    if(BufferType[i] == "Float32"){
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(Buffer[i].data), gl.STATIC_DRAW);
+      console.log("binding instanced Float32 Buffer")
+    }
+    if(BufferType[i] == "Float64"){
+      gl.bufferData(gl.ARRAY_BUFFER, new Float64Array(Buffer[i].data), gl.STATIC_DRAW);
+      console.log("binding instanced Float64 Buffer")
+    }
+    if(BufferType[i] == "Uint16"){
+      gl.bufferData(gl.ARRAY_BUFFER, new Uint16Array(Buffer[i].data), gl.STATIC_DRAW);
+      console.log("binding instanced Uint16 Buffer")
+    }
+    if(BufferType[i] == "Uint32"){
+      gl.bufferData(gl.ARRAY_BUFFER, new Uint32Array(Buffer[i].data), gl.STATIC_DRAW);
+      console.log("binding instanced Uint32 Buffer")
+    }
+    if(BufferType[i] == "Int16"){
+      gl.bufferData(gl.ARRAY_BUFFER, new Int16Array(Buffer[i].data), gl.STATIC_DRAW);
+    }
+    if(BufferType[i] == "Float16"){
+      gl.bufferData(gl.ARRAY_BUFFER, new Float16Array(Buffer[i].data), gl.STATIC_DRAW);
+    }
     }
   }
+
 
 
   /** @member */
@@ -3135,7 +3167,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
               gl.enableVertexAttribArray(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position);
               gl.vertexAttribPointer(layer.shader.attributeSpecs[layer.shader.attribSemanticMap[b.usage]].position, b.size, gl.FLOAT, false, b.stride, b.offset);
             });
-            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            //gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
 
 //quick access to shader attribute and uniform debugging
@@ -3144,7 +3176,7 @@ VVVV.Nodes.RendererWebGL = function(id, graph) {
 //           console.log(JSON.stringify(layer.shader.uniformSpecs));
 //           console.log(JSON.stringify(layer.shader.attribSemanticMap));
 //           console.log(JSON.stringify(layer.shader.uniformSemanticMap));
-//           console.log(JSON.stringify(layer.mesh.Buffer1));
+//           console.log(JSON.stringify(layer.mesh));
 //           console.log(JSON.stringify(layer.mesh.Buffer2));
 //           console.log(JSON.stringify(layer.mesh.instanceCount));
 
@@ -3564,6 +3596,7 @@ VVVV.Nodes.InstancerDynamic = function(id, graph) {
 
   var meshIn = this.addInputPin("Geometry", [], VVVV.PinTypes.WebGlResource);
   var BufferIn = [];
+  var BufferTypeIn = [];
   var CountIn = this.addInputPin("Count", [1.0], VVVV.PinTypes.Value);
   var ApplyIn = this.addInputPin("Apply", [0.0], VVVV.PinTypes.Value);
   var SemanticIn = this.addInputPin("Semantic", ["offset"], VVVV.PinTypes.String);
@@ -3574,7 +3607,11 @@ VVVV.Nodes.InstancerDynamic = function(id, graph) {
     var inputCount = Math.max(1, cntCfg.getValue(0));
     VVVV.Helpers.dynamicPins(this, BufferIn, inputCount, function(i) {
       return this.addInputPin('Buffer '+(i+1), [], VVVV.PinTypes.SceneBuffer);
-    })
+    });
+    VVVV.Helpers.dynamicPins(this, BufferTypeIn, inputCount, function(i) {
+      return this.addInputPin('BufferType '+(i+1), ["Float32"], VVVV.PinTypes.String);
+
+    });
   }
 
 
@@ -3582,6 +3619,7 @@ VVVV.Nodes.InstancerDynamic = function(id, graph) {
 
     var Geometry = null;
     var Buffers = [];
+    var BufferTypes = [];
     var MeshWasConnected = 0;
     var vecSize = [];
     var semanticsArray = [];
@@ -3592,6 +3630,8 @@ VVVV.Nodes.InstancerDynamic = function(id, graph) {
 
     var geometryCount = meshIn.getSliceCount();
     var bufferCount = BufferIn.length;
+    var bufferTypeCount = BufferTypeIn.length;
+
     if (!this.renderContexts) return;
        var gl = this.renderContexts[0];
     if (!gl)
@@ -3622,6 +3662,7 @@ VVVV.Nodes.InstancerDynamic = function(id, graph) {
                  vecSize[j] = BufferIn[j].getValue(j).VectorSize;
                  semanticsArray[j] = SemanticIn.getValue(j%SemanticIn.getSliceCount());
                  Buffers[j] = BufferIn[j].getValue(j);
+                 BufferTypes[j] = BufferTypeIn[j].getValue(j);
                  divisorArray[j] = DivisorIn.getValue(j%DivisorIn.getSliceCount());
 
                 }
@@ -3630,7 +3671,7 @@ VVVV.Nodes.InstancerDynamic = function(id, graph) {
                     Geometry = meshIn.getValue(i%geometryCount);
                     Geometry.instanced = true;
                     Geometry.instanceCount = CountIn.getValue(i%CountIn.getSliceCount());
-                    Geometry.updateInstancedArray(Buffers);
+                    Geometry.updateInstancedArray(Buffers, BufferTypes);
                     Geometry.addSemantics(semanticsArray);
                     Geometry.addVectorSize(vecSize);
                     Geometry.addDivisor(divisorArray);
@@ -6042,5 +6083,99 @@ VVVV.Nodes.glTF_PBR_core.prototype = new Node();
     }
 }
 VVVV.Nodes.DefinesGLTF.prototype = new Node();
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: RawFileBuffer (WebGL Buffer)
+ Author(s): Luna Nane
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.RawFileBuffer = function(id, graph) {
+  this.constructor(id, "RawFileBuffer (WebGL Buffer)", graph);
+
+  this.auto_nil = false;
+
+  this.meta = {
+    authors: ['Luna Nane'],
+    original_authors: [],
+    credits: [],
+    compatibility_issues: []
+  };
+
+
+  var filenamePin = this.addInputPin("File Name", ["http://localhost"], VVVV.PinTypes.String);
+  var VectorSize = this.addInputPin('VectorSize', [3], VVVV.PinTypes.Value);
+  var Update= this.addInputPin('Update', [0], VVVV.PinTypes.Value);
+
+  var BufferOut = this.addOutputPin("Buffer Out", [], VVVV.PinTypes.SceneBuffer);
+
+  var Success = this.addOutputPin("Success", [0.0], VVVV.PinTypes.Value);
+
+
+  var HasLoaded = 0;
+   var prevFilenames = [];
+   var filename = [];
+   var xhr = [];
+
+   var SceneElementArray = [];
+  var SuccessLoad = [];
+  this.evaluate = function() {
+
+   // if (filenamePin.pinIsChanged()){
+    //  this.initialize();}
+
+   var maxCount = filenamePin.getSliceCount();
+
+      for (var i=0; i<maxCount; i++) {
+
+          //Success.setValue(i,0);
+
+            if (prevFilenames[i] != filenamePin.getValue(i) | HasLoaded[i] == 0 | Update.getValue(i) == 1) {
+                filename[i] = VVVV.Helpers.prepareFilePath(filenamePin.getValue(i), this.parentPatch);
+                (function(i) {
+                  xhr[i] = new XMLHttpRequest();
+                  //xhr[i].responseType = 'arraybuffer';
+                  xhr[i].open("GET", filename[i], true);
+                  xhr[i].responseType = "arraybuffer";
+                  xhr[i].onreadystatechange = function() {
+                     if (xhr[i].readyState === 4) {
+                        if (xhr[i].status === 200) {
+                          var data = xhr[i].response;
+
+                            var OutputBuffer = new VVVV.Types.SceneBuffer(VectorSize.getValue(0), data, 0, -1, -1);
+                            BufferOut.setValue(i,OutputBuffer);
+
+                            //just to check
+                            //var dataview = new DataView(data);
+                            //var mFloatArray = new Float32Array(data.byteLength / 4);
+
+
+                              //console.log(data.byteLength);
+                              /////
+                            Success.setValue(i,1);
+                            HasLoaded[i]=1;
+                            SuccessLoad[i] = 1;
+                        } else {
+                          console.log("Error loading Buffer", xhr[i].status);
+                          Success.setValue(i,0);
+                        }
+                     }
+                  };
+                  xhr[i].send(null);
+               })(i);
+             }
+             else{Success.setValue(i,0);}
+             prevFilenames[i] = filenamePin.getValue(i);
+        }   //end of inner for loop
+        for (var t = 0; t < maxCount; t++){
+            //SceneElements.setValue(i,SceneElementArray[t]);
+            //Success.setValue(t,SuccessLoad[t] );
+        }
+        BufferOut.setSliceCount(maxCount);
+     }
+  }
+ VVVV.Nodes.RawFileBuffer.prototype = new Node();
 
 });

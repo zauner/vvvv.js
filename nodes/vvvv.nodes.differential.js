@@ -84,7 +84,7 @@ VVVV.Nodes.IntegrateMinMax = function(id, graph) {
 
   var posIn = this.addInputPin('Position In', [0.0], VVVV.PinTypes.Value);
   var resetIn = this.addInputPin("Reset", [0], VVVV.PinTypes.Value);
-
+  var resetPosIn = this.addInputPin("Reset Position", [0], VVVV.PinTypes.Value);
   var MinIn = this.addInputPin('Min', [-1.0], VVVV.PinTypes.Value);
   var MaxIn = this.addInputPin("Max", [1.0], VVVV.PinTypes.Value);
 
@@ -110,7 +110,7 @@ VVVV.Nodes.IntegrateMinMax = function(id, graph) {
       current[i] += pos*dt;
 
       var reset = resetIn.getValue(i);
-      if (reset>=0.5) current[i] = 0.0;
+      if (reset>=0.5) current[i] = resetPosIn.getValue(i);
 
       if(current[i] >= max ){
         current[i] = max;
