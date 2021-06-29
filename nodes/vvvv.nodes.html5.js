@@ -393,6 +393,7 @@ VVVV.Nodes.ScrubVideo = function(id, graph) {
 
   var durationOut = this.addOutputPin('Duration', [0.0], VVVV.PinTypes.Value);
   var positionOut = this.addOutputPin('Position', [0.0], VVVV.PinTypes.Value);
+  var pauseVideo = this.addInputPin('Pause Video', [true], VVVV.PinTypes.Boolean);
 
 
   var videos = [];
@@ -404,6 +405,9 @@ VVVV.Nodes.ScrubVideo = function(id, graph) {
       videos[i] = document.getElementById(idIn.getValue(i));
       var frameNumber = frameIn.getValue(i);
       videos[i].currentTime = frameNumber;
+      if (pauseVideo.getValue){
+        videos[i].pause();
+      }
     }
   }
 }
@@ -1017,5 +1021,133 @@ VVVV.Nodes.StoreFile = function(id, graph) {
     }
   }
   VVVV.Nodes.AudioPlayerHTML.prototype = new Node();
+
+  /*
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   NODE: PreloadVideo (HTML VVVVjs)
+   Author(s): Luna Nane
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  */
+
+  VVVV.Nodes.PreloadVideo = function(id, graph) {
+    this.constructor(id, "PreloadVideo (HTML)", graph);
+
+    this.meta = {
+      authors: ['Luna Nane'],
+      original_authors: [],
+      credits: [],
+      compatibility_issues: []
+    };
+
+    this.auto_evaluate = true;
+
+
+
+    var idIn = this.addInputPin('id', ['v0'], VVVV.PinTypes.String);
+    var filenameIn = this.addInputPin('filename', [''], VVVV.PinTypes.String);
+    var loadIn = this.addInputPin('load', [0], VVVV.PinTypes.Value);
+
+
+    var progressOut = this.addOutputPin('Progress', [0.0], VVVV.PinTypes.Value);
+    var hasLoadedOut = this.addOutputPin('HasLoaded', [0.0], VVVV.PinTypes.Value);
+
+
+    var videos = [];
+    var players = [];
+    var VideoAStore = [];
+    var progress = [];
+
+
+
+
+    this.evaluate = function() {
+        var maxSpreadSize = this.getMaxInputSliceCount();
+            //Load Video
+        if(progress[0]== undefined){
+          
+        for (let i=0; i<maxSpreadSize; i++) {
+          progress[i]=0;
+        }
+
+        }
+        
+        if(loadIn.getValue(0) == 1){
+          console.log("load")
+            for (var i=0; i<maxSpreadSize; i++) {
+
+              videos[i] = new XMLHttpRequest();
+
+              var filename = VVVV.Helpers.prepareFilePath(filenameIn.getValue(i), this.parentPatch);
+              if (filename.indexOf('http://')===0 && VVVV.ImageProxyPrefix!==undefined){
+                filename = VVVV.ImageProxyPrefix+encodeURI(filename);
+              }
+              videos[i].open('GET', filename, true);
+              videos[i].responseType = 'blob';
+              videos[i].send();
+
+              videos[i].onload = (function(i) {
+                return function() {
+                if (this.status === 200) {
+                  const videoBlob = this.response;
+                  let VideoAStore = URL.createObjectURL(videoBlob); // IE10+
+
+                  players[i] = document.getElementById(idIn.getValue(i));
+                  players[i].src = VideoAStore;
+
+                  var playPromiseA = players[i].play();
+
+                  if (playPromiseA !== undefined) {
+                    playPromiseA.then(_ => {
+                      videoPlayerA.pause();
+                      //console.log("VideoA Pausiert")
+                    })
+                      .catch(error => {
+                      });
+                    }
+                }
+                }
+            })(i);
+            
+            videos[i].onerror = function () {
+              console.log(this.status)
+            }
+
+          }
+
+
+
+
+          if(videos[0] != undefined){
+            for (let j=0; j<maxSpreadSize; j++) {
+              console.log(j);
+              videos[j].addEventListener("progress", function (evt) {
+                if (evt.lengthComputable) {
+                    var percentComplete = evt.loaded / evt.total;
+                    //Do something with download progress
+                    console.log('percent downloaded: ' + j + "  " + (percentComplete * 100));
+                    progress[j] = percentComplete;
+                }
+            }, false);
+          }
+        }
+
+
+
+        }
+
+
+
+        progressOut.setSliceCount(maxSpreadSize);
+        
+        for (var k=0; k<maxSpreadSize; k++) {
+          progressOut.setValue(k, progress[k])
+        }
+
+
+
+
+    }
+  }
+  VVVV.Nodes.PreloadVideo.prototype = new Node();
 
 });

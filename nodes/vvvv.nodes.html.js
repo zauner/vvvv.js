@@ -1289,13 +1289,28 @@ VVVV.Nodes.SetTextHTML = function(id, graph) {
     if (!elementIn.isConnected() || elementIn.getValue(0).tagName=='')
       return;
 
+
+
+    //add line breaks
+    var contentIn = textIn.getValue(0);
+    var res = contentIn.split('\\n');
+    var output = "";
+    for (i = 0; i < res.length; i++) {
+        output = output + res[i]
+
+        if(i !== res.length-1){
+          output = output + '\n';
+        }
+    }
+
+
     var e;
     for (var i=0; i<maxSpreadSize; i++) {
       e = elementIn.getValue(i).element;
       if (e.contents().length>0 && e.contents().first()[0].nodeType==3)
-        e.contents().first()[0].data = textIn.getValue(0);
+        e.contents().first()[0].data = output;
       else
-        e.prepend(document.createTextNode(textIn.getValue(0)));
+        e.prepend(document.createTextNode(output));
     }
   }
 }
@@ -1790,6 +1805,8 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
     var snapValuesIn = this.addInputPin("Snap Values", [0], VVVV.PinTypes.Value);
     var positionIn = this.addInputPin("Set Position", [0], VVVV.PinTypes.Value);
     var setPositionIn = this.addInputPin("Set", [0], VVVV.PinTypes.Value);
+    var offsetIn = this.addInputPin("offset", [0], VVVV.PinTypes.Value);
+    var offsetIndrag = this.addInputPin("offset draggable", [0], VVVV.PinTypes.Value);
 
     var IsDragging = this.addOutputPin("Dragging", [0], VVVV.PinTypes.Value);
     var nearestOut = this.addOutputPin("Nearest", [0], VVVV.PinTypes.Value);
@@ -1816,13 +1833,13 @@ VVVV.Nodes["InjectHTML"] = function(id, graph) {
           //ui.position.left
         },
         stop: (event, ui) => {
-          nearest = findNearest(snapValues, ui.position.left);
+          nearest = findNearest(snapValues, ui.position.left+offsetIndrag.getValue(0));
 
           indexOut.setValue(0, snapValues.indexOf(nearest) );
           nearestOut.setValue(0, nearest);
 
           $( tag ).animate({
-            left: nearest - 25 + 'px',
+            left: nearest + offsetIn.getValue(0) + 'px',
 
           }, 50, function() {
             // Animation complete.
