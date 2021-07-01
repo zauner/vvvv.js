@@ -17,8 +17,8 @@ VVVVContext.ThirdPartyLibs = {
   "beatdetektor": "lib/beatdetektor.js",
   "GLUtil": "lib/gl-util.js",
   "meshUtils": "lib/mesh-utils.js",
-  "floatExtension": "lib/webgl-texture-float-extension-shims/webgl-texture-float-extension-shims.js",
-  //"glMatrix2": "..vvvv.js/lib/gl-matrix.js"
+  "floatExtension": "lib/webgl-texture-float-extension-shims/webgl-texture-float-extension-shims.js"
+ 
 }
 
 // ... and just leave this

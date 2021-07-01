@@ -7,6 +7,7 @@ if (typeof define !== 'function') { var define = require(VVVVContext.Root+'/node
 define(function(require,exports) {
 
 var $ = require('jquery');
+var d3 = require('lib/d3-v4/d3.v4.min');
 var _ = require('underscore');
 var Node = require('core/vvvv.core.node');
 var VVVV = require('core/vvvv.core.defines');
@@ -33,7 +34,10 @@ VVVV.Nodes.CanvasD3 = function(id, graph) {
   this.auto_evaluate = false;
 
   // input pins
-  var elementIn = this.addInputPin('Layer(D3)',[], VVVV.PinTypes.Node );
+  var LayerIn = this.addInputPin('Layer(D3)',[], VVVV.PinTypes.Node );
+  var elementIn = this.addInputPin("Element", [], VVVV.PinTypes.HTMLLayer);
+
+
   var widthIn = this.addInputPin('width', [512], VVVV.PinTypes.Value);
   var heightIn = this.addInputPin('height', [512], VVVV.PinTypes.Value);
 
@@ -43,11 +47,17 @@ VVVV.Nodes.CanvasD3 = function(id, graph) {
   // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
   this.evaluate = function() {
 
-    var idx = 0;
-    for (var i=0; i<widthIn.getSliceCount(); i++) {
-        idx++;
-    }
+  
 
+    var element = $("body");
+    if (elementIn.isConnected()){
+      var element = elementIn.getValue(i).element[0];
+
+    }
+    console.log( "test" + element);
+
+
+    
     canvas = d3.select("body")
                 .append("svg")
                 .attr("width", widthIn.getValue(0))
@@ -135,5 +145,121 @@ VVVV.Nodes.CircleD3 = function(id, graph) {
   //cnavas.innerHTML('');
 }
 VVVV.Nodes.CircleD3.prototype = new Node();
+
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ NODE: ForceDirectedGraph (D3)
+ Author(s): 'Luna Nane'
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+VVVV.Nodes.ForceDirectedGraph = function(id, graph) {
+  this.constructor(id, "ForceDirectedGraph (D3)", graph);
+
+  this.meta = {
+    authors: ['Luna Nane'],
+    original_authors: ['d3'],
+    credits: [],
+    compatibility_issues: []
+  };
+
+  this.auto_evaluate = false;
+
+
+
+
+
+  // evaluate() will be called each frame
+  // (if the input pins have changed, or the nodes is flagged as auto-evaluating)
+  this.evaluate = function() {
+
+    
+    
+
+
+    var svg = d3.select("svg"),
+    width = +svg.attr("width"),
+    height = +svg.attr("height");
+
+    console.log("anything" + svg);
+
+var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink().id(function(d) { return d.id; }))
+    .force("charge", d3.forceManyBody())
+    .force("center", d3.forceCenter(width / 2, height / 2));
+
+d3.json("miserables.json", function(error, graph) {
+  if (error) throw error;
+
+  var link = svg.append("g")
+      .attr("class", "links")
+    .selectAll("line")
+    .data(graph.links)
+    .enter().append("line")
+      .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+  var node = svg.append("g")
+      .attr("class", "nodes")
+    .selectAll("circle")
+    .data(graph.nodes)
+    .enter().append("circle")
+      .attr("r", 5)
+      .attr("fill", function(d) { return color(d.group); })
+      .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+
+  node.append("title")
+      .text(function(d) { return d.id; });
+
+  simulation
+      .nodes(graph.nodes)
+      .on("tick", ticked);
+
+  simulation.force("link")
+      .links(graph.links);
+
+  function ticked() {
+    link
+        .attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    node
+        .attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+  }
+});
+
+function dragstarted(d) {
+  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
+
+function dragged(d) {
+  d.fx = d3.event.x;
+  d.fy = d3.event.y;
+}
+
+function dragended(d) {
+  if (!d3.event.active) simulation.alphaTarget(0);
+  d.fx = null;
+  d.fy = null;
+}
+
+    
+  }
+
+}
+VVVV.Nodes.ForceDirectedGraph.prototype = new Node();
+
+
 
 });
